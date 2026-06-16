@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SessionsRouteImport } from './routes/sessions'
+import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ProgramsRouteImport } from './routes/programs'
 import { Route as DrillsRouteImport } from './routes/drills'
 import { Route as IndexRouteImport } from './routes/index'
@@ -17,6 +18,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const SessionsRoute = SessionsRouteImport.update({
   id: '/sessions',
   path: '/sessions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgressRoute = ProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProgramsRoute = ProgramsRouteImport.update({
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/drills': typeof DrillsRoute
   '/programs': typeof ProgramsRoute
+  '/progress': typeof ProgressRoute
   '/sessions': typeof SessionsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/drills': typeof DrillsRoute
   '/programs': typeof ProgramsRoute
+  '/progress': typeof ProgressRoute
   '/sessions': typeof SessionsRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/drills': typeof DrillsRoute
   '/programs': typeof ProgramsRoute
+  '/progress': typeof ProgressRoute
   '/sessions': typeof SessionsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/drills' | '/programs' | '/sessions'
+  fullPaths: '/' | '/drills' | '/programs' | '/progress' | '/sessions'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/drills' | '/programs' | '/sessions'
-  id: '__root__' | '/' | '/drills' | '/programs' | '/sessions'
+  to: '/' | '/drills' | '/programs' | '/progress' | '/sessions'
+  id: '__root__' | '/' | '/drills' | '/programs' | '/progress' | '/sessions'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DrillsRoute: typeof DrillsRoute
   ProgramsRoute: typeof ProgramsRoute
+  ProgressRoute: typeof ProgressRoute
   SessionsRoute: typeof SessionsRoute
 }
 
@@ -76,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/sessions'
       fullPath: '/sessions'
       preLoaderRoute: typeof SessionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/progress': {
+      id: '/progress'
+      path: '/progress'
+      fullPath: '/progress'
+      preLoaderRoute: typeof ProgressRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/programs': {
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DrillsRoute: DrillsRoute,
   ProgramsRoute: ProgramsRoute,
+  ProgressRoute: ProgressRoute,
   SessionsRoute: SessionsRoute,
 }
 export const routeTree = rootRouteImport
