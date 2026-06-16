@@ -20,16 +20,43 @@ const SkateIcon = ({ className, size }: { className?: string; size?: number }) =
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth={1.6}
+    strokeWidth={1.5}
     strokeLinecap="round"
     strokeLinejoin="round"
     className={className}
   >
-    <path d="M4 16c0-3 3-4 6-4h5c3 0 5 1 5 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2Z" />
-    <path d="M9 12V8a3 3 0 0 1 6 0v4" />
-    <path d="M6 20h12" />
+    <path d="M8 4v5c0 1.5 1 2 2 2h4c1 0 2-.5 2-2V4" />
+    <path d="M7 11h10c1.5 0 2.5 1 2.5 2.5v2c0 1.5-1 2.5-2.5 2.5H7c-1.5 0-2.5-1-2.5-2.5v-2C4.5 12 5.5 11 7 11Z" />
+    <path d="M8 9h8" />
+    <path d="M9 6h1" />
+    <path d="M11 6h1" />
+    <path d="M13 6h1" />
+    <path d="M6 18h12" />
     <path d="M7 20v2" />
     <path d="M17 20v2" />
+  </svg>
+);
+
+const ShootingIcon = ({ className, size }: { className?: string; size?: number }) => (
+  <svg
+    width={size ?? 24}
+    height={size ?? 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.5}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <circle cx="12" cy="12" r="8" />
+    <path d="M12 8v8" />
+    <path d="M8 12h8" />
+    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+    <path d="M4 12h2" />
+    <path d="M18 12h2" />
+    <path d="M12 4v2" />
+    <path d="M12 18v2" />
   </svg>
 );
 
@@ -37,7 +64,7 @@ const categories = [
   { label: "Slip Circuits", icon: Zap, color: "teal" as const },
   { label: "GameIQ PODS", icon: Brain, color: "volt" as const },
   { label: "Skating", icon: SkateIcon, color: "teal" as const },
-  { label: "Shooting", icon: Target, color: "volt" as const },
+  { label: "Shooting", icon: ShootingIcon, color: "volt" as const },
   { label: "Dryland Skills", icon: Activity, color: "teal" as const },
   { label: "Dryland Fitness", icon: Dumbbell, color: "volt" as const },
 ];
