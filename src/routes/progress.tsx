@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Flame, Trophy, Layers, Clock, Activity, Award } from "lucide-react";
 
 export const Route = createFileRoute("/progress")({
@@ -81,7 +81,10 @@ function Progress() {
         ))}
       </div>
 
-      <h2 className="mt-7 text-xs font-bold tracking-[0.25em] text-foreground/90">BADGES EARNED</h2>
+      <div className="mt-7 flex items-center justify-between">
+        <h2 className="text-xs font-bold tracking-[0.25em] text-foreground/90">BADGES EARNED</h2>
+        <Link to="/achievements" className="text-[11px] font-semibold tracking-wider text-teal">VIEW ALL</Link>
+      </div>
       <div className="mt-3 grid grid-cols-3 gap-3">
         {badges.map((b) => (
           <div key={b.name} className="flex flex-col items-center gap-2 rounded-2xl border border-border/60 bg-surface p-3 text-center">
