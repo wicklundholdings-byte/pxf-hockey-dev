@@ -353,17 +353,20 @@ function DrillCard({ d, onAdd, selectMode, selected, onToggleSelect }: { d: Dril
   );
 }
 
-function AddToSessionModal({ drill, onClose, onDone }: { drill: Drill; onClose: () => void; onDone: (msg: string) => void }) {
+function AddToSessionModal({ drills, onClose, onDone }: { drills: Drill[]; onClose: () => void; onDone: (msg: string) => void }) {
+  const primary = drills[0];
+  const multi = drills.length > 1;
+  const totalMins = drills.reduce((s, d) => s + d.durationMin, 0);
   const [mode, setMode] = useState<"choose" | "existing" | "new">("choose");
   const [sessions, setSessions] = useState<SavedSession[]>([]);
   const [picked, setPicked] = useState<Set<string>>(new Set());
 
   // new session fields
   const today = new Date().toISOString().slice(0, 10);
-  const [name, setName] = useState(`${drill.category} — ${new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" })}`);
+  const [name, setName] = useState(`${multi ? "Session" : primary.category} — ${new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" })}`);
   const [date, setDate] = useState(today);
-  const [age, setAge] = useState<string>(drill.ageGroup ?? "U13+");
-  const [duration, setDuration] = useState<number>(60);
+  const [age, setAge] = useState<string>(primary.ageGroup ?? "U13+");
+  const [duration, setDuration] = useState<number>(Math.max(60, Math.ceil(totalMins / 5) * 5));
 
   useEffect(() => { setSessions(readSessions()); }, []);
 
@@ -375,13 +378,15 @@ function AddToSessionModal({ drill, onClose, onDone }: { drill: Drill; onClose: 
     });
   }
 
+  const drillLabel = multi ? `${drills.length} drills` : "Drill";
+
   function addToExisting() {
     if (picked.size === 0) return;
     const next = sessions.map((s) =>
-      picked.has(s.id) ? { ...s, blocks: [...s.blocks, makeBlock(drill)] } : s,
+      picked.has(s.id) ? { ...s, blocks: [...s.blocks, ...drills.map(makeBlock)] } : s,
     );
     writeSessions(next);
-    onDone(picked.size === 1 ? "Drill Added To Session" : `Drill Added To ${picked.size} Sessions`);
+    onDone(`${drillLabel} Added To ${picked.size} Session${picked.size === 1 ? "" : "s"}`);
   }
 
   function createAndAdd() {
@@ -391,14 +396,14 @@ function AddToSessionModal({ drill, onClose, onDone }: { drill: Drill; onClose: 
       name: name.trim(),
       date,
       age,
-      level: drill.difficulty ?? "Intermediate",
+      level: primary.difficulty ?? "Intermediate",
       totalMins: duration,
       notes: "",
-      blocks: [makeBlock(drill)],
+      blocks: drills.map(makeBlock),
       completed: false,
     };
     writeSessions([fresh, ...sessions]);
-    onDone("Drill Added To Session");
+    onDone(multi ? `${drillLabel} Added To Session` : "Drill Added To Session");
   }
 
   return (
@@ -410,8 +415,8 @@ function AddToSessionModal({ drill, onClose, onDone }: { drill: Drill; onClose: 
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[10px] font-bold tracking-[0.3em] text-teal">ADD TO SESSION</p>
-            <h2 className="mt-1 text-lg font-bold text-foreground">{drill.name}</h2>
-            <p className="text-[11px] text-muted-foreground">{drill.category} · {drill.durationMin} min</p>
+            <h2 className="mt-1 text-lg font-bold text-foreground">{multi ? `${drills.length} drills selected` : primary.name}</h2>
+            <p className="text-[11px] text-muted-foreground">{multi ? `${totalMins} min total` : `${primary.category} · ${primary.durationMin} min`}</p>
           </div>
           <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full border border-border/60 bg-surface-2 text-muted-foreground">
             <X size={14} />
