@@ -13,6 +13,7 @@ import { Route as SessionsRouteImport } from './routes/sessions'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ProgramsRouteImport } from './routes/programs'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as MembershipRouteImport } from './routes/membership'
 import { Route as GameiqRouteImport } from './routes/gameiq'
 import { Route as DrillsRouteImport } from './routes/drills'
 import { Route as IndexRouteImport } from './routes/index'
@@ -36,6 +37,11 @@ const ProgramsRoute = ProgramsRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MembershipRoute = MembershipRouteImport.update({
+  id: '/membership',
+  path: '/membership',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GameiqRoute = GameiqRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/drills': typeof DrillsRouteWithChildren
   '/gameiq': typeof GameiqRoute
+  '/membership': typeof MembershipRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/drills': typeof DrillsRouteWithChildren
   '/gameiq': typeof GameiqRoute
+  '/membership': typeof MembershipRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/drills': typeof DrillsRouteWithChildren
   '/gameiq': typeof GameiqRoute
+  '/membership': typeof MembershipRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/drills'
     | '/gameiq'
+    | '/membership'
     | '/profile'
     | '/programs'
     | '/progress'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/drills'
     | '/gameiq'
+    | '/membership'
     | '/profile'
     | '/programs'
     | '/progress'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/drills'
     | '/gameiq'
+    | '/membership'
     | '/profile'
     | '/programs'
     | '/progress'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DrillsRoute: typeof DrillsRouteWithChildren
   GameiqRoute: typeof GameiqRoute
+  MembershipRoute: typeof MembershipRoute
   ProfileRoute: typeof ProfileRoute
   ProgramsRoute: typeof ProgramsRoute
   ProgressRoute: typeof ProgressRoute
@@ -161,6 +174,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/membership': {
+      id: '/membership'
+      path: '/membership'
+      fullPath: '/membership'
+      preLoaderRoute: typeof MembershipRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gameiq': {
@@ -209,6 +229,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DrillsRoute: DrillsRouteWithChildren,
   GameiqRoute: GameiqRoute,
+  MembershipRoute: MembershipRoute,
   ProfileRoute: ProfileRoute,
   ProgramsRoute: ProgramsRoute,
   ProgressRoute: ProgressRoute,

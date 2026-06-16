@@ -1,11 +1,10 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Layers, Dumbbell, CalendarDays, LineChart, User, Bell } from "lucide-react";
+import { Home, Dumbbell, CalendarDays, LineChart, User, Bell } from "lucide-react";
 import type { ReactNode } from "react";
 
 type NavItem = { to: string; label: string; icon: typeof Home; exact?: boolean };
 const nav: NavItem[] = [
   { to: "/", label: "Home", icon: Home, exact: true },
-  { to: "/programs", label: "Programs", icon: Layers },
   { to: "/drills", label: "Drills", icon: Dumbbell },
   { to: "/sessions", label: "Sessions", icon: CalendarDays },
   { to: "/progress", label: "Progress", icon: LineChart },
