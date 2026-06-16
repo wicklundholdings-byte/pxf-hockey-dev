@@ -82,10 +82,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Power. Flow. Performance. A complete player development system built around structured progressions." },
       { name: "author", content: "PXF Hockey" },
       { property: "og:title", content: "PXF Hockey — Train the Game" },
-      { property: "og:description", content: "Power. Flow. Performance. A complete hockey development system." },
+      { property: "og:description", content: "Power. Flow. Performance. A complete player development system built around structured progressions." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "theme-color", content: "#0D0D0D" },
+      { name: "twitter:title", content: "PXF Hockey — Train the Game" },
+      { name: "twitter:description", content: "Power. Flow. Performance. A complete player development system built around structured progressions." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/adfb9cc3-f846-48e9-83e1-6bbe8eaaf0aa/id-preview-4ec6f46b--2cfca5d0-05bd-4a98-8e9d-3dfab64bea35.lovable.app-1781649020320.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/adfb9cc3-f846-48e9-83e1-6bbe8eaaf0aa/id-preview-4ec6f46b--2cfca5d0-05bd-4a98-8e9d-3dfab64bea35.lovable.app-1781649020320.png" },
     ],
     links: [
       {
