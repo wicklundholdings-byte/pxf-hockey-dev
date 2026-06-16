@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Search, Filter, Play, BarChart3, Clock, Users, Wrench, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { CATEGORIES, DRILLS, type Category, type Drill } from "@/data/pxf";
+import { trainingCategories, TRAINING_CATEGORY_TO_DRILL_CATEGORIES, type TrainingCategory } from "@/data/trainingCategories";
 
 export const Route = createFileRoute("/drills")({
   head: () => ({
@@ -19,12 +20,16 @@ const AGE_GROUPS = ["U9+", "U11+", "U13+", "U15+"] as const;
 const LEVELS = ["Beginner", "Intermediate", "Advanced", "Elite"] as const;
 const EQUIP = ["Cones", "Pucks", "Net", "PODs", "Partner"] as const;
 
-type FilterKey = "age" | "level" | "equip" | "cat";
 
 function Drills() {
   const [q, setQ] = useState("");
   const [openFilters, setOpenFilters] = useState(false);
-  const [active, setActive] = useState<Record<FilterKey, string | null>>({
+  const [active, setActive] = useState<{
+    age: string | null;
+    level: string | null;
+    equip: string | null;
+    cat: TrainingCategory | null;
+  }>({
     age: null,
     level: null,
     equip: null,
@@ -34,7 +39,10 @@ function Drills() {
   const filtered = useMemo(() => {
     return DRILLS.filter((d) => {
       if (q && !d.name.toLowerCase().includes(q.toLowerCase())) return false;
-      if (active.cat && d.category !== active.cat) return false;
+      if (active.cat) {
+        const matches = TRAINING_CATEGORY_TO_DRILL_CATEGORIES[active.cat];
+        if (!matches.includes(d.category)) return false;
+      }
       if (active.level && d.difficulty !== active.level) return false;
       if (active.age && d.ageGroup !== active.age) return false;
       if (active.equip && !d.equipment.some((e) => e.toLowerCase().includes(active.equip!.toLowerCase()))) return false;
@@ -77,7 +85,7 @@ function Drills() {
 
       {openFilters && (
         <div className="mt-3 space-y-3 rounded-2xl border border-border/60 bg-surface p-4">
-          <FilterRow label="Category" options={CATEGORIES.map((c) => c.name)} value={active.cat} onChange={(v) => setActive((s) => ({ ...s, cat: v }))} />
+          <FilterRow label="Category" options={trainingCategories.map((c) => c.name)} value={active.cat} onChange={(v) => setActive((s) => ({ ...s, cat: v as TrainingCategory | null }))} />
           <FilterRow label="Age" options={[...AGE_GROUPS]} value={active.age} onChange={(v) => setActive((s) => ({ ...s, age: v }))} />
           <FilterRow label="Skill Level" options={[...LEVELS]} value={active.level} onChange={(v) => setActive((s) => ({ ...s, level: v }))} />
           <FilterRow label="Equipment" options={[...EQUIP]} value={active.equip} onChange={(v) => setActive((s) => ({ ...s, equip: v }))} />

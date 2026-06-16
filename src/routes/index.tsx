@@ -14,6 +14,8 @@ import {
   Disc3,
   Crown,
 } from "lucide-react";
+import { trainingCategories, type TrainingCategory } from "@/data/trainingCategories";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -27,8 +29,8 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const SkateIcon = ({ className, size }: { className?: string; size?: number }) => (
-  <svg width={size ?? 24} height={size ?? 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className={className}>
+const SkateIcon = ({ className, size, strokeWidth }: { className?: string; size?: number; strokeWidth?: number }) => (
+  <svg width={size ?? 24} height={size ?? 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth ?? 1.5} strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M9 3v5.5c0 1.5.8 2.5 2 3l1 .5" />
     <path d="M9 3h6" />
     <path d="M15 3v5.5c0 2.5 1.5 3.5 2.5 4.5.8.8 1.2 1.8 1.2 3v1.5c0 1.5-1.2 2.5-2.5 2.5H8.8c-1.3 0-2.5-1-2.5-2.5V17c0-1.2.4-2.2 1.2-3 1-1 2.5-2 2.5-4.5V3" />
@@ -46,14 +48,30 @@ const ShootingIcon = ({ className, size }: { className?: string; size?: number }
   </svg>
 );
 
-const categories = [
-  { label: "Slip Circuits", icon: Layers, tint: "teal" as const, to: "/drills" as const },
-  { label: "GameIQ Circuits", icon: Brain, tint: "volt" as const, to: "/gameiq" as const },
-  { label: "Skating Flow", icon: SkateIcon, tint: "teal" as const, to: "/drills" as const },
-  { label: "Edge Control", icon: Activity, tint: "volt" as const, to: "/drills" as const },
-  { label: "Dryland Skills", icon: Zap, tint: "teal" as const, to: "/drills" as const },
-  { label: "Dryland Training", icon: Flame, tint: "volt" as const, to: "/drills" as const },
-];
+const categoryToRoute: Record<TrainingCategory, "/drills" | "/gameiq"> = {
+  "Slip Circuits": "/drills",
+  "GameIQ Circuits": "/gameiq",
+  "Skating Flow": "/drills",
+  "Edge Control": "/drills",
+  "Dryland Skills": "/drills",
+  "Dryland Training": "/drills",
+};
+
+const categoryIcon: Record<TrainingCategory, React.ComponentType<{ className?: string; size?: number; strokeWidth?: number }>> = {
+  "Slip Circuits": Layers,
+  "GameIQ Circuits": Brain,
+  "Skating Flow": SkateIcon,
+  "Edge Control": Activity,
+  "Dryland Skills": Zap,
+  "Dryland Training": Flame,
+};
+
+const categories = trainingCategories.map(({ name, tint }) => ({
+  label: name,
+  icon: categoryIcon[name],
+  tint,
+  to: categoryToRoute[name],
+}));
 
 const quickAccess = [
   { label: "Build Session", icon: Plus, to: "/sessions" as const },
