@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as DrillsRouteImport } from './routes/drills'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DrillsDrillIdRouteImport } from './routes/drills.$drillId'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -28,34 +29,42 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DrillsDrillIdRoute = DrillsDrillIdRouteImport.update({
+  id: '/$drillId',
+  path: '/$drillId',
+  getParentRoute: () => DrillsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/drills': typeof DrillsRoute
+  '/drills': typeof DrillsRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/drills/$drillId': typeof DrillsDrillIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/drills': typeof DrillsRoute
+  '/drills': typeof DrillsRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/drills/$drillId': typeof DrillsDrillIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/drills': typeof DrillsRoute
+  '/drills': typeof DrillsRouteWithChildren
   '/profile': typeof ProfileRoute
+  '/drills/$drillId': typeof DrillsDrillIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/drills' | '/profile'
+  fullPaths: '/' | '/drills' | '/profile' | '/drills/$drillId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/drills' | '/profile'
-  id: '__root__' | '/' | '/drills' | '/profile'
+  to: '/' | '/drills' | '/profile' | '/drills/$drillId'
+  id: '__root__' | '/' | '/drills' | '/profile' | '/drills/$drillId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DrillsRoute: typeof DrillsRoute
+  DrillsRoute: typeof DrillsRouteWithChildren
   ProfileRoute: typeof ProfileRoute
 }
 
@@ -82,12 +91,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/drills/$drillId': {
+      id: '/drills/$drillId'
+      path: '/$drillId'
+      fullPath: '/drills/$drillId'
+      preLoaderRoute: typeof DrillsDrillIdRouteImport
+      parentRoute: typeof DrillsRoute
+    }
   }
 }
 
+interface DrillsRouteChildren {
+  DrillsDrillIdRoute: typeof DrillsDrillIdRoute
+}
+
+const DrillsRouteChildren: DrillsRouteChildren = {
+  DrillsDrillIdRoute: DrillsDrillIdRoute,
+}
+
+const DrillsRouteWithChildren =
+  DrillsRoute._addFileChildren(DrillsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DrillsRoute: DrillsRoute,
+  DrillsRoute: DrillsRouteWithChildren,
   ProfileRoute: ProfileRoute,
 }
 export const routeTree = rootRouteImport
