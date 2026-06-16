@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Search, Filter, Play, BarChart3, Clock, Users, Wrench, ChevronRight, Heart, Plus, X, CheckCircle2, ListChecks, Sparkles, Calendar as CalendarIcon } from "lucide-react";
+import { Search, Filter, Play, BarChart3, Clock, Users, Wrench, ChevronRight, Heart, Plus, X, CheckCircle2, ListChecks, Sparkles, Calendar as CalendarIcon, Folder as FolderIcon, FolderPlus, Check } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { CATEGORIES, DRILLS, type Category, type Drill } from "@/data/pxf";
 import { trainingCategories, TRAINING_CATEGORY_TO_DRILL_CATEGORIES, type TrainingCategory } from "@/data/trainingCategories";
@@ -69,6 +69,38 @@ function Drills() {
   });
   const [addDrill, setAddDrill] = useState<Drill | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkAdd, setBulkAdd] = useState(false);
+  const [bulkFolder, setBulkFolder] = useState(false);
+  const fav = useFavorites();
+
+  function toggleSelected(id: string) {
+    setSelected((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  }
+
+  function exitSelect() {
+    setSelectMode(false);
+    setSelected(new Set());
+  }
+
+  const selectedDrills = useMemo(
+    () => DRILLS.filter((d) => selected.has(d.id)),
+    [selected],
+  );
+
+  function saveSelectedToFavourites() {
+    let added = 0;
+    for (const id of selected) {
+      if (!fav.isFavorite(id)) { fav.toggle(id); added++; }
+    }
+    setToast(added === 0 ? "Already in Favourites" : `Saved ${added} to Favourites`);
+    exitSelect();
+  }
 
   useEffect(() => {
     if (!toast) return;
@@ -99,9 +131,17 @@ function Drills() {
 
   return (
     <div className="px-5 pt-4">
-      <div>
-        <p className="text-[11px] font-semibold tracking-[0.3em] text-muted-foreground">DRILL LIBRARY</p>
-        <h1 className="mt-1 text-3xl font-bold text-foreground">Drills</h1>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-semibold tracking-[0.3em] text-muted-foreground">DRILL LIBRARY</p>
+          <h1 className="mt-1 text-3xl font-bold text-foreground">Drills</h1>
+        </div>
+        <button
+          onClick={() => { if (selectMode) exitSelect(); else setSelectMode(true); }}
+          className={"mt-1 rounded-full border px-3 py-1.5 text-[11px] font-bold tracking-wider transition-colors " + (selectMode ? "border-teal bg-teal text-background" : "border-border/60 bg-surface text-foreground/80")}
+        >
+          {selectMode ? "DONE" : "SELECT"}
+        </button>
       </div>
 
       <div className="mt-4 flex items-center gap-2">
@@ -146,7 +186,16 @@ function Drills() {
                 <span className="text-[11px] font-semibold text-muted-foreground">{list.length} drills</span>
               </div>
               <div className="mt-3 space-y-3">
-                {list.map((d) => <DrillCard key={d.id} d={d} onAdd={() => setAddDrill(d)} />)}
+                {list.map((d) => (
+                  <DrillCard
+                    key={d.id}
+                    d={d}
+                    onAdd={() => setAddDrill(d)}
+                    selectMode={selectMode}
+                    selected={selected.has(d.id)}
+                    onToggleSelect={() => toggleSelected(d.id)}
+                  />
+                ))}
               </div>
             </section>
           );
@@ -158,9 +207,34 @@ function Drills() {
 
       {addDrill && (
         <AddToSessionModal
-          drill={addDrill}
+          drills={[addDrill]}
           onClose={() => setAddDrill(null)}
           onDone={(msg) => { setAddDrill(null); setToast(msg); }}
+        />
+      )}
+
+      {bulkAdd && selectedDrills.length > 0 && (
+        <AddToSessionModal
+          drills={selectedDrills}
+          onClose={() => setBulkAdd(false)}
+          onDone={(msg) => { setBulkAdd(false); exitSelect(); setToast(msg); }}
+        />
+      )}
+
+      {bulkFolder && selectedDrills.length > 0 && (
+        <SaveToFolderModal
+          drillIds={[...selected]}
+          onClose={() => setBulkFolder(false)}
+          onDone={(msg) => { setBulkFolder(false); exitSelect(); setToast(msg); }}
+        />
+      )}
+
+      {selectMode && (
+        <SelectionToolbar
+          count={selected.size}
+          onAddToSession={() => { if (selected.size) setBulkAdd(true); }}
+          onSaveToFolder={() => { if (selected.size) setBulkFolder(true); }}
+          onSaveToFavourites={() => { if (selected.size) saveSelectedToFavourites(); }}
         />
       )}
 
@@ -196,12 +270,52 @@ function FilterRow({ label, options, value, onChange }: { label: string; options
   );
 }
 
-function DrillCard({ d, onAdd }: { d: Drill; onAdd: () => void }) {
+function DrillCard({ d, onAdd, selectMode, selected, onToggleSelect }: { d: Drill; onAdd: () => void; selectMode: boolean; selected: boolean; onToggleSelect: () => void }) {
   const { isFavorite, toggle } = useFavorites();
   const fav = isFavorite(d.id);
+  const cardClass = "flex w-full items-center gap-3 rounded-2xl border bg-surface p-3 transition-colors " +
+    (selectMode
+      ? (selected ? "border-teal bg-teal/10 pr-3" : "border-border/60 pr-3 hover:border-teal/40")
+      : "border-border/60 pr-24 hover:border-teal/40");
+  const inner = (
+    <>
+      {selectMode && (
+        <div className={"grid h-6 w-6 shrink-0 place-items-center rounded-full border " + (selected ? "border-teal bg-teal text-background" : "border-border/60 bg-surface-2 text-muted-foreground")}>
+          {selected && <Check size={14} strokeWidth={3} />}
+        </div>
+      )}
+      <div className="relative grid h-20 w-24 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-surface-2 to-background">
+        <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "radial-gradient(circle at 30% 40%, #00E5D6 0, transparent 60%)" }} />
+        <div className="relative grid h-9 w-9 place-items-center rounded-full bg-gradient-brand text-primary-foreground shadow-glow-teal">
+          <Play size={14} fill="currentColor" />
+        </div>
+        <span className="absolute bottom-1 right-1 rounded-md bg-background/80 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-volt">L{d.level}</span>
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-semibold tracking-wider text-volt">{d.category.toUpperCase()}</p>
+        <h3 className="mt-0.5 truncate text-sm font-bold text-foreground">{d.name}</h3>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1"><BarChart3 size={11} /> {d.difficulty}</span>
+          <span className="flex items-center gap-1"><Users size={11} /> {d.ageGroup}</span>
+          <span className="flex items-center gap-1"><Clock size={11} /> {d.durationMin} min</span>
+          <span className="flex items-center gap-1"><Wrench size={11} /> {d.equipment.length} items</span>
+        </div>
+      </div>
+      {!selectMode && <ChevronRight size={16} className="text-muted-foreground" />}
+    </>
+  );
+
+  if (selectMode) {
+    return (
+      <button type="button" onClick={onToggleSelect} className={cardClass + " text-left"}>
+        {inner}
+      </button>
+    );
+  }
+
   return (
     <div className="relative">
-    <Link to="/drills/$drillId" params={{ drillId: d.id }} className="flex w-full items-center gap-3 rounded-2xl border border-border/60 bg-surface p-3 pr-24 transition-colors hover:border-teal/40">
+    <Link to="/drills/$drillId" params={{ drillId: d.id }} className={cardClass}>
       <div className="relative grid h-20 w-24 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-surface-2 to-background">
         <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "radial-gradient(circle at 30% 40%, #00E5D6 0, transparent 60%)" }} />
         <div className="relative grid h-9 w-9 place-items-center rounded-full bg-gradient-brand text-primary-foreground shadow-glow-teal">
@@ -239,17 +353,20 @@ function DrillCard({ d, onAdd }: { d: Drill; onAdd: () => void }) {
   );
 }
 
-function AddToSessionModal({ drill, onClose, onDone }: { drill: Drill; onClose: () => void; onDone: (msg: string) => void }) {
+function AddToSessionModal({ drills, onClose, onDone }: { drills: Drill[]; onClose: () => void; onDone: (msg: string) => void }) {
+  const primary = drills[0];
+  const multi = drills.length > 1;
+  const totalMins = drills.reduce((s, d) => s + d.durationMin, 0);
   const [mode, setMode] = useState<"choose" | "existing" | "new">("choose");
   const [sessions, setSessions] = useState<SavedSession[]>([]);
   const [picked, setPicked] = useState<Set<string>>(new Set());
 
   // new session fields
   const today = new Date().toISOString().slice(0, 10);
-  const [name, setName] = useState(`${drill.category} — ${new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" })}`);
+  const [name, setName] = useState(`${multi ? "Session" : primary.category} — ${new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" })}`);
   const [date, setDate] = useState(today);
-  const [age, setAge] = useState<string>(drill.ageGroup ?? "U13+");
-  const [duration, setDuration] = useState<number>(60);
+  const [age, setAge] = useState<string>(primary.ageGroup ?? "U13+");
+  const [duration, setDuration] = useState<number>(Math.max(60, Math.ceil(totalMins / 5) * 5));
 
   useEffect(() => { setSessions(readSessions()); }, []);
 
@@ -261,13 +378,15 @@ function AddToSessionModal({ drill, onClose, onDone }: { drill: Drill; onClose: 
     });
   }
 
+  const drillLabel = multi ? `${drills.length} drills` : "Drill";
+
   function addToExisting() {
     if (picked.size === 0) return;
     const next = sessions.map((s) =>
-      picked.has(s.id) ? { ...s, blocks: [...s.blocks, makeBlock(drill)] } : s,
+      picked.has(s.id) ? { ...s, blocks: [...s.blocks, ...drills.map(makeBlock)] } : s,
     );
     writeSessions(next);
-    onDone(picked.size === 1 ? "Drill Added To Session" : `Drill Added To ${picked.size} Sessions`);
+    onDone(`${drillLabel} Added To ${picked.size} Session${picked.size === 1 ? "" : "s"}`);
   }
 
   function createAndAdd() {
@@ -277,14 +396,14 @@ function AddToSessionModal({ drill, onClose, onDone }: { drill: Drill; onClose: 
       name: name.trim(),
       date,
       age,
-      level: drill.difficulty ?? "Intermediate",
+      level: primary.difficulty ?? "Intermediate",
       totalMins: duration,
       notes: "",
-      blocks: [makeBlock(drill)],
+      blocks: drills.map(makeBlock),
       completed: false,
     };
     writeSessions([fresh, ...sessions]);
-    onDone("Drill Added To Session");
+    onDone(multi ? `${drillLabel} Added To Session` : "Drill Added To Session");
   }
 
   return (
@@ -296,8 +415,8 @@ function AddToSessionModal({ drill, onClose, onDone }: { drill: Drill; onClose: 
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[10px] font-bold tracking-[0.3em] text-teal">ADD TO SESSION</p>
-            <h2 className="mt-1 text-lg font-bold text-foreground">{drill.name}</h2>
-            <p className="text-[11px] text-muted-foreground">{drill.category} · {drill.durationMin} min</p>
+            <h2 className="mt-1 text-lg font-bold text-foreground">{multi ? `${drills.length} drills selected` : primary.name}</h2>
+            <p className="text-[11px] text-muted-foreground">{multi ? `${totalMins} min total` : `${primary.category} · ${primary.durationMin} min`}</p>
           </div>
           <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full border border-border/60 bg-surface-2 text-muted-foreground">
             <X size={14} />
@@ -413,5 +532,142 @@ function Field({ label, icon, children }: { label: string; icon?: React.ReactNod
       <p className="flex items-center gap-1 text-[9px] font-bold tracking-[0.3em] text-muted-foreground">{icon}{label}</p>
       <div className="mt-1">{children}</div>
     </label>
+  );
+}
+
+function SelectionToolbar({ count, onAddToSession, onSaveToFolder, onSaveToFavourites }: {
+  count: number;
+  onAddToSession: () => void;
+  onSaveToFolder: () => void;
+  onSaveToFavourites: () => void;
+}) {
+  const disabled = count === 0;
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-surface/95 backdrop-blur">
+      <div className="mx-auto flex max-w-xl items-center gap-2 px-4 py-3">
+        <div className="mr-1 flex h-9 min-w-9 items-center justify-center rounded-full bg-teal px-2 text-[12px] font-bold text-background">
+          {count}
+        </div>
+        <ToolbarBtn label="Session" icon={<Plus size={14} />} onClick={onAddToSession} disabled={disabled} tint="volt" />
+        <ToolbarBtn label="Folder" icon={<FolderIcon size={14} />} onClick={onSaveToFolder} disabled={disabled} tint="teal" />
+        <ToolbarBtn label="Favourite" icon={<Heart size={14} />} onClick={onSaveToFavourites} disabled={disabled} tint="teal" />
+      </div>
+    </div>
+  );
+}
+
+function ToolbarBtn({ label, icon, onClick, disabled, tint }: { label: string; icon: React.ReactNode; onClick: () => void; disabled?: boolean; tint: "teal" | "volt" }) {
+  const tintClass = tint === "teal" ? "border-teal/40 bg-teal/10 text-teal" : "border-volt/40 bg-volt/10 text-volt";
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={"flex flex-1 items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-[12px] font-bold transition-opacity " + tintClass + (disabled ? " opacity-40" : "")}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+function SaveToFolderModal({ drillIds, onClose, onDone }: { drillIds: string[]; onClose: () => void; onDone: (msg: string) => void }) {
+  const { folders, createFolder, foldersForDrill, setDrillFolders, toggle, isFavorite } = useFavorites();
+  const [picked, setPicked] = useState<Set<string>>(() => {
+    // pre-pick folders that ALL selected drills already share
+    if (drillIds.length === 0) return new Set();
+    const first = new Set(foldersForDrill(drillIds[0]));
+    for (let i = 1; i < drillIds.length; i++) {
+      const cur = new Set(foldersForDrill(drillIds[i]));
+      for (const id of [...first]) if (!cur.has(id)) first.delete(id);
+    }
+    return first;
+  });
+  const [newName, setNewName] = useState("");
+
+  function togglePick(id: string) {
+    setPicked((s) => {
+      const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n;
+    });
+  }
+
+  function handleCreate() {
+    const f = createFolder(newName);
+    if (f) {
+      setPicked((s) => new Set([...s, f.id]));
+      setNewName("");
+    }
+  }
+
+  function save() {
+    const target = [...picked];
+    for (const id of drillIds) {
+      // ensure favourited so folder membership persists in Favourites screen
+      if (!isFavorite(id)) toggle(id);
+      const existing = foldersForDrill(id);
+      const merged = Array.from(new Set([...existing, ...target]));
+      setDrillFolders(id, merged);
+    }
+    onDone(target.length === 0 ? "Saved to Favourites" : `Saved ${drillIds.length} drill${drillIds.length === 1 ? "" : "s"} to ${target.length} folder${target.length === 1 ? "" : "s"}`);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm sm:items-center" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-t-3xl border border-border/60 bg-surface p-5 shadow-2xl sm:rounded-3xl">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold tracking-[0.3em] text-teal">SAVE TO FOLDER</p>
+            <h2 className="mt-1 text-lg font-bold text-foreground">{drillIds.length} drill{drillIds.length === 1 ? "" : "s"} selected</h2>
+            <p className="text-[11px] text-muted-foreground">Pick one or more folders</p>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full border border-border/60 bg-surface-2 text-muted-foreground">
+            <X size={14} />
+          </button>
+        </div>
+
+        <div className="mt-5 flex items-center gap-2 rounded-xl border border-border/60 bg-surface-2 px-3 py-2">
+          <FolderPlus size={14} className="text-muted-foreground" />
+          <input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
+            placeholder="New folder name…"
+            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+          />
+          <button
+            onClick={handleCreate}
+            disabled={!newName.trim()}
+            className="rounded-full bg-teal px-3 py-1 text-[11px] font-bold text-background disabled:opacity-40"
+          >Create</button>
+        </div>
+
+        <div className="mt-3 max-h-[40vh] space-y-2 overflow-y-auto pr-1">
+          {folders.length === 0 && (
+            <p className="py-6 text-center text-sm text-muted-foreground">No folders yet. Create one above.</p>
+          )}
+          {folders.map((f) => {
+            const a = picked.has(f.id);
+            return (
+              <button
+                key={f.id}
+                onClick={() => togglePick(f.id)}
+                className={"flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors " + (a ? "border-teal bg-teal/10" : "border-border/60 bg-surface-2 hover:border-teal/40")}
+              >
+                <div className={"grid h-8 w-8 place-items-center rounded-full border " + (a ? "border-teal bg-teal text-background" : "border-border/60 text-muted-foreground")}>
+                  {a ? <Check size={16} strokeWidth={3} /> : <FolderIcon size={14} />}
+                </div>
+                <p className="flex-1 truncate text-sm font-bold text-foreground">{f.name}</p>
+              </button>
+            );
+          })}
+        </div>
+
+        <button
+          onClick={save}
+          className="mt-4 w-full rounded-2xl bg-gradient-brand py-3 text-sm font-bold text-primary-foreground shadow-glow-teal"
+        >
+          Save
+        </button>
+      </div>
+    </div>
   );
 }
