@@ -86,7 +86,7 @@ function Drills() {
 
       {openFilters && (
         <div className="mt-3 space-y-3 rounded-2xl border border-border/60 bg-surface p-4">
-          <FilterRow label="Category" options={CATEGORIES.map((c) => c.name)} value={active.cat} onChange={(v) => setActive((s) => ({ ...s, cat: v }))} />
+          <FilterRow label="Category" options={trainingCategories.map((c) => c.name)} value={active.cat} onChange={(v) => setActive((s) => ({ ...s, cat: v as TrainingCategory | null }))} />
           <FilterRow label="Age" options={[...AGE_GROUPS]} value={active.age} onChange={(v) => setActive((s) => ({ ...s, age: v }))} />
           <FilterRow label="Skill Level" options={[...LEVELS]} value={active.level} onChange={(v) => setActive((s) => ({ ...s, level: v }))} />
           <FilterRow label="Equipment" options={[...EQUIP]} value={active.equip} onChange={(v) => setActive((s) => ({ ...s, equip: v }))} />
