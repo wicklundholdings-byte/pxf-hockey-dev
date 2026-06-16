@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Calendar as CalendarIcon, Clock, Disc3, Copy, Trash2, Pencil, CheckCircle2, Circle,
-  FileEdit, ArrowUpRight, ListChecks, Plus, Tag,
+  FileEdit, ArrowUpRight, ListChecks, Plus, Tag, CalendarDays,
 } from "lucide-react";
 import { DRILLS, type Drill, type Category } from "@/data/pxf";
 
@@ -143,6 +143,13 @@ function SavedSessions() {
           <Plus size={18} />
         </Link>
       </div>
+
+      <Link to="/calendar" className="mt-4 flex items-center justify-between rounded-2xl border border-teal/40 bg-teal/5 px-4 py-3">
+        <span className="flex items-center gap-2 text-sm font-bold text-teal">
+          <CalendarDays size={14} /> View on calendar
+        </span>
+        <ArrowUpRight size={14} className="text-teal" />
+      </Link>
 
       <div className="mt-5 grid grid-cols-3 gap-2">
         {tabs.map((t) => (

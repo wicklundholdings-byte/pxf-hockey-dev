@@ -19,6 +19,7 @@ import { Route as MembershipRouteImport } from './routes/membership'
 import { Route as GameiqRouteImport } from './routes/gameiq'
 import { Route as FavouritesRouteImport } from './routes/favourites'
 import { Route as DrillsRouteImport } from './routes/drills'
+import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DrillsDrillIdRouteImport } from './routes/drills.$drillId'
@@ -73,6 +74,11 @@ const DrillsRoute = DrillsRouteImport.update({
   path: '/drills',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AchievementsRoute = AchievementsRouteImport.update({
   id: '/achievements',
   path: '/achievements',
@@ -92,6 +98,7 @@ const DrillsDrillIdRoute = DrillsDrillIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
+  '/calendar': typeof CalendarRoute
   '/drills': typeof DrillsRouteWithChildren
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
+  '/calendar': typeof CalendarRoute
   '/drills': typeof DrillsRouteWithChildren
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
+  '/calendar': typeof CalendarRoute
   '/drills': typeof DrillsRouteWithChildren
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/achievements'
+    | '/calendar'
     | '/drills'
     | '/favourites'
     | '/gameiq'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/achievements'
+    | '/calendar'
     | '/drills'
     | '/favourites'
     | '/gameiq'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/achievements'
+    | '/calendar'
     | '/drills'
     | '/favourites'
     | '/gameiq'
@@ -186,6 +198,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AchievementsRoute: typeof AchievementsRoute
+  CalendarRoute: typeof CalendarRoute
   DrillsRoute: typeof DrillsRouteWithChildren
   FavouritesRoute: typeof FavouritesRoute
   GameiqRoute: typeof GameiqRoute
@@ -270,6 +283,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DrillsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/achievements': {
       id: '/achievements'
       path: '/achievements'
@@ -308,6 +328,7 @@ const DrillsRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AchievementsRoute: AchievementsRoute,
+  CalendarRoute: CalendarRoute,
   DrillsRoute: DrillsRouteWithChildren,
   FavouritesRoute: FavouritesRoute,
   GameiqRoute: GameiqRoute,
