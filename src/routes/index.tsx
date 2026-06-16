@@ -48,14 +48,30 @@ const ShootingIcon = ({ className, size }: { className?: string; size?: number }
   </svg>
 );
 
-const categories = [
-  { label: "Slip Circuits", icon: Layers, tint: "teal" as const, to: "/drills" as const },
-  { label: "GameIQ Circuits", icon: Brain, tint: "volt" as const, to: "/gameiq" as const },
-  { label: "Skating Flow", icon: SkateIcon, tint: "teal" as const, to: "/drills" as const },
-  { label: "Edge Control", icon: Activity, tint: "volt" as const, to: "/drills" as const },
-  { label: "Dryland Skills", icon: Zap, tint: "teal" as const, to: "/drills" as const },
-  { label: "Dryland Training", icon: Flame, tint: "volt" as const, to: "/drills" as const },
-];
+const categoryToRoute: Record<TrainingCategory, "/drills" | "/gameiq"> = {
+  "Slip Circuits": "/drills",
+  "GameIQ Circuits": "/gameiq",
+  "Skating Flow": "/drills",
+  "Edge Control": "/drills",
+  "Dryland Skills": "/drills",
+  "Dryland Training": "/drills",
+};
+
+const categoryIcon: Record<TrainingCategory, React.ComponentType<{ className?: string; size?: number }>> = {
+  "Slip Circuits": Layers,
+  "GameIQ Circuits": Brain,
+  "Skating Flow": SkateIcon,
+  "Edge Control": Activity,
+  "Dryland Skills": Zap,
+  "Dryland Training": Flame,
+};
+
+const categories = trainingCategories.map(({ name, tint }) => ({
+  label: name,
+  icon: categoryIcon[name],
+  tint,
+  to: categoryToRoute[name],
+}));
 
 const quickAccess = [
   { label: "Build Session", icon: Plus, to: "/sessions" as const },
