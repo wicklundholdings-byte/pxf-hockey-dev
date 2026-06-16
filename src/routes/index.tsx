@@ -14,6 +14,8 @@ import {
   Disc3,
   Crown,
 } from "lucide-react";
+import { trainingCategories, type TrainingCategory } from "@/data/trainingCategories";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
