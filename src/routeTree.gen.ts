@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TeamRouteImport } from './routes/team'
 import { Route as SessionsRouteImport } from './routes/sessions'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ProgramsRouteImport } from './routes/programs'
@@ -19,6 +20,11 @@ import { Route as DrillsRouteImport } from './routes/drills'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DrillsDrillIdRouteImport } from './routes/drills.$drillId'
 
+const TeamRoute = TeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SessionsRoute = SessionsRouteImport.update({
   id: '/sessions',
   path: '/sessions',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
   '/sessions': typeof SessionsRoute
+  '/team': typeof TeamRoute
   '/drills/$drillId': typeof DrillsDrillIdRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
   '/sessions': typeof SessionsRoute
+  '/team': typeof TeamRoute
   '/drills/$drillId': typeof DrillsDrillIdRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
   '/sessions': typeof SessionsRoute
+  '/team': typeof TeamRoute
   '/drills/$drillId': typeof DrillsDrillIdRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/programs'
     | '/progress'
     | '/sessions'
+    | '/team'
     | '/drills/$drillId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/programs'
     | '/progress'
     | '/sessions'
+    | '/team'
     | '/drills/$drillId'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/programs'
     | '/progress'
     | '/sessions'
+    | '/team'
     | '/drills/$drillId'
   fileRoutesById: FileRoutesById
 }
@@ -144,10 +156,18 @@ export interface RootRouteChildren {
   ProgramsRoute: typeof ProgramsRoute
   ProgressRoute: typeof ProgressRoute
   SessionsRoute: typeof SessionsRoute
+  TeamRoute: typeof TeamRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/team': {
+      id: '/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof TeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sessions': {
       id: '/sessions'
       path: '/sessions'
@@ -234,6 +254,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProgramsRoute: ProgramsRoute,
   ProgressRoute: ProgressRoute,
   SessionsRoute: SessionsRoute,
+  TeamRoute: TeamRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
