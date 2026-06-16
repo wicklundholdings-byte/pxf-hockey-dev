@@ -377,6 +377,125 @@ function Select({ value, options, onChange }: { value: string; options: string[]
   );
 }
 
+function SavedSessionsList({
+  saved, activeId, onLoad, onDelete, onDuplicate, onToggleComplete,
+}: {
+  saved: Session[];
+  activeId: string;
+  onLoad: (s: Session) => void;
+  onDelete: (id: string) => void;
+  onDuplicate: (s: Session) => void;
+  onToggleComplete: (id: string) => void;
+}) {
+  const sorted = useMemo(() => {
+    return [...saved].sort((a, b) => {
+      if (!!a.completed !== !!b.completed) return a.completed ? 1 : -1;
+      return b.date.localeCompare(a.date);
+    });
+  }, [saved]);
+
+  const active = sorted.filter((s) => !s.completed);
+  const done = sorted.filter((s) => s.completed);
+
+  return (
+    <div className="mt-8">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xs font-bold tracking-[0.25em] text-foreground/90">SAVED SESSIONS</h2>
+        <span className="text-[10px] text-muted-foreground">{active.length} active · {done.length} done</span>
+      </div>
+      {active.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {active.map((s) => (
+            <SavedSessionRow
+              key={s.id} s={s} isActive={s.id === activeId}
+              onLoad={() => onLoad(s)}
+              onDelete={() => onDelete(s.id)}
+              onDuplicate={() => onDuplicate(s)}
+              onToggleComplete={() => onToggleComplete(s.id)}
+            />
+          ))}
+        </div>
+      )}
+      {done.length > 0 && (
+        <>
+          <p className="mt-5 text-[10px] font-bold tracking-[0.3em] text-muted-foreground">COMPLETED</p>
+          <div className="mt-2 space-y-2">
+            {done.map((s) => (
+              <SavedSessionRow
+                key={s.id} s={s} isActive={s.id === activeId}
+                onLoad={() => onLoad(s)}
+                onDelete={() => onDelete(s.id)}
+                onDuplicate={() => onDuplicate(s)}
+                onToggleComplete={() => onToggleComplete(s.id)}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function SavedSessionRow({
+  s, isActive, onLoad, onDelete, onDuplicate, onToggleComplete,
+}: {
+  s: Session;
+  isActive: boolean;
+  onLoad: () => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
+  onToggleComplete: () => void;
+}) {
+  const total = s.blocks.reduce((t, b) => t + b.mins, 0);
+  return (
+    <div
+      className={
+        "rounded-2xl border bg-surface p-3 transition-colors " +
+        (s.completed ? "border-border/40 opacity-75 " : "border-border/60 ") +
+        (isActive ? "ring-2 ring-teal/40 " : "")
+      }
+    >
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onToggleComplete}
+          aria-label={s.completed ? "Mark incomplete" : "Mark complete"}
+          className={
+            "grid h-9 w-9 shrink-0 place-items-center rounded-full border transition-colors " +
+            (s.completed
+              ? "border-volt/60 bg-volt/15 text-volt"
+              : "border-border/60 bg-surface-2 text-muted-foreground hover:border-volt/40 hover:text-volt")
+          }
+        >
+          {s.completed ? <CheckCircle2 size={16} /> : <Circle size={16} />}
+        </button>
+        <button onClick={onLoad} className="min-w-0 flex-1 text-left">
+          <p className={"truncate text-sm font-bold " + (s.completed ? "text-muted-foreground line-through" : "text-foreground")}>
+            {s.name}
+          </p>
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1"><CalendarIcon size={10} /> {s.date}</span>
+            <span>·</span>
+            <span>{s.level}</span>
+            <span>·</span>
+            <span>{s.blocks.length} drills · {total}m</span>
+          </p>
+        </button>
+        <div className="flex items-center gap-1">
+          <button onClick={onLoad} aria-label="Edit" className="grid h-8 w-8 place-items-center rounded-lg border border-border/60 text-teal hover:bg-teal/10">
+            <Pencil size={13} />
+          </button>
+          <button onClick={onDuplicate} aria-label="Duplicate" className="grid h-8 w-8 place-items-center rounded-lg border border-border/60 text-volt hover:bg-volt/10">
+            <Copy size={13} />
+          </button>
+          <button onClick={onDelete} aria-label="Delete" className="grid h-8 w-8 place-items-center rounded-lg border border-border/60 text-muted-foreground hover:border-destructive/40 hover:text-destructive">
+            <Trash2 size={13} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SessionBlockCard({
   index, block, drill, expanded, dragging, isOver,
   onToggleExpand, onMins, onRemove,
