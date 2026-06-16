@@ -534,3 +534,140 @@ function Field({ label, icon, children }: { label: string; icon?: React.ReactNod
     </label>
   );
 }
+
+function SelectionToolbar({ count, onAddToSession, onSaveToFolder, onSaveToFavourites }: {
+  count: number;
+  onAddToSession: () => void;
+  onSaveToFolder: () => void;
+  onSaveToFavourites: () => void;
+}) {
+  const disabled = count === 0;
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-surface/95 backdrop-blur">
+      <div className="mx-auto flex max-w-xl items-center gap-2 px-4 py-3">
+        <div className="mr-1 flex h-9 min-w-9 items-center justify-center rounded-full bg-teal px-2 text-[12px] font-bold text-background">
+          {count}
+        </div>
+        <ToolbarBtn label="Session" icon={<Plus size={14} />} onClick={onAddToSession} disabled={disabled} tint="volt" />
+        <ToolbarBtn label="Folder" icon={<FolderIcon size={14} />} onClick={onSaveToFolder} disabled={disabled} tint="teal" />
+        <ToolbarBtn label="Favourite" icon={<Heart size={14} />} onClick={onSaveToFavourites} disabled={disabled} tint="teal" />
+      </div>
+    </div>
+  );
+}
+
+function ToolbarBtn({ label, icon, onClick, disabled, tint }: { label: string; icon: React.ReactNode; onClick: () => void; disabled?: boolean; tint: "teal" | "volt" }) {
+  const tintClass = tint === "teal" ? "border-teal/40 bg-teal/10 text-teal" : "border-volt/40 bg-volt/10 text-volt";
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={"flex flex-1 items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-[12px] font-bold transition-opacity " + tintClass + (disabled ? " opacity-40" : "")}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+function SaveToFolderModal({ drillIds, onClose, onDone }: { drillIds: string[]; onClose: () => void; onDone: (msg: string) => void }) {
+  const { folders, createFolder, foldersForDrill, setDrillFolders, toggle, isFavorite } = useFavorites();
+  const [picked, setPicked] = useState<Set<string>>(() => {
+    // pre-pick folders that ALL selected drills already share
+    if (drillIds.length === 0) return new Set();
+    const first = new Set(foldersForDrill(drillIds[0]));
+    for (let i = 1; i < drillIds.length; i++) {
+      const cur = new Set(foldersForDrill(drillIds[i]));
+      for (const id of [...first]) if (!cur.has(id)) first.delete(id);
+    }
+    return first;
+  });
+  const [newName, setNewName] = useState("");
+
+  function togglePick(id: string) {
+    setPicked((s) => {
+      const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n;
+    });
+  }
+
+  function handleCreate() {
+    const f = createFolder(newName);
+    if (f) {
+      setPicked((s) => new Set([...s, f.id]));
+      setNewName("");
+    }
+  }
+
+  function save() {
+    const target = [...picked];
+    for (const id of drillIds) {
+      // ensure favourited so folder membership persists in Favourites screen
+      if (!isFavorite(id)) toggle(id);
+      const existing = foldersForDrill(id);
+      const merged = Array.from(new Set([...existing, ...target]));
+      setDrillFolders(id, merged);
+    }
+    onDone(target.length === 0 ? "Saved to Favourites" : `Saved ${drillIds.length} drill${drillIds.length === 1 ? "" : "s"} to ${target.length} folder${target.length === 1 ? "" : "s"}`);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm sm:items-center" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-t-3xl border border-border/60 bg-surface p-5 shadow-2xl sm:rounded-3xl">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold tracking-[0.3em] text-teal">SAVE TO FOLDER</p>
+            <h2 className="mt-1 text-lg font-bold text-foreground">{drillIds.length} drill{drillIds.length === 1 ? "" : "s"} selected</h2>
+            <p className="text-[11px] text-muted-foreground">Pick one or more folders</p>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full border border-border/60 bg-surface-2 text-muted-foreground">
+            <X size={14} />
+          </button>
+        </div>
+
+        <div className="mt-5 flex items-center gap-2 rounded-xl border border-border/60 bg-surface-2 px-3 py-2">
+          <FolderPlus size={14} className="text-muted-foreground" />
+          <input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
+            placeholder="New folder name…"
+            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+          />
+          <button
+            onClick={handleCreate}
+            disabled={!newName.trim()}
+            className="rounded-full bg-teal px-3 py-1 text-[11px] font-bold text-background disabled:opacity-40"
+          >Create</button>
+        </div>
+
+        <div className="mt-3 max-h-[40vh] space-y-2 overflow-y-auto pr-1">
+          {folders.length === 0 && (
+            <p className="py-6 text-center text-sm text-muted-foreground">No folders yet. Create one above.</p>
+          )}
+          {folders.map((f) => {
+            const a = picked.has(f.id);
+            return (
+              <button
+                key={f.id}
+                onClick={() => togglePick(f.id)}
+                className={"flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors " + (a ? "border-teal bg-teal/10" : "border-border/60 bg-surface-2 hover:border-teal/40")}
+              >
+                <div className={"grid h-8 w-8 place-items-center rounded-full border " + (a ? "border-teal bg-teal text-background" : "border-border/60 text-muted-foreground")}>
+                  {a ? <Check size={16} strokeWidth={3} /> : <FolderIcon size={14} />}
+                </div>
+                <p className="flex-1 truncate text-sm font-bold text-foreground">{f.name}</p>
+              </button>
+            );
+          })}
+        </div>
+
+        <button
+          onClick={save}
+          className="mt-4 w-full rounded-2xl bg-gradient-brand py-3 text-sm font-bold text-primary-foreground shadow-glow-teal"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  );
+}
