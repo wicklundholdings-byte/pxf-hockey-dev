@@ -270,12 +270,52 @@ function FilterRow({ label, options, value, onChange }: { label: string; options
   );
 }
 
-function DrillCard({ d, onAdd }: { d: Drill; onAdd: () => void }) {
+function DrillCard({ d, onAdd, selectMode, selected, onToggleSelect }: { d: Drill; onAdd: () => void; selectMode: boolean; selected: boolean; onToggleSelect: () => void }) {
   const { isFavorite, toggle } = useFavorites();
   const fav = isFavorite(d.id);
+  const cardClass = "flex w-full items-center gap-3 rounded-2xl border bg-surface p-3 transition-colors " +
+    (selectMode
+      ? (selected ? "border-teal bg-teal/10 pr-3" : "border-border/60 pr-3 hover:border-teal/40")
+      : "border-border/60 pr-24 hover:border-teal/40");
+  const inner = (
+    <>
+      {selectMode && (
+        <div className={"grid h-6 w-6 shrink-0 place-items-center rounded-full border " + (selected ? "border-teal bg-teal text-background" : "border-border/60 bg-surface-2 text-muted-foreground")}>
+          {selected && <Check size={14} strokeWidth={3} />}
+        </div>
+      )}
+      <div className="relative grid h-20 w-24 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-surface-2 to-background">
+        <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "radial-gradient(circle at 30% 40%, #00E5D6 0, transparent 60%)" }} />
+        <div className="relative grid h-9 w-9 place-items-center rounded-full bg-gradient-brand text-primary-foreground shadow-glow-teal">
+          <Play size={14} fill="currentColor" />
+        </div>
+        <span className="absolute bottom-1 right-1 rounded-md bg-background/80 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-volt">L{d.level}</span>
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-semibold tracking-wider text-volt">{d.category.toUpperCase()}</p>
+        <h3 className="mt-0.5 truncate text-sm font-bold text-foreground">{d.name}</h3>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1"><BarChart3 size={11} /> {d.difficulty}</span>
+          <span className="flex items-center gap-1"><Users size={11} /> {d.ageGroup}</span>
+          <span className="flex items-center gap-1"><Clock size={11} /> {d.durationMin} min</span>
+          <span className="flex items-center gap-1"><Wrench size={11} /> {d.equipment.length} items</span>
+        </div>
+      </div>
+      {!selectMode && <ChevronRight size={16} className="text-muted-foreground" />}
+    </>
+  );
+
+  if (selectMode) {
+    return (
+      <button type="button" onClick={onToggleSelect} className={cardClass + " text-left"}>
+        {inner}
+      </button>
+    );
+  }
+
   return (
     <div className="relative">
-    <Link to="/drills/$drillId" params={{ drillId: d.id }} className="flex w-full items-center gap-3 rounded-2xl border border-border/60 bg-surface p-3 pr-24 transition-colors hover:border-teal/40">
+    <Link to="/drills/$drillId" params={{ drillId: d.id }} className={cardClass}>
       <div className="relative grid h-20 w-24 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-surface-2 to-background">
         <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "radial-gradient(circle at 30% 40%, #00E5D6 0, transparent 60%)" }} />
         <div className="relative grid h-9 w-9 place-items-center rounded-full bg-gradient-brand text-primary-foreground shadow-glow-teal">
