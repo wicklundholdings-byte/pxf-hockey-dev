@@ -57,7 +57,7 @@ const categoryToRoute: Record<TrainingCategory, "/drills" | "/gameiq"> = {
   "Dryland Training": "/drills",
 };
 
-const categoryIcon: Record<TrainingCategory, React.ComponentType<{ className?: string; size?: number }>> = {
+const categoryIcon: Record<TrainingCategory, React.ComponentType<{ className?: string; size?: number; strokeWidth?: number }>> = {
   "Slip Circuits": Layers,
   "GameIQ Circuits": Brain,
   "Skating Flow": SkateIcon,
