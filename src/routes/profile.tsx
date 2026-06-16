@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Settings, Shield, Bell, HelpCircle, LogOut, ChevronRight, Award, Users } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Settings, Shield, Bell, HelpCircle, LogOut, ChevronRight, Award, Users, Crown } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -59,16 +59,25 @@ function Profile() {
       <h2 className="mt-7 text-xs font-bold tracking-[0.25em] text-foreground/90">ACCOUNT</h2>
       <div className="mt-3 overflow-hidden rounded-2xl border border-border/60 bg-surface">
         {[
+          { label: "Membership", icon: Crown, to: "/membership" as const },
           { label: "My Team", icon: Users },
           { label: "Notifications", icon: Bell },
           { label: "Privacy & Data", icon: Shield },
           { label: "Help & Support", icon: HelpCircle },
         ].map((r) => (
-          <button key={r.label} className="flex w-full items-center gap-3 border-b border-border/60 px-4 py-3.5 last:border-b-0">
-            <r.icon size={16} className="text-teal" />
-            <span className="flex-1 text-left text-sm font-medium text-foreground">{r.label}</span>
-            <ChevronRight size={16} className="text-muted-foreground" />
-          </button>
+          (r as { to?: "/membership" }).to ? (
+            <Link key={r.label} to={(r as { to: "/membership" }).to} className="flex w-full items-center gap-3 border-b border-border/60 px-4 py-3.5 last:border-b-0">
+              <r.icon size={16} className="text-teal" />
+              <span className="flex-1 text-left text-sm font-medium text-foreground">{r.label}</span>
+              <ChevronRight size={16} className="text-muted-foreground" />
+            </Link>
+          ) : (
+            <button key={r.label} className="flex w-full items-center gap-3 border-b border-border/60 px-4 py-3.5 last:border-b-0">
+              <r.icon size={16} className="text-teal" />
+              <span className="flex-1 text-left text-sm font-medium text-foreground">{r.label}</span>
+              <ChevronRight size={16} className="text-muted-foreground" />
+            </button>
+          )
         ))}
       </div>
 

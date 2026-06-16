@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Flame, Trophy, TrendingUp, Activity } from "lucide-react";
+import { Flame, Trophy, Layers, Clock, Activity, Award } from "lucide-react";
 
 export const Route = createFileRoute("/progress")({
   head: () => ({
     meta: [
       { title: "Progress — PXF Hockey" },
-      { name: "description", content: "Track your development across skating, puck control, shooting and game IQ." },
+      { name: "description", content: "Track sessions, hours, streaks, skill ratings, and badges." },
       { property: "og:title", content: "Progress — PXF Hockey" },
       { property: "og:description", content: "Track your hockey development metrics over time." },
     ],
@@ -17,9 +17,20 @@ const skills = [
   { name: "Skating", value: 78 },
   { name: "Edges", value: 72 },
   { name: "Puck", value: 65 },
+  { name: "Passing", value: 60 },
   { name: "Shooting", value: 54 },
-  { name: "Game IQ", value: 60 },
   { name: "Reaction", value: 70 },
+];
+
+const weekly = [3, 5, 2, 6, 4, 7, 3];
+
+const badges = [
+  { name: "10 Day Streak", tint: "volt" as const },
+  { name: "Edge Master", tint: "teal" as const },
+  { name: "First Pathway", tint: "teal" as const },
+  { name: "Cue Hunter", tint: "volt" as const },
+  { name: "Snap Sniper", tint: "teal" as const },
+  { name: "Squad Builder", tint: "volt" as const },
 ];
 
 function Progress() {
@@ -31,40 +42,66 @@ function Progress() {
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
-        <StatCard icon={Flame} label="Day Streak" value="12" tint="volt" />
         <StatCard icon={Activity} label="Sessions" value="46" tint="teal" />
-        <StatCard icon={Trophy} label="Drills Done" value="312" tint="teal" />
-        <StatCard icon={TrendingUp} label="PXF Score" value="784" tint="volt" />
+        <StatCard icon={Clock} label="Training Hrs" value="38" tint="volt" />
+        <StatCard icon={Layers} label="Pathways" value="2" tint="teal" />
+        <StatCard icon={Flame} label="Day Streak" value="12" tint="volt" />
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-3xl border border-border/60 bg-surface p-5">
+      <div className="mt-6 rounded-3xl border border-border/60 bg-surface p-5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold tracking-[0.3em] text-volt">SKILL MAP</p>
-            <h2 className="mt-1 text-lg font-bold text-foreground">Development Index</h2>
+            <p className="text-[10px] font-bold tracking-[0.3em] text-volt">THIS WEEK</p>
+            <h2 className="mt-1 text-lg font-bold text-foreground">Training Load</h2>
           </div>
-          <span className="rounded-full bg-teal/15 px-2.5 py-1 text-[10px] font-semibold tracking-wider text-teal">
-            +12% MO
-          </span>
+          <span className="rounded-full bg-teal/15 px-2.5 py-1 text-[10px] font-semibold tracking-wider text-teal">+12% MO</span>
         </div>
-        <div className="mt-4 grid place-items-center">
-          <RadarChart skills={skills} />
+        <div className="mt-4 flex h-32 items-end justify-between gap-2">
+          {weekly.map((v, i) => (
+            <div key={i} className="flex flex-1 flex-col items-center gap-1">
+              <div className="flex h-full w-full items-end">
+                <div className="w-full rounded-md bg-gradient-brand" style={{ height: `${(v / 8) * 100}%` }} />
+              </div>
+              <span className="text-[9px] tracking-widest text-muted-foreground">{["M","T","W","T","F","S","S"][i]}</span>
+            </div>
+          ))}
         </div>
       </div>
 
-      <h2 className="mt-7 text-xs font-bold tracking-[0.25em] text-foreground/90">SKILL BREAKDOWN</h2>
-      <div className="mt-3 space-y-3">
+      <h2 className="mt-7 text-xs font-bold tracking-[0.25em] text-foreground/90">SKILL RATINGS</h2>
+      <div className="mt-3 grid grid-cols-2 gap-3">
         {skills.map((s) => (
-          <div key={s.name} className="rounded-2xl border border-border/60 bg-surface p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-foreground">{s.name}</span>
-              <span className="text-xs font-bold text-teal">{s.value}</span>
-            </div>
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
-              <div className="h-full rounded-full bg-gradient-brand" style={{ width: `${s.value}%` }} />
+          <div key={s.name} className="flex items-center gap-3 rounded-2xl border border-border/60 bg-surface p-3">
+            <Ring value={s.value} />
+            <div>
+              <p className="text-[10px] tracking-wider text-muted-foreground">{s.name.toUpperCase()}</p>
+              <p className="font-display text-lg font-bold text-foreground">{s.value}</p>
             </div>
           </div>
         ))}
+      </div>
+
+      <h2 className="mt-7 text-xs font-bold tracking-[0.25em] text-foreground/90">BADGES EARNED</h2>
+      <div className="mt-3 grid grid-cols-3 gap-3">
+        {badges.map((b) => (
+          <div key={b.name} className="flex flex-col items-center gap-2 rounded-2xl border border-border/60 bg-surface p-3 text-center">
+            <div className={"grid h-12 w-12 place-items-center rounded-full " + (b.tint === "teal" ? "bg-teal/15 text-teal" : "bg-volt/15 text-volt")}>
+              <Award size={20} />
+            </div>
+            <span className="text-[10px] font-semibold leading-tight text-foreground">{b.name}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-7 mb-6 flex items-center justify-between rounded-2xl border border-border/60 bg-surface px-4 py-4">
+        <div className="flex items-center gap-3">
+          <Trophy size={22} className="text-volt" />
+          <div>
+            <p className="text-sm font-bold text-foreground">PXF Score</p>
+            <p className="text-[11px] text-muted-foreground">Combined index across all skills.</p>
+          </div>
+        </div>
+        <span className="font-display text-3xl font-bold text-gradient-brand">784</span>
       </div>
     </div>
   );
@@ -80,63 +117,23 @@ function StatCard({ icon: Icon, label, value, tint }: { icon: typeof Flame; labe
   );
 }
 
-function RadarChart({ skills }: { skills: { name: string; value: number }[] }) {
-  const size = 240;
-  const cx = size / 2;
-  const cy = size / 2;
-  const radius = 88;
-  const n = skills.length;
-  const angle = (i: number) => (Math.PI * 2 * i) / n - Math.PI / 2;
-  const point = (i: number, v: number) => {
-    const r = (radius * v) / 100;
-    return [cx + Math.cos(angle(i)) * r, cy + Math.sin(angle(i)) * r] as const;
-  };
-  const path =
-    skills
-      .map((s, i) => {
-        const [x, y] = point(i, s.value);
-        return `${i === 0 ? "M" : "L"}${x},${y}`;
-      })
-      .join(" ") + " Z";
-
+function Ring({ value }: { value: number }) {
+  const size = 52;
+  const r = 22;
+  const c = 2 * Math.PI * r;
+  const off = c - (value / 100) * c;
   return (
-    <svg viewBox={`0 0 ${size} ${size}`} className="w-full max-w-[260px]">
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       <defs>
-        <linearGradient id="radarFill" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#00E5D6" stopOpacity="0.55" />
-          <stop offset="1" stopColor="#39FF14" stopOpacity="0.55" />
+        <linearGradient id="ringG" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#00E5D6" />
+          <stop offset="1" stopColor="#39FF14" />
         </linearGradient>
       </defs>
-      {[0.25, 0.5, 0.75, 1].map((f) => (
-        <polygon
-          key={f}
-          points={skills.map((_, i) => point(i, f * 100).join(",")).join(" ")}
-          fill="none"
-          stroke="rgba(255,255,255,0.07)"
-        />
-      ))}
-      {skills.map((_, i) => {
-        const [x, y] = point(i, 100);
-        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(255,255,255,0.06)" />;
-      })}
-      <path d={path} fill="url(#radarFill)" stroke="#00E5D6" strokeWidth="1.5" />
-      {skills.map((s, i) => {
-        const [lx, ly] = point(i, 118);
-        return (
-          <text
-            key={s.name}
-            x={lx}
-            y={ly}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fontSize="9"
-            fill="rgba(255,255,255,0.6)"
-            style={{ letterSpacing: "0.12em" }}
-          >
-            {s.name.toUpperCase()}
-          </text>
-        );
-      })}
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="url(#ringG)" strokeWidth="4" strokeLinecap="round"
+        strokeDasharray={c} strokeDashoffset={off}
+        transform={`rotate(-90 ${size / 2} ${size / 2})`} />
     </svg>
   );
 }
