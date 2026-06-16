@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Settings, Shield, Bell, HelpCircle, LogOut, ChevronRight, Award, Users, Crown } from "lucide-react";
+import { Settings, Shield, Bell, HelpCircle, LogOut, ChevronRight, Award, Users, Crown, Heart } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -61,12 +61,13 @@ function Profile() {
         {[
           { label: "Membership", icon: Crown, to: "/membership" as const },
           { label: "My Team", icon: Users, to: "/team" as const },
+          { label: "Favourites", icon: Heart, to: "/favourites" as const },
           { label: "Notifications", icon: Bell },
           { label: "Privacy & Data", icon: Shield },
           { label: "Help & Support", icon: HelpCircle },
         ].map((r) => (
           (r as { to?: string }).to ? (
-            <Link key={r.label} to={(r as { to: "/membership" | "/team" }).to} className="flex w-full items-center gap-3 border-b border-border/60 px-4 py-3.5 last:border-b-0">
+            <Link key={r.label} to={(r as { to: "/membership" | "/team" | "/favourites" }).to} className="flex w-full items-center gap-3 border-b border-border/60 px-4 py-3.5 last:border-b-0">
               <r.icon size={16} className="text-teal" />
               <span className="flex-1 text-left text-sm font-medium text-foreground">{r.label}</span>
               <ChevronRight size={16} className="text-muted-foreground" />
