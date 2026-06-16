@@ -25,15 +25,14 @@ const SkateIcon = ({ className, size }: { className?: string; size?: number }) =
     strokeLinejoin="round"
     className={className}
   >
-    <path d="M8 4v5c0 1.5 1 2 2 2h4c1 0 2-.5 2-2V4" />
-    <path d="M7 11h10c1.5 0 2.5 1 2.5 2.5v2c0 1.5-1 2.5-2.5 2.5H7c-1.5 0-2.5-1-2.5-2.5v-2C4.5 12 5.5 11 7 11Z" />
-    <path d="M8 9h8" />
-    <path d="M9 6h1" />
-    <path d="M11 6h1" />
-    <path d="M13 6h1" />
-    <path d="M6 18h12" />
-    <path d="M7 20v2" />
-    <path d="M17 20v2" />
+    <path d="M10 4v5.5c0 .8.5 1.5 1.2 1.8l.8.2h2c.8 0 1.5-.3 2-.8" />
+    <path d="M9 4h6" />
+    <path d="M14 4v4.5c0 2.5 2 3.5 3 4.5.5.5.7 1.2.7 2v2.3c0 1.3-1 2.2-2.2 2.2H8.5c-1.2 0-2.2-.9-2.2-2.2V15c0-.8.3-1.5.8-2 1-.9 2.7-1.7 2.7-4.5V4" />
+    <path d="M9.5 8.5l3 2" />
+    <path d="M9.5 11l3 2" />
+    <path d="M10 13.5l2 1.5" />
+    <path d="M7 18.5h10" />
+    <path d="M8 18.5c.5 1.5 1.5 2.5 4 2.5s3.5-1 4-2.5" />
   </svg>
 );
 
