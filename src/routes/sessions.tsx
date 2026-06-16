@@ -76,7 +76,13 @@ function Sessions() {
           window.localStorage.removeItem("pxf:sessions:load");
           const target = list.find((s) => s.id === loadId);
           if (target) setSession(target);
+          return;
         }
+      }
+      const newDate = window.localStorage.getItem("pxf:sessions:new-date");
+      if (newDate) {
+        window.localStorage.removeItem("pxf:sessions:new-date");
+        setSession((s) => ({ ...s, date: newDate }));
       }
     } catch { /* ignore */ }
   }, []);
