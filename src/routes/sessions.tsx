@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, GripVertical, Trash2, Save, Clock, Users, Disc3, X, Search, Heart, Folder, BookOpen, Wrench, ListChecks, Calendar as CalendarIcon, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, GripVertical, Trash2, Save, Clock, Users, Disc3, X, Search, Heart, Folder, BookOpen, Wrench, ListChecks, Calendar as CalendarIcon, ChevronDown, ChevronUp, Copy, CheckCircle2, Pencil, Circle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { DRILLS, type Drill } from "@/data/pxf";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -34,6 +34,8 @@ type Session = {
   totalMins: number;
   notes: string;
   blocks: SessionBlock[];
+  completed?: boolean;
+  completedAt?: string;
 };
 
 const SESSIONS_KEY = "pxf:sessions:v2";
@@ -48,6 +50,7 @@ function newSession(): Session {
     totalMins: 60,
     notes: "",
     blocks: [],
+    completed: false,
   };
 }
 
@@ -59,6 +62,7 @@ function Sessions() {
   const [expandedUid, setExpandedUid] = useState<string | null>(null);
 
   const [saved, setSaved] = useState<Session[]>([]);
+  const isEditingSaved = useMemo(() => saved.some((s) => s.id === session.id), [saved, session.id]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -125,6 +129,58 @@ function Sessions() {
 
   function deleteSaved(id: string) {
     persist(saved.filter((s) => s.id !== id));
+    if (session.id === id) setSession(newSession());
+  }
+
+  function duplicateSession(s: Session) {
+    const copy: Session = {
+      ...s,
+      id: `s-${Date.now()}`,
+      name: `${s.name} (Copy)`,
+      date: new Date().toISOString().slice(0, 10),
+      completed: false,
+      completedAt: undefined,
+      blocks: s.blocks.map((b) => ({ ...b, uid: `b-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` })),
+    };
+    persist([copy, ...saved].slice(0, 20));
+    setSession(copy);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function toggleComplete(id: string) {
+    const next = saved.map((s) =>
+      s.id === id
+        ? { ...s, completed: !s.completed, completedAt: !s.completed ? new Date().toISOString() : undefined }
+        : s
+    );
+    persist(next);
+    if (session.id === id) {
+      const updated = next.find((s) => s.id === id);
+      if (updated) setSession(updated);
+    }
+  }
+
+  function toggleCurrentComplete() {
+    if (!isEditingSaved) {
+      saveSession();
+    }
+    setSession((s) => ({
+      ...s,
+      completed: !s.completed,
+      completedAt: !s.completed ? new Date().toISOString() : undefined,
+    }));
+    // Persist the toggle to saved as well
+    setTimeout(() => {
+      setSaved((prev) => {
+        const idx = prev.findIndex((p) => p.id === session.id);
+        if (idx < 0) return prev;
+        const cur = prev[idx];
+        const updated = { ...cur, completed: !cur.completed, completedAt: !cur.completed ? new Date().toISOString() : undefined };
+        const next = prev.map((p, i) => (i === idx ? updated : p));
+        if (typeof window !== "undefined") window.localStorage.setItem(SESSIONS_KEY, JSON.stringify(next));
+        return next;
+      });
+    }, 0);
   }
 
   return (
@@ -133,6 +189,11 @@ function Sessions() {
         <div>
           <p className="text-[11px] font-semibold tracking-[0.3em] text-muted-foreground">SESSION BUILDER</p>
           <h1 className="mt-1 text-3xl font-bold text-foreground">Build a Session</h1>
+          {isEditingSaved && (
+            <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold tracking-wider text-teal">
+              <Pencil size={10} /> EDITING SAVED SESSION
+            </p>
+          )}
         </div>
         <button onClick={() => setSession(newSession())} className="rounded-full border border-border/60 bg-surface px-3 py-1.5 text-[11px] font-bold text-muted-foreground">
           NEW
@@ -185,16 +246,43 @@ function Sessions() {
         </div>
       </div>
 
-      <div className="mt-5 flex items-center justify-between rounded-2xl border border-teal/30 bg-surface px-4 py-3 shadow-glow-teal">
-        <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
-          <span className={"flex items-center gap-1 " + (totalMins > session.totalMins ? "text-destructive" : "")}>
-            <Clock size={12} className="text-teal" /> {totalMins} / {session.totalMins} min
-          </span>
-          <span className="flex items-center gap-1"><Disc3 size={12} className="text-teal" /> {session.blocks.length} drills</span>
+      <div className="mt-5 rounded-2xl border border-teal/30 bg-surface px-4 py-3 shadow-glow-teal">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
+            <span className={"flex items-center gap-1 " + (totalMins > session.totalMins ? "text-destructive" : "")}>
+              <Clock size={12} className="text-teal" /> {totalMins} / {session.totalMins} min
+            </span>
+            <span className="flex items-center gap-1"><Disc3 size={12} className="text-teal" /> {session.blocks.length} drills</span>
+            {session.completed && (
+              <span className="flex items-center gap-1 text-volt"><CheckCircle2 size={12} /> COMPLETED</span>
+            )}
+          </div>
+          <button onClick={saveSession} className="flex items-center gap-1 rounded-lg bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-primary-foreground shadow-glow-teal">
+            <Save size={12} /> {isEditingSaved ? "UPDATE" : "SAVE"}
+          </button>
         </div>
-        <button onClick={saveSession} className="flex items-center gap-1 rounded-lg border border-volt/40 bg-volt/10 px-3 py-1.5 text-[11px] font-bold text-volt">
-          <Save size={12} /> SAVE
-        </button>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button
+            onClick={toggleCurrentComplete}
+            disabled={session.blocks.length === 0 && !isEditingSaved}
+            className={
+              "flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-bold transition-colors disabled:opacity-40 " +
+              (session.completed
+                ? "border-volt/60 bg-volt/15 text-volt"
+                : "border-volt/40 bg-surface-2 text-foreground/80 hover:border-volt/60 hover:text-volt")
+            }
+          >
+            {session.completed ? <CheckCircle2 size={12} /> : <Circle size={12} />}
+            {session.completed ? "MARK INCOMPLETE" : "MARK COMPLETE"}
+          </button>
+          <button
+            onClick={() => duplicateSession({ ...session, totalMins })}
+            disabled={session.blocks.length === 0}
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-teal/40 bg-surface-2 px-3 py-2 text-[11px] font-bold text-teal disabled:opacity-40 hover:bg-teal/10"
+          >
+            <Copy size={12} /> DUPLICATE
+          </button>
+        </div>
       </div>
 
       <div className="mt-5">
@@ -245,22 +333,14 @@ function Sessions() {
       </div>
 
       {saved.length > 0 && (
-        <>
-          <h2 className="mt-8 text-xs font-bold tracking-[0.25em] text-foreground/90">SAVED SESSIONS</h2>
-          <div className="mt-3 space-y-2">
-            {saved.map((s) => (
-              <div key={s.id} className="flex items-center justify-between rounded-xl border border-border/60 bg-surface px-3 py-2.5">
-                <button onClick={() => loadSession(s)} className="min-w-0 flex-1 text-left">
-                  <p className="truncate text-sm font-semibold text-foreground">{s.name}</p>
-                  <p className="text-[11px] text-muted-foreground">{s.date} · {s.level} · {s.blocks.length} drills · {s.blocks.reduce((t, b) => t + b.mins, 0)} min</p>
-                </button>
-                <button onClick={() => deleteSaved(s.id)} className="ml-2 text-muted-foreground" aria-label="Delete">
-                  <X size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-        </>
+        <SavedSessionsList
+          saved={saved}
+          activeId={session.id}
+          onLoad={loadSession}
+          onDelete={deleteSaved}
+          onDuplicate={duplicateSession}
+          onToggleComplete={toggleComplete}
+        />
       )}
 
       {pickerOpen && (
