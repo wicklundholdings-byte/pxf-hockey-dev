@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Search, Filter, Play, BarChart3, Clock, Users, Wrench, ChevronRight, Heart, Plus, X, CheckCircle2, ListChecks, Sparkles, Calendar as CalendarIcon } from "lucide-react";
+import { Search, Filter, Play, BarChart3, Clock, Users, Wrench, ChevronRight, Heart, Plus, X, CheckCircle2, ListChecks, Sparkles, Calendar as CalendarIcon, Folder as FolderIcon, FolderPlus, Check } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { CATEGORIES, DRILLS, type Category, type Drill } from "@/data/pxf";
 import { trainingCategories, TRAINING_CATEGORY_TO_DRILL_CATEGORIES, type TrainingCategory } from "@/data/trainingCategories";
@@ -69,6 +69,38 @@ function Drills() {
   });
   const [addDrill, setAddDrill] = useState<Drill | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkAdd, setBulkAdd] = useState(false);
+  const [bulkFolder, setBulkFolder] = useState(false);
+  const fav = useFavorites();
+
+  function toggleSelected(id: string) {
+    setSelected((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  }
+
+  function exitSelect() {
+    setSelectMode(false);
+    setSelected(new Set());
+  }
+
+  const selectedDrills = useMemo(
+    () => DRILLS.filter((d) => selected.has(d.id)),
+    [selected],
+  );
+
+  function saveSelectedToFavourites() {
+    let added = 0;
+    for (const id of selected) {
+      if (!fav.isFavorite(id)) { fav.toggle(id); added++; }
+    }
+    setToast(added === 0 ? "Already in Favourites" : `Saved ${added} to Favourites`);
+    exitSelect();
+  }
 
   useEffect(() => {
     if (!toast) return;
@@ -99,9 +131,17 @@ function Drills() {
 
   return (
     <div className="px-5 pt-4">
-      <div>
-        <p className="text-[11px] font-semibold tracking-[0.3em] text-muted-foreground">DRILL LIBRARY</p>
-        <h1 className="mt-1 text-3xl font-bold text-foreground">Drills</h1>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-semibold tracking-[0.3em] text-muted-foreground">DRILL LIBRARY</p>
+          <h1 className="mt-1 text-3xl font-bold text-foreground">Drills</h1>
+        </div>
+        <button
+          onClick={() => { if (selectMode) exitSelect(); else setSelectMode(true); }}
+          className={"mt-1 rounded-full border px-3 py-1.5 text-[11px] font-bold tracking-wider transition-colors " + (selectMode ? "border-teal bg-teal text-background" : "border-border/60 bg-surface text-foreground/80")}
+        >
+          {selectMode ? "DONE" : "SELECT"}
+        </button>
       </div>
 
       <div className="mt-4 flex items-center gap-2">
@@ -146,7 +186,16 @@ function Drills() {
                 <span className="text-[11px] font-semibold text-muted-foreground">{list.length} drills</span>
               </div>
               <div className="mt-3 space-y-3">
-                {list.map((d) => <DrillCard key={d.id} d={d} onAdd={() => setAddDrill(d)} />)}
+                {list.map((d) => (
+                  <DrillCard
+                    key={d.id}
+                    d={d}
+                    onAdd={() => setAddDrill(d)}
+                    selectMode={selectMode}
+                    selected={selected.has(d.id)}
+                    onToggleSelect={() => toggleSelected(d.id)}
+                  />
+                ))}
               </div>
             </section>
           );
@@ -158,9 +207,34 @@ function Drills() {
 
       {addDrill && (
         <AddToSessionModal
-          drill={addDrill}
+          drills={[addDrill]}
           onClose={() => setAddDrill(null)}
           onDone={(msg) => { setAddDrill(null); setToast(msg); }}
+        />
+      )}
+
+      {bulkAdd && selectedDrills.length > 0 && (
+        <AddToSessionModal
+          drills={selectedDrills}
+          onClose={() => setBulkAdd(false)}
+          onDone={(msg) => { setBulkAdd(false); exitSelect(); setToast(msg); }}
+        />
+      )}
+
+      {bulkFolder && selectedDrills.length > 0 && (
+        <SaveToFolderModal
+          drillIds={[...selected]}
+          onClose={() => setBulkFolder(false)}
+          onDone={(msg) => { setBulkFolder(false); exitSelect(); setToast(msg); }}
+        />
+      )}
+
+      {selectMode && (
+        <SelectionToolbar
+          count={selected.size}
+          onAddToSession={() => { if (selected.size) setBulkAdd(true); }}
+          onSaveToFolder={() => { if (selected.size) setBulkFolder(true); }}
+          onSaveToFavourites={() => { if (selected.size) saveSelectedToFavourites(); }}
         />
       )}
 
