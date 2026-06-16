@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Flame, ChevronRight, Play, Snowflake, Target, Brain, Zap, Activity, Dumbbell, Clock, ArrowRight } from "lucide-react";
+import { Flame, ChevronRight, Play, Snowflake, Target, Brain, Zap, Activity, Dumbbell, Disc3, Clock, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
