@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SessionsRouteImport } from './routes/sessions'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ProgramsRouteImport } from './routes/programs'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as DrillsRouteImport } from './routes/drills'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -30,6 +31,11 @@ const ProgramsRoute = ProgramsRouteImport.update({
   path: '/programs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DrillsRoute = DrillsRouteImport.update({
   id: '/drills',
   path: '/drills',
@@ -44,6 +50,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/drills': typeof DrillsRoute
+  '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
   '/sessions': typeof SessionsRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/drills': typeof DrillsRoute
+  '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
   '/sessions': typeof SessionsRoute
@@ -59,21 +67,36 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/drills': typeof DrillsRoute
+  '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
   '/sessions': typeof SessionsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/drills' | '/programs' | '/progress' | '/sessions'
+  fullPaths:
+    | '/'
+    | '/drills'
+    | '/profile'
+    | '/programs'
+    | '/progress'
+    | '/sessions'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/drills' | '/programs' | '/progress' | '/sessions'
-  id: '__root__' | '/' | '/drills' | '/programs' | '/progress' | '/sessions'
+  to: '/' | '/drills' | '/profile' | '/programs' | '/progress' | '/sessions'
+  id:
+    | '__root__'
+    | '/'
+    | '/drills'
+    | '/profile'
+    | '/programs'
+    | '/progress'
+    | '/sessions'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DrillsRoute: typeof DrillsRoute
+  ProfileRoute: typeof ProfileRoute
   ProgramsRoute: typeof ProgramsRoute
   ProgressRoute: typeof ProgressRoute
   SessionsRoute: typeof SessionsRoute
@@ -102,6 +125,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProgramsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/drills': {
       id: '/drills'
       path: '/drills'
@@ -122,6 +152,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DrillsRoute: DrillsRoute,
+  ProfileRoute: ProfileRoute,
   ProgramsRoute: ProgramsRoute,
   ProgressRoute: ProgressRoute,
   SessionsRoute: SessionsRoute,
