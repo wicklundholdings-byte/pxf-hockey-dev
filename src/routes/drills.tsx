@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Search, Filter, Play, BarChart3, Clock, Users, Wrench, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { CATEGORIES, DRILLS, type Category, type Drill } from "@/data/pxf";
+import { trainingCategories, TRAINING_CATEGORY_TO_DRILL_CATEGORIES, type TrainingCategory } from "@/data/trainingCategories";
 
 export const Route = createFileRoute("/drills")({
   head: () => ({
