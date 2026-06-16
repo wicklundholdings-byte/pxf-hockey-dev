@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Flame, ChevronRight, Play, Snowflake, Compass, Disc3, Target, Brain, Zap, Clock, ArrowRight } from "lucide-react";
+import { Flame, ChevronRight, Play, Snowflake, Target, Brain, Zap, Activity, Dumbbell, Disc3, Clock, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -14,12 +14,12 @@ export const Route = createFileRoute("/")({
 });
 
 const categories = [
-  { label: "Skating Flow", icon: Snowflake, color: "teal" as const },
-  { label: "Edge Control", icon: Compass, color: "volt" as const },
-  { label: "Puck Control", icon: Disc3, color: "teal" as const },
+  { label: "Slip Circuits", icon: Zap, color: "teal" as const },
+  { label: "GameIQ PODS", icon: Brain, color: "volt" as const },
+  { label: "Skating", icon: Snowflake, color: "teal" as const },
   { label: "Shooting", icon: Target, color: "volt" as const },
-  { label: "Game IQ", icon: Brain, color: "teal" as const },
-  { label: "Circuits", icon: Zap, color: "volt" as const },
+  { label: "Dryland Skills", icon: Activity, color: "teal" as const },
+  { label: "Dryland Fitness", icon: Dumbbell, color: "volt" as const },
 ];
 
 function Home() {
