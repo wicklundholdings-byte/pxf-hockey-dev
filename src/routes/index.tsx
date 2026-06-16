@@ -29,8 +29,8 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const SkateIcon = ({ className, size }: { className?: string; size?: number }) => (
-  <svg width={size ?? 24} height={size ?? 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className={className}>
+const SkateIcon = ({ className, size, strokeWidth }: { className?: string; size?: number; strokeWidth?: number }) => (
+  <svg width={size ?? 24} height={size ?? 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth ?? 1.5} strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M9 3v5.5c0 1.5.8 2.5 2 3l1 .5" />
     <path d="M9 3h6" />
     <path d="M15 3v5.5c0 2.5 1.5 3.5 2.5 4.5.8.8 1.2 1.8 1.2 3v1.5c0 1.5-1.2 2.5-2.5 2.5H8.8c-1.3 0-2.5-1-2.5-2.5V17c0-1.2.4-2.2 1.2-3 1-1 2.5-2 2.5-4.5V3" />
