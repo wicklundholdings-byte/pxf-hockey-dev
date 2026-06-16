@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Search, Filter, Play, BarChart3, Clock, Users, Wrench, ChevronRight, Heart } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Search, Filter, Play, BarChart3, Clock, Users, Wrench, ChevronRight, Heart, Plus, X, CheckCircle2, ListChecks, Sparkles, Calendar as CalendarIcon } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { CATEGORIES, DRILLS, type Category, type Drill } from "@/data/pxf";
 import { trainingCategories, TRAINING_CATEGORY_TO_DRILL_CATEGORIES, type TrainingCategory } from "@/data/trainingCategories";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -21,6 +21,37 @@ const AGE_GROUPS = ["U9+", "U11+", "U13+", "U15+"] as const;
 const LEVELS = ["Beginner", "Intermediate", "Advanced", "Elite"] as const;
 const EQUIP = ["Cones", "Pucks", "Net", "PODs", "Partner"] as const;
 
+const SESSIONS_KEY = "pxf:sessions:v2";
+
+type SessionBlock = { uid: string; drillId: string; mins: number };
+type SavedSession = {
+  id: string;
+  name: string;
+  date: string;
+  age: string;
+  level: string;
+  totalMins: number;
+  notes: string;
+  blocks: SessionBlock[];
+  completed?: boolean;
+  completedAt?: string;
+};
+
+function readSessions(): SavedSession[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(SESSIONS_KEY);
+    return raw ? (JSON.parse(raw) as SavedSession[]) : [];
+  } catch { return []; }
+}
+function writeSessions(list: SavedSession[]) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(SESSIONS_KEY, JSON.stringify(list));
+  window.dispatchEvent(new CustomEvent("pxf:sessions-changed"));
+}
+function makeBlock(drill: Drill): SessionBlock {
+  return { uid: `b-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, drillId: drill.id, mins: drill.durationMin };
+}
 
 function Drills() {
   const [q, setQ] = useState("");
@@ -36,6 +67,14 @@ function Drills() {
     equip: null,
     cat: null,
   });
+  const [addDrill, setAddDrill] = useState<Drill | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2200);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   const filtered = useMemo(() => {
     return DRILLS.filter((d) => {
@@ -107,7 +146,7 @@ function Drills() {
                 <span className="text-[11px] font-semibold text-muted-foreground">{list.length} drills</span>
               </div>
               <div className="mt-3 space-y-3">
-                {list.map((d) => <DrillCard key={d.id} d={d} />)}
+                {list.map((d) => <DrillCard key={d.id} d={d} onAdd={() => setAddDrill(d)} />)}
               </div>
             </section>
           );
@@ -116,6 +155,23 @@ function Drills() {
           <p className="py-10 text-center text-sm text-muted-foreground">No drills match those filters.</p>
         )}
       </div>
+
+      {addDrill && (
+        <AddToSessionModal
+          drill={addDrill}
+          onClose={() => setAddDrill(null)}
+          onDone={(msg) => { setAddDrill(null); setToast(msg); }}
+        />
+      )}
+
+      {toast && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex justify-center px-5">
+          <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-teal/40 bg-surface/95 px-4 py-2.5 text-sm font-semibold text-teal shadow-glow-teal backdrop-blur">
+            <CheckCircle2 size={16} />
+            {toast}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -140,12 +196,12 @@ function FilterRow({ label, options, value, onChange }: { label: string; options
   );
 }
 
-function DrillCard({ d }: { d: Drill }) {
+function DrillCard({ d, onAdd }: { d: Drill; onAdd: () => void }) {
   const { isFavorite, toggle } = useFavorites();
   const fav = isFavorite(d.id);
   return (
     <div className="relative">
-    <Link to="/drills/$drillId" params={{ drillId: d.id }} className="flex w-full items-center gap-3 rounded-2xl border border-border/60 bg-surface p-3 pr-12 transition-colors hover:border-teal/40">
+    <Link to="/drills/$drillId" params={{ drillId: d.id }} className="flex w-full items-center gap-3 rounded-2xl border border-border/60 bg-surface p-3 pr-24 transition-colors hover:border-teal/40">
       <div className="relative grid h-20 w-24 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-surface-2 to-background">
         <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "radial-gradient(circle at 30% 40%, #00E5D6 0, transparent 60%)" }} />
         <div className="relative grid h-9 w-9 place-items-center rounded-full bg-gradient-brand text-primary-foreground shadow-glow-teal">
@@ -166,6 +222,13 @@ function DrillCard({ d }: { d: Drill }) {
       <ChevronRight size={16} className="text-muted-foreground" />
     </Link>
       <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(); }}
+        aria-label="Add to session"
+        className="absolute right-12 top-1/2 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full border border-volt/40 bg-volt/15 text-volt transition-colors hover:bg-volt/25"
+      >
+        <Plus size={16} />
+      </button>
+      <button
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(d.id); }}
         aria-label={fav ? "Remove from favourites" : "Add to favourites"}
         className={"absolute right-3 top-1/2 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full border transition-colors " + (fav ? "border-teal/40 bg-teal/15 text-teal" : "border-border/60 bg-surface-2 text-muted-foreground hover:text-teal")}
@@ -173,5 +236,182 @@ function DrillCard({ d }: { d: Drill }) {
         <Heart size={14} fill={fav ? "currentColor" : "none"} />
       </button>
     </div>
+  );
+}
+
+function AddToSessionModal({ drill, onClose, onDone }: { drill: Drill; onClose: () => void; onDone: (msg: string) => void }) {
+  const [mode, setMode] = useState<"choose" | "existing" | "new">("choose");
+  const [sessions, setSessions] = useState<SavedSession[]>([]);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+
+  // new session fields
+  const today = new Date().toISOString().slice(0, 10);
+  const [name, setName] = useState(`${drill.category} — ${new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" })}`);
+  const [date, setDate] = useState(today);
+  const [age, setAge] = useState<string>(drill.ageGroup ?? "U13+");
+  const [duration, setDuration] = useState<number>(60);
+
+  useEffect(() => { setSessions(readSessions()); }, []);
+
+  function togglePick(id: string) {
+    setPicked((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  }
+
+  function addToExisting() {
+    if (picked.size === 0) return;
+    const next = sessions.map((s) =>
+      picked.has(s.id) ? { ...s, blocks: [...s.blocks, makeBlock(drill)] } : s,
+    );
+    writeSessions(next);
+    onDone(picked.size === 1 ? "Drill Added To Session" : `Drill Added To ${picked.size} Sessions`);
+  }
+
+  function createAndAdd() {
+    if (!name.trim()) return;
+    const fresh: SavedSession = {
+      id: `s-${Date.now()}`,
+      name: name.trim(),
+      date,
+      age,
+      level: drill.difficulty ?? "Intermediate",
+      totalMins: duration,
+      notes: "",
+      blocks: [makeBlock(drill)],
+      completed: false,
+    };
+    writeSessions([fresh, ...sessions]);
+    onDone("Drill Added To Session");
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm sm:items-center" onClick={onClose}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md rounded-t-3xl border border-border/60 bg-surface p-5 shadow-2xl sm:rounded-3xl"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold tracking-[0.3em] text-teal">ADD TO SESSION</p>
+            <h2 className="mt-1 text-lg font-bold text-foreground">{drill.name}</h2>
+            <p className="text-[11px] text-muted-foreground">{drill.category} · {drill.durationMin} min</p>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full border border-border/60 bg-surface-2 text-muted-foreground">
+            <X size={14} />
+          </button>
+        </div>
+
+        {mode === "choose" && (
+          <div className="mt-5 grid grid-cols-1 gap-2">
+            <button
+              onClick={() => setMode("existing")}
+              className="flex items-center gap-3 rounded-2xl border border-border/60 bg-surface-2 p-4 text-left transition-colors hover:border-teal/40"
+            >
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-teal/15 text-teal"><ListChecks size={18} /></div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-foreground">Existing Session</p>
+                <p className="text-[11px] text-muted-foreground">{sessions.length} saved · pick one or more</p>
+              </div>
+              <ChevronRight size={16} className="text-muted-foreground" />
+            </button>
+            <button
+              onClick={() => setMode("new")}
+              className="flex items-center gap-3 rounded-2xl border border-border/60 bg-surface-2 p-4 text-left transition-colors hover:border-volt/40"
+            >
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-volt/15 text-volt"><Sparkles size={18} /></div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-foreground">Create New Session</p>
+                <p className="text-[11px] text-muted-foreground">Name, date, age, duration</p>
+              </div>
+              <ChevronRight size={16} className="text-muted-foreground" />
+            </button>
+          </div>
+        )}
+
+        {mode === "existing" && (
+          <div className="mt-5">
+            <button onClick={() => setMode("choose")} className="text-[11px] font-semibold tracking-wider text-muted-foreground">← BACK</button>
+            <div className="mt-3 max-h-[50vh] space-y-2 overflow-y-auto pr-1">
+              {sessions.length === 0 && (
+                <p className="py-8 text-center text-sm text-muted-foreground">No saved sessions yet. Create one instead.</p>
+              )}
+              {sessions.map((s) => {
+                const a = picked.has(s.id);
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => togglePick(s.id)}
+                    className={"flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors " + (a ? "border-teal bg-teal/10" : "border-border/60 bg-surface-2 hover:border-teal/40")}
+                  >
+                    <div className={"grid h-8 w-8 place-items-center rounded-full border " + (a ? "border-teal bg-teal text-background" : "border-border/60 text-muted-foreground")}>
+                      {a ? <CheckCircle2 size={16} /> : <Plus size={14} />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-foreground">{s.name}</p>
+                      <p className="text-[11px] text-muted-foreground">{s.date} · {s.blocks.length} drills · {s.age}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              disabled={picked.size === 0}
+              onClick={addToExisting}
+              className="mt-4 w-full rounded-2xl bg-gradient-brand py-3 text-sm font-bold text-primary-foreground shadow-glow-teal disabled:opacity-40"
+            >
+              Add to {picked.size || 0} session{picked.size === 1 ? "" : "s"}
+            </button>
+          </div>
+        )}
+
+        {mode === "new" && (
+          <div className="mt-5 space-y-3">
+            <button onClick={() => setMode("choose")} className="text-[11px] font-semibold tracking-wider text-muted-foreground">← BACK</button>
+            <Field label="Session Name">
+              <input value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-transparent text-sm text-foreground focus:outline-none" />
+            </Field>
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="Date" icon={<CalendarIcon size={12} />}>
+                <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-transparent text-sm text-foreground focus:outline-none" />
+              </Field>
+              <Field label="Duration (min)">
+                <input type="number" min={10} step={5} value={duration} onChange={(e) => setDuration(Number(e.target.value) || 0)} className="w-full bg-transparent text-sm text-foreground focus:outline-none" />
+              </Field>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold tracking-[0.3em] text-muted-foreground">AGE GROUP</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {AGE_GROUPS.map((g) => (
+                  <button
+                    key={g}
+                    onClick={() => setAge(g)}
+                    className={"rounded-full border px-3 py-1 text-[11px] font-semibold " + (age === g ? "border-teal bg-teal/15 text-teal" : "border-border/60 bg-surface-2 text-muted-foreground")}
+                  >{g}</button>
+                ))}
+              </div>
+            </div>
+            <button
+              onClick={createAndAdd}
+              disabled={!name.trim()}
+              className="mt-2 w-full rounded-2xl bg-gradient-brand py-3 text-sm font-bold text-primary-foreground shadow-glow-teal disabled:opacity-40"
+            >
+              Create & Add Drill
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, icon, children }: { label: string; icon?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <label className="block rounded-xl border border-border/60 bg-surface-2 px-3 py-2">
+      <p className="flex items-center gap-1 text-[9px] font-bold tracking-[0.3em] text-muted-foreground">{icon}{label}</p>
+      <div className="mt-1">{children}</div>
+    </label>
   );
 }
