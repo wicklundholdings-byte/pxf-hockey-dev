@@ -20,7 +20,6 @@ const AGE_GROUPS = ["U9+", "U11+", "U13+", "U15+"] as const;
 const LEVELS = ["Beginner", "Intermediate", "Advanced", "Elite"] as const;
 const EQUIP = ["Cones", "Pucks", "Net", "PODs", "Partner"] as const;
 
-type FilterKey = "age" | "level" | "equip" | "cat";
 
 function Drills() {
   const [q, setQ] = useState("");
