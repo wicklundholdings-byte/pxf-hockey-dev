@@ -52,7 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             return (
               <li key={to} className="flex-1">
                 <Link
-                  to={to}
+                  to={to as "/"}
                   className="group flex flex-col items-center gap-1 px-1 py-1.5"
                 >
                   <Icon
