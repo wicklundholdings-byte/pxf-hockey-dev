@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Flame, ChevronRight, Play, Snowflake, Target, Brain, Zap, Activity, Dumbbell, Disc3, Clock, ArrowRight } from "lucide-react";
+import { Flame, ChevronRight, Play, Target, Brain, Zap, Activity, Dumbbell, Disc3, Clock, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -13,10 +13,30 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
+const SkateIcon = ({ className, size }: { className?: string; size?: number }) => (
+  <svg
+    width={size ?? 24}
+    height={size ?? 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.6}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M4 16c0-3 3-4 6-4h5c3 0 5 1 5 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2Z" />
+    <path d="M9 12V8a3 3 0 0 1 6 0v4" />
+    <path d="M6 20h12" />
+    <path d="M7 20v2" />
+    <path d="M17 20v2" />
+  </svg>
+);
+
 const categories = [
   { label: "Slip Circuits", icon: Zap, color: "teal" as const },
   { label: "GameIQ PODS", icon: Brain, color: "volt" as const },
-  { label: "Skating", icon: Snowflake, color: "teal" as const },
+  { label: "Skating", icon: SkateIcon, color: "teal" as const },
   { label: "Shooting", icon: Target, color: "volt" as const },
   { label: "Dryland Skills", icon: Activity, color: "teal" as const },
   { label: "Dryland Fitness", icon: Dumbbell, color: "volt" as const },
