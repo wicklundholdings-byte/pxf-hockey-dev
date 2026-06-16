@@ -68,13 +68,25 @@ function Sessions() {
     if (typeof window === "undefined") return;
     try {
       const raw = window.localStorage.getItem(SESSIONS_KEY);
-      if (raw) setSaved(JSON.parse(raw));
+      if (raw) {
+        const list: Session[] = JSON.parse(raw);
+        setSaved(list);
+        const loadId = window.localStorage.getItem("pxf:sessions:load");
+        if (loadId) {
+          window.localStorage.removeItem("pxf:sessions:load");
+          const target = list.find((s) => s.id === loadId);
+          if (target) setSession(target);
+        }
+      }
     } catch { /* ignore */ }
   }, []);
 
   function persist(next: Session[]) {
     setSaved(next);
-    if (typeof window !== "undefined") window.localStorage.setItem(SESSIONS_KEY, JSON.stringify(next));
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(SESSIONS_KEY, JSON.stringify(next));
+      window.dispatchEvent(new CustomEvent("pxf:sessions-changed"));
+    }
   }
 
   const totalMins = useMemo(() => session.blocks.reduce((s, b) => s + b.mins, 0), [session.blocks]);
