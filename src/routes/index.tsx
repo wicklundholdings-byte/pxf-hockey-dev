@@ -47,14 +47,12 @@ const ShootingIcon = ({ className, size }: { className?: string; size?: number }
 );
 
 const categories = [
+  { label: "Slip Circuits", icon: Layers, tint: "teal" as const, to: "/drills" as const },
+  { label: "GameIQ Circuits", icon: Brain, tint: "volt" as const, to: "/gameiq" as const },
   { label: "Skating Flow", icon: SkateIcon, tint: "teal" as const, to: "/drills" as const },
   { label: "Edge Control", icon: Activity, tint: "volt" as const, to: "/drills" as const },
-  { label: "Puck Control", icon: Disc3, tint: "teal" as const, to: "/drills" as const },
-  { label: "Passing", icon: ArrowRight, tint: "volt" as const, to: "/drills" as const },
-  { label: "Shooting", icon: ShootingIcon, tint: "teal" as const, to: "/drills" as const },
-  { label: "Reaction Training", icon: Zap, tint: "volt" as const, to: "/drills" as const },
-  { label: "GameIQ", icon: Brain, tint: "teal" as const, to: "/gameiq" as const },
-  { label: "Circuits", icon: Layers, tint: "volt" as const, to: "/drills" as const },
+  { label: "Dryland Skills", icon: Zap, tint: "teal" as const, to: "/drills" as const },
+  { label: "Dryland Training", icon: Flame, tint: "volt" as const, to: "/drills" as const },
 ];
 
 const quickAccess = [
@@ -93,7 +91,7 @@ function Home() {
 
       <section className="mt-7">
         <SectionHeader title="Training Categories" to="/drills" />
-        <div className="mt-3 grid grid-cols-4 gap-2.5">
+        <div className="mt-3 grid grid-cols-3 gap-3">
           {categories.map(({ label, icon: Icon, tint, to }) => (
             <Link key={label} to={to} className="group flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/60 bg-surface p-2 transition-all hover:border-teal/40 hover:bg-surface-2">
               <Icon size={22} strokeWidth={1.6} className={tint === "teal" ? "text-teal" : "text-volt"} />
