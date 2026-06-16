@@ -25,7 +25,12 @@ type FilterKey = "age" | "level" | "equip" | "cat";
 function Drills() {
   const [q, setQ] = useState("");
   const [openFilters, setOpenFilters] = useState(false);
-  const [active, setActive] = useState<Record<FilterKey, string | null>>({
+  const [active, setActive] = useState<{
+    age: string | null;
+    level: string | null;
+    equip: string | null;
+    cat: TrainingCategory | null;
+  }>({
     age: null,
     level: null,
     equip: null,
@@ -35,7 +40,10 @@ function Drills() {
   const filtered = useMemo(() => {
     return DRILLS.filter((d) => {
       if (q && !d.name.toLowerCase().includes(q.toLowerCase())) return false;
-      if (active.cat && d.category !== active.cat) return false;
+      if (active.cat) {
+        const matches = TRAINING_CATEGORY_TO_DRILL_CATEGORIES[active.cat];
+        if (!matches.includes(d.category)) return false;
+      }
       if (active.level && d.difficulty !== active.level) return false;
       if (active.age && d.ageGroup !== active.age) return false;
       if (active.equip && !d.equipment.some((e) => e.toLowerCase().includes(active.equip!.toLowerCase()))) return false;
