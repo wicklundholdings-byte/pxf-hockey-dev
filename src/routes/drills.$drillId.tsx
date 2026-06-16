@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useRouter, notFound } from "@tanstack/react-router";
 import {
-  Play, ArrowLeft, BarChart3, Users, Wrench, Clock, ChevronRight, AlertTriangle, ListChecks, Layers,
+  Play, ArrowLeft, BarChart3, Users, Wrench, Clock, ChevronRight, AlertTriangle, ListChecks, Layers, Heart,
 } from "lucide-react";
 import { findDrill, relatedTo, type Drill } from "@/data/pxf";
+import { useFavorites } from "@/hooks/useFavorites";
 
 export const Route = createFileRoute("/drills/$drillId")({
   head: ({ params }) => {
@@ -41,6 +42,8 @@ function DrillDetail() {
   const d = Route.useLoaderData() as Drill;
   const router = useRouter();
   const related = relatedTo(d);
+  const { isFavorite, toggle } = useFavorites();
+  const fav = isFavorite(d.id);
 
   return (
     <div>
@@ -51,6 +54,13 @@ function DrillDetail() {
         </button>
         <button onClick={() => router.history.back()} aria-label="Back" className="absolute left-4 top-4 grid h-10 w-10 place-items-center rounded-full border border-border/60 bg-background/70 text-foreground backdrop-blur">
           <ArrowLeft size={16} />
+        </button>
+        <button
+          onClick={() => toggle(d.id)}
+          aria-label={fav ? "Remove from favourites" : "Add to favourites"}
+          className={"absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full border backdrop-blur transition-colors " + (fav ? "border-teal/60 bg-teal/20 text-teal" : "border-border/60 bg-background/70 text-foreground hover:text-teal")}
+        >
+          <Heart size={16} fill={fav ? "currentColor" : "none"} />
         </button>
         <div className="absolute bottom-3 left-4 flex items-center gap-2">
           <span className="rounded-full bg-background/80 px-2.5 py-1 text-[10px] font-bold tracking-wider text-teal backdrop-blur">{d.category.toUpperCase()}</span>

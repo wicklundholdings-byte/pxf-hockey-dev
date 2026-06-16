@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Search, Filter, Play, BarChart3, Clock, Users, Wrench, ChevronRight } from "lucide-react";
+import { Search, Filter, Play, BarChart3, Clock, Users, Wrench, ChevronRight, Heart } from "lucide-react";
 import { useMemo, useState } from "react";
 import { CATEGORIES, DRILLS, type Category, type Drill } from "@/data/pxf";
 import { trainingCategories, TRAINING_CATEGORY_TO_DRILL_CATEGORIES, type TrainingCategory } from "@/data/trainingCategories";
+import { useFavorites } from "@/hooks/useFavorites";
 
 export const Route = createFileRoute("/drills")({
   head: () => ({
@@ -140,8 +141,11 @@ function FilterRow({ label, options, value, onChange }: { label: string; options
 }
 
 function DrillCard({ d }: { d: Drill }) {
+  const { isFavorite, toggle } = useFavorites();
+  const fav = isFavorite(d.id);
   return (
-    <Link to="/drills/$drillId" params={{ drillId: d.id }} className="flex w-full items-center gap-3 rounded-2xl border border-border/60 bg-surface p-3 transition-colors hover:border-teal/40">
+    <div className="relative">
+    <Link to="/drills/$drillId" params={{ drillId: d.id }} className="flex w-full items-center gap-3 rounded-2xl border border-border/60 bg-surface p-3 pr-12 transition-colors hover:border-teal/40">
       <div className="relative grid h-20 w-24 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-surface-2 to-background">
         <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "radial-gradient(circle at 30% 40%, #00E5D6 0, transparent 60%)" }} />
         <div className="relative grid h-9 w-9 place-items-center rounded-full bg-gradient-brand text-primary-foreground shadow-glow-teal">
@@ -161,5 +165,13 @@ function DrillCard({ d }: { d: Drill }) {
       </div>
       <ChevronRight size={16} className="text-muted-foreground" />
     </Link>
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(d.id); }}
+        aria-label={fav ? "Remove from favourites" : "Add to favourites"}
+        className={"absolute right-3 top-1/2 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full border transition-colors " + (fav ? "border-teal/40 bg-teal/15 text-teal" : "border-border/60 bg-surface-2 text-muted-foreground hover:text-teal")}
+      >
+        <Heart size={14} fill={fav ? "currentColor" : "none"} />
+      </button>
+    </div>
   );
 }
