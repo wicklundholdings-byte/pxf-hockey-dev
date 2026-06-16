@@ -13,6 +13,7 @@ import { Route as SessionsRouteImport } from './routes/sessions'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ProgramsRouteImport } from './routes/programs'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as GameiqRouteImport } from './routes/gameiq'
 import { Route as DrillsRouteImport } from './routes/drills'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DrillsDrillIdRouteImport } from './routes/drills.$drillId'
@@ -37,6 +38,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GameiqRoute = GameiqRouteImport.update({
+  id: '/gameiq',
+  path: '/gameiq',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DrillsRoute = DrillsRouteImport.update({
   id: '/drills',
   path: '/drills',
@@ -56,6 +62,7 @@ const DrillsDrillIdRoute = DrillsDrillIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/drills': typeof DrillsRouteWithChildren
+  '/gameiq': typeof GameiqRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/drills': typeof DrillsRouteWithChildren
+  '/gameiq': typeof GameiqRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/drills': typeof DrillsRouteWithChildren
+  '/gameiq': typeof GameiqRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/drills'
+    | '/gameiq'
     | '/profile'
     | '/programs'
     | '/progress'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/drills'
+    | '/gameiq'
     | '/profile'
     | '/programs'
     | '/progress'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/drills'
+    | '/gameiq'
     | '/profile'
     | '/programs'
     | '/progress'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DrillsRoute: typeof DrillsRouteWithChildren
+  GameiqRoute: typeof GameiqRoute
   ProfileRoute: typeof ProfileRoute
   ProgramsRoute: typeof ProgramsRoute
   ProgressRoute: typeof ProgressRoute
@@ -148,6 +161,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gameiq': {
+      id: '/gameiq'
+      path: '/gameiq'
+      fullPath: '/gameiq'
+      preLoaderRoute: typeof GameiqRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/drills': {
@@ -188,6 +208,7 @@ const DrillsRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DrillsRoute: DrillsRouteWithChildren,
+  GameiqRoute: GameiqRoute,
   ProfileRoute: ProfileRoute,
   ProgramsRoute: ProgramsRoute,
   ProgressRoute: ProgressRoute,
