@@ -22,7 +22,7 @@ import { Route as DrillsRouteImport } from './routes/drills'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DrillsDrillIdRouteImport } from './routes/drills.$drillId'
+import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
 
 const TeamRoute = TeamRouteImport.update({
   id: '/team',
@@ -89,17 +89,17 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DrillsDrillIdRoute = DrillsDrillIdRouteImport.update({
-  id: '/$drillId',
-  path: '/$drillId',
-  getParentRoute: () => DrillsRoute,
+const DrillDetailDrillIdRoute = DrillDetailDrillIdRouteImport.update({
+  id: '/drill-detail/$drillId',
+  path: '/drill-detail/$drillId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/calendar': typeof CalendarRoute
-  '/drills': typeof DrillsRouteWithChildren
+  '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
   '/membership': typeof MembershipRoute
@@ -109,13 +109,13 @@ export interface FileRoutesByFullPath {
   '/saved-sessions': typeof SavedSessionsRoute
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
-  '/drills/$drillId': typeof DrillsDrillIdRoute
+  '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/calendar': typeof CalendarRoute
-  '/drills': typeof DrillsRouteWithChildren
+  '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
   '/membership': typeof MembershipRoute
@@ -125,14 +125,14 @@ export interface FileRoutesByTo {
   '/saved-sessions': typeof SavedSessionsRoute
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
-  '/drills/$drillId': typeof DrillsDrillIdRoute
+  '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/calendar': typeof CalendarRoute
-  '/drills': typeof DrillsRouteWithChildren
+  '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
   '/membership': typeof MembershipRoute
@@ -142,7 +142,7 @@ export interface FileRoutesById {
   '/saved-sessions': typeof SavedSessionsRoute
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
-  '/drills/$drillId': typeof DrillsDrillIdRoute
+  '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -160,7 +160,7 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/sessions'
     | '/team'
-    | '/drills/$drillId'
+    | '/drill-detail/$drillId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -176,7 +176,7 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/sessions'
     | '/team'
-    | '/drills/$drillId'
+    | '/drill-detail/$drillId'
   id:
     | '__root__'
     | '/'
@@ -192,14 +192,14 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/sessions'
     | '/team'
-    | '/drills/$drillId'
+    | '/drill-detail/$drillId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AchievementsRoute: typeof AchievementsRoute
   CalendarRoute: typeof CalendarRoute
-  DrillsRoute: typeof DrillsRouteWithChildren
+  DrillsRoute: typeof DrillsRoute
   FavouritesRoute: typeof FavouritesRoute
   GameiqRoute: typeof GameiqRoute
   MembershipRoute: typeof MembershipRoute
@@ -209,6 +209,7 @@ export interface RootRouteChildren {
   SavedSessionsRoute: typeof SavedSessionsRoute
   SessionsRoute: typeof SessionsRoute
   TeamRoute: typeof TeamRoute
+  DrillDetailDrillIdRoute: typeof DrillDetailDrillIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -304,32 +305,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/drills/$drillId': {
-      id: '/drills/$drillId'
-      path: '/$drillId'
-      fullPath: '/drills/$drillId'
-      preLoaderRoute: typeof DrillsDrillIdRouteImport
-      parentRoute: typeof DrillsRoute
+    '/drill-detail/$drillId': {
+      id: '/drill-detail/$drillId'
+      path: '/drill-detail/$drillId'
+      fullPath: '/drill-detail/$drillId'
+      preLoaderRoute: typeof DrillDetailDrillIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface DrillsRouteChildren {
-  DrillsDrillIdRoute: typeof DrillsDrillIdRoute
-}
-
-const DrillsRouteChildren: DrillsRouteChildren = {
-  DrillsDrillIdRoute: DrillsDrillIdRoute,
-}
-
-const DrillsRouteWithChildren =
-  DrillsRoute._addFileChildren(DrillsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AchievementsRoute: AchievementsRoute,
   CalendarRoute: CalendarRoute,
-  DrillsRoute: DrillsRouteWithChildren,
+  DrillsRoute: DrillsRoute,
   FavouritesRoute: FavouritesRoute,
   GameiqRoute: GameiqRoute,
   MembershipRoute: MembershipRoute,
@@ -339,6 +329,7 @@ const rootRouteChildren: RootRouteChildren = {
   SavedSessionsRoute: SavedSessionsRoute,
   SessionsRoute: SessionsRoute,
   TeamRoute: TeamRoute,
+  DrillDetailDrillIdRoute: DrillDetailDrillIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
