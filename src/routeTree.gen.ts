@@ -25,6 +25,7 @@ import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
+import { Route as CoachSessionIdRouteImport } from './routes/coach.$sessionId'
 
 const TeamRoute = TeamRouteImport.update({
   id: '/team',
@@ -106,12 +107,17 @@ const DrillDetailDrillIdRoute = DrillDetailDrillIdRouteImport.update({
   path: '/drill-detail/$drillId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CoachSessionIdRoute = CoachSessionIdRouteImport.update({
+  id: '/$sessionId',
+  path: '/$sessionId',
+  getParentRoute: () => CoachRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/calendar': typeof CalendarRoute
-  '/coach': typeof CoachRoute
+  '/coach': typeof CoachRouteWithChildren
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/saved-sessions': typeof SavedSessionsRoute
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
+  '/coach/$sessionId': typeof CoachSessionIdRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
 }
@@ -129,7 +136,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/calendar': typeof CalendarRoute
-  '/coach': typeof CoachRoute
+  '/coach': typeof CoachRouteWithChildren
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/saved-sessions': typeof SavedSessionsRoute
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
+  '/coach/$sessionId': typeof CoachSessionIdRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
 }
@@ -148,7 +156,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/calendar': typeof CalendarRoute
-  '/coach': typeof CoachRoute
+  '/coach': typeof CoachRouteWithChildren
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/saved-sessions': typeof SavedSessionsRoute
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
+  '/coach/$sessionId': typeof CoachSessionIdRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
 }
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/sessions'
     | '/team'
+    | '/coach/$sessionId'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
   fileRoutesByTo: FileRoutesByTo
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/sessions'
     | '/team'
+    | '/coach/$sessionId'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
   id:
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/sessions'
     | '/team'
+    | '/coach/$sessionId'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
   fileRoutesById: FileRoutesById
@@ -223,7 +235,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AchievementsRoute: typeof AchievementsRoute
   CalendarRoute: typeof CalendarRoute
-  CoachRoute: typeof CoachRoute
+  CoachRoute: typeof CoachRouteWithChildren
   DrillsRoute: typeof DrillsRoute
   FavouritesRoute: typeof FavouritesRoute
   GameiqRoute: typeof GameiqRoute
@@ -352,14 +364,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DrillDetailDrillIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/coach/$sessionId': {
+      id: '/coach/$sessionId'
+      path: '/$sessionId'
+      fullPath: '/coach/$sessionId'
+      preLoaderRoute: typeof CoachSessionIdRouteImport
+      parentRoute: typeof CoachRoute
+    }
   }
 }
+
+interface CoachRouteChildren {
+  CoachSessionIdRoute: typeof CoachSessionIdRoute
+}
+
+const CoachRouteChildren: CoachRouteChildren = {
+  CoachSessionIdRoute: CoachSessionIdRoute,
+}
+
+const CoachRouteWithChildren = CoachRoute._addFileChildren(CoachRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AchievementsRoute: AchievementsRoute,
   CalendarRoute: CalendarRoute,
-  CoachRoute: CoachRoute,
+  CoachRoute: CoachRouteWithChildren,
   DrillsRoute: DrillsRoute,
   FavouritesRoute: FavouritesRoute,
   GameiqRoute: GameiqRoute,
