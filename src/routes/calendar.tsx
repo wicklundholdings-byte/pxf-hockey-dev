@@ -107,8 +107,7 @@ function CalendarScreen() {
   }
 
   function openInBuilder(s: Session) {
-    if (typeof window !== "undefined") window.localStorage.setItem(LOAD_KEY, s.id);
-    navigate({ to: "/sessions" });
+    navigate({ to: "/session-detail/$sessionId", params: { sessionId: s.id } });
   }
 
   function createOnDate(iso: string) {
