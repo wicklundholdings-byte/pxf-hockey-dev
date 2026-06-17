@@ -33,6 +33,8 @@ export type Drill = {
   mistakes: string[];
   progressions: string[];
   related: string[];
+  videoUrl?: string;
+  posterUrl?: string;
 };
 
 export const DRILLS: Drill[] = [
