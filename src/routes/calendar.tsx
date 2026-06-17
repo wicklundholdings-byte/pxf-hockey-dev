@@ -32,7 +32,6 @@ type Session = {
 };
 
 const SESSIONS_KEY = "pxf:sessions:v2";
-const LOAD_KEY = "pxf:sessions:load";
 const EVT = "pxf:sessions-changed";
 
 function read(): Session[] {
@@ -107,8 +106,7 @@ function CalendarScreen() {
   }
 
   function openInBuilder(s: Session) {
-    if (typeof window !== "undefined") window.localStorage.setItem(LOAD_KEY, s.id);
-    navigate({ to: "/sessions" });
+    navigate({ to: "/session-detail/$sessionId", params: { sessionId: s.id } });
   }
 
   function createOnDate(iso: string) {

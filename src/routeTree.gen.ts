@@ -22,6 +22,7 @@ import { Route as DrillsRouteImport } from './routes/drills'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
 
 const TeamRoute = TeamRouteImport.update({
@@ -89,6 +90,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SessionDetailSessionIdRoute = SessionDetailSessionIdRouteImport.update({
+  id: '/session-detail/$sessionId',
+  path: '/session-detail/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DrillDetailDrillIdRoute = DrillDetailDrillIdRouteImport.update({
   id: '/drill-detail/$drillId',
   path: '/drill-detail/$drillId',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/sessions'
     | '/team'
     | '/drill-detail/$drillId'
+    | '/session-detail/$sessionId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/sessions'
     | '/team'
     | '/drill-detail/$drillId'
+    | '/session-detail/$sessionId'
   id:
     | '__root__'
     | '/'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/sessions'
     | '/team'
     | '/drill-detail/$drillId'
+    | '/session-detail/$sessionId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -210,6 +222,7 @@ export interface RootRouteChildren {
   SessionsRoute: typeof SessionsRoute
   TeamRoute: typeof TeamRoute
   DrillDetailDrillIdRoute: typeof DrillDetailDrillIdRoute
+  SessionDetailSessionIdRoute: typeof SessionDetailSessionIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -305,6 +318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/session-detail/$sessionId': {
+      id: '/session-detail/$sessionId'
+      path: '/session-detail/$sessionId'
+      fullPath: '/session-detail/$sessionId'
+      preLoaderRoute: typeof SessionDetailSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/drill-detail/$drillId': {
       id: '/drill-detail/$drillId'
       path: '/drill-detail/$drillId'
@@ -330,17 +350,8 @@ const rootRouteChildren: RootRouteChildren = {
   SessionsRoute: SessionsRoute,
   TeamRoute: TeamRoute,
   DrillDetailDrillIdRoute: DrillDetailDrillIdRoute,
+  SessionDetailSessionIdRoute: SessionDetailSessionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

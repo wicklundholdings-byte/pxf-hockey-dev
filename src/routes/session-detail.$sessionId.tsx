@@ -1,0 +1,750 @@
+import { createFileRoute, Link, useNavigate, notFound } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowLeft, Pencil, Calendar as CalendarIcon, Clock, Users, BarChart3, Disc3,
+  Wrench, ListChecks, GripVertical, Trash2, ChevronRight, Plus, Copy, CheckCircle2,
+  Play, X, SkipForward, Save, Pause, RotateCcw, Video, Image as ImageIcon, Minus,
+} from "lucide-react";
+import { DRILLS, findDrill, type Category, type Drill } from "@/data/pxf";
+
+const SESSIONS_KEY = "pxf:sessions:v2";
+const EVT = "pxf:sessions-changed";
+
+type Block = { uid: string; drillId: string; mins: number; notes?: string };
+type Session = {
+  id: string;
+  name: string;
+  date: string;
+  age: string;
+  level: string;
+  totalMins: number;
+  notes: string;
+  blocks: Block[];
+  completed?: boolean;
+  completedAt?: string;
+};
+
+function readAll(): Session[] {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(window.localStorage.getItem(SESSIONS_KEY) ?? "[]"); } catch { return []; }
+}
+function writeAll(list: Session[]) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(SESSIONS_KEY, JSON.stringify(list));
+  window.dispatchEvent(new CustomEvent(EVT));
+}
+
+export const Route = createFileRoute("/session-detail/$sessionId")({
+  head: ({ params }) => ({
+    meta: [
+      { title: "Session — PXF Hockey" },
+      { name: "description", content: `Session ${params?.sessionId ?? ""} detail.` },
+    ],
+  }),
+  notFoundComponent: () => {
+    const { sessionId } = Route.useParams();
+    return (
+      <div className="px-5 pt-10 text-center">
+        <p className="text-sm text-muted-foreground">Session {sessionId} not found.</p>
+        <Link to="/saved-sessions" className="mt-3 inline-flex text-sm font-semibold text-teal">Back to sessions</Link>
+      </div>
+    );
+  },
+  errorComponent: ({ error, reset }) => (
+    <div className="px-5 pt-10 text-center">
+      <p className="text-sm text-destructive">Something went wrong.</p>
+      <p className="mt-1 text-xs text-muted-foreground">{error.message}</p>
+      <button onClick={reset} className="mt-3 text-sm font-semibold text-teal">Try again</button>
+    </div>
+  ),
+  component: SessionDetail,
+});
+
+function SessionDetail() {
+  const { sessionId } = Route.useParams();
+  const navigate = useNavigate();
+  const [session, setSession] = useState<Session | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [runOpen, setRunOpen] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [drag, setDrag] = useState<{ from: number; over: number } | null>(null);
+  const [editingBlockUid, setEditingBlockUid] = useState<string | null>(null);
+
+  useEffect(() => {
+    const all = readAll();
+    const s = all.find((x) => x.id === sessionId) ?? null;
+    setSession(s);
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 1800);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  if (session === null) {
+    return <div className="px-5 pt-10 text-center text-sm text-muted-foreground">Loading…</div>;
+  }
+
+  const totalMins = session.blocks.reduce((t, b) => t + b.mins, 0);
+  const focuses = uniqueFocuses(session.blocks);
+  const equipment = uniqueEquipment(session.blocks);
+
+  function update(next: Session, markDirty = true) {
+    setSession(next);
+    if (markDirty) setDirty(true);
+  }
+
+  function persist(next?: Session) {
+    const target = next ?? session;
+    if (!target) return;
+    const all = readAll();
+    const idx = all.findIndex((x) => x.id === target.id);
+    const updated = { ...target, totalMins: target.blocks.reduce((t, b) => t + b.mins, 0) };
+    if (idx === -1) all.unshift(updated); else all[idx] = updated;
+    writeAll(all);
+    setSession(updated);
+    setDirty(false);
+    setToast("Session saved");
+  }
+
+  function reorder(from: number, to: number) {
+    if (!session || from === to) return;
+    const blocks = [...session.blocks];
+    const [moved] = blocks.splice(from, 1);
+    blocks.splice(to, 0, moved);
+    update({ ...session, blocks });
+  }
+
+  function adjustMins(uid: string, delta: number) {
+    if (!session) return;
+    update({
+      ...session,
+      blocks: session.blocks.map((b) => b.uid === uid ? { ...b, mins: Math.max(1, b.mins + delta) } : b),
+    });
+  }
+
+  function removeBlock(uid: string) {
+    if (!session) return;
+    update({ ...session, blocks: session.blocks.filter((b) => b.uid !== uid) });
+  }
+
+  function setBlockNotes(uid: string, notes: string) {
+    if (!session) return;
+    update({
+      ...session,
+      blocks: session.blocks.map((b) => b.uid === uid ? { ...b, notes } : b),
+    });
+  }
+
+  function addDrill(drill: Drill) {
+    if (!session) return;
+    const newBlock: Block = {
+      uid: `b-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      drillId: drill.id,
+      mins: drill.durationMin,
+    };
+    update({ ...session, blocks: [...session.blocks, newBlock] });
+  }
+
+  function duplicate() {
+    if (!session) return;
+    const all = readAll();
+    const copy: Session = {
+      ...session,
+      id: `s-${Date.now()}`,
+      name: `${session.name} (Copy)`,
+      completed: false,
+      completedAt: undefined,
+      blocks: session.blocks.map((b) => ({ ...b, uid: `b-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` })),
+    };
+    writeAll([copy, ...all].slice(0, 50));
+    setToast("Duplicated");
+    navigate({ to: "/session-detail/$sessionId", params: { sessionId: copy.id } });
+  }
+
+  function toggleComplete() {
+    if (!session) return;
+    const next: Session = {
+      ...session,
+      completed: !session.completed,
+      completedAt: !session.completed ? new Date().toISOString() : undefined,
+    };
+    persist(next);
+    setToast(next.completed ? "Marked complete" : "Marked incomplete");
+  }
+
+  function deleteSession() {
+    if (typeof window !== "undefined" && !window.confirm("Delete this session?")) return;
+    const all = readAll().filter((x) => x.id !== session!.id);
+    writeAll(all);
+    navigate({ to: "/saved-sessions" });
+  }
+
+  return (
+    <div className="pb-40">
+      {/* Header */}
+      <div className="px-5 pt-3">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigate({ to: "/saved-sessions" })}
+            aria-label="Back"
+            className="grid h-10 w-10 place-items-center rounded-full border border-border/60 bg-surface text-foreground"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <p className="text-[11px] font-semibold tracking-[0.3em] text-volt">SESSION</p>
+          <button
+            onClick={() => setEditingName((v) => !v)}
+            aria-label="Edit session"
+            className="grid h-10 w-10 place-items-center rounded-full border border-teal/40 bg-teal/10 text-teal"
+          >
+            <Pencil size={16} />
+          </button>
+        </div>
+
+        {editingName ? (
+          <input
+            autoFocus
+            value={session.name}
+            onChange={(e) => update({ ...session, name: e.target.value })}
+            onBlur={() => setEditingName(false)}
+            className="mt-4 w-full rounded-2xl border border-teal/50 bg-surface-2 px-3 py-2.5 text-2xl font-bold text-foreground outline-none"
+          />
+        ) : (
+          <h1 className="mt-4 text-3xl font-bold leading-tight text-foreground">{session.name}</h1>
+        )}
+
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted-foreground">
+          <span className="flex items-center gap-1"><CalendarIcon size={12} className="text-teal" /> {formatDate(session.date)}</span>
+          <span className="flex items-center gap-1"><Users size={12} className="text-teal" /> {session.age}</span>
+          <span className="flex items-center gap-1"><BarChart3 size={12} className="text-teal" /> {session.level}</span>
+          <span className="flex items-center gap-1"><Clock size={12} className="text-volt" /> {totalMins} min</span>
+          <span className="flex items-center gap-1"><Disc3 size={12} className="text-volt" /> {session.blocks.length} drills</span>
+        </div>
+
+        {session.completed && (
+          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-volt/15 px-3 py-1 text-[10px] font-bold tracking-wider text-volt">
+            <CheckCircle2 size={11} /> COMPLETED
+          </div>
+        )}
+      </div>
+
+      {/* Summary card */}
+      <div className="px-5 mt-5">
+        <div className="rounded-3xl border border-border/60 bg-gradient-to-br from-surface to-surface-2 p-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Stat icon={Clock} tint="teal" label="Total Time" value={`${totalMins} min`} />
+            <Stat icon={Disc3} tint="volt" label="Drills" value={String(session.blocks.length)} />
+          </div>
+
+          <div className="mt-4">
+            <p className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground">FOCUS AREAS</p>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {focuses.length === 0 && <span className="text-xs text-muted-foreground">No drills yet</span>}
+              {focuses.map((f) => (
+                <span key={f} className="rounded-full bg-teal/15 px-2.5 py-0.5 text-[11px] font-semibold text-teal">{f}</span>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <p className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground">EQUIPMENT</p>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {equipment.length === 0 && <span className="text-xs text-muted-foreground">—</span>}
+              {equipment.map((e) => (
+                <span key={e} className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-surface-2 px-2.5 py-0.5 text-[11px] font-semibold text-foreground/80">
+                  <Wrench size={9} className="text-volt" /> {e}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {session.notes.trim() && (
+            <div className="mt-3 rounded-xl border border-border/40 bg-surface-2/60 p-2.5">
+              <p className="flex items-center gap-1 text-[10px] font-bold tracking-[0.2em] text-volt">
+                <ListChecks size={10} /> NOTES
+              </p>
+              <p className="mt-1 line-clamp-3 text-[12px] italic text-muted-foreground">{session.notes}</p>
+            </div>
+          )}
+
+          <div className="mt-4 flex items-center gap-2">
+            <button
+              onClick={duplicate}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border/60 bg-surface-2 py-2 text-[11px] font-bold tracking-wide text-foreground hover:bg-surface"
+            >
+              <Copy size={12} /> DUPLICATE
+            </button>
+            <button
+              onClick={toggleComplete}
+              className={
+                "flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-[11px] font-bold tracking-wide " +
+                (session.completed ? "border border-border/60 bg-surface-2 text-muted-foreground" : "bg-volt/15 text-volt")
+              }
+            >
+              <CheckCircle2 size={12} /> {session.completed ? "INCOMPLETE" : "COMPLETE"}
+            </button>
+            <button
+              onClick={deleteSession}
+              className="grid h-9 w-9 place-items-center rounded-xl border border-destructive/40 bg-destructive/10 text-destructive"
+              aria-label="Delete session"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Session plan */}
+      <div className="px-5 mt-6">
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] font-bold tracking-[0.3em] text-teal">SESSION PLAN</p>
+          <span className="text-[10px] font-semibold text-muted-foreground">Drag to reorder</span>
+        </div>
+
+        <div className="mt-3 space-y-2.5">
+          {session.blocks.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-border/60 bg-surface p-6 text-center">
+              <p className="text-sm text-muted-foreground">No drills yet.</p>
+              <button
+                onClick={() => setAddOpen(true)}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-gradient-brand px-4 py-2 text-[11px] font-bold tracking-wide text-primary-foreground"
+              >
+                <Plus size={12} /> ADD DRILL
+              </button>
+            </div>
+          )}
+
+          {session.blocks.map((b, i) => {
+            const d = findDrill(b.drillId);
+            if (!d) return null;
+            const editing = editingBlockUid === b.uid;
+            return (
+              <div
+                key={b.uid}
+                draggable
+                onDragStart={() => setDrag({ from: i, over: i })}
+                onDragOver={(e) => { e.preventDefault(); if (drag) setDrag({ ...drag, over: i }); }}
+                onDrop={() => { if (drag) reorder(drag.from, i); setDrag(null); }}
+                onDragEnd={() => setDrag(null)}
+                className={
+                  "rounded-2xl border bg-surface transition-colors " +
+                  (drag?.over === i && drag.from !== i ? "border-teal/60 shadow-glow-teal" : "border-border/60")
+                }
+              >
+                <div className="flex items-stretch gap-2 p-3">
+                  <div className="flex flex-col items-center gap-2 pt-1">
+                    <span className="grid h-7 w-7 place-items-center rounded-full bg-gradient-brand text-[12px] font-bold text-primary-foreground">
+                      {i + 1}
+                    </span>
+                    <button
+                      aria-label="Drag handle"
+                      className="cursor-grab text-muted-foreground active:cursor-grabbing"
+                    >
+                      <GripVertical size={16} />
+                    </button>
+                  </div>
+
+                  <Link
+                    to="/drill-detail/$drillId"
+                    params={{ drillId: d.id }}
+                    className="flex flex-1 gap-3"
+                  >
+                    <DrillThumb category={d.category} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold tracking-wider text-teal">{d.category.toUpperCase()}</p>
+                      <h3 className="truncate text-sm font-bold text-foreground">{d.name}</h3>
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        {d.difficulty} · {d.ageGroup} · {b.mins} min
+                      </p>
+                      <p className="mt-1 line-clamp-1 text-[11px] text-muted-foreground">
+                        <Wrench size={9} className="-mt-0.5 mr-1 inline text-volt" />
+                        {d.equipment.join(", ")}
+                      </p>
+                      {d.notes[0] && (
+                        <p className="mt-1 line-clamp-1 text-[11px] italic text-foreground/70">
+                          Focus: {d.notes[0]}
+                        </p>
+                      )}
+                    </div>
+                    <ChevronRight size={16} className="self-center text-muted-foreground" />
+                  </Link>
+                </div>
+
+                {/* Duration & notes editor */}
+                {editing && (
+                  <div className="border-t border-border/60 bg-surface-2/60 p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground">DURATION</span>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => adjustMins(b.uid, -1)} className="grid h-8 w-8 place-items-center rounded-full border border-border/60 bg-surface text-foreground">
+                          <Minus size={14} />
+                        </button>
+                        <span className="min-w-[60px] text-center text-sm font-bold text-teal">{b.mins} min</span>
+                        <button onClick={() => adjustMins(b.uid, 1)} className="grid h-8 w-8 place-items-center rounded-full border border-border/60 bg-surface text-foreground">
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <span className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground">DRILL NOTES</span>
+                      <textarea
+                        value={b.notes ?? ""}
+                        onChange={(e) => setBlockNotes(b.uid, e.target.value)}
+                        placeholder="Add coaching notes for this drill…"
+                        rows={2}
+                        className="mt-1.5 w-full resize-none rounded-xl border border-border/60 bg-surface px-3 py-2 text-[12px] text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-teal/60"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {!editing && b.notes && (
+                  <div className="border-t border-border/60 bg-surface-2/40 px-3 py-2">
+                    <p className="line-clamp-2 text-[11px] italic text-muted-foreground">
+                      <ListChecks size={10} className="-mt-0.5 mr-1 inline text-volt" />
+                      {b.notes}
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex items-center border-t border-border/60 bg-surface-2/40">
+                  <button
+                    onClick={() => setEditingBlockUid(editing ? null : b.uid)}
+                    className="flex flex-1 items-center justify-center gap-1.5 py-2 text-[11px] font-bold tracking-wide text-teal hover:bg-teal/10"
+                  >
+                    <Pencil size={11} /> {editing ? "DONE" : "EDIT"}
+                  </button>
+                  <div className="h-6 w-px bg-border/60" />
+                  <button
+                    onClick={() => removeBlock(b.uid)}
+                    className="flex flex-1 items-center justify-center gap-1.5 py-2 text-[11px] font-bold tracking-wide text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 size={11} /> REMOVE
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Sticky action bar */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/95 px-3 py-3 backdrop-blur">
+        <div className="mx-auto flex max-w-screen-sm items-center gap-2">
+          <button
+            onClick={() => setAddOpen(true)}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl border border-border/60 bg-surface py-3 text-[11px] font-bold tracking-wide text-foreground"
+          >
+            <Plus size={14} /> ADD DRILL
+          </button>
+          <button
+            onClick={() => persist()}
+            className={
+              "flex flex-1 items-center justify-center gap-1.5 rounded-2xl py-3 text-[11px] font-bold tracking-wide " +
+              (dirty ? "bg-teal/20 text-teal" : "border border-border/60 bg-surface text-muted-foreground")
+            }
+          >
+            <Save size={14} /> SAVE
+          </button>
+          <button
+            onClick={() => setRunOpen(true)}
+            disabled={session.blocks.length === 0}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl bg-gradient-brand py-3 text-[11px] font-bold tracking-wide text-primary-foreground shadow-glow-teal disabled:opacity-50"
+          >
+            <Play size={14} /> START
+          </button>
+        </div>
+      </div>
+
+      {addOpen && <AddDrillModal onClose={() => setAddOpen(false)} onPick={(d) => { addDrill(d); setAddOpen(false); setToast(`Added ${d.name}`); }} />}
+
+      {runOpen && <RunSession session={session} onClose={() => setRunOpen(false)} onComplete={() => { setRunOpen(false); if (!session.completed) toggleComplete(); }} />}
+
+      {toast && (
+        <div className="fixed left-1/2 bottom-24 z-50 -translate-x-1/2 rounded-full bg-volt px-4 py-2 text-[12px] font-bold text-background shadow-glow-volt">
+          {toast}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Stat({ icon: Icon, tint, label, value }: { icon: typeof Clock; tint: "teal" | "volt"; label: string; value: string }) {
+  const color = tint === "teal" ? "text-teal" : "text-volt";
+  return (
+    <div className="rounded-2xl border border-border/60 bg-surface-2/60 p-3">
+      <div className={"flex items-center gap-1.5 " + color}>
+        <Icon size={14} />
+        <span className="text-[10px] font-bold tracking-[0.2em]">{label.toUpperCase()}</span>
+      </div>
+      <p className="mt-1.5 text-2xl font-bold text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function DrillThumb({ category }: { category: Category }) {
+  const isVolt = ["Edge Control", "Passing", "Reaction Training", "Circuits"].includes(category);
+  return (
+    <div className={"grid h-14 w-14 shrink-0 place-items-center rounded-xl border " + (isVolt ? "border-volt/40 bg-volt/10 text-volt" : "border-teal/40 bg-teal/10 text-teal")}>
+      <Disc3 size={22} />
+    </div>
+  );
+}
+
+function uniqueFocuses(blocks: Block[]): string[] {
+  const set = new Set<Category>();
+  for (const b of blocks) {
+    const d = findDrill(b.drillId);
+    if (d) set.add(d.category);
+  }
+  return Array.from(set);
+}
+
+function uniqueEquipment(blocks: Block[]): string[] {
+  const set = new Set<string>();
+  for (const b of blocks) {
+    const d = findDrill(b.drillId);
+    if (d) for (const e of d.equipment) set.add(e);
+  }
+  return Array.from(set);
+}
+
+function formatDate(iso: string) {
+  if (!iso) return "—";
+  try {
+    const d = new Date(iso + "T00:00:00");
+    return d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  } catch { return iso; }
+}
+
+/* ============================== Add Drill Modal ============================== */
+
+function AddDrillModal({ onClose, onPick }: { onClose: () => void; onPick: (d: Drill) => void }) {
+  const [q, setQ] = useState("");
+  const list = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    return DRILLS.filter((d) => !t || d.name.toLowerCase().includes(t) || d.category.toLowerCase().includes(t));
+  }, [q]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur" onClick={onClose}>
+      <div
+        className="max-h-[80vh] w-full max-w-screen-sm overflow-hidden rounded-t-3xl border-t border-border/60 bg-surface"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-border/60 p-4">
+          <div>
+            <p className="text-[10px] font-bold tracking-[0.3em] text-volt">ADD DRILL</p>
+            <h2 className="mt-0.5 text-lg font-bold text-foreground">Drill Library</h2>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="grid h-9 w-9 place-items-center rounded-full bg-surface-2 text-foreground">
+            <X size={16} />
+          </button>
+        </div>
+        <div className="p-3">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search drills…"
+            className="w-full rounded-xl border border-border/60 bg-surface-2 px-3 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-teal/60"
+          />
+        </div>
+        <div className="max-h-[55vh] space-y-2 overflow-y-auto px-3 pb-6">
+          {list.map((d) => (
+            <button
+              key={d.id}
+              onClick={() => onPick(d)}
+              className="flex w-full items-center gap-3 rounded-2xl border border-border/60 bg-surface-2 p-3 text-left transition-colors hover:border-teal/50"
+            >
+              <DrillThumb category={d.category} />
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold tracking-wider text-teal">{d.category.toUpperCase()}</p>
+                <h3 className="truncate text-sm font-bold text-foreground">{d.name}</h3>
+                <p className="text-[11px] text-muted-foreground">{d.difficulty} · {d.ageGroup} · {d.durationMin} min</p>
+              </div>
+              <Plus size={18} className="text-teal" />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== Run Session Mode ============================== */
+
+function RunSession({ session, onClose, onComplete }: { session: Session; onClose: () => void; onComplete: () => void }) {
+  const [idx, setIdx] = useState(0);
+  const [done, setDone] = useState<Set<string>>(new Set());
+  const [showVideo, setShowVideo] = useState(false);
+  const [showDiagram, setShowDiagram] = useState(false);
+
+  const block = session.blocks[idx];
+  const drill = block ? findDrill(block.drillId) : null;
+
+  const [seconds, setSeconds] = useState((block?.mins ?? 0) * 60);
+  const [running, setRunning] = useState(true);
+
+  useEffect(() => {
+    setSeconds((block?.mins ?? 0) * 60);
+    setRunning(true);
+    setShowVideo(false);
+    setShowDiagram(false);
+  }, [idx, block?.mins]);
+
+  useEffect(() => {
+    if (!running) return;
+    const t = setInterval(() => setSeconds((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [running]);
+
+  if (!block || !drill) return null;
+
+  const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
+  const ss = String(seconds % 60).padStart(2, "0");
+  const total = session.blocks.length;
+  const completedAll = done.size === total;
+
+  function completeDrill() {
+    const next = new Set(done);
+    next.add(block.uid);
+    setDone(next);
+    if (idx < total - 1) setIdx(idx + 1);
+    else onComplete();
+  }
+
+  function nextDrill() {
+    if (idx < total - 1) setIdx(idx + 1);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+      <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+        <button onClick={onClose} aria-label="Close run mode" className="grid h-9 w-9 place-items-center rounded-full bg-surface text-foreground">
+          <X size={16} />
+        </button>
+        <div className="text-center">
+          <p className="text-[10px] font-bold tracking-[0.3em] text-volt">RUN MODE</p>
+          <p className="text-[11px] text-muted-foreground">Drill {idx + 1} of {total}</p>
+        </div>
+        <div className="w-9" />
+      </div>
+
+      {/* Progress bar */}
+      <div className="flex gap-1 px-4 pt-3">
+        {session.blocks.map((b, i) => (
+          <div
+            key={b.uid}
+            className={
+              "h-1.5 flex-1 rounded-full " +
+              (done.has(b.uid) ? "bg-volt" : i === idx ? "bg-teal" : "bg-surface-2")
+            }
+          />
+        ))}
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-5 pt-5 pb-32">
+        <p className="text-[10px] font-bold tracking-wider text-teal">{drill.category.toUpperCase()}</p>
+        <h1 className="mt-1 text-3xl font-bold text-foreground">{drill.name}</h1>
+        <p className="mt-1 text-[12px] text-muted-foreground">{drill.difficulty} · {drill.ageGroup}</p>
+
+        {/* Timer */}
+        <div className="mt-5 rounded-3xl border border-teal/40 bg-gradient-to-br from-teal/10 to-volt/10 p-6 text-center">
+          <p className="text-[10px] font-bold tracking-[0.3em] text-teal">TIMER</p>
+          <p className="mt-2 font-mono text-6xl font-bold text-foreground tabular-nums">{mm}:{ss}</p>
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <button
+              onClick={() => setRunning((r) => !r)}
+              className="flex items-center gap-1.5 rounded-full bg-gradient-brand px-5 py-2 text-[12px] font-bold text-primary-foreground shadow-glow-teal"
+            >
+              {running ? <><Pause size={14} /> PAUSE</> : <><Play size={14} /> RESUME</>}
+            </button>
+            <button
+              onClick={() => setSeconds(block.mins * 60)}
+              className="grid h-10 w-10 place-items-center rounded-full border border-border/60 bg-surface text-foreground"
+              aria-label="Reset timer"
+            >
+              <RotateCcw size={14} />
+            </button>
+          </div>
+        </div>
+
+        {/* Media toggles */}
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <button
+            onClick={() => { setShowVideo((v) => !v); setShowDiagram(false); }}
+            className={"flex items-center justify-center gap-1.5 rounded-2xl py-3 text-[11px] font-bold tracking-wide " + (showVideo ? "bg-teal/20 text-teal" : "border border-border/60 bg-surface text-foreground")}
+          >
+            <Video size={14} /> VIDEO
+          </button>
+          <button
+            onClick={() => { setShowDiagram((v) => !v); setShowVideo(false); }}
+            className={"flex items-center justify-center gap-1.5 rounded-2xl py-3 text-[11px] font-bold tracking-wide " + (showDiagram ? "bg-volt/20 text-volt" : "border border-border/60 bg-surface text-foreground")}
+          >
+            <ImageIcon size={14} /> DIAGRAM
+          </button>
+        </div>
+
+        {showVideo && (
+          <div className="mt-3 grid aspect-video place-items-center rounded-2xl border border-border/60 bg-surface-2 text-muted-foreground">
+            <div className="text-center">
+              <Video size={28} className="mx-auto text-teal" />
+              <p className="mt-2 text-[12px]">Video demonstration</p>
+            </div>
+          </div>
+        )}
+        {showDiagram && (
+          <div className="mt-3 grid aspect-video place-items-center rounded-2xl border border-border/60 bg-surface-2 text-muted-foreground">
+            <div className="text-center">
+              <ImageIcon size={28} className="mx-auto text-volt" />
+              <p className="mt-2 text-[12px]">Drill diagram</p>
+            </div>
+          </div>
+        )}
+
+        {/* Coaching points */}
+        <div className="mt-5">
+          <p className="text-[10px] font-bold tracking-[0.3em] text-volt">COACHING POINTS</p>
+          <ul className="mt-2 space-y-2">
+            {drill.notes.map((n, i) => (
+              <li key={i} className="flex gap-2 rounded-xl border border-border/60 bg-surface p-3">
+                <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-teal" />
+                <span className="text-[13px] text-foreground">{n}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {block.notes && (
+          <div className="mt-4 rounded-2xl border border-volt/30 bg-volt/10 p-3">
+            <p className="text-[10px] font-bold tracking-[0.3em] text-volt">SESSION NOTES</p>
+            <p className="mt-1 text-[13px] text-foreground">{block.notes}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Sticky run actions */}
+      <div className="fixed inset-x-0 bottom-0 border-t border-border/60 bg-background/95 px-3 py-3 backdrop-blur">
+        <div className="mx-auto flex max-w-screen-sm items-center gap-2">
+          <button
+            onClick={nextDrill}
+            disabled={idx >= total - 1}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-2xl border border-border/60 bg-surface py-3 text-[11px] font-bold tracking-wide text-foreground disabled:opacity-40"
+          >
+            <SkipForward size={14} /> NEXT
+          </button>
+          <button
+            onClick={completeDrill}
+            className="flex flex-[1.4] items-center justify-center gap-1.5 rounded-2xl bg-gradient-brand py-3 text-[11px] font-bold tracking-wide text-primary-foreground shadow-glow-teal"
+          >
+            <CheckCircle2 size={14} /> {completedAll ? "FINISH" : "COMPLETE DRILL"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
