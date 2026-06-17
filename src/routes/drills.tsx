@@ -273,49 +273,58 @@ function FilterRow({ label, options, value, onChange }: { label: string; options
 function DrillCard({ d, onAdd, selectMode, selected, onToggleSelect }: { d: Drill; onAdd: () => void; selectMode: boolean; selected: boolean; onToggleSelect: () => void }) {
   const { isFavorite, toggle } = useFavorites();
   const fav = isFavorite(d.id);
-  const cardClass = "flex w-full items-center gap-3 rounded-2xl border bg-surface p-3 transition-colors " +
-    (selectMode
-      ? (selected ? "border-teal bg-teal/10 pr-3" : "border-border/60 pr-3 hover:border-teal/40")
-      : "border-border/60 pr-24 hover:border-teal/40");
-  const inner = (
-    <>
-      {selectMode && (
-        <div className={"grid h-6 w-6 shrink-0 place-items-center rounded-full border " + (selected ? "border-teal bg-teal text-background" : "border-border/60 bg-surface-2 text-muted-foreground")}>
-          {selected && <Check size={14} strokeWidth={3} />}
-        </div>
-      )}
-      <div className="relative grid h-20 w-24 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-surface-2 to-background">
-        <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "radial-gradient(circle at 30% 40%, #00E5D6 0, transparent 60%)" }} />
-        <div className="relative grid h-9 w-9 place-items-center rounded-full bg-gradient-brand text-primary-foreground shadow-glow-teal">
-          <Play size={14} fill="currentColor" />
-        </div>
-        <span className="absolute bottom-1 right-1 rounded-md bg-background/80 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-volt">L{d.level}</span>
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-semibold tracking-wider text-volt">{d.category.toUpperCase()}</p>
-        <h3 className="mt-0.5 truncate text-sm font-bold text-foreground">{d.name}</h3>
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-          <span className="flex items-center gap-1"><BarChart3 size={11} /> {d.difficulty}</span>
-          <span className="flex items-center gap-1"><Users size={11} /> {d.ageGroup}</span>
-          <span className="flex items-center gap-1"><Clock size={11} /> {d.durationMin} min</span>
-          <span className="flex items-center gap-1"><Wrench size={11} /> {d.equipment.length} items</span>
-        </div>
-      </div>
-      {!selectMode && <ChevronRight size={16} className="text-muted-foreground" />}
-    </>
-  );
+  const shellClass = "flex w-full items-center gap-2 rounded-2xl border bg-surface p-3 transition-colors " +
+    (selected ? "border-teal bg-teal/10" : "border-border/60 hover:border-teal/40");
 
   if (selectMode) {
     return (
-      <button type="button" onClick={onToggleSelect} className={cardClass + " text-left"}>
-        {inner}
+      <button type="button" onClick={onToggleSelect} className={shellClass + " text-left"}>
+        <div className={"grid h-9 w-9 shrink-0 place-items-center rounded-full border " + (selected ? "border-teal bg-teal text-background" : "border-border/60 bg-surface-2 text-muted-foreground")}>
+          {selected && <Check size={15} strokeWidth={3} />}
+        </div>
+        <DrillCardContent d={d} />
       </button>
     );
   }
 
   return (
-    <div className="relative">
-    <Link to="/drills/$drillId" params={{ drillId: d.id }} className={cardClass}>
+    <div className={"relative " + shellClass}>
+      <Link
+        to="/drills/$drillId"
+        params={{ drillId: d.id }}
+        aria-label={`Open ${d.name} drill detail`}
+        className="absolute inset-0 z-0 rounded-2xl focus:outline-none focus:ring-2 focus:ring-teal/70"
+      />
+      <div className="pointer-events-none relative z-10 flex min-w-0 flex-1 items-center gap-3">
+        <DrillCardContent d={d} />
+        <ChevronRight size={16} className="shrink-0 text-muted-foreground" />
+      </div>
+
+      <div className="relative z-20 flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(); }}
+          aria-label="Add to session"
+          className="grid h-9 w-9 place-items-center rounded-full border border-volt/40 bg-volt/15 text-volt transition-colors hover:bg-volt/25"
+        >
+          <Plus size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(d.id); }}
+          aria-label={fav ? "Remove from favourites" : "Add to favourites"}
+          className={"grid h-9 w-9 place-items-center rounded-full border transition-colors " + (fav ? "border-teal/40 bg-teal/15 text-teal" : "border-border/60 bg-surface-2 text-muted-foreground hover:text-teal")}
+        >
+          <Heart size={14} fill={fav ? "currentColor" : "none"} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DrillCardContent({ d }: { d: Drill }) {
+  return (
+    <>
       <div className="relative grid h-20 w-24 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-surface-2 to-background">
         <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "radial-gradient(circle at 30% 40%, #00E5D6 0, transparent 60%)" }} />
         <div className="relative grid h-9 w-9 place-items-center rounded-full bg-gradient-brand text-primary-foreground shadow-glow-teal">
@@ -333,23 +342,7 @@ function DrillCard({ d, onAdd, selectMode, selected, onToggleSelect }: { d: Dril
           <span className="flex items-center gap-1"><Wrench size={11} /> {d.equipment.length} items</span>
         </div>
       </div>
-      <ChevronRight size={16} className="text-muted-foreground" />
-    </Link>
-      <button
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(); }}
-        aria-label="Add to session"
-        className="absolute right-12 top-1/2 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full border border-volt/40 bg-volt/15 text-volt transition-colors hover:bg-volt/25"
-      >
-        <Plus size={16} />
-      </button>
-      <button
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(d.id); }}
-        aria-label={fav ? "Remove from favourites" : "Add to favourites"}
-        className={"absolute right-3 top-1/2 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full border transition-colors " + (fav ? "border-teal/40 bg-teal/15 text-teal" : "border-border/60 bg-surface-2 text-muted-foreground hover:text-teal")}
-      >
-        <Heart size={14} fill={fav ? "currentColor" : "none"} />
-      </button>
-    </div>
+    </>
   );
 }
 
