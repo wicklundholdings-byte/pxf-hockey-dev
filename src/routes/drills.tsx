@@ -136,12 +136,20 @@ function Drills() {
           <p className="text-[11px] font-semibold tracking-[0.3em] text-muted-foreground">DRILL LIBRARY</p>
           <h1 className="mt-1 text-3xl font-bold text-foreground">Drills</h1>
         </div>
-        <button
-          onClick={() => { if (selectMode) exitSelect(); else setSelectMode(true); }}
-          className={"mt-1 rounded-full border px-3 py-1.5 text-[11px] font-bold tracking-wider transition-colors " + (selectMode ? "border-teal bg-teal text-background" : "border-border/60 bg-surface text-foreground/80")}
-        >
-          {selectMode ? "DONE" : "SELECT"}
-        </button>
+        <div className="mt-1 flex items-center gap-2">
+          <Link
+            to="/drill-builder"
+            className="flex items-center gap-1 rounded-full border border-volt/50 bg-volt/15 px-3 py-1.5 text-[11px] font-bold tracking-wider text-volt shadow-glow-volt"
+          >
+            <Plus size={13} /> CREATE DRILL
+          </Link>
+          <button
+            onClick={() => { if (selectMode) exitSelect(); else setSelectMode(true); }}
+            className={"rounded-full border px-3 py-1.5 text-[11px] font-bold tracking-wider transition-colors " + (selectMode ? "border-teal bg-teal text-background" : "border-border/60 bg-surface text-foreground/80")}
+          >
+            {selectMode ? "DONE" : "SELECT"}
+          </button>
+        </div>
       </div>
 
       <div className="mt-4 flex items-center gap-2">
