@@ -514,8 +514,8 @@ function MiniDrillDiagram({ drill }: { drill: Drill }) {
   const player = "hsl(95 90% 60%)";
 
   return (
-    <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-xl border border-border/60 bg-surface-2">
-      <svg viewBox="0 0 120 100" className="h-full w-full" preserveAspectRatio="xMidYMid slice">
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-border/60 bg-surface-2">
+      <svg viewBox="0 0 120 100" className="h-full w-full" preserveAspectRatio="xMidYMid meet">
         {/* Rink backdrop */}
         <rect x="3" y="3" width="114" height="94" rx="14" ry="14" fill="hsl(210 25% 12%)" stroke="hsl(0 0% 30%)" strokeWidth="1" />
         <line x1="60" y1="6" x2="60" y2="94" stroke="hsl(0 0% 28%)" strokeWidth="0.5" strokeDasharray="2 2" />
