@@ -335,7 +335,7 @@ function SessionDetail() {
                   (drag?.over === i && drag.from !== i ? "border-teal/60 shadow-glow-teal" : "border-border/60")
                 }
               >
-                <div className="flex items-stretch gap-2 p-3">
+                <div className="flex gap-2 p-3">
                   <div className="flex flex-col items-center gap-2 pt-1">
                     <span className="grid h-7 w-7 place-items-center rounded-full bg-gradient-brand text-[12px] font-bold text-primary-foreground">
                       {i + 1}
@@ -351,15 +351,19 @@ function SessionDetail() {
                   <Link
                     to="/drill-detail/$drillId"
                     params={{ drillId: d.id }}
-                    className="flex flex-1 gap-3"
+                    className="flex min-w-0 flex-1 flex-col gap-3"
                   >
-                    <MiniDrillDiagram drill={d} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-bold tracking-wider text-teal">{d.category.toUpperCase()}</p>
-                      <h3 className="truncate text-sm font-bold text-foreground">{d.name}</h3>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">
-                        {d.difficulty} · {d.ageGroup} · {b.mins} min
-                      </p>
+                    <div className="min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold tracking-wider text-teal">{d.category.toUpperCase()}</p>
+                          <h3 className="truncate text-sm font-bold text-foreground">{d.name}</h3>
+                          <p className="mt-0.5 text-[11px] text-muted-foreground">
+                            {d.difficulty} · {d.ageGroup} · {b.mins} min
+                          </p>
+                        </div>
+                        <ChevronRight size={16} className="mt-1 shrink-0 text-muted-foreground" />
+                      </div>
                       <p className="mt-1 line-clamp-1 text-[11px] text-muted-foreground">
                         <Wrench size={9} className="-mt-0.5 mr-1 inline text-volt" />
                         {d.equipment.join(", ")}
@@ -370,7 +374,7 @@ function SessionDetail() {
                         </p>
                       )}
                     </div>
-                    <ChevronRight size={16} className="self-center text-muted-foreground" />
+                    <MiniDrillDiagram drill={d} />
                   </Link>
                 </div>
 
