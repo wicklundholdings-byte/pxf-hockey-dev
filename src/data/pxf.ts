@@ -60,6 +60,8 @@ export const DRILLS: Drill[] = [
     ],
     progressions: ["Stationary handles", "Walking 8", "Skating 8", "Skating 8 with deke at top"],
     related: ["mohawk-transitions", "tight-turn-stops"],
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    posterUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
   },
   {
     id: "tight-turn-stops",
@@ -75,6 +77,8 @@ export const DRILLS: Drill[] = [
     mistakes: ["Rising up between reps.", "Slow first step out of the stop."],
     progressions: ["2-cone stop", "4-cone stop", "Stop + crossover start", "Game-pace pattern"],
     related: ["inside-edge-crossovers"],
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+    posterUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ElephantsDream.jpg",
   },
   {
     id: "inside-edge-crossovers",
