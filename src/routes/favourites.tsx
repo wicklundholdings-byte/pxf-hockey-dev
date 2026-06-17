@@ -162,7 +162,7 @@ function FolderTab({ label, count, active, onClick, muted }: { label: string; co
 function FavoriteDrillCard({ d, folderLabels, onUnfavorite, onOpenFolders }: { d: Drill; folderLabels: string[]; onUnfavorite: () => void; onOpenFolders: () => void }) {
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-surface transition-colors hover:border-teal/40">
-      <Link to="/drills/$drillId" params={{ drillId: d.id }} className="flex w-full gap-3 p-3">
+      <Link to="/drill-detail/$drillId" params={{ drillId: d.id }} className="flex w-full gap-3 p-3">
         <div className="relative grid h-24 w-32 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-surface-2 to-background">
           <div className="absolute inset-0 opacity-50" style={{ backgroundImage: "radial-gradient(circle at 30% 35%, #00E5D6 0, transparent 55%), radial-gradient(circle at 75% 75%, #39FF14 0, transparent 60%)" }} />
           <div className="relative grid h-10 w-10 place-items-center rounded-full bg-gradient-brand text-primary-foreground shadow-glow-teal">

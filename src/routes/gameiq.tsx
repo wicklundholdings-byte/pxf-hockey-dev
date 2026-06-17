@@ -73,7 +73,7 @@ function GameIQ() {
       <h2 className="mt-7 text-xs font-bold tracking-[0.25em] text-foreground/90">POD-BASED DRILLS</h2>
       <div className="mt-3 space-y-2">
         {podDrills.map((d) => (
-          <Link key={d.id} to="/drills/$drillId" params={{ drillId: d.id }} className="flex items-center gap-3 rounded-2xl border border-border/60 bg-surface p-3">
+          <Link key={d.id} to="/drill-detail/$drillId" params={{ drillId: d.id }} className="flex items-center gap-3 rounded-2xl border border-border/60 bg-surface p-3">
             <div className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-brand text-primary-foreground shadow-glow-teal">
               <Play size={16} fill="currentColor" />
             </div>

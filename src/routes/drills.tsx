@@ -290,7 +290,7 @@ function DrillCard({ d, onAdd, selectMode, selected, onToggleSelect }: { d: Dril
   return (
     <div className={"relative " + shellClass}>
       <Link
-        to="/drills/$drillId"
+        to="/drill-detail/$drillId"
         params={{ drillId: d.id }}
         aria-label={`Open ${d.name} drill detail`}
         className="absolute inset-0 z-0 rounded-2xl focus:outline-none focus:ring-2 focus:ring-teal/70"

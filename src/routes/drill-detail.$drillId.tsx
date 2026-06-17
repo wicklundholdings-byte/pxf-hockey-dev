@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { findDrill, relatedTo, type Drill } from "@/data/pxf";
 import { useFavorites } from "@/hooks/useFavorites";
 
-export const Route = createFileRoute("/drills/$drillId")({
+export const Route = createFileRoute("/drill-detail/$drillId")({
   head: ({ params }) => {
     const d = params ? findDrill(params.drillId) : undefined;
     return {
@@ -198,7 +198,7 @@ function DrillDetail() {
             <SectionHeader>RELATED DRILLS</SectionHeader>
             <div className="space-y-2">
               {related.map((r) => (
-                <Link key={r.id} to="/drills/$drillId" params={{ drillId: r.id }} className="flex items-center gap-3 rounded-2xl border border-border/60 bg-surface px-3 py-3">
+                <Link key={r.id} to="/drill-detail/$drillId" params={{ drillId: r.id }} className="flex items-center gap-3 rounded-2xl border border-border/60 bg-surface px-3 py-3">
                   <div className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-brand text-primary-foreground"><Play size={14} fill="currentColor" /></div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[10px] font-semibold tracking-wider text-volt">{r.category.toUpperCase()}</p>

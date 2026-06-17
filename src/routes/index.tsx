@@ -181,7 +181,7 @@ function Home() {
 
       <section className="mt-7">
         <SectionHeader title="Featured Drill" to="/drills" />
-        <Link to="/drills/$drillId" params={{ drillId: "figure-8-puck" }} className="mt-3 block overflow-hidden rounded-3xl border border-border/60 bg-surface">
+        <Link to="/drill-detail/$drillId" params={{ drillId: "figure-8-puck" }} className="mt-3 block overflow-hidden rounded-3xl border border-border/60 bg-surface">
           <div className="relative aspect-[16/9] bg-gradient-to-br from-surface-2 to-background">
             <FigureEightSvg className="absolute inset-0 h-full w-full" />
             <span className="absolute left-3 top-3 rounded-full bg-background/70 px-2.5 py-1 text-[10px] font-semibold tracking-wider text-teal backdrop-blur">ADVANCED</span>
