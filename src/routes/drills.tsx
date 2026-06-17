@@ -288,18 +288,19 @@ function DrillCard({ d, onAdd, selectMode, selected, onToggleSelect }: { d: Dril
   }
 
   return (
-    <div className={shellClass}>
+    <div className={"relative " + shellClass}>
       <Link
         to="/drills/$drillId"
         params={{ drillId: d.id }}
         aria-label={`Open ${d.name} drill detail`}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal/70"
-      >
+        className="absolute inset-0 z-0 rounded-2xl focus:outline-none focus:ring-2 focus:ring-teal/70"
+      />
+      <div className="pointer-events-none relative z-10 flex min-w-0 flex-1 items-center gap-3">
         <DrillCardContent d={d} />
         <ChevronRight size={16} className="shrink-0 text-muted-foreground" />
-      </Link>
+      </div>
 
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="relative z-20 flex shrink-0 items-center gap-2">
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(); }}
