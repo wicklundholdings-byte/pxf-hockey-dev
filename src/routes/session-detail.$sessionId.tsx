@@ -353,7 +353,7 @@ function SessionDetail() {
                     params={{ drillId: d.id }}
                     className="flex flex-1 gap-3"
                   >
-                    <DrillThumb category={d.category} />
+                    <MiniDrillDiagram drill={d} />
                     <div className="min-w-0 flex-1">
                       <p className="text-[10px] font-bold tracking-wider text-teal">{d.category.toUpperCase()}</p>
                       <h3 className="truncate text-sm font-bold text-foreground">{d.name}</h3>
