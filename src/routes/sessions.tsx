@@ -4,7 +4,7 @@ import {
   Plus, X, Calendar as CalendarIcon, Clock, Users, BarChart3, Disc3,
   ListChecks, Tag, ArrowUpRight, CheckCircle2, Circle, FileEdit,
 } from "lucide-react";
-import { CATEGORIES, DRILLS, type Category, type Drill } from "@/data/pxf";
+import { CATEGORIES, DRILLS, type Category } from "@/data/pxf";
 
 const SESSIONS_KEY = "pxf:sessions:v2";
 const EVT = "pxf:sessions-changed";
@@ -373,6 +373,3 @@ function Chip({
     </button>
   );
 }
-
-// keep import to avoid unused warning when DRILLS isn't referenced
-void Drill;
