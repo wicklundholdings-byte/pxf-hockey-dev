@@ -19,6 +19,7 @@ import { Route as MembershipRouteImport } from './routes/membership'
 import { Route as GameiqRouteImport } from './routes/gameiq'
 import { Route as FavouritesRouteImport } from './routes/favourites'
 import { Route as DrillsRouteImport } from './routes/drills'
+import { Route as DrillBuilderRouteImport } from './routes/drill-builder'
 import { Route as CoachRouteImport } from './routes/coach'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AchievementsRouteImport } from './routes/achievements'
@@ -77,6 +78,11 @@ const DrillsRoute = DrillsRouteImport.update({
   path: '/drills',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DrillBuilderRoute = DrillBuilderRouteImport.update({
+  id: '/drill-builder',
+  path: '/drill-builder',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CoachRoute = CoachRouteImport.update({
   id: '/coach',
   path: '/coach',
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/achievements': typeof AchievementsRoute
   '/calendar': typeof CalendarRoute
   '/coach': typeof CoachRouteWithChildren
+  '/drill-builder': typeof DrillBuilderRoute
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/achievements': typeof AchievementsRoute
   '/calendar': typeof CalendarRoute
   '/coach': typeof CoachRouteWithChildren
+  '/drill-builder': typeof DrillBuilderRoute
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/achievements': typeof AchievementsRoute
   '/calendar': typeof CalendarRoute
   '/coach': typeof CoachRouteWithChildren
+  '/drill-builder': typeof DrillBuilderRoute
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/calendar'
     | '/coach'
+    | '/drill-builder'
     | '/drills'
     | '/favourites'
     | '/gameiq'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/calendar'
     | '/coach'
+    | '/drill-builder'
     | '/drills'
     | '/favourites'
     | '/gameiq'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/calendar'
     | '/coach'
+    | '/drill-builder'
     | '/drills'
     | '/favourites'
     | '/gameiq'
@@ -236,6 +248,7 @@ export interface RootRouteChildren {
   AchievementsRoute: typeof AchievementsRoute
   CalendarRoute: typeof CalendarRoute
   CoachRoute: typeof CoachRouteWithChildren
+  DrillBuilderRoute: typeof DrillBuilderRoute
   DrillsRoute: typeof DrillsRoute
   FavouritesRoute: typeof FavouritesRoute
   GameiqRoute: typeof GameiqRoute
@@ -322,6 +335,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DrillsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/drill-builder': {
+      id: '/drill-builder'
+      path: '/drill-builder'
+      fullPath: '/drill-builder'
+      preLoaderRoute: typeof DrillBuilderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/coach': {
       id: '/coach'
       path: '/coach'
@@ -389,6 +409,7 @@ const rootRouteChildren: RootRouteChildren = {
   AchievementsRoute: AchievementsRoute,
   CalendarRoute: CalendarRoute,
   CoachRoute: CoachRouteWithChildren,
+  DrillBuilderRoute: DrillBuilderRoute,
   DrillsRoute: DrillsRoute,
   FavouritesRoute: FavouritesRoute,
   GameiqRoute: GameiqRoute,
@@ -405,13 +426,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
