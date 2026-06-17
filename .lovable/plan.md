@@ -1,51 +1,72 @@
-This is a large multi-screen build. Here's what I'll ship in one pass, all frontend (no backend yet — data will be in-file mock data so the UI feels real and is easy to wire to Lovable Cloud later).
+## PXF Digital Coach
 
-## Screens
+A new bottom-tab destination where a coach picks a saved session and runs an entire practice guided by **video of a real coach on the ice** demonstrating and explaining each drill. No AI voice — every cue comes from pre-recorded coach footage tied to each drill.
 
-1. **Home** (`/`) — rebuild
-   - Logo + welcome + streak chip + quick-access row
-   - 8 main category tiles: Skating Flow, Edge Control, Puck Control, Passing, Shooting, Reaction Training, GameIQ, Circuits
-   - Continue Training, Recommended Progression, Upcoming Session, Featured Drill cards
+### 1. Navigation change
 
-2. **Drills** (`/drills`) — drill library
-   - Search bar, filter chips (Age, Skill Level, Equipment, Category)
-   - Category sections with drill cards (name, difficulty, age group, equipment, thumbnail, progression level)
+Update `src/components/app-shell.tsx`:
+- Replace the `Progress` nav item with `Coach` → `/coach` (Whistle icon).
+- The `/progress` route stays so existing links still work; it's just removed from the bottom bar.
 
-3. **Drill Detail** (`/drills/$drillId`) — new dynamic route
-   - Hero video block, name, category, difficulty, equipment
-   - Diagram, coaching notes, common mistakes, progressions, related drills
-   - Start Session CTA
+### 2. New route: `/coach` (Coach hub)
 
-4. **Sessions** (`/sessions`) — session builder
-   - Form: age group, skill level, # players, ice time, equipment
-   - Generated session blocks: Warm Up, Skill Development, Progression Work, Game Transfer, Cool Down
-   - Reorder (drag handles), save, edit
+`src/routes/coach.tsx`. Mobile-first, matte black / Electric Teal / Volt Green, consistent with the rest of the app:
+- Header: "Digital Coach" + tagline "Your on-ice coach for every drill."
+- List of saved sessions from the existing `localStorage` `SESSIONS_KEY` store.
+- Each card: session name, date, age group, skill level, total duration, drill count, big `START PRACTICE` button → `/coach/$sessionId`.
+- Empty state with a CTA back to `/sessions`.
 
-5. **Programs** (`/programs`) — progression pathways
-   - 7 pathway cards with vertical Flow 1 → Flow 4 stepper
-   - Lock state, % complete, est. time
+### 3. New route: `/coach.$sessionId` (Practice Mode)
 
-6. **Progress** (`/progress`) — analytics dashboard
-   - Stat cards: sessions, hours, pathways, streak
-   - Skill rating bars/rings, badges grid, weekly chart
+`src/routes/coach.$sessionId.tsx`. Full-screen, video-first layout. Three phases:
 
-7. **GameIQ** (`/gameiq`) — new route, also linked from home category
-   - Focus pillars, pod drills, reaction pathways, metrics, hardware teaser
+**a. Pre-flight**
+- Session summary, drill list, big `START PRACTICE` button.
+- Requests wake lock when started.
 
-8. **Membership** (`/membership`) — new route, linked from profile
-   - 3 plan cards (30-day trial / monthly / annual), feature list
+**b. Active drill view (one drill at a time)**
+- Top bar: `Drill X of N`, session name, Exit (with confirm).
+- **Coach video player (hero element):** plays the drill's coach-explanation video full-width with native controls. Autoplay muted on drill load (browser autoplay rules); a clear Play / Unmute button overlays until tapped. Falls back to a "Coach video coming soon" placeholder card when a drill has no video yet.
+- Below the video: drill name, focus area, duration, equipment chips, coaching points list.
+- Buttons: `Diagram` (links to drill detail), `Replay video`.
+- Timer (mm:ss) with Pause / Resume and +30s / -30s.
+- Note input (saved into in-memory practice log for the summary).
+- Footer actions: `Skip`, `Complete Drill`, `Next Drill`.
 
-## Tech / Design
+**c. Summary**
+- Total time, drills completed vs skipped, per-drill actual time, notes captured.
+- `Mark Session Complete` (persists `completed: true` to the session via existing save helper) and `Back to Coach`.
 
-- Pure frontend, mock data in `src/data/pxf.ts`
-- Reuse existing `AppShell` + dark theme tokens (Electric Teal #00E5D6, Volt Green #39FF14, Matte Black, White) already in `styles.css`
-- Tailwind v4 utility classes + semantic tokens, no hardcoded colors
-- shadcn primitives (Card, Button, Input, Badge, Progress, Tabs) where useful
-- Charts via lightweight inline SVG / progress rings (no new deps)
-- Drag-and-drop for session builder: native HTML5 DnD (no new deps) to keep it fast
-- Bottom nav already exists in AppShell — add Programs/GameIQ entry points as needed
+### 4. Drill videos
 
-## Out of scope (this pass)
-- Real auth, real video playback (thumbnails + play affordance only), real payments, backend persistence (saved sessions live in localStorage)
+Each drill in the drill catalog gets an optional `videoUrl` (and optional `posterUrl`). For initial wiring:
+- Add the field to the existing drill type.
+- Seed 2–3 sample drills with publicly hostable demo MP4s so the flow is testable end-to-end; the rest show the "coming soon" placeholder.
+- Later you (or your editor) can paste real Vimeo / Mux / direct MP4 URLs per drill — no code change needed.
 
-Reply "go" to build, or tell me what to drop/change.
+If you'd like, this can also be a Lovable Cloud-backed media library so you upload coach videos in-app instead of editing URLs. Say the word and I'll fold that in as a follow-up.
+
+### 5. Wake lock helper
+
+`src/lib/coach-runtime.ts` (client-only, SSR-safe):
+- `useWakeLock()` — `navigator.wakeLock.request('screen')` on mount, re-request on `visibilitychange`, release on unmount. Silent no-op where unsupported.
+
+No Web Speech, no AI voice synthesis — explicitly removed per your clarification.
+
+### 6. Data model
+
+Reuse the existing localStorage session shape. Per-drill `completed` / `actualSeconds` / `notes` live in an in-memory practice log; only `session.completed` is persisted on finish.
+
+### Technical notes
+
+- New TanStack Start routes: `src/routes/coach.tsx`, `src/routes/coach.$sessionId.tsx`. Router plugin regenerates `routeTree.gen.ts`.
+- Video uses the native `<video>` element with `playsInline`, `controls`, and `preload="metadata"` so it works on iOS Safari without extra dependencies.
+- No new npm packages.
+- Existing Run Session modal on Session Detail stays untouched.
+
+```text
+Bottom nav: Home  Drills  Sessions  [Coach]  Profile
+                                     └─ /coach (pick session)
+                                          └─ /coach/$sessionId (Practice Mode)
+                                               Pre-flight → Coach video per drill → Summary
+```
