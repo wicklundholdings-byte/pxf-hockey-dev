@@ -495,6 +495,150 @@ function DrillThumb({ category }: { category: Category }) {
   );
 }
 
+/* ============================== Mini Drill Diagram ============================== */
+// Simplified top-down rink visualization. Setup elements (slips, cones, players,
+// pucks) and routes (skating dashed, passing dotted) vary by drill category so
+// coaches can scan the whole session at a glance.
+
+function MiniDrillDiagram({ drill }: { drill: Drill }) {
+  // teal = skating route, volt = passing route, orange = cones, white = pucks
+  const skating = "hsl(180 90% 55%)";
+  const passing = "hsl(95 90% 60%)";
+  const cone = "hsl(28 95% 60%)";
+  const slip = "hsl(180 90% 55%)";
+  const puck = "#f5f5f5";
+  const player = "hsl(95 90% 60%)";
+
+  return (
+    <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-xl border border-border/60 bg-surface-2">
+      <svg viewBox="0 0 120 100" className="h-full w-full" preserveAspectRatio="xMidYMid slice">
+        {/* Rink backdrop */}
+        <rect x="3" y="3" width="114" height="94" rx="14" ry="14" fill="hsl(210 25% 12%)" stroke="hsl(0 0% 30%)" strokeWidth="1" />
+        <line x1="60" y1="6" x2="60" y2="94" stroke="hsl(0 0% 28%)" strokeWidth="0.5" strokeDasharray="2 2" />
+        <circle cx="60" cy="50" r="10" fill="none" stroke="hsl(0 0% 25%)" strokeWidth="0.5" />
+
+        {(() => {
+          switch (drill.category) {
+            case "Skating Flow":
+              return (
+                <>
+                  <Cone x={25} y={75} fill={cone} />
+                  <Cone x={60} y={30} fill={cone} />
+                  <Cone x={95} y={75} fill={cone} />
+                  <path d="M25,75 Q40,40 60,30 Q80,40 95,75" stroke={skating} strokeWidth="1.5" strokeDasharray="3 2" fill="none" markerEnd="url(#arrow-teal)" />
+                  <Player x={25} y={85} fill={player} />
+                </>
+              );
+            case "Edge Control":
+              return (
+                <>
+                  <circle cx="60" cy="50" r="22" fill="none" stroke={skating} strokeWidth="1.2" strokeDasharray="3 2" />
+                  <Cone x={60} y={50} fill={cone} />
+                  <Player x={38} y={50} fill={player} />
+                </>
+              );
+            case "Puck Control":
+              return (
+                <>
+                  <Slip x={35} y={40} fill={slip} />
+                  <Slip x={85} y={60} fill={slip} />
+                  <Puck x={35} y={70} fill={puck} />
+                  <path d="M35,70 Q55,55 35,40 Q15,55 35,40 Q55,55 85,60" stroke={skating} strokeWidth="1.4" strokeDasharray="3 2" fill="none" markerEnd="url(#arrow-teal)" />
+                  <Player x={35} y={80} fill={player} />
+                </>
+              );
+            case "Passing":
+              return (
+                <>
+                  <Player x={25} y={75} fill={player} />
+                  <Player x={95} y={75} fill={player} />
+                  <Player x={60} y={28} fill={player} />
+                  <Puck x={25} y={75} fill={puck} />
+                  <path d="M25,75 L60,28" stroke={passing} strokeWidth="1.4" strokeDasharray="1 3" fill="none" markerEnd="url(#arrow-volt)" />
+                  <path d="M60,28 L95,75" stroke={passing} strokeWidth="1.4" strokeDasharray="1 3" fill="none" markerEnd="url(#arrow-volt)" />
+                </>
+              );
+            case "Shooting":
+              return (
+                <>
+                  <rect x="48" y="14" width="24" height="6" rx="1" fill="none" stroke="hsl(0 0% 70%)" strokeWidth="1" />
+                  <Cone x={40} y={75} fill={cone} />
+                  <Cone x={80} y={75} fill={cone} />
+                  <Puck x={60} y={70} fill={puck} />
+                  <Player x={60} y={82} fill={player} />
+                  <path d="M60,70 L60,22" stroke={passing} strokeWidth="1.6" strokeDasharray="1 3" fill="none" markerEnd="url(#arrow-volt)" />
+                </>
+              );
+            case "Reaction Training":
+              return (
+                <>
+                  <Cone x={30} y={35} fill={cone} />
+                  <Cone x={90} y={35} fill={cone} />
+                  <Cone x={30} y={75} fill={cone} />
+                  <Cone x={90} y={75} fill={cone} />
+                  <Player x={60} y={55} fill={player} />
+                  <path d="M60,55 L30,35" stroke={skating} strokeWidth="1" strokeDasharray="2 2" fill="none" />
+                  <path d="M60,55 L90,35" stroke={skating} strokeWidth="1" strokeDasharray="2 2" fill="none" />
+                  <path d="M60,55 L30,75" stroke={skating} strokeWidth="1" strokeDasharray="2 2" fill="none" />
+                  <path d="M60,55 L90,75" stroke={skating} strokeWidth="1" strokeDasharray="2 2" fill="none" />
+                </>
+              );
+            case "GameIQ":
+              return (
+                <>
+                  <Player x={30} y={70} fill={player} />
+                  <Player x={60} y={40} fill={player} />
+                  <Player x={90} y={70} fill={player} />
+                  <Player x={45} y={25} fill="hsl(0 80% 65%)" />
+                  <Player x={75} y={25} fill="hsl(0 80% 65%)" />
+                  <Puck x={30} y={70} fill={puck} />
+                  <path d="M30,70 Q45,55 60,40" stroke={passing} strokeWidth="1.4" strokeDasharray="1 3" fill="none" markerEnd="url(#arrow-volt)" />
+                  <path d="M60,40 Q75,55 90,70" stroke={passing} strokeWidth="1.4" strokeDasharray="1 3" fill="none" markerEnd="url(#arrow-volt)" />
+                </>
+              );
+            case "Circuits":
+              return (
+                <>
+                  <Slip x={25} y={30} fill={slip} />
+                  <Slip x={60} y={30} fill={slip} />
+                  <Slip x={95} y={30} fill={slip} />
+                  <Cone x={25} y={75} fill={cone} />
+                  <Cone x={60} y={75} fill={cone} />
+                  <Cone x={95} y={75} fill={cone} />
+                  <path d="M25,75 L25,30 L60,75 L60,30 L95,75 L95,30" stroke={skating} strokeWidth="1.3" strokeDasharray="3 2" fill="none" markerEnd="url(#arrow-teal)" />
+                </>
+              );
+            default:
+              return null;
+          }
+        })()}
+
+        <defs>
+          <marker id="arrow-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill={skating} />
+          </marker>
+          <marker id="arrow-volt" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill={passing} />
+          </marker>
+        </defs>
+      </svg>
+    </div>
+  );
+}
+
+function Cone({ x, y, fill }: { x: number; y: number; fill: string }) {
+  return <polygon points={`${x},${y - 4} ${x - 3},${y + 2} ${x + 3},${y + 2}`} fill={fill} />;
+}
+function Player({ x, y, fill }: { x: number; y: number; fill: string }) {
+  return <circle cx={x} cy={y} r={3.5} fill={fill} stroke="hsl(0 0% 15%)" strokeWidth="0.6" />;
+}
+function Puck({ x, y, fill }: { x: number; y: number; fill: string }) {
+  return <ellipse cx={x} cy={y} rx={2.4} ry={1.4} fill={fill} />;
+}
+function Slip({ x, y, fill }: { x: number; y: number; fill: string }) {
+  return <rect x={x - 5} y={y - 1.5} width={10} height={3} rx={1.5} fill={fill} opacity={0.85} />;
+}
+
 function uniqueFocuses(blocks: Block[]): string[] {
   const set = new Set<Category>();
   for (const b of blocks) {
