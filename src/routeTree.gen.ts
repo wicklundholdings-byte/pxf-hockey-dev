@@ -23,9 +23,12 @@ import { Route as DrillBuilderRouteImport } from './routes/drill-builder'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AchievementsRouteImport } from './routes/achievements'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 
 const TeamRoute = TeamRouteImport.update({
   id: '/team',
@@ -97,6 +100,10 @@ const AchievementsRoute = AchievementsRouteImport.update({
   path: '/achievements',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -111,6 +118,16 @@ const DrillDetailDrillIdRoute = DrillDetailDrillIdRouteImport.update({
   id: '/drill-detail/$drillId',
   path: '/drill-detail/$drillId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -129,8 +146,10 @@ export interface FileRoutesByFullPath {
   '/saved-sessions': typeof SavedSessionsRoute
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -150,10 +169,12 @@ export interface FileRoutesByTo {
   '/team': typeof TeamRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/achievements': typeof AchievementsRoute
   '/auth': typeof AuthRoute
   '/calendar': typeof CalendarRoute
@@ -168,8 +189,10 @@ export interface FileRoutesById {
   '/saved-sessions': typeof SavedSessionsRoute
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -189,8 +212,10 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/sessions'
     | '/team'
+    | '/admin'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -210,9 +235,11 @@ export interface FileRouteTypes {
     | '/team'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
+    | '/admin'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/achievements'
     | '/auth'
     | '/calendar'
@@ -227,12 +254,15 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/sessions'
     | '/team'
+    | '/_authenticated/admin'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
+    | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AchievementsRoute: typeof AchievementsRoute
   AuthRoute: typeof AuthRoute
   CalendarRoute: typeof CalendarRoute
@@ -351,6 +381,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AchievementsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -372,11 +409,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DrillDetailDrillIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AchievementsRoute: AchievementsRoute,
   AuthRoute: AuthRoute,
   CalendarRoute: CalendarRoute,

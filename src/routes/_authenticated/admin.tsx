@@ -21,10 +21,10 @@ export const Route = createFileRoute("/_authenticated/admin")({
 function AdminLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const tabs = [
-    { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
-    { to: "/admin/drills", label: "Drills", icon: Dumbbell },
-    { to: "/admin/categories", label: "Categories", icon: FolderTree },
-    { to: "/admin/programs", label: "Programs", icon: ListChecks },
+    { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true as boolean },
+    { to: "/admin/drills", label: "Drills", icon: Dumbbell, exact: false as boolean },
+    { to: "/admin/categories", label: "Categories", icon: FolderTree, exact: false as boolean },
+    { to: "/admin/programs", label: "Programs", icon: ListChecks, exact: false as boolean },
   ] as const;
 
   return (
