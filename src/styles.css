@@ -61,6 +61,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-teal: var(--teal);
   --color-volt: var(--volt);
+  --color-soon: var(--soon);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --font-display: "Rajdhani", system-ui, sans-serif;
@@ -80,6 +81,7 @@
   --popover-foreground: oklch(0.985 0 0);
   --teal: oklch(0.82 0.16 195);
   --volt: oklch(0.92 0.27 135);
+  --soon: oklch(0.78 0.18 75);
   --primary: var(--teal);
   --primary-foreground: oklch(0.12 0 0);
   --secondary: oklch(0.235 0 0);
