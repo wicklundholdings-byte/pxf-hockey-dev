@@ -29,6 +29,9 @@ import { Route as SessionDetailSessionIdRouteImport } from './routes/session-det
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminProgramsRouteImport } from './routes/_authenticated/admin.programs'
+import { Route as AuthenticatedAdminDrillsRouteImport } from './routes/_authenticated/admin.drills'
+import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 
 const TeamRoute = TeamRouteImport.update({
   id: '/team',
@@ -129,6 +132,24 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminProgramsRoute =
+  AuthenticatedAdminProgramsRouteImport.update({
+    id: '/programs',
+    path: '/programs',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminDrillsRoute =
+  AuthenticatedAdminDrillsRouteImport.update({
+    id: '/drills',
+    path: '/drills',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminCategoriesRoute =
+  AuthenticatedAdminCategoriesRouteImport.update({
+    id: '/categories',
+    path: '/categories',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -149,6 +170,9 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
+  '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
+  '/admin/drills': typeof AuthenticatedAdminDrillsRoute
+  '/admin/programs': typeof AuthenticatedAdminProgramsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -169,6 +193,9 @@ export interface FileRoutesByTo {
   '/team': typeof TeamRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
+  '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
+  '/admin/drills': typeof AuthenticatedAdminDrillsRoute
+  '/admin/programs': typeof AuthenticatedAdminProgramsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -192,6 +219,9 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
+  '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
+  '/_authenticated/admin/drills': typeof AuthenticatedAdminDrillsRoute
+  '/_authenticated/admin/programs': typeof AuthenticatedAdminProgramsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -215,6 +245,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
+    | '/admin/categories'
+    | '/admin/drills'
+    | '/admin/programs'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -235,6 +268,9 @@ export interface FileRouteTypes {
     | '/team'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
+    | '/admin/categories'
+    | '/admin/drills'
+    | '/admin/programs'
     | '/admin'
   id:
     | '__root__'
@@ -257,6 +293,9 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
+    | '/_authenticated/admin/categories'
+    | '/_authenticated/admin/drills'
+    | '/_authenticated/admin/programs'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -423,14 +462,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/programs': {
+      id: '/_authenticated/admin/programs'
+      path: '/programs'
+      fullPath: '/admin/programs'
+      preLoaderRoute: typeof AuthenticatedAdminProgramsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/drills': {
+      id: '/_authenticated/admin/drills'
+      path: '/drills'
+      fullPath: '/admin/drills'
+      preLoaderRoute: typeof AuthenticatedAdminDrillsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/categories': {
+      id: '/_authenticated/admin/categories'
+      path: '/categories'
+      fullPath: '/admin/categories'
+      preLoaderRoute: typeof AuthenticatedAdminCategoriesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminCategoriesRoute: typeof AuthenticatedAdminCategoriesRoute
+  AuthenticatedAdminDrillsRoute: typeof AuthenticatedAdminDrillsRoute
+  AuthenticatedAdminProgramsRoute: typeof AuthenticatedAdminProgramsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminCategoriesRoute: AuthenticatedAdminCategoriesRoute,
+  AuthenticatedAdminDrillsRoute: AuthenticatedAdminDrillsRoute,
+  AuthenticatedAdminProgramsRoute: AuthenticatedAdminProgramsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
