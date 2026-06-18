@@ -20,7 +20,6 @@ import { Route as GameiqRouteImport } from './routes/gameiq'
 import { Route as FavouritesRouteImport } from './routes/favourites'
 import { Route as DrillsRouteImport } from './routes/drills'
 import { Route as DrillBuilderRouteImport } from './routes/drill-builder'
-import { Route as CoachRouteImport } from './routes/coach'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
@@ -83,11 +82,6 @@ const DrillBuilderRoute = DrillBuilderRouteImport.update({
   path: '/drill-builder',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CoachRoute = CoachRouteImport.update({
-  id: '/coach',
-  path: '/coach',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CalendarRoute = CalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -123,7 +117,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/calendar': typeof CalendarRoute
-  '/coach': typeof CoachRouteWithChildren
   '/drill-builder': typeof DrillBuilderRoute
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
@@ -143,7 +136,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/calendar': typeof CalendarRoute
-  '/coach': typeof CoachRouteWithChildren
   '/drill-builder': typeof DrillBuilderRoute
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
@@ -164,7 +156,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/calendar': typeof CalendarRoute
-  '/coach': typeof CoachRouteWithChildren
   '/drill-builder': typeof DrillBuilderRoute
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
@@ -186,7 +177,6 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/calendar'
-    | '/coach'
     | '/drill-builder'
     | '/drills'
     | '/favourites'
@@ -206,7 +196,6 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/calendar'
-    | '/coach'
     | '/drill-builder'
     | '/drills'
     | '/favourites'
@@ -226,7 +215,6 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/calendar'
-    | '/coach'
     | '/drill-builder'
     | '/drills'
     | '/favourites'
@@ -247,7 +235,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AchievementsRoute: typeof AchievementsRoute
   CalendarRoute: typeof CalendarRoute
-  CoachRoute: typeof CoachRouteWithChildren
   DrillBuilderRoute: typeof DrillBuilderRoute
   DrillsRoute: typeof DrillsRoute
   FavouritesRoute: typeof FavouritesRoute
@@ -342,13 +329,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DrillBuilderRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/coach': {
-      id: '/coach'
-      path: '/coach'
-      fullPath: '/coach'
-      preLoaderRoute: typeof CoachRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/calendar': {
       id: '/calendar'
       path: '/calendar'
@@ -394,21 +374,10 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface CoachRouteChildren {
-  CoachSessionIdRoute: typeof CoachSessionIdRoute
-}
-
-const CoachRouteChildren: CoachRouteChildren = {
-  CoachSessionIdRoute: CoachSessionIdRoute,
-}
-
-const CoachRouteWithChildren = CoachRoute._addFileChildren(CoachRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AchievementsRoute: AchievementsRoute,
   CalendarRoute: CalendarRoute,
-  CoachRoute: CoachRouteWithChildren,
   DrillBuilderRoute: DrillBuilderRoute,
   DrillsRoute: DrillsRoute,
   FavouritesRoute: FavouritesRoute,
@@ -426,3 +395,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
