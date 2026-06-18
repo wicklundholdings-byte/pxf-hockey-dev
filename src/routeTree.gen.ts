@@ -108,9 +108,9 @@ const DrillDetailDrillIdRoute = DrillDetailDrillIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoachSessionIdRoute = CoachSessionIdRouteImport.update({
-  id: '/$sessionId',
-  path: '/$sessionId',
-  getParentRoute: () => CoachRoute,
+  id: '/coach/$sessionId',
+  path: '/coach/$sessionId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -246,6 +246,7 @@ export interface RootRouteChildren {
   SavedSessionsRoute: typeof SavedSessionsRoute
   SessionsRoute: typeof SessionsRoute
   TeamRoute: typeof TeamRoute
+  CoachSessionIdRoute: typeof CoachSessionIdRoute
   DrillDetailDrillIdRoute: typeof DrillDetailDrillIdRoute
   SessionDetailSessionIdRoute: typeof SessionDetailSessionIdRoute
 }
@@ -366,10 +367,10 @@ declare module '@tanstack/react-router' {
     }
     '/coach/$sessionId': {
       id: '/coach/$sessionId'
-      path: '/$sessionId'
+      path: '/coach/$sessionId'
       fullPath: '/coach/$sessionId'
       preLoaderRoute: typeof CoachSessionIdRouteImport
-      parentRoute: typeof CoachRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -389,19 +390,10 @@ const rootRouteChildren: RootRouteChildren = {
   SavedSessionsRoute: SavedSessionsRoute,
   SessionsRoute: SessionsRoute,
   TeamRoute: TeamRoute,
+  CoachSessionIdRoute: CoachSessionIdRoute,
   DrillDetailDrillIdRoute: DrillDetailDrillIdRoute,
   SessionDetailSessionIdRoute: SessionDetailSessionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
