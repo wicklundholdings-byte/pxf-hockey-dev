@@ -1,21 +1,15 @@
 import type { Category } from "./pxf";
 
 export const trainingCategories = [
-  { name: "Slip Circuits", tint: "teal" as const },
-  { name: "GameIQ Circuits", tint: "volt" as const },
-  { name: "Skating Flow", tint: "teal" as const },
-  { name: "Edge Control", tint: "volt" as const },
-  { name: "Dryland Skills", tint: "teal" as const },
-  { name: "Dryland Training", tint: "volt" as const },
+  { name: "Slip Circuits", tint: "teal" as const, comingSoon: false },
+  { name: "Dryland Skills", tint: "volt" as const, comingSoon: false },
+  { name: "Game IQ Circuits", tint: "teal" as const, comingSoon: true },
 ] as const;
 
 export type TrainingCategory = (typeof trainingCategories)[number]["name"];
 
 export const TRAINING_CATEGORY_TO_DRILL_CATEGORIES: Record<TrainingCategory, Category[]> = {
   "Slip Circuits": ["Circuits"],
-  "GameIQ Circuits": ["GameIQ"],
-  "Skating Flow": ["Skating Flow"],
-  "Edge Control": ["Edge Control"],
   "Dryland Skills": [],
-  "Dryland Training": [],
+  "Game IQ Circuits": ["GameIQ"],
 };
