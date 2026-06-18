@@ -4,8 +4,6 @@ import {
   ChevronRight,
   Play,
   Brain,
-  Activity,
-  Zap,
   Layers,
   ArrowRight,
   Plus,
@@ -29,47 +27,23 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const SkateIcon = ({ className, size, strokeWidth }: { className?: string; size?: number; strokeWidth?: number }) => (
-  <svg width={size ?? 24} height={size ?? 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth ?? 1.5} strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M9 3v5.5c0 1.5.8 2.5 2 3l1 .5" />
-    <path d="M9 3h6" />
-    <path d="M15 3v5.5c0 2.5 1.5 3.5 2.5 4.5.8.8 1.2 1.8 1.2 3v1.5c0 1.5-1.2 2.5-2.5 2.5H8.8c-1.3 0-2.5-1-2.5-2.5V17c0-1.2.4-2.2 1.2-3 1-1 2.5-2 2.5-4.5V3" />
-    <path d="M10 8.5l3 2" /><path d="M10 11l3 2" /><path d="M10.5 13.5l2.5 1.5" />
-    <path d="M7 19h10" /><path d="M8 19c.5 1.5 2 2.5 4 2.5s3.5-1 4-2.5" />
-  </svg>
-);
-
-const ShootingIcon = ({ className, size }: { className?: string; size?: number }) => (
-  <svg width={size ?? 24} height={size ?? 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <circle cx="12" cy="12" r="8" />
-    <path d="M12 8v8" /><path d="M8 12h8" />
-    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
-    <path d="M4 12h2" /><path d="M18 12h2" /><path d="M12 4v2" /><path d="M12 18v2" />
-  </svg>
-);
-
 const categoryToRoute: Record<TrainingCategory, "/drills" | "/gameiq"> = {
   "Slip Circuits": "/drills",
-  "GameIQ Circuits": "/gameiq",
-  "Skating Flow": "/drills",
-  "Edge Control": "/drills",
   "Dryland Skills": "/drills",
-  "Dryland Training": "/drills",
+  "Game IQ Circuits": "/gameiq",
 };
 
 const categoryIcon: Record<TrainingCategory, React.ComponentType<{ className?: string; size?: number; strokeWidth?: number }>> = {
   "Slip Circuits": Layers,
-  "GameIQ Circuits": Brain,
-  "Skating Flow": SkateIcon,
-  "Edge Control": Activity,
-  "Dryland Skills": Zap,
-  "Dryland Training": Flame,
+  "Dryland Skills": Flame,
+  "Game IQ Circuits": Brain,
 };
 
-const categories = trainingCategories.map(({ name, tint }) => ({
+const categories = trainingCategories.map(({ name, tint, comingSoon }) => ({
   label: name,
   icon: categoryIcon[name],
   tint,
+  comingSoon,
   to: categoryToRoute[name],
 }));
 
@@ -110,8 +84,9 @@ function Home() {
       <section className="mt-7">
         <SectionHeader title="Training Categories" to="/drills" />
         <div className="mt-3 grid grid-cols-3 gap-3">
-          {categories.map(({ label, icon: Icon, tint, to }) => (
-            <Link key={label} to={to} className="group flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/60 bg-surface p-2 transition-all hover:border-teal/40 hover:bg-surface-2">
+          {categories.map(({ label, icon: Icon, tint, comingSoon, to }) => (
+            <Link key={label} to={to} className={`group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border p-2 transition-all ${comingSoon ? "border-soon/40 bg-surface hover:bg-soon/10" : "border-border/60 bg-surface hover:border-teal/40 hover:bg-surface-2"}`}>
+              {comingSoon && <span className="absolute right-2 top-2 rounded-full bg-soon/20 px-1.5 py-0.5 text-[8px] font-bold tracking-wider text-soon">SOON</span>}
               <Icon size={22} strokeWidth={1.6} className={tint === "teal" ? "text-teal" : "text-volt"} />
               <span className="text-center text-[9.5px] font-semibold leading-tight text-foreground">{label}</span>
             </Link>
@@ -125,7 +100,7 @@ function Home() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] font-bold tracking-[0.3em] text-teal">IN PROGRESS</p>
-              <h3 className="mt-1 text-base font-bold text-foreground">Edge Control · Flow 2</h3>
+              <h3 className="mt-1 text-base font-bold text-foreground">Slip Circuits · Flow 2</h3>
               <div className="mt-1 flex items-center gap-3 text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1"><Disc3 size={11} /> 4 of 6 drills</span>
                 <span className="flex items-center gap-1"><Clock size={11} /> 22 min left</span>
@@ -168,7 +143,7 @@ function Home() {
             <span className="font-display text-base font-bold text-foreground">18</span>
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-sm font-bold text-foreground">Edges & Transitions · 5pm</h3>
+            <h3 className="truncate text-sm font-bold text-foreground">Slip Circuit · 5pm</h3>
             <div className="mt-1 flex items-center gap-3 text-[11px] text-muted-foreground">
               <span className="flex items-center gap-1"><CalendarDays size={11} /> Northstar Rink</span>
               <span>·</span>
