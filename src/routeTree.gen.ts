@@ -25,7 +25,6 @@ import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
-import { Route as CoachSessionIdRouteImport } from './routes/coach.$sessionId'
 
 const TeamRoute = TeamRouteImport.update({
   id: '/team',
@@ -107,11 +106,6 @@ const DrillDetailDrillIdRoute = DrillDetailDrillIdRouteImport.update({
   path: '/drill-detail/$drillId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CoachSessionIdRoute = CoachSessionIdRouteImport.update({
-  id: '/coach/$sessionId',
-  path: '/coach/$sessionId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -128,7 +122,6 @@ export interface FileRoutesByFullPath {
   '/saved-sessions': typeof SavedSessionsRoute
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
-  '/coach/$sessionId': typeof CoachSessionIdRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
 }
@@ -147,7 +140,6 @@ export interface FileRoutesByTo {
   '/saved-sessions': typeof SavedSessionsRoute
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
-  '/coach/$sessionId': typeof CoachSessionIdRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
 }
@@ -167,7 +159,6 @@ export interface FileRoutesById {
   '/saved-sessions': typeof SavedSessionsRoute
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
-  '/coach/$sessionId': typeof CoachSessionIdRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
 }
@@ -188,7 +179,6 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/sessions'
     | '/team'
-    | '/coach/$sessionId'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
   fileRoutesByTo: FileRoutesByTo
@@ -207,7 +197,6 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/sessions'
     | '/team'
-    | '/coach/$sessionId'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
   id:
@@ -226,7 +215,6 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/sessions'
     | '/team'
-    | '/coach/$sessionId'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
   fileRoutesById: FileRoutesById
@@ -246,7 +234,6 @@ export interface RootRouteChildren {
   SavedSessionsRoute: typeof SavedSessionsRoute
   SessionsRoute: typeof SessionsRoute
   TeamRoute: typeof TeamRoute
-  CoachSessionIdRoute: typeof CoachSessionIdRoute
   DrillDetailDrillIdRoute: typeof DrillDetailDrillIdRoute
   SessionDetailSessionIdRoute: typeof SessionDetailSessionIdRoute
 }
@@ -365,13 +352,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DrillDetailDrillIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/coach/$sessionId': {
-      id: '/coach/$sessionId'
-      path: '/coach/$sessionId'
-      fullPath: '/coach/$sessionId'
-      preLoaderRoute: typeof CoachSessionIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -390,10 +370,19 @@ const rootRouteChildren: RootRouteChildren = {
   SavedSessionsRoute: SavedSessionsRoute,
   SessionsRoute: SessionsRoute,
   TeamRoute: TeamRoute,
-  CoachSessionIdRoute: CoachSessionIdRoute,
   DrillDetailDrillIdRoute: DrillDetailDrillIdRoute,
   SessionDetailSessionIdRoute: SessionDetailSessionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
