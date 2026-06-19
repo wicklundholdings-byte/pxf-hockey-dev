@@ -1,9 +1,60 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Search, Filter, Play, BarChart3, Clock, Users, Wrench, ChevronRight, Heart, Plus, X, CheckCircle2, ListChecks, Sparkles, Calendar as CalendarIcon, Folder as FolderIcon, FolderPlus, Check } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { CATEGORIES, DRILLS, type Category, type Drill } from "@/data/pxf";
+import { type Category, type Drill } from "@/data/pxf";
 import { trainingCategories, TRAINING_CATEGORY_TO_DRILL_CATEGORIES, type TrainingCategory } from "@/data/trainingCategories";
 import { useFavorites } from "@/hooks/useFavorites";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type DbDrill = Database["public"]["Tables"]["drills"]["Row"];
+type DbCategory = Database["public"]["Tables"]["drill_categories"]["Row"];
+type CategoryMeta = { name: Category; tint: "teal" | "volt"; blurb: string };
+
+const DIFFICULTY_MAP: Record<string, Drill["difficulty"]> = {
+  beginner: "Beginner",
+  intermediate: "Intermediate",
+  advanced: "Advanced",
+  elite: "Elite",
+};
+
+function parseEquipment(raw: string | null): string[] {
+  if (!raw?.trim()) return [];
+  return raw.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+function mapDifficulty(level: DbDrill["difficulty_level"]): Drill["difficulty"] {
+  if (!level) return "Intermediate";
+  return DIFFICULTY_MAP[level] ?? "Intermediate";
+}
+
+function mapDrill(row: DbDrill, categoryName: Category): Drill {
+  return {
+    id: row.id,
+    name: row.title,
+    category: categoryName,
+    difficulty: mapDifficulty(row.difficulty_level),
+    ageGroup: row.age_group ?? "U13+",
+    equipment: parseEquipment(row.equipment_needed),
+    level: Math.min(4, Math.max(1, row.sort_order || 1)),
+    durationMin: row.duration_minutes ?? 0,
+    blurb: row.short_description ?? "",
+    notes: row.coaching_points ? row.coaching_points.split("\n").filter(Boolean) : [],
+    mistakes: [],
+    progressions: [],
+    related: [],
+    videoUrl: row.video_url ?? undefined,
+    posterUrl: row.thumbnail_url ?? undefined,
+  };
+}
+
+function mapCategories(rows: DbCategory[]): CategoryMeta[] {
+  return rows.map((c, i) => ({
+    name: c.title as Category,
+    tint: i % 2 === 0 ? "teal" : "volt",
+    blurb: c.description ?? "",
+  }));
+}
 
 export const Route = createFileRoute("/drills")({
   head: () => ({
@@ -54,6 +105,9 @@ function makeBlock(drill: Drill): SessionBlock {
 }
 
 function Drills() {
+  const [drills, setDrills] = useState<Drill[]>([]);
+  const [categories, setCategories] = useState<CategoryMeta[]>([]);
+  const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [openFilters, setOpenFilters] = useState(false);
   const [active, setActive] = useState<{
@@ -75,6 +129,30 @@ function Drills() {
   const [bulkFolder, setBulkFolder] = useState(false);
   const fav = useFavorites();
 
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      const [drillsRes, catsRes] = await Promise.all([
+        supabase.from("drills").select("*").eq("is_published", true),
+        supabase.from("drill_categories").select("*").order("sort_order"),
+      ]);
+      const cats = catsRes.data ?? [];
+      const catById = new Map(cats.map((c) => [c.id, c.title as Category]));
+      setCategories(mapCategories(cats));
+      setDrills(
+        (drillsRes.data ?? [])
+          .map((row) => {
+            const categoryName = row.category_id ? catById.get(row.category_id) : undefined;
+            if (!categoryName) return null;
+            return mapDrill(row, categoryName);
+          })
+          .filter((d): d is Drill => d !== null),
+      );
+      setLoading(false);
+    }
+    load();
+  }, []);
+
   function toggleSelected(id: string) {
     setSelected((s) => {
       const n = new Set(s);
@@ -89,8 +167,8 @@ function Drills() {
   }
 
   const selectedDrills = useMemo(
-    () => DRILLS.filter((d) => selected.has(d.id)),
-    [selected],
+    () => drills.filter((d) => selected.has(d.id)),
+    [drills, selected],
   );
 
   function saveSelectedToFavourites() {
@@ -109,7 +187,7 @@ function Drills() {
   }, [toast]);
 
   const filtered = useMemo(() => {
-    return DRILLS.filter((d) => {
+    return drills.filter((d) => {
       if (q && !d.name.toLowerCase().includes(q.toLowerCase())) return false;
       if (active.cat) {
         const matches = TRAINING_CATEGORY_TO_DRILL_CATEGORIES[active.cat];
@@ -120,14 +198,17 @@ function Drills() {
       if (active.equip && !d.equipment.some((e) => e.toLowerCase().includes(active.equip!.toLowerCase()))) return false;
       return true;
     });
-  }, [q, active]);
+  }, [drills, q, active]);
 
   const byCat = useMemo(() => {
     const map = new Map<Category, Drill[]>();
-    for (const c of CATEGORIES) map.set(c.name, []);
-    for (const d of filtered) map.get(d.category)!.push(d);
+    for (const c of categories) map.set(c.name, []);
+    for (const d of filtered) {
+      const list = map.get(d.category);
+      if (list) list.push(d);
+    }
     return map;
-  }, [filtered]);
+  }, [categories, filtered]);
 
   return (
     <div className="px-5 pt-4">
@@ -181,7 +262,7 @@ function Drills() {
       )}
 
       <div className="mt-6 space-y-7">
-        {CATEGORIES.map((c) => {
+        {categories.map((c) => {
           const list = byCat.get(c.name) ?? [];
           if (list.length === 0) return null;
           return (
@@ -208,7 +289,7 @@ function Drills() {
             </section>
           );
         })}
-        {filtered.length === 0 && (
+        {!loading && filtered.length === 0 && (
           <p className="py-10 text-center text-sm text-muted-foreground">No drills match those filters.</p>
         )}
       </div>

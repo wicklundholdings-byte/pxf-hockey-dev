@@ -21,7 +21,8 @@ export async function uploadToBucket(
     contentType: file.type,
   });
   if (error) throw error;
-  return `${bucket}/${path}`;
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
 }
 
 export async function signedUrl(storagePath: string | null | undefined, expiresSec = 3600): Promise<string | null> {

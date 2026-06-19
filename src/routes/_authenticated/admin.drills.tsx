@@ -37,10 +37,15 @@ function AdminDrills() {
     try {
       const videoFile = (document.getElementById("drill-vid") as HTMLInputElement | null)?.files?.[0];
       const thumbFile = (document.getElementById("drill-thumb") as HTMLInputElement | null)?.files?.[0];
+      const diagramFile = (document.getElementById("drill-diagram") as HTMLInputElement | null)?.files?.[0];
+      console.log("videoFile", videoFile);
       let video_url = editing.video_url ?? null;
       let thumbnail_url = editing.thumbnail_url ?? null;
+      let diagram_url = editing.diagram_url ?? null;
       if (videoFile) video_url = await uploadToBucket("drill-videos", videoFile);
+      console.log("video_url after upload", video_url);
       if (thumbFile) thumbnail_url = await uploadToBucket("drill-thumbnails", thumbFile);
+      if (diagramFile) diagram_url = await uploadToBucket("drill-thumbnails", diagramFile);
 
       const payload = {
         title: editing.title ?? "",
@@ -57,10 +62,16 @@ function AdminDrills() {
         is_premium: editing.is_premium ?? false,
         is_published: editing.is_published ?? false,
         sort_order: editing.sort_order ?? 0,
-        video_url, thumbnail_url,
+        video_url, thumbnail_url, diagram_url,
       };
-      if (editing.id) await supabase.from("drills").update(payload).eq("id", editing.id);
-      else await supabase.from("drills").insert(payload);
+      console.log("payload before save", payload);
+      if (editing.id) {
+        const result = await supabase.from("drills").update(payload).eq("id", editing.id);
+        console.log("supabase update result", result);
+        if (result.error) console.error("supabase update error", result.error);
+      } else {
+        await supabase.from("drills").insert(payload);
+      }
       setEditing(null);
       await load();
     } catch (err) {
@@ -105,6 +116,7 @@ function AdminDrills() {
         <Input label="Sort order" type="number" value={String(editing.sort_order ?? 0)} onChange={(v) => setEditing({ ...editing, sort_order: Number(v) })} />
         <FileInput id="drill-vid" label="Video file" accept="video/*" />
         <FileInput id="drill-thumb" label="Thumbnail" accept="image/*" />
+        <FileInput id="drill-diagram" label="Drill Diagram (rink setup image)" accept="image/*" />
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={editing.is_premium ?? false} onChange={(e) => setEditing({ ...editing, is_premium: e.target.checked })} />
           Premium content

@@ -1,42 +1,69 @@
-import { createFileRoute, Link, useRouter, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import {
   Play, ArrowLeft, BarChart3, Users, Wrench, Clock, ChevronRight, AlertTriangle,
   ListChecks, Heart, Plus, X, Sparkles, Calendar as CalendarIcon, CheckCircle2, Maximize2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { findDrill, relatedTo, type Drill } from "@/data/pxf";
+import { type Category, type Drill } from "@/data/pxf";
 import { useFavorites } from "@/hooks/useFavorites";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type DbDrill = Database["public"]["Tables"]["drills"]["Row"];
+type DrillRow = DbDrill & { drill_categories: { title: string } | null };
+
+const DIFFICULTY_MAP: Record<string, Drill["difficulty"]> = {
+  beginner: "Beginner",
+  intermediate: "Intermediate",
+  advanced: "Advanced",
+  elite: "Elite",
+};
+
+function parseEquipment(raw: string | null): string[] {
+  if (!raw?.trim()) return [];
+  return raw.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+function parseNotes(raw: string | null): string[] {
+  if (!raw?.trim()) return [];
+  return raw.split(".").map((s) => s.trim()).filter(Boolean);
+}
+
+function mapDifficulty(level: DbDrill["difficulty_level"]): Drill["difficulty"] {
+  if (!level) return "Intermediate";
+  return DIFFICULTY_MAP[level] ?? "Intermediate";
+}
+
+function mapDrillFromSupabase(row: DrillRow): Drill {
+  return {
+    id: row.id,
+    name: row.title,
+    category: (row.drill_categories?.title ?? "Uncategorized") as Category,
+    difficulty: mapDifficulty(row.difficulty_level),
+    ageGroup: row.age_group ?? "U13+",
+    equipment: parseEquipment(row.equipment_needed),
+    level: Math.min(4, Math.max(1, row.sort_order || 1)),
+    durationMin: row.duration_minutes ?? 0,
+    blurb: row.short_description ?? "",
+    notes: parseNotes(row.coaching_points),
+    mistakes: [],
+    progressions: [],
+    related: [],
+    videoUrl: row.video_url ?? undefined,
+    posterUrl: row.thumbnail_url ?? undefined,
+    diagramUrl: row.diagram_url ?? undefined,
+  };
+}
 
 export const Route = createFileRoute("/drill-detail/$drillId")({
-  head: ({ params }) => {
-    const d = params ? findDrill(params.drillId) : undefined;
-    return {
-      meta: [
-        { title: d ? `${d.name} — PXF Hockey` : "Drill — PXF Hockey" },
-        { name: "description", content: d?.blurb ?? "Drill detail." },
-        { property: "og:title", content: d ? `${d.name} — PXF Hockey` : "Drill — PXF Hockey" },
-        { property: "og:description", content: d?.blurb ?? "Drill detail." },
-      ],
-    };
-  },
-  loader: ({ params }) => {
-    const d = findDrill(params.drillId);
-    if (!d) throw notFound();
-    return d;
-  },
-  notFoundComponent: () => (
-    <div className="px-5 pt-10 text-center">
-      <p className="text-sm text-muted-foreground">Drill not found.</p>
-      <Link to="/drills" className="mt-3 inline-flex text-sm font-semibold text-teal">Back to drills</Link>
-    </div>
-  ),
-  errorComponent: ({ error, reset }) => (
-    <div className="px-5 pt-10 text-center">
-      <p className="text-sm text-destructive">Something went wrong.</p>
-      <p className="mt-1 text-xs text-muted-foreground">{error.message}</p>
-      <button onClick={reset} className="mt-3 text-sm font-semibold text-teal">Try again</button>
-    </div>
-  ),
+  head: () => ({
+    meta: [
+      { title: "Drill — PXF Hockey" },
+      { name: "description", content: "Drill detail." },
+      { property: "og:title", content: "Drill — PXF Hockey" },
+      { property: "og:description", content: "Drill detail." },
+    ],
+  }),
   component: DrillDetail,
 });
 
@@ -65,19 +92,59 @@ function makeBlock(d: Drill): SessionBlock {
 }
 
 function DrillDetail() {
-  const d = Route.useLoaderData() as Drill;
+  const { drillId } = Route.useParams();
   const router = useRouter();
-  const related = relatedTo(d);
+  const [d, setD] = useState<Drill | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const { isFavorite, toggle } = useFavorites();
-  const fav = isFavorite(d.id);
   const [addOpen, setAddOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      setNotFound(false);
+      const { data, error } = await supabase
+        .from("drills")
+        .select("*, drill_categories(title)")
+        .eq("id", drillId)
+        .single();
+      if (error || !data) {
+        setNotFound(true);
+        setD(null);
+      } else {
+        setD(mapDrillFromSupabase(data as DrillRow));
+      }
+      setLoading(false);
+    }
+    load();
+  }, [drillId]);
 
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 2200);
     return () => clearTimeout(t);
   }, [toast]);
+
+  if (loading) {
+    return (
+      <div className="px-5 pt-10 text-center">
+        <p className="text-sm text-muted-foreground">Loading drill…</p>
+      </div>
+    );
+  }
+
+  if (notFound || !d) {
+    return (
+      <div className="px-5 pt-10 text-center">
+        <p className="text-sm text-muted-foreground">Drill not found.</p>
+        <Link to="/drills" className="mt-3 inline-flex text-sm font-semibold text-teal">Back to drills</Link>
+      </div>
+    );
+  }
+
+  const fav = isFavorite(d.id);
 
   return (
     <div className="bg-background pb-32">
@@ -136,7 +203,11 @@ function DrillDetail() {
             </span>
           </div>
           <div className="w-full overflow-auto" style={{ touchAction: "pinch-zoom" }}>
-            <RinkDiagram />
+            {d.diagramUrl ? (
+              <img src={d.diagramUrl} className="w-full" alt="Drill setup diagram" />
+            ) : (
+              <RinkDiagram />
+            )}
           </div>
           <SetupLegend />
         </div>
@@ -145,17 +216,23 @@ function DrillDetail() {
         <SectionHeader>VIDEO DEMONSTRATION</SectionHeader>
         <div className="-mx-4 overflow-hidden border-y border-border/60 bg-black sm:mx-0 sm:rounded-3xl sm:border">
           <div className="relative aspect-video w-full">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(0,229,214,0.18),transparent_55%),radial-gradient(circle_at_75%_70%,rgba(57,255,20,0.15),transparent_55%)]" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <button aria-label="Play video" className="group grid h-20 w-20 place-items-center rounded-full bg-gradient-brand text-primary-foreground shadow-glow-teal transition-transform hover:scale-105">
-                <Play size={30} fill="currentColor" className="translate-x-0.5" />
-              </button>
-            </div>
-            <div className="absolute bottom-3 left-4 right-4 flex flex-wrap items-center gap-2 text-[10px] font-bold tracking-wider">
-              <span className="rounded-full bg-background/70 px-2 py-1 text-teal backdrop-blur">FULL SPEED</span>
-              <span className="rounded-full bg-background/70 px-2 py-1 text-volt backdrop-blur">SLOW MOTION</span>
-              <span className="rounded-full bg-background/70 px-2 py-1 text-foreground backdrop-blur">COACH DEMO</span>
-            </div>
+            {d.videoUrl ? (
+              <video controls playsInline className="w-full" src={d.videoUrl} />
+            ) : (
+              <>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(0,229,214,0.18),transparent_55%),radial-gradient(circle_at_75%_70%,rgba(57,255,20,0.15),transparent_55%)]" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <button aria-label="Play video" className="group grid h-20 w-20 place-items-center rounded-full bg-gradient-brand text-primary-foreground shadow-glow-teal transition-transform hover:scale-105">
+                    <Play size={30} fill="currentColor" className="translate-x-0.5" />
+                  </button>
+                </div>
+                <div className="absolute bottom-3 left-4 right-4 flex flex-wrap items-center gap-2 text-[10px] font-bold tracking-wider">
+                  <span className="rounded-full bg-background/70 px-2 py-1 text-teal backdrop-blur">FULL SPEED</span>
+                  <span className="rounded-full bg-background/70 px-2 py-1 text-volt backdrop-blur">SLOW MOTION</span>
+                  <span className="rounded-full bg-background/70 px-2 py-1 text-foreground backdrop-blur">COACH DEMO</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -192,24 +269,6 @@ function DrillDetail() {
           </ul>
         </div>
 
-        {/* RELATED */}
-        {related.length > 0 && (
-          <>
-            <SectionHeader>RELATED DRILLS</SectionHeader>
-            <div className="space-y-2">
-              {related.map((r) => (
-                <Link key={r.id} to="/drill-detail/$drillId" params={{ drillId: r.id }} className="flex items-center gap-3 rounded-2xl border border-border/60 bg-surface px-3 py-3">
-                  <div className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-brand text-primary-foreground"><Play size={14} fill="currentColor" /></div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-semibold tracking-wider text-volt">{r.category.toUpperCase()}</p>
-                    <p className="truncate text-sm font-bold text-foreground">{r.name}</p>
-                  </div>
-                  <ChevronRight size={16} className="text-muted-foreground" />
-                </Link>
-              ))}
-            </div>
-          </>
-        )}
       </div>
 
       {/* Sticky action bar */}

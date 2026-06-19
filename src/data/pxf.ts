@@ -35,6 +35,7 @@ export type Drill = {
   related: string[];
   videoUrl?: string;
   posterUrl?: string;
+  diagramUrl?: string;
 };
 
 export const DRILLS: Drill[] = [
