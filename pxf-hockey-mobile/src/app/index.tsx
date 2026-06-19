@@ -24,8 +24,8 @@ const QUICK_ACTIONS = [
 ];
 
 const CATEGORIES = [
-  { name: 'Slip Circuits', icon: 'refresh-outline', soon: false },
-  { name: 'Dryland Skills', icon: 'body-outline', soon: false },
+  { name: 'Slip Circuits', icon: 'layers-outline', soon: false },
+  { name: 'Dryland Skills', icon: 'flame-outline', soon: false },
   { name: 'Game IQ Circuits', icon: 'bulb-outline', soon: true },
 ];
 
@@ -116,13 +116,13 @@ export default function HomeScreen() {
           <View style={styles.categoryRow}>
             {CATEGORIES.map((cat) => (
               <TouchableOpacity key={cat.name} style={styles.categoryCard}>
-                <Ionicons name={cat.icon as any} size={22} color={TEAL} style={{ marginBottom: 8 }} />
-                <ThemedText style={styles.categoryName}>{cat.name}</ThemedText>
                 {cat.soon && (
                   <View style={styles.soonBadge}>
                     <ThemedText style={styles.soonText}>SOON</ThemedText>
                   </View>
                 )}
+                <Ionicons name={cat.icon as any} size={28} color={TEAL} />
+                <ThemedText style={styles.categoryName}>{cat.name}</ThemedText>
               </TouchableOpacity>
             ))}
           </View>
@@ -148,31 +148,6 @@ export default function HomeScreen() {
             <TouchableOpacity style={styles.resumeButton}>
               <ThemedText style={styles.resumeText}>START →</ThemedText>
             </TouchableOpacity>
-          </View>
-
-          {/* Recommended Progression */}
-          <View style={styles.sectionHeader}>
-            <ThemedText style={styles.sectionTitle}>RECOMMENDED PROGRESSION</ThemedText>
-            <TouchableOpacity><ThemedText style={styles.seeAll}>See all ›</ThemedText></TouchableOpacity>
-          </View>
-
-          <View style={styles.progressionCard}>
-            <View style={styles.progressionTop}>
-              <View style={styles.pathwayBadge}>
-                <ThemedText style={styles.pathwayText}>PATHWAY</ThemedText>
-              </View>
-              <View style={styles.nextUpBadge}>
-                <ThemedText style={styles.nextUpText}>NEXT UP</ThemedText>
-              </View>
-            </View>
-            <View style={styles.progressionDivider} />
-            <View style={styles.progressionBottom}>
-              <View style={styles.progressionInfo}>
-                <ThemedText style={styles.progressionTitle}>Puck Control · Flow 3 — Deception</ThemedText>
-                <ThemedText style={styles.progressionMeta}>Unlock after 2 more sessions in Flow 2.</ThemedText>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={TEXT_MUTED} />
-            </View>
           </View>
 
           {/* Upcoming Session */}
@@ -274,10 +249,10 @@ const styles = StyleSheet.create({
   seeAll: { fontSize: 13, color: GREEN, fontWeight: '600' },
 
   categoryRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginBottom: 28 },
-  categoryCard: { flex: 1, aspectRatio: 1, backgroundColor: CARD2, borderRadius: 14, padding: 12, justifyContent: 'flex-end', borderWidth: 1, borderColor: '#1B3A2A', position: 'relative' },
-  categoryName: { fontSize: 12, fontWeight: '700', color: TEXT },
-  soonBadge: { position: 'absolute', top: 10, right: 10, backgroundColor: '#F4A261', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  soonText: { fontSize: 9, fontWeight: '800', color: '#000' },
+  categoryCard: { flex: 1, aspectRatio: 1, backgroundColor: CARD2, borderRadius: 14, padding: 12, justifyContent: 'center', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: '#1B3A2A', position: 'relative' },
+  categoryName: { fontSize: 12, fontWeight: '700', color: TEXT, textAlign: 'center' },
+  soonBadge: { position: 'absolute', top: 8, right: 8, backgroundColor: '#F4A261', borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2 },
+  soonText: { fontSize: 8, fontWeight: '800', color: '#000', letterSpacing: 0.5 },
 
   continueCard: { marginHorizontal: 20, marginBottom: 28, backgroundColor: CARD, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: BORDER },
   inProgressBadge: { alignSelf: 'flex-start', backgroundColor: GREEN_DIM, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 12 },
@@ -290,18 +265,6 @@ const styles = StyleSheet.create({
   progressFill: { height: 6, backgroundColor: GREEN, borderRadius: 3 },
   resumeButton: { backgroundColor: GREEN, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   resumeText: { fontSize: 15, fontWeight: '800', color: '#000', letterSpacing: 1 },
-
-  progressionCard: { marginHorizontal: 20, marginBottom: 28, backgroundColor: CARD, borderRadius: 16, borderWidth: 1, borderColor: BORDER, overflow: 'hidden' },
-  progressionTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 },
-  pathwayBadge: { backgroundColor: GREEN_DIM, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  pathwayText: { fontSize: 11, fontWeight: '800', color: GREEN, letterSpacing: 1 },
-  nextUpBadge: { backgroundColor: BORDER, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  nextUpText: { fontSize: 11, fontWeight: '700', color: TEXT_MUTED, letterSpacing: 1 },
-  progressionDivider: { height: 1, backgroundColor: BORDER },
-  progressionBottom: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
-  progressionInfo: { flex: 1 },
-  progressionTitle: { fontSize: 14, fontWeight: '700', color: TEXT, marginBottom: 4 },
-  progressionMeta: { fontSize: 12, color: TEXT_MUTED },
 
   sessionCard: { marginHorizontal: 20, marginBottom: 28, backgroundColor: CARD, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: BORDER, gap: 14 },
   sessionDateBox: { backgroundColor: GREEN_DIM, borderRadius: 10, width: 48, height: 56, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: GREEN },
