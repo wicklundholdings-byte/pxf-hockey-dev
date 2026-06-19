@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText } from '@/components/themed-text';
 import { GradientText } from '@/components/gradient-text';
 import { supabase } from '@/lib/supabase';
@@ -148,12 +149,29 @@ export default function HomeScreen() {
               <ThemedText style={styles.continueTitle}>Slip Circuits · Flow 1</ThemedText>
               <ThemedText style={styles.continuePercent}>0%</ThemedText>
             </View>
-            <ThemedText style={styles.continueMeta}>0 of 6 drills  ·  Start today</ThemedText>
-            <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: '0%' }]} />
+            <View style={styles.continueMetaRow}>
+              <Ionicons name="play-circle-outline" size={13} color={TEXT_MUTED} />
+              <ThemedText style={styles.continueMeta}>0 of 6 drills</ThemedText>
+              <Ionicons name="time-outline" size={13} color={TEXT_MUTED} />
+              <ThemedText style={styles.continueMeta}>45 min left</ThemedText>
             </View>
-            <TouchableOpacity style={styles.resumeButton}>
-              <ThemedText style={styles.resumeText}>START →</ThemedText>
+            <View style={styles.progressBar}>
+              <LinearGradient
+                colors={[TEAL, GREEN]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[styles.progressFill, { width: '0%' }]}
+              />
+            </View>
+            <TouchableOpacity style={styles.resumeButton} activeOpacity={0.85}>
+              <LinearGradient
+                colors={[TEAL, GREEN]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.resumeGradient}
+              >
+                <ThemedText style={styles.resumeText}>RESUME →</ThemedText>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
 
@@ -214,8 +232,16 @@ export default function HomeScreen() {
               <TouchableOpacity
                 style={styles.viewDrillBtn}
                 onPress={() => router.push(`/drill/${featuredDrill.id}`)}
+                activeOpacity={0.85}
               >
-                <ThemedText style={styles.viewDrillText}>VIEW DRILL →</ThemedText>
+                <LinearGradient
+                  colors={[TEAL, GREEN]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.viewDrillGradient}
+                >
+                  <ThemedText style={styles.viewDrillText}>VIEW DRILL →</ThemedText>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           ) : null}
@@ -240,7 +266,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: BG },
   safe: { flex: 1 },
   scroll: { flex: 1 },
-  content: { paddingBottom: 100 },
+  content: { paddingBottom: 20 },
 
   header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   logoText: { fontSize: 28, fontWeight: '900', color: TEAL, letterSpacing: 3, lineHeight: 46 },
@@ -272,16 +298,18 @@ const styles = StyleSheet.create({
   soonBadge: { position: 'absolute', top: 7, right: 7, backgroundColor: '#F97316', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 },
   soonText: { fontSize: 7, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
 
-  continueCard: { marginHorizontal: 20, marginBottom: 28, backgroundColor: CARD, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: BORDER },
-  inProgressBadge: { alignSelf: 'flex-start', backgroundColor: GREEN_DIM, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 12 },
-  inProgressText: { fontSize: 10, fontWeight: '800', color: GREEN, letterSpacing: 1 },
-  continueRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  continueCard: { marginHorizontal: 20, marginBottom: 28, backgroundColor: CARD, borderRadius: 16, padding: 20, borderWidth: 1.5, borderColor: TEAL },
+  inProgressBadge: { alignSelf: 'flex-start', marginBottom: 12 },
+  inProgressText: { fontSize: 10, fontWeight: '800', color: TEAL, letterSpacing: 1 },
+  continueRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   continueTitle: { fontSize: 17, fontWeight: '700', color: TEXT },
-  continuePercent: { fontSize: 22, fontWeight: '800', color: GREEN },
-  continueMeta: { fontSize: 12, color: TEXT_MUTED, marginBottom: 14 },
-  progressBar: { height: 6, backgroundColor: BORDER, borderRadius: 3, marginBottom: 16 },
-  progressFill: { height: 6, backgroundColor: GREEN, borderRadius: 3 },
-  resumeButton: { backgroundColor: GREEN, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  continuePercent: { fontSize: 22, fontWeight: '800', color: TEAL },
+  continueMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 14 },
+  continueMeta: { fontSize: 12, color: TEXT_MUTED, marginRight: 6 },
+  progressBar: { height: 5, backgroundColor: BORDER, borderRadius: 3, marginBottom: 16, overflow: 'hidden' },
+  progressFill: { height: 5, borderRadius: 3 },
+  resumeButton: { borderRadius: 12, overflow: 'hidden' },
+  resumeGradient: { paddingVertical: 14, alignItems: 'center' },
   resumeText: { fontSize: 15, fontWeight: '800', color: '#000', letterSpacing: 1 },
 
   sessionCard: { marginHorizontal: 20, marginBottom: 28, backgroundColor: CARD, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: BORDER, gap: 14 },
@@ -304,10 +332,11 @@ const styles = StyleSheet.create({
   featuredCategory: { fontSize: 10, fontWeight: '800', color: TEAL, letterSpacing: 2, marginBottom: 4 },
   featuredTitle: { fontSize: 18, fontWeight: '800', color: TEXT, marginBottom: 6 },
   featuredDesc: { fontSize: 13, color: TEXT_MUTED, lineHeight: 18 },
-  viewDrillBtn: { margin: 16, marginTop: 4, backgroundColor: GREEN, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  viewDrillBtn: { margin: 16, marginTop: 4, borderRadius: 12, overflow: 'hidden' },
+  viewDrillGradient: { paddingVertical: 14, alignItems: 'center' },
   viewDrillText: { fontSize: 14, fontWeight: '800', color: '#000', letterSpacing: 1 },
 
-  footerTagline: { alignItems: 'center', paddingVertical: 32, paddingHorizontal: 20 },
+  footerTagline: { alignItems: 'center', paddingVertical: 20, paddingHorizontal: 20 },
   footerTaglineText: { fontSize: 13, fontWeight: '700', letterSpacing: 2, marginBottom: 6 },
   footerSubText: { fontSize: 11, fontWeight: '600', color: TEXT_MUTED, letterSpacing: 3 },
 });
