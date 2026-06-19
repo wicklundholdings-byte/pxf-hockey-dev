@@ -3,6 +3,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } fro
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { ThemedText } from '@/components/themed-text';
 import { supabase } from '@/lib/supabase';
 
@@ -34,9 +35,17 @@ export default function DrillDetailScreen() {
   const [drill, setDrill] = useState<Drill | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const player = useVideoPlayer(null);
+
   useEffect(() => {
     fetchDrill();
   }, [id]);
+
+  useEffect(() => {
+    if (drill?.video_url) {
+      player.replace({ uri: drill.video_url });
+    }
+  }, [drill?.video_url]);
 
   async function fetchDrill() {
     const { data } = await supabase
@@ -76,17 +85,22 @@ export default function DrillDetailScreen() {
 
         <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
-          {/* Video placeholder */}
-          <View style={styles.videoArea}>
-            <View style={styles.playCircle}>
-              <SymbolView name="play.fill" tintColor={GREEN} size={28} />
-            </View>
-            {drill.video_url ? (
-              <ThemedText style={styles.videoHint}>Tap to play</ThemedText>
-            ) : (
+          {/* Video */}
+          {drill.video_url ? (
+            <VideoView
+              player={player}
+              style={styles.videoPlayer}
+              allowsFullscreen
+              allowsPictureInPicture
+            />
+          ) : (
+            <View style={styles.videoArea}>
+              <View style={styles.playCircle}>
+                <SymbolView name="play.fill" tintColor={GREEN} size={28} />
+              </View>
               <ThemedText style={styles.videoHint}>No video yet</ThemedText>
-            )}
-          </View>
+            </View>
+          )}
 
           {/* Category + Title */}
           <View style={styles.titleSection}>
@@ -172,6 +186,12 @@ const styles = StyleSheet.create({
   },
   backText: { fontSize: 16, color: GREEN, fontWeight: '600' },
 
+  videoPlayer: {
+    width: '100%',
+    height: 220,
+    marginBottom: 24,
+    backgroundColor: '#000',
+  },
   videoArea: {
     height: 220,
     backgroundColor: '#0A1F15',
