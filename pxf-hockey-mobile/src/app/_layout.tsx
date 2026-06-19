@@ -78,6 +78,7 @@ export default function TabLayout() {
       />
       <Tabs.Screen name="explore" options={{ href: null }} />
       <Tabs.Screen name="drill/[id]" options={{ href: null }} />
+      <Tabs.Screen name="session/[id]" options={{ href: null }} />
       <Tabs.Screen name="auth/sign-in" options={{ href: null }} />
       <Tabs.Screen name="auth/sign-up" options={{ href: null }} />
     </Tabs>
