@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
 
   titleSection: { paddingHorizontal: 20, marginBottom: 24 },
   categoryLabel: { fontSize: 11, fontWeight: '800', color: GREEN, letterSpacing: 2, marginBottom: 6 },
-  drillTitle: { fontSize: 26, fontWeight: '800', color: TEXT, marginBottom: 14 },
+  drillTitle: { fontSize: 26, fontWeight: '800', color: TEXT, marginBottom: 14, lineHeight: 36 },
   metaRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   metaPill: {
     backgroundColor: '#161B22',

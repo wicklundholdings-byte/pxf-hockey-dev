@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
 
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 },
   headerLabel: { fontSize: 11, fontWeight: '700', color: TEXT_MUTED, letterSpacing: 2, marginBottom: 4 },
-  headerTitle: { fontSize: 32, fontWeight: '800', color: TEXT },
+  headerTitle: { fontSize: 32, fontWeight: '800', color: TEXT, lineHeight: 42 },
 
   searchRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginBottom: 24 },
   searchBar: {

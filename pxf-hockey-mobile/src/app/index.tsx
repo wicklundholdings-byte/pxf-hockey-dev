@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
+import { supabase } from '@/lib/supabase';
 
 const BG = '#0D1117';
 const CARD = '#161B22';
@@ -25,6 +27,22 @@ const CATEGORIES = [
 ];
 
 export default function HomeScreen() {
+  const [userName, setUserName] = useState('Athlete');
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const name = data.user?.user_metadata?.full_name || data.user?.email?.split('@')[0] || 'Athlete';
+      setUserName(name);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      const name = session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || 'Athlete';
+      setUserName(name);
+    });
+
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safe}>
@@ -42,7 +60,7 @@ export default function HomeScreen() {
           <View style={styles.welcomeRow}>
             <View style={styles.welcomeLeft}>
               <ThemedText style={styles.welcomeLabel}>WELCOME BACK</ThemedText>
-              <ThemedText style={styles.welcomeName}>Athlete</ThemedText>
+              <ThemedText style={styles.welcomeName}>{userName}</ThemedText>
               <ThemedText style={styles.welcomeTagline}>Train the game. Today's the day.</ThemedText>
             </View>
             <View style={styles.streakBadge}>
@@ -124,7 +142,7 @@ const styles = StyleSheet.create({
   welcomeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 24 },
   welcomeLeft: { flex: 1 },
   welcomeLabel: { fontSize: 11, fontWeight: '700', color: TEXT_MUTED, letterSpacing: 2, marginBottom: 4 },
-  welcomeName: { fontSize: 28, fontWeight: '800', color: GREEN, marginBottom: 4 },
+  welcomeName: { fontSize: 28, fontWeight: '800', color: GREEN, marginBottom: 4, lineHeight: 38 },
   welcomeTagline: { fontSize: 14, color: TEXT_MUTED },
   streakBadge: { backgroundColor: CARD, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12, alignItems: 'center', borderWidth: 1, borderColor: GREEN_DIM },
   streakNumber: { fontSize: 24, fontWeight: '800', color: GREEN },

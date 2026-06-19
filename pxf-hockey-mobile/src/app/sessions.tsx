@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: BG },
   safeArea: { flex: 1 },
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 },
-  title: { fontSize: 28, fontWeight: '800', color: '#FFFFFF', marginBottom: 4 },
+  title: { fontSize: 28, fontWeight: '800', color: '#FFFFFF', marginBottom: 4, lineHeight: 38 },
   subtitle: { fontSize: 14, color: TEXT_MUTED },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 },
   emptyIcon: { fontSize: 48, marginBottom: 16 },
