@@ -1,17 +1,21 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SymbolView } from 'expo-symbols';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText } from '@/components/themed-text';
+import { GradientText } from '@/components/gradient-text';
 import { supabase } from '@/lib/supabase';
 
 const BG = '#0D1117';
 const CARD = '#0F1923';
 const GREEN = '#3DFF8F';
+const TEAL = '#00C4B4';
 const TEXT = '#FFFFFF';
 const TEXT_MUTED = '#8B949E';
 const SEARCH_BG = '#161B22';
+const BORDER = '#1A2A1E';
 
 type Drill = {
   id: string;
@@ -20,7 +24,6 @@ type Drill = {
   age_group: string;
   duration_minutes: number;
   video_url: string | null;
-  drill_categories: { title: string } | null;
 };
 
 type Category = {
@@ -75,7 +78,18 @@ export default function DrillsScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
-          {/* Header */}
+          {/* Logo header */}
+          <View style={styles.logoHeader}>
+            <View>
+              <GradientText style={styles.logoText} colors={[TEAL, GREEN]}>PXF</GradientText>
+              <GradientText style={styles.logoSub} colors={[TEAL, GREEN]}>HOCKEY</GradientText>
+            </View>
+            <TouchableOpacity style={styles.bellBtn}>
+              <Ionicons name="notifications-outline" size={22} color={TEXT_MUTED} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Title */}
           <View style={styles.header}>
             <ThemedText style={styles.headerLabel}>DRILL LIBRARY</ThemedText>
             <ThemedText style={styles.headerTitle}>Drills</ThemedText>
@@ -84,7 +98,7 @@ export default function DrillsScreen() {
           {/* Search */}
           <View style={styles.searchRow}>
             <View style={styles.searchBar}>
-              <SymbolView name="magnifyingglass" tintColor={TEXT_MUTED} size={16} />
+              <Ionicons name="search-outline" size={16} color={TEXT_MUTED} />
               <TextInput
                 placeholder="Search drills, skills, tags..."
                 placeholderTextColor={TEXT_MUTED}
@@ -94,7 +108,7 @@ export default function DrillsScreen() {
               />
             </View>
             <TouchableOpacity style={styles.filterBtn}>
-              <SymbolView name="line.3.horizontal.decrease" tintColor={TEXT_MUTED} size={18} />
+              <Ionicons name="options-outline" size={18} color={TEXT_MUTED} />
             </TouchableOpacity>
           </View>
 
@@ -114,32 +128,41 @@ export default function DrillsScreen() {
                 {section.drills.map((drill, i) => (
                   <TouchableOpacity key={drill.id} style={styles.drillCard} onPress={() => router.push(`/drill/${drill.id}`)}>
                     <View style={styles.thumbnail}>
-                      <View style={styles.playCircle}>
-                        <SymbolView name="play.fill" tintColor={GREEN} size={16} />
-                      </View>
-                      <View style={styles.levelBadge}>
-                        <ThemedText style={styles.levelText}>L{i + 1}</ThemedText>
-                      </View>
+                      <LinearGradient
+                        colors={[TEAL, GREEN]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.playCircle}
+                      >
+                        <Ionicons name="play" size={14} color="#000" />
+                      </LinearGradient>
                     </View>
 
                     <View style={styles.drillInfo}>
                       <ThemedText style={styles.drillCategory}>{section.title.toUpperCase()}</ThemedText>
                       <ThemedText style={styles.drillTitle}>{drill.title}</ThemedText>
                       <View style={styles.drillMeta}>
-                        <ThemedText style={styles.metaText}>{drill.difficulty_level}</ThemedText>
+                        <Ionicons name="bar-chart-outline" size={11} color={TEXT_MUTED} />
+                        <ThemedText style={styles.metaText}> {drill.difficulty_level}</ThemedText>
                         <ThemedText style={styles.metaDot}>·</ThemedText>
-                        <ThemedText style={styles.metaText}>{drill.age_group}</ThemedText>
-                        <ThemedText style={styles.metaDot}>·</ThemedText>
-                        <ThemedText style={styles.metaText}>{drill.duration_minutes} min</ThemedText>
+                        <Ionicons name="people-outline" size={11} color={TEXT_MUTED} />
+                        <ThemedText style={styles.metaText}> {drill.age_group}</ThemedText>
+                        {!!drill.duration_minutes && (
+                          <>
+                            <ThemedText style={styles.metaDot}>·</ThemedText>
+                            <Ionicons name="time-outline" size={11} color={TEXT_MUTED} />
+                            <ThemedText style={styles.metaText}> {drill.duration_minutes} min</ThemedText>
+                          </>
+                        )}
                       </View>
                     </View>
 
                     <View style={styles.drillActions}>
                       <TouchableOpacity style={styles.addBtn}>
-                        <SymbolView name="plus" tintColor={GREEN} size={16} />
+                        <Ionicons name="add" size={18} color={GREEN} />
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.favoriteBtn}>
-                        <SymbolView name="heart" tintColor={TEXT_MUTED} size={16} />
+                        <Ionicons name="heart-outline" size={15} color={TEXT_MUTED} />
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>
@@ -158,112 +181,71 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: BG },
   safeArea: { flex: 1 },
   scroll: { flex: 1 },
-  scrollContent: { paddingBottom: 100 },
+  scrollContent: { paddingBottom: 40 },
 
-  header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 },
+  logoHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
+  logoText: { fontSize: 28, fontWeight: '900', color: TEAL, letterSpacing: 3, lineHeight: 46 },
+  logoSub: { fontSize: 11, fontWeight: '700', color: GREEN, letterSpacing: 5, lineHeight: 18 },
+  bellBtn: { marginTop: 8 },
+
+  header: { paddingHorizontal: 20, paddingBottom: 16 },
   headerLabel: { fontSize: 11, fontWeight: '700', color: TEXT_MUTED, letterSpacing: 2, marginBottom: 4 },
   headerTitle: { fontSize: 32, fontWeight: '800', color: TEXT, lineHeight: 42 },
 
-  searchRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginBottom: 24 },
+  searchRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginBottom: 8 },
   searchBar: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: SEARCH_BG,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    height: 44,
-    gap: 8,
+    flex: 1, flexDirection: 'row', alignItems: 'center',
+    backgroundColor: SEARCH_BG, borderRadius: 12,
+    paddingHorizontal: 14, height: 44, gap: 8,
   },
   searchInput: { flex: 1, color: TEXT, fontSize: 15 },
   filterBtn: {
-    backgroundColor: SEARCH_BG,
-    borderRadius: 12,
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: SEARCH_BG, borderRadius: 12,
+    width: 44, height: 44, alignItems: 'center', justifyContent: 'center',
   },
 
   categoryHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
+    flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingTop: 20, paddingBottom: 10,
   },
   categoryHeaderLeft: { flex: 1 },
-  categoryTitle: { fontSize: 12, fontWeight: '800', color: GREEN, letterSpacing: 2, marginBottom: 2 },
+  categoryTitle: { fontSize: 12, fontWeight: '800', color: TEAL, letterSpacing: 2, marginBottom: 2 },
   categoryDesc: { fontSize: 13, color: TEXT_MUTED },
   drillCount: { fontSize: 12, color: TEXT_MUTED, paddingTop: 1 },
 
   drillCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginBottom: 10,
-    backgroundColor: CARD,
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#1A2A1E',
+    flexDirection: 'row', alignItems: 'center',
+    marginHorizontal: 20, marginBottom: 10,
+    backgroundColor: CARD, borderRadius: 16,
+    padding: 12, borderWidth: 1, borderColor: BORDER,
   },
 
   thumbnail: {
-    width: 72,
-    height: 72,
-    backgroundColor: '#0A1F15',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-    position: 'relative',
+    width: 72, height: 72, backgroundColor: '#0A1F15',
+    borderRadius: 12, alignItems: 'center', justifyContent: 'center',
+    marginRight: 12, position: 'relative',
   },
   playCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: GREEN,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 40, height: 40, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center',
   },
-  levelBadge: {
-    position: 'absolute',
-    bottom: 6,
-    left: 6,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    borderRadius: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-  },
-  levelText: { fontSize: 9, fontWeight: '800', color: TEXT_MUTED },
 
   drillInfo: { flex: 1 },
-  drillCategory: { fontSize: 10, fontWeight: '700', color: GREEN, letterSpacing: 1, marginBottom: 3 },
+  drillCategory: { fontSize: 10, fontWeight: '700', color: TEAL, letterSpacing: 1, marginBottom: 3 },
   drillTitle: { fontSize: 15, fontWeight: '700', color: TEXT, marginBottom: 6 },
   drillMeta: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
-  metaText: { fontSize: 12, color: TEXT_MUTED },
-  metaDot: { fontSize: 12, color: TEXT_MUTED, marginHorizontal: 4 },
+  metaText: { fontSize: 11, color: TEXT_MUTED },
+  metaDot: { fontSize: 11, color: TEXT_MUTED, marginHorizontal: 4 },
 
   drillActions: { gap: 8, marginLeft: 8 },
   addBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: GREEN,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 32, height: 32, borderRadius: 16,
+    borderWidth: 2, borderColor: GREEN,
+    alignItems: 'center', justifyContent: 'center',
   },
   favoriteBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#21262D',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 32, height: 32, borderRadius: 16,
+    borderWidth: 1, borderColor: '#21262D',
+    alignItems: 'center', justifyContent: 'center',
   },
 });

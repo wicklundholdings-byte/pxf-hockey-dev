@@ -78,7 +78,7 @@ export default function DrillDetailScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top']}>
 
         {/* Back button */}
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.navigate('/drills')}>
           <SymbolView name="chevron.left" tintColor={GREEN} size={18} />
           <ThemedText style={styles.backText}>Drills</ThemedText>
         </TouchableOpacity>
