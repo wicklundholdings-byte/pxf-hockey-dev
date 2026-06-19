@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
+import { GradientText } from '@/components/gradient-text';
 import { supabase } from '@/lib/supabase';
 
 const BG = '#0D1117';
@@ -24,9 +25,9 @@ const QUICK_ACTIONS = [
 ];
 
 const CATEGORIES = [
-  { name: 'Slip Circuits', icon: 'layers-outline', soon: false },
-  { name: 'Dryland Skills', icon: 'flame-outline', soon: false },
-  { name: 'Game IQ Circuits', icon: 'bulb-outline', soon: true },
+  { name: 'Slip Circuits', icon: 'layers-outline', material: false, soon: false },
+  { name: 'Dryland Skills', icon: 'flame-outline', material: false, soon: false },
+  { name: 'Game IQ', icon: 'brain', material: true, soon: true },
 ];
 
 type FeaturedDrill = {
@@ -75,8 +76,8 @@ export default function HomeScreen() {
           {/* Header */}
           <View style={styles.header}>
             <View>
-              <ThemedText style={styles.logoText}>PXF</ThemedText>
-              <ThemedText style={styles.logoSub}>HOCKEY</ThemedText>
+              <GradientText style={styles.logoText} colors={[TEAL, GREEN]}>PXF</GradientText>
+              <GradientText style={styles.logoSub} colors={[TEAL, GREEN]}>HOCKEY</GradientText>
             </View>
             <TouchableOpacity style={styles.bellBtn}>
               <Ionicons name="notifications-outline" size={22} color={TEXT_MUTED} />
@@ -87,7 +88,7 @@ export default function HomeScreen() {
           <View style={styles.welcomeRow}>
             <View style={styles.welcomeLeft}>
               <ThemedText style={styles.welcomeLabel}>WELCOME BACK</ThemedText>
-              <ThemedText style={styles.welcomeName}>{userName}</ThemedText>
+              <GradientText style={styles.welcomeName} colors={[TEAL, GREEN]}>{userName}</GradientText>
               <ThemedText style={styles.welcomeTagline}>Train the game. Today's the day.</ThemedText>
             </View>
             <View style={styles.streakBadge}>
@@ -115,13 +116,19 @@ export default function HomeScreen() {
 
           <View style={styles.categoryRow}>
             {CATEGORIES.map((cat) => (
-              <TouchableOpacity key={cat.name} style={styles.categoryCard}>
+              <TouchableOpacity
+                key={cat.name}
+                style={[styles.categoryCard, cat.soon && styles.categoryCardSoon]}
+              >
                 {cat.soon && (
                   <View style={styles.soonBadge}>
                     <ThemedText style={styles.soonText}>SOON</ThemedText>
                   </View>
                 )}
-                <Ionicons name={cat.icon as any} size={28} color={TEAL} />
+                {cat.material
+                  ? <MaterialCommunityIcons name={cat.icon as any} size={28} color={TEAL} />
+                  : <Ionicons name={cat.icon as any} size={28} color={TEAL} />
+                }
                 <ThemedText style={styles.categoryName}>{cat.name}</ThemedText>
               </TouchableOpacity>
             ))}
@@ -177,7 +184,7 @@ export default function HomeScreen() {
             <TouchableOpacity><ThemedText style={styles.seeAll}>See all ›</ThemedText></TouchableOpacity>
           </View>
 
-          {featuredDrill && (
+          {featuredDrill ? (
             <View style={styles.featuredCard}>
               {/* Diagram placeholder */}
               <View style={styles.featuredDiagram}>
@@ -211,7 +218,17 @@ export default function HomeScreen() {
                 <ThemedText style={styles.viewDrillText}>VIEW DRILL →</ThemedText>
               </TouchableOpacity>
             </View>
-          )}
+          ) : null}
+
+          {/* Footer tagline */}
+          <View style={styles.footerTagline}>
+            <ThemedText style={styles.footerTaglineText}>
+              <ThemedText style={{ color: TEAL }}>POWER. </ThemedText>
+              <ThemedText style={{ color: GREEN }}>FLOW</ThemedText>
+              <ThemedText style={{ color: TEXT_MUTED }}>. PERFORMANCE.</ThemedText>
+            </ThemedText>
+            <ThemedText style={styles.footerSubText}>TRAIN THE GAME</ThemedText>
+          </View>
 
         </ScrollView>
       </SafeAreaView>
@@ -240,9 +257,9 @@ const styles = StyleSheet.create({
   streakLabel: { fontSize: 10, fontWeight: '700', color: TEXT_MUTED, letterSpacing: 1 },
 
   quickActions: { flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginBottom: 28 },
-  quickAction: { flex: 1, backgroundColor: CARD, borderRadius: 14, paddingVertical: 14, alignItems: 'center', gap: 5, borderWidth: 1, borderColor: BORDER },
+  quickAction: { flex: 1, backgroundColor: CARD, borderRadius: 14, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', gap: 5, borderWidth: 1, borderColor: BORDER },
   quickActionLabel: { fontSize: 10, fontWeight: '600', color: TEXT_MUTED, textAlign: 'center' },
-  quickActionSoon: { fontSize: 8, fontWeight: '600', color: '#F4A261', textAlign: 'center' },
+  quickActionSoon: { fontSize: 8, fontWeight: '600', color: '#F4A261', textAlign: 'center', position: 'absolute', bottom: 4 },
 
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 12 },
   sectionTitle: { fontSize: 11, fontWeight: '700', color: TEXT_MUTED, letterSpacing: 2 },
@@ -250,9 +267,10 @@ const styles = StyleSheet.create({
 
   categoryRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginBottom: 28 },
   categoryCard: { flex: 1, aspectRatio: 1, backgroundColor: CARD2, borderRadius: 14, padding: 12, justifyContent: 'center', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: '#1B3A2A', position: 'relative' },
-  categoryName: { fontSize: 12, fontWeight: '700', color: TEXT, textAlign: 'center' },
-  soonBadge: { position: 'absolute', top: 8, right: 8, backgroundColor: '#F4A261', borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2 },
-  soonText: { fontSize: 8, fontWeight: '800', color: '#000', letterSpacing: 0.5 },
+  categoryCardSoon: { borderColor: '#F97316', borderWidth: 1.5 },
+  categoryName: { fontSize: 12, fontWeight: '700', color: TEXT, textAlign: 'center', lineHeight: 17 },
+  soonBadge: { position: 'absolute', top: 7, right: 7, backgroundColor: '#F97316', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 },
+  soonText: { fontSize: 7, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
 
   continueCard: { marginHorizontal: 20, marginBottom: 28, backgroundColor: CARD, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: BORDER },
   inProgressBadge: { alignSelf: 'flex-start', backgroundColor: GREEN_DIM, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginBottom: 12 },
@@ -288,4 +306,8 @@ const styles = StyleSheet.create({
   featuredDesc: { fontSize: 13, color: TEXT_MUTED, lineHeight: 18 },
   viewDrillBtn: { margin: 16, marginTop: 4, backgroundColor: GREEN, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   viewDrillText: { fontSize: 14, fontWeight: '800', color: '#000', letterSpacing: 1 },
+
+  footerTagline: { alignItems: 'center', paddingVertical: 32, paddingHorizontal: 20 },
+  footerTaglineText: { fontSize: 13, fontWeight: '700', letterSpacing: 2, marginBottom: 6 },
+  footerSubText: { fontSize: 11, fontWeight: '600', color: TEXT_MUTED, letterSpacing: 3 },
 });
