@@ -27,11 +27,15 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
+import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authenticated/coach.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedCoachCampsRouteImport } from './routes/_authenticated/coach.camps'
 import { Route as AuthenticatedAdminProgramsRouteImport } from './routes/_authenticated/admin.programs'
 import { Route as AuthenticatedAdminDrillsRouteImport } from './routes/_authenticated/admin.drills'
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
+import { Route as AuthenticatedCoachCampsNewRouteImport } from './routes/_authenticated/coach.camps.new'
 
 const TeamRoute = TeamRouteImport.update({
   id: '/team',
@@ -122,15 +126,30 @@ const DrillDetailDrillIdRoute = DrillDetailDrillIdRouteImport.update({
   path: '/drill-detail/$drillId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedCoachRoute = AuthenticatedCoachRouteImport.update({
+  id: '/coach',
+  path: '/coach',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCoachIndexRoute = AuthenticatedCoachIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedCoachRoute,
+} as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedCoachCampsRoute = AuthenticatedCoachCampsRouteImport.update({
+  id: '/camps',
+  path: '/camps',
+  getParentRoute: () => AuthenticatedCoachRoute,
 } as any)
 const AuthenticatedAdminProgramsRoute =
   AuthenticatedAdminProgramsRouteImport.update({
@@ -150,6 +169,12 @@ const AuthenticatedAdminCategoriesRoute =
     path: '/categories',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedCoachCampsNewRoute =
+  AuthenticatedCoachCampsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedCoachCampsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -168,12 +193,16 @@ export interface FileRoutesByFullPath {
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/coach': typeof AuthenticatedCoachRouteWithChildren
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/admin/programs': typeof AuthenticatedAdminProgramsRoute
+  '/coach/camps': typeof AuthenticatedCoachCampsRouteWithChildren
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/coach/': typeof AuthenticatedCoachIndexRoute
+  '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -196,7 +225,10 @@ export interface FileRoutesByTo {
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/admin/programs': typeof AuthenticatedAdminProgramsRoute
+  '/coach/camps': typeof AuthenticatedCoachCampsRouteWithChildren
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/coach': typeof AuthenticatedCoachIndexRoute
+  '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -217,12 +249,16 @@ export interface FileRoutesById {
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/_authenticated/coach': typeof AuthenticatedCoachRouteWithChildren
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/_authenticated/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/_authenticated/admin/programs': typeof AuthenticatedAdminProgramsRoute
+  '/_authenticated/coach/camps': typeof AuthenticatedCoachCampsRouteWithChildren
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/coach/': typeof AuthenticatedCoachIndexRoute
+  '/_authenticated/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -243,12 +279,16 @@ export interface FileRouteTypes {
     | '/sessions'
     | '/team'
     | '/admin'
+    | '/coach'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
     | '/admin/categories'
     | '/admin/drills'
     | '/admin/programs'
+    | '/coach/camps'
     | '/admin/'
+    | '/coach/'
+    | '/coach/camps/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -271,7 +311,10 @@ export interface FileRouteTypes {
     | '/admin/categories'
     | '/admin/drills'
     | '/admin/programs'
+    | '/coach/camps'
     | '/admin'
+    | '/coach'
+    | '/coach/camps/new'
   id:
     | '__root__'
     | '/'
@@ -291,12 +334,16 @@ export interface FileRouteTypes {
     | '/sessions'
     | '/team'
     | '/_authenticated/admin'
+    | '/_authenticated/coach'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
     | '/_authenticated/admin/categories'
     | '/_authenticated/admin/drills'
     | '/_authenticated/admin/programs'
+    | '/_authenticated/coach/camps'
     | '/_authenticated/admin/'
+    | '/_authenticated/coach/'
+    | '/_authenticated/coach/camps/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -448,6 +495,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DrillDetailDrillIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/coach': {
+      id: '/_authenticated/coach'
+      path: '/coach'
+      fullPath: '/coach'
+      preLoaderRoute: typeof AuthenticatedCoachRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -455,12 +509,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/coach/': {
+      id: '/_authenticated/coach/'
+      path: '/'
+      fullPath: '/coach/'
+      preLoaderRoute: typeof AuthenticatedCoachIndexRouteImport
+      parentRoute: typeof AuthenticatedCoachRoute
+    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/coach/camps': {
+      id: '/_authenticated/coach/camps'
+      path: '/camps'
+      fullPath: '/coach/camps'
+      preLoaderRoute: typeof AuthenticatedCoachCampsRouteImport
+      parentRoute: typeof AuthenticatedCoachRoute
     }
     '/_authenticated/admin/programs': {
       id: '/_authenticated/admin/programs'
@@ -483,6 +551,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCategoriesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/coach/camps/new': {
+      id: '/_authenticated/coach/camps/new'
+      path: '/new'
+      fullPath: '/coach/camps/new'
+      preLoaderRoute: typeof AuthenticatedCoachCampsNewRouteImport
+      parentRoute: typeof AuthenticatedCoachCampsRoute
+    }
   }
 }
 
@@ -503,12 +578,41 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
 const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
+interface AuthenticatedCoachCampsRouteChildren {
+  AuthenticatedCoachCampsNewRoute: typeof AuthenticatedCoachCampsNewRoute
+}
+
+const AuthenticatedCoachCampsRouteChildren: AuthenticatedCoachCampsRouteChildren =
+  {
+    AuthenticatedCoachCampsNewRoute: AuthenticatedCoachCampsNewRoute,
+  }
+
+const AuthenticatedCoachCampsRouteWithChildren =
+  AuthenticatedCoachCampsRoute._addFileChildren(
+    AuthenticatedCoachCampsRouteChildren,
+  )
+
+interface AuthenticatedCoachRouteChildren {
+  AuthenticatedCoachCampsRoute: typeof AuthenticatedCoachCampsRouteWithChildren
+  AuthenticatedCoachIndexRoute: typeof AuthenticatedCoachIndexRoute
+}
+
+const AuthenticatedCoachRouteChildren: AuthenticatedCoachRouteChildren = {
+  AuthenticatedCoachCampsRoute: AuthenticatedCoachCampsRouteWithChildren,
+  AuthenticatedCoachIndexRoute: AuthenticatedCoachIndexRoute,
+}
+
+const AuthenticatedCoachRouteWithChildren =
+  AuthenticatedCoachRoute._addFileChildren(AuthenticatedCoachRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+  AuthenticatedCoachRoute: typeof AuthenticatedCoachRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+  AuthenticatedCoachRoute: AuthenticatedCoachRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -537,13 +641,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

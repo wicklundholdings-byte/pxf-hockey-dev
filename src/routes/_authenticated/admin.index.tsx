@@ -37,6 +37,15 @@ function AdminDashboard() {
   ] as const;
 
   return (
+    <div className="space-y-4">
+      <Link
+        to="/coach"
+        className="block rounded-2xl border border-teal/40 bg-gradient-to-br from-teal/10 to-transparent p-4"
+      >
+        <p className="text-[10px] font-bold tracking-wider text-teal">NEW</p>
+        <p className="mt-1 font-display text-lg font-bold text-foreground">Open Coach Console →</p>
+        <p className="text-[11px] text-muted-foreground">Camps, registrations, financials, contacts, inbox.</p>
+      </Link>
     <div className="grid grid-cols-2 gap-3">
       {cards.map((c) => {
         const inner = (
@@ -53,6 +62,7 @@ function AdminDashboard() {
           <div key={c.label}>{inner}</div>
         );
       })}
+    </div>
     </div>
   );
 }
