@@ -46,3 +46,34 @@ export function useIsAdmin(userId: string | undefined) {
   }, [userId]);
   return { isAdmin, loading };
 }
+
+export function useHasCoachAccess(userId: string | undefined) {
+  const [hasAccess, setHasAccess] = useState(false);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    if (!userId) {
+      setHasAccess(false);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    (async () => {
+      const [{ data: role }, { data: subs }] = await Promise.all([
+        supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle(),
+        supabase
+          .from("subscriptions")
+          .select("plan_name,status,current_period_end")
+          .eq("user_id", userId)
+          .eq("status", "active"),
+      ]);
+      const subActive = (subs ?? []).some((s) => {
+        const notExpired = !s.current_period_end || new Date(s.current_period_end) > new Date();
+        const plan = (s.plan_name ?? "").toLowerCase();
+        return notExpired && (plan.includes("coach") || plan.includes("platinum"));
+      });
+      setHasAccess(!!role || subActive);
+      setLoading(false);
+    })();
+  }, [userId]);
+  return { hasAccess, loading };
+}
