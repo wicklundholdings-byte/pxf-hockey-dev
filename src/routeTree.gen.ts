@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as SignatureRouteImport } from './routes/signature'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SessionsRouteImport } from './routes/sessions'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SavedSessionsRouteImport } from './routes/saved-sessions'
@@ -88,6 +89,11 @@ const TeamRoute = TeamRouteImport.update({
 const SignatureRoute = SignatureRouteImport.update({
   id: '/signature',
   path: '/signature',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SessionsRoute = SessionsRouteImport.update({
@@ -438,6 +444,7 @@ export interface FileRoutesByFullPath {
   '/saved-sessions': typeof SavedSessionsRoute
   '/search': typeof SearchRoute
   '/sessions': typeof SessionsRoute
+  '/settings': typeof SettingsRoute
   '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
   '/welcome': typeof WelcomeRoute
@@ -504,6 +511,7 @@ export interface FileRoutesByTo {
   '/saved-sessions': typeof SavedSessionsRoute
   '/search': typeof SearchRoute
   '/sessions': typeof SessionsRoute
+  '/settings': typeof SettingsRoute
   '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
   '/welcome': typeof WelcomeRoute
@@ -570,6 +578,7 @@ export interface FileRoutesById {
   '/saved-sessions': typeof SavedSessionsRoute
   '/search': typeof SearchRoute
   '/sessions': typeof SessionsRoute
+  '/settings': typeof SettingsRoute
   '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
   '/welcome': typeof WelcomeRoute
@@ -638,6 +647,7 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/search'
     | '/sessions'
+    | '/settings'
     | '/signature'
     | '/team'
     | '/welcome'
@@ -704,6 +714,7 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/search'
     | '/sessions'
+    | '/settings'
     | '/signature'
     | '/team'
     | '/welcome'
@@ -769,6 +780,7 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/search'
     | '/sessions'
+    | '/settings'
     | '/signature'
     | '/team'
     | '/welcome'
@@ -837,6 +849,7 @@ export interface RootRouteChildren {
   SavedSessionsRoute: typeof SavedSessionsRoute
   SearchRoute: typeof SearchRoute
   SessionsRoute: typeof SessionsRoute
+  SettingsRoute: typeof SettingsRoute
   SignatureRoute: typeof SignatureRoute
   TeamRoute: typeof TeamRoute
   WelcomeRoute: typeof WelcomeRoute
@@ -878,6 +891,13 @@ declare module '@tanstack/react-router' {
       path: '/signature'
       fullPath: '/signature'
       preLoaderRoute: typeof SignatureRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sessions': {
@@ -1480,6 +1500,7 @@ const rootRouteChildren: RootRouteChildren = {
   SavedSessionsRoute: SavedSessionsRoute,
   SearchRoute: SearchRoute,
   SessionsRoute: SessionsRoute,
+  SettingsRoute: SettingsRoute,
   SignatureRoute: SignatureRoute,
   TeamRoute: TeamRoute,
   WelcomeRoute: WelcomeRoute,
