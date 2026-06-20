@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { DollarSign, TrendingUp, Wallet, Tag, Plus, X, Copy, CheckCircle2 } from "lucide-react";
+import { DollarSign, TrendingUp, Wallet, Tag, Plus, X, Copy, CheckCircle2, BarChart3, Percent, Download } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/financials")({
   component: FinancialsPage,
@@ -19,7 +19,7 @@ type Reg = {
 type Payout = { id: string; amount_cents: number; status: string; period_start: string | null; period_end: string | null; paid_at: string | null; created_at: string };
 type Coupon = { id: string; code: string; percent_off: number | null; amount_off_cents: number | null; expires_at: string | null; usage_limit: number | null; used_count: number };
 
-type Tab = "overview" | "orders" | "payouts" | "coupons";
+type Tab = "overview" | "orders" | "reports" | "taxes" | "payouts" | "coupons";
 
 function FinancialsPage() {
   const [tab, setTab] = useState<Tab>("overview");
@@ -73,7 +73,7 @@ function FinancialsPage() {
 
       <nav className="-mx-5 overflow-x-auto px-5">
         <div className="flex gap-2">
-          {(["overview", "orders", "payouts", "coupons"] as Tab[]).map((t) => (
+          {(["overview", "orders", "reports", "taxes", "payouts", "coupons"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -92,6 +92,8 @@ function FinancialsPage() {
         <>
           {tab === "overview" && <OverviewTab regs={regs} />}
           {tab === "orders" && <OrdersTab regs={regs} />}
+          {tab === "reports" && <ReportsTab regs={regs} />}
+          {tab === "taxes" && <TaxesTab />}
           {tab === "payouts" && <PayoutsTab payouts={payouts} balance={stats.balance} onReload={load} />}
           {tab === "coupons" && <CouponsTab coupons={coupons} onReload={load} />}
         </>
