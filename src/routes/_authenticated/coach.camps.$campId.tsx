@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/$campId")({
@@ -34,7 +34,7 @@ type Wait = {
 };
 type Media = { id: string; storage_path: string; created_at: string };
 
-type Tab = "overview" | "roster" | "waitlist" | "sessions" | "evaluations" | "media";
+type Tab = "overview" | "description" | "options" | "roster" | "waitlist" | "sessions" | "evaluations" | "media";
 
 function fmt(d: string | null) {
   if (!d) return "TBA";
@@ -97,6 +97,8 @@ function CampDetailPage() {
   const pct = camp.capacity ? Math.min(100, (stats.paid / camp.capacity) * 100) : 0;
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: "overview", label: "Overview" },
+    { id: "description", label: "Description" },
+    { id: "options", label: "Order Options" },
     { id: "roster", label: "Roster", count: regs.length },
     { id: "waitlist", label: "Waitlist", count: wait.length },
     { id: "sessions", label: "Attendance", count: sessions.length },
@@ -198,6 +200,8 @@ function CampDetailPage() {
       </nav>
 
       {tab === "overview" && <OverviewTab camp={camp} />}
+      {tab === "description" && <DescriptionTab camp={camp} />}
+      {tab === "options" && <OptionsTab camp={camp} />}
       {tab === "roster" && <RosterTab regs={regs} />}
       {tab === "waitlist" && <WaitlistTab entries={wait} />}
       {tab === "sessions" && <SessionsTab sessions={sessions} regs={regs} campId={campId} />}
