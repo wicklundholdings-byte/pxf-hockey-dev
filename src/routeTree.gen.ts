@@ -27,6 +27,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
+import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminProgramsRouteImport } from './routes/_authenticated/admin.programs'
@@ -122,6 +123,11 @@ const DrillDetailDrillIdRoute = DrillDetailDrillIdRouteImport.update({
   path: '/drill-detail/$drillId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedCoachRoute = AuthenticatedCoachRouteImport.update({
+  id: '/coach',
+  path: '/coach',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -168,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/coach': typeof AuthenticatedCoachRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByTo {
   '/saved-sessions': typeof SavedSessionsRoute
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
+  '/coach': typeof AuthenticatedCoachRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/_authenticated/coach': typeof AuthenticatedCoachRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
     | '/sessions'
     | '/team'
     | '/admin'
+    | '/coach'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
     | '/admin/categories'
@@ -266,6 +276,7 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/sessions'
     | '/team'
+    | '/coach'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
     | '/admin/categories'
@@ -291,6 +302,7 @@ export interface FileRouteTypes {
     | '/sessions'
     | '/team'
     | '/_authenticated/admin'
+    | '/_authenticated/coach'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
     | '/_authenticated/admin/categories'
@@ -448,6 +460,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DrillDetailDrillIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/coach': {
+      id: '/_authenticated/coach'
+      path: '/coach'
+      fullPath: '/coach'
+      preLoaderRoute: typeof AuthenticatedCoachRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -505,10 +524,12 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+  AuthenticatedCoachRoute: typeof AuthenticatedCoachRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+  AuthenticatedCoachRoute: AuthenticatedCoachRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
