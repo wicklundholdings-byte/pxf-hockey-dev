@@ -7,13 +7,20 @@ export const Route = createFileRoute("/_authenticated/coach")({
   beforeLoad: async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) throw redirect({ to: "/auth", search: { mode: "login", redirect: "/coach" } });
-    const { data: role } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", u.user.id)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (!role) throw redirect({ to: "/" });
+    const [{ data: role }, { data: subs }] = await Promise.all([
+      supabase.from("user_roles").select("role").eq("user_id", u.user.id).eq("role", "admin").maybeSingle(),
+      supabase
+        .from("subscriptions")
+        .select("plan_name,status,current_period_end")
+        .eq("user_id", u.user.id)
+        .eq("status", "active"),
+    ]);
+    const subActive = (subs ?? []).some((s) => {
+      const notExpired = !s.current_period_end || new Date(s.current_period_end) > new Date();
+      const plan = (s.plan_name ?? "").toLowerCase();
+      return notExpired && (plan.includes("coach") || plan.includes("platinum"));
+    });
+    if (!role && !subActive) throw redirect({ to: "/" });
   },
   component: CoachLayout,
 });
