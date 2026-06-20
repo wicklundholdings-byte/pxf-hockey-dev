@@ -15,6 +15,7 @@ import { Route as SavedSessionsRouteImport } from './routes/saved-sessions'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ProgramsRouteImport } from './routes/programs'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PaymentsPreviewRouteImport } from './routes/payments-preview'
 import { Route as MembershipRouteImport } from './routes/membership'
 import { Route as GameiqRouteImport } from './routes/gameiq'
 import { Route as FavouritesRouteImport } from './routes/favourites'
@@ -74,6 +75,11 @@ const ProgramsRoute = ProgramsRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsPreviewRoute = PaymentsPreviewRouteImport.update({
+  id: '/payments-preview',
+  path: '/payments-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MembershipRoute = MembershipRouteImport.update({
@@ -245,6 +251,7 @@ export interface FileRoutesByFullPath {
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
   '/membership': typeof MembershipRoute
+  '/payments-preview': typeof PaymentsPreviewRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
@@ -282,6 +289,7 @@ export interface FileRoutesByTo {
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
   '/membership': typeof MembershipRoute
+  '/payments-preview': typeof PaymentsPreviewRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
@@ -319,6 +327,7 @@ export interface FileRoutesById {
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
   '/membership': typeof MembershipRoute
+  '/payments-preview': typeof PaymentsPreviewRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
@@ -358,6 +367,7 @@ export interface FileRouteTypes {
     | '/favourites'
     | '/gameiq'
     | '/membership'
+    | '/payments-preview'
     | '/profile'
     | '/programs'
     | '/progress'
@@ -395,6 +405,7 @@ export interface FileRouteTypes {
     | '/favourites'
     | '/gameiq'
     | '/membership'
+    | '/payments-preview'
     | '/profile'
     | '/programs'
     | '/progress'
@@ -431,6 +442,7 @@ export interface FileRouteTypes {
     | '/favourites'
     | '/gameiq'
     | '/membership'
+    | '/payments-preview'
     | '/profile'
     | '/programs'
     | '/progress'
@@ -470,6 +482,7 @@ export interface RootRouteChildren {
   FavouritesRoute: typeof FavouritesRoute
   GameiqRoute: typeof GameiqRoute
   MembershipRoute: typeof MembershipRoute
+  PaymentsPreviewRoute: typeof PaymentsPreviewRoute
   ProfileRoute: typeof ProfileRoute
   ProgramsRoute: typeof ProgramsRoute
   ProgressRoute: typeof ProgressRoute
@@ -523,6 +536,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments-preview': {
+      id: '/payments-preview'
+      path: '/payments-preview'
+      fullPath: '/payments-preview'
+      preLoaderRoute: typeof PaymentsPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/membership': {
@@ -821,6 +841,7 @@ const rootRouteChildren: RootRouteChildren = {
   FavouritesRoute: FavouritesRoute,
   GameiqRoute: GameiqRoute,
   MembershipRoute: MembershipRoute,
+  PaymentsPreviewRoute: PaymentsPreviewRoute,
   ProfileRoute: ProfileRoute,
   ProgramsRoute: ProgramsRoute,
   ProgressRoute: ProgressRoute,
@@ -834,13 +855,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
