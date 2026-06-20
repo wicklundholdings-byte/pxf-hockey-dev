@@ -31,6 +31,7 @@ import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StoreIndexRouteImport } from './routes/store.index'
+import { Route as StoreCartRouteImport } from './routes/store.cart'
 import { Route as StoreProductIdRouteImport } from './routes/store.$productId'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
 import { Route as PaymentsSubscribeRouteImport } from './routes/payments.subscribe'
@@ -172,6 +173,11 @@ const IndexRoute = IndexRouteImport.update({
 const StoreIndexRoute = StoreIndexRouteImport.update({
   id: '/store/',
   path: '/store/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StoreCartRoute = StoreCartRouteImport.update({
+  id: '/store/cart',
+  path: '/store/cart',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StoreProductIdRoute = StoreProductIdRouteImport.update({
@@ -388,6 +394,7 @@ export interface FileRoutesByFullPath {
   '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
+  '/store/cart': typeof StoreCartRoute
   '/store/': typeof StoreIndexRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
@@ -442,6 +449,7 @@ export interface FileRoutesByTo {
   '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
+  '/store/cart': typeof StoreCartRoute
   '/store': typeof StoreIndexRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
@@ -500,6 +508,7 @@ export interface FileRoutesById {
   '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
+  '/store/cart': typeof StoreCartRoute
   '/store/': typeof StoreIndexRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/_authenticated/admin/drills': typeof AuthenticatedAdminDrillsRoute
@@ -558,6 +567,7 @@ export interface FileRouteTypes {
     | '/payments/subscribe'
     | '/session-detail/$sessionId'
     | '/store/$productId'
+    | '/store/cart'
     | '/store/'
     | '/admin/categories'
     | '/admin/drills'
@@ -612,6 +622,7 @@ export interface FileRouteTypes {
     | '/payments/subscribe'
     | '/session-detail/$sessionId'
     | '/store/$productId'
+    | '/store/cart'
     | '/store'
     | '/admin/categories'
     | '/admin/drills'
@@ -669,6 +680,7 @@ export interface FileRouteTypes {
     | '/payments/subscribe'
     | '/session-detail/$sessionId'
     | '/store/$productId'
+    | '/store/cart'
     | '/store/'
     | '/_authenticated/admin/categories'
     | '/_authenticated/admin/drills'
@@ -725,6 +737,7 @@ export interface RootRouteChildren {
   PaymentsSubscribeRoute: typeof PaymentsSubscribeRoute
   SessionDetailSessionIdRoute: typeof SessionDetailSessionIdRoute
   StoreProductIdRoute: typeof StoreProductIdRoute
+  StoreCartRoute: typeof StoreCartRoute
   StoreIndexRoute: typeof StoreIndexRoute
 }
 
@@ -882,6 +895,13 @@ declare module '@tanstack/react-router' {
       path: '/store'
       fullPath: '/store/'
       preLoaderRoute: typeof StoreIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/store/cart': {
+      id: '/store/cart'
+      path: '/store/cart'
+      fullPath: '/store/cart'
+      preLoaderRoute: typeof StoreCartRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/store/$productId': {
@@ -1273,6 +1293,7 @@ const rootRouteChildren: RootRouteChildren = {
   PaymentsSubscribeRoute: PaymentsSubscribeRoute,
   SessionDetailSessionIdRoute: SessionDetailSessionIdRoute,
   StoreProductIdRoute: StoreProductIdRoute,
+  StoreCartRoute: StoreCartRoute,
   StoreIndexRoute: StoreIndexRoute,
 }
 export const routeTree = rootRouteImport
