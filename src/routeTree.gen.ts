@@ -27,6 +27,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
+import { Route as BookSlugRouteImport } from './routes/book.$slug'
 import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authenticated/coach.index'
@@ -127,6 +128,11 @@ const DrillDetailDrillIdRoute = DrillDetailDrillIdRouteImport.update({
   path: '/drill-detail/$drillId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookSlugRoute = BookSlugRouteImport.update({
+  id: '/book/$slug',
+  path: '/book/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedCoachRoute = AuthenticatedCoachRouteImport.update({
   id: '/coach',
   path: '/coach',
@@ -201,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/team': typeof TeamRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/coach': typeof AuthenticatedCoachRouteWithChildren
+  '/book/$slug': typeof BookSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -228,6 +235,7 @@ export interface FileRoutesByTo {
   '/saved-sessions': typeof SavedSessionsRoute
   '/sessions': typeof SessionsRoute
   '/team': typeof TeamRoute
+  '/book/$slug': typeof BookSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -259,6 +267,7 @@ export interface FileRoutesById {
   '/team': typeof TeamRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/coach': typeof AuthenticatedCoachRouteWithChildren
+  '/book/$slug': typeof BookSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -290,6 +299,7 @@ export interface FileRouteTypes {
     | '/team'
     | '/admin'
     | '/coach'
+    | '/book/$slug'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
     | '/admin/categories'
@@ -317,6 +327,7 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/sessions'
     | '/team'
+    | '/book/$slug'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
     | '/admin/categories'
@@ -347,6 +358,7 @@ export interface FileRouteTypes {
     | '/team'
     | '/_authenticated/admin'
     | '/_authenticated/coach'
+    | '/book/$slug'
     | '/drill-detail/$drillId'
     | '/session-detail/$sessionId'
     | '/_authenticated/admin/categories'
@@ -376,6 +388,7 @@ export interface RootRouteChildren {
   SavedSessionsRoute: typeof SavedSessionsRoute
   SessionsRoute: typeof SessionsRoute
   TeamRoute: typeof TeamRoute
+  BookSlugRoute: typeof BookSlugRoute
   DrillDetailDrillIdRoute: typeof DrillDetailDrillIdRoute
   SessionDetailSessionIdRoute: typeof SessionDetailSessionIdRoute
 }
@@ -506,6 +519,13 @@ declare module '@tanstack/react-router' {
       path: '/drill-detail/$drillId'
       fullPath: '/drill-detail/$drillId'
       preLoaderRoute: typeof DrillDetailDrillIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book/$slug': {
+      id: '/book/$slug'
+      path: '/book/$slug'
+      fullPath: '/book/$slug'
+      preLoaderRoute: typeof BookSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/coach': {
@@ -657,6 +677,7 @@ const rootRouteChildren: RootRouteChildren = {
   SavedSessionsRoute: SavedSessionsRoute,
   SessionsRoute: SessionsRoute,
   TeamRoute: TeamRoute,
+  BookSlugRoute: BookSlugRoute,
   DrillDetailDrillIdRoute: DrillDetailDrillIdRoute,
   SessionDetailSessionIdRoute: SessionDetailSessionIdRoute,
 }
