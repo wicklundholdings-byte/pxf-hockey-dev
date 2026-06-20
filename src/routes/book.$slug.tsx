@@ -1,8 +1,8 @@
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { submitBooking } from "@/lib/booking.functions";
-import { Calendar, MapPin, Clock, Users, CheckCircle2, Loader2 } from "lucide-react";
+import { submitBooking, previewCoupon } from "@/lib/booking.functions";
+import { Calendar, MapPin, Clock, Users, CheckCircle2, Loader2, Tag, X } from "lucide-react";
 
 export const Route = createFileRoute("/book/$slug")({
   component: BookingPage,
@@ -44,6 +44,10 @@ function BookingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ kind: "registered" | "waitlisted"; amountCents?: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [coupon, setCoupon] = useState<{ baseCents: number; discountCents: number; finalCents: number; label: string } | null>(null);
+  const [couponErr, setCouponErr] = useState<string | null>(null);
+  const [checkingCoupon, setCheckingCoupon] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -102,6 +106,7 @@ function BookingPage() {
           parent,
           attendee,
           customFieldValues: customs,
+          couponCode: coupon ? couponCode : null,
         },
       });
       setResult(res);
@@ -110,6 +115,29 @@ function BookingPage() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  async function applyCoupon() {
+    if (!camp || !couponCode.trim()) return;
+    setCheckingCoupon(true);
+    setCouponErr(null);
+    try {
+      const res = await previewCoupon({ data: { campId: camp.id, code: couponCode.trim() } });
+      if (res.ok) {
+        setCoupon({ baseCents: res.baseCents, discountCents: res.discountCents, finalCents: res.finalCents, label: res.label });
+      } else {
+        setCoupon(null);
+        setCouponErr(res.error);
+      }
+    } finally {
+      setCheckingCoupon(false);
+    }
+  }
+
+  function clearCoupon() {
+    setCoupon(null);
+    setCouponCode("");
+    setCouponErr(null);
   }
 
   if (result) {
@@ -261,8 +289,49 @@ function BookingPage() {
                 <Row k="Parent" v={parent.full_name} />
                 <Row k="Email" v={parent.email} />
                 <Row k="Athlete" v={attendee.full_name} />
-                <Row k={isFull ? "Status" : "Total"} v={isFull ? "Waitlist" : `$${(price / 100).toFixed(0)}`} highlight />
+                {!isFull && coupon && (
+                  <>
+                    <Row k="Subtotal" v={`$${(coupon.baseCents / 100).toFixed(0)}`} />
+                    <Row k={`Coupon (${coupon.label})`} v={`-$${(coupon.discountCents / 100).toFixed(0)}`} />
+                  </>
+                )}
+                <Row
+                  k={isFull ? "Status" : "Total"}
+                  v={isFull ? "Waitlist" : `$${((coupon?.finalCents ?? price) / 100).toFixed(0)}`}
+                  highlight
+                />
               </div>
+
+              {!isFull && (
+                <div className="rounded-2xl border border-dashed border-border bg-surface p-3">
+                  <label className="mb-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <Tag size={11} /> Promo code
+                  </label>
+                  {coupon ? (
+                    <div className="flex items-center justify-between rounded-xl bg-teal/10 px-3 py-2">
+                      <span className="text-xs font-semibold text-teal">{couponCode.toUpperCase()} · {coupon.label}</span>
+                      <button onClick={clearCoupon} className="text-teal"><X size={14} /></button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value)}
+                        placeholder="SUMMER20"
+                        className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground uppercase placeholder:text-muted-foreground/60 placeholder:normal-case"
+                      />
+                      <button
+                        onClick={applyCoupon}
+                        disabled={checkingCoupon || !couponCode.trim()}
+                        className="rounded-xl bg-foreground px-4 py-2 text-xs font-bold text-background disabled:opacity-40"
+                      >
+                        {checkingCoupon ? "…" : "Apply"}
+                      </button>
+                    </div>
+                  )}
+                  {couponErr && <p className="mt-1 text-[11px] text-red-400">{couponErr}</p>}
+                </div>
+              )}
 
               {error && <p className="text-xs text-red-400">{error}</p>}
 
