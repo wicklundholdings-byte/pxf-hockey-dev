@@ -29,6 +29,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
 import { Route as PaymentsConnectRouteImport } from './routes/payments.connect'
+import { Route as PaymentsConfirmationRouteImport } from './routes/payments.confirmation'
 import { Route as PaymentsCheckoutRouteImport } from './routes/payments.checkout'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
@@ -146,6 +147,11 @@ const SessionDetailSessionIdRoute = SessionDetailSessionIdRouteImport.update({
 const PaymentsConnectRoute = PaymentsConnectRouteImport.update({
   id: '/payments/connect',
   path: '/payments/connect',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsConfirmationRoute = PaymentsConfirmationRouteImport.update({
+  id: '/payments/confirmation',
+  path: '/payments/confirmation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PaymentsCheckoutRoute = PaymentsCheckoutRouteImport.update({
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/book/$slug': typeof BookSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
+  '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -313,6 +320,7 @@ export interface FileRoutesByTo {
   '/book/$slug': typeof BookSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
+  '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -355,6 +363,7 @@ export interface FileRoutesById {
   '/book/$slug': typeof BookSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
+  '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -397,6 +406,7 @@ export interface FileRouteTypes {
     | '/book/$slug'
     | '/drill-detail/$drillId'
     | '/payments/checkout'
+    | '/payments/confirmation'
     | '/payments/connect'
     | '/session-detail/$sessionId'
     | '/admin/categories'
@@ -435,6 +445,7 @@ export interface FileRouteTypes {
     | '/book/$slug'
     | '/drill-detail/$drillId'
     | '/payments/checkout'
+    | '/payments/confirmation'
     | '/payments/connect'
     | '/session-detail/$sessionId'
     | '/admin/categories'
@@ -476,6 +487,7 @@ export interface FileRouteTypes {
     | '/book/$slug'
     | '/drill-detail/$drillId'
     | '/payments/checkout'
+    | '/payments/confirmation'
     | '/payments/connect'
     | '/session-detail/$sessionId'
     | '/_authenticated/admin/categories'
@@ -516,6 +528,7 @@ export interface RootRouteChildren {
   BookSlugRoute: typeof BookSlugRoute
   DrillDetailDrillIdRoute: typeof DrillDetailDrillIdRoute
   PaymentsCheckoutRoute: typeof PaymentsCheckoutRoute
+  PaymentsConfirmationRoute: typeof PaymentsConfirmationRoute
   PaymentsConnectRoute: typeof PaymentsConnectRoute
   SessionDetailSessionIdRoute: typeof SessionDetailSessionIdRoute
 }
@@ -660,6 +673,13 @@ declare module '@tanstack/react-router' {
       path: '/payments/connect'
       fullPath: '/payments/connect'
       preLoaderRoute: typeof PaymentsConnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments/confirmation': {
+      id: '/payments/confirmation'
+      path: '/payments/confirmation'
+      fullPath: '/payments/confirmation'
+      preLoaderRoute: typeof PaymentsConfirmationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/payments/checkout': {
@@ -891,6 +911,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookSlugRoute: BookSlugRoute,
   DrillDetailDrillIdRoute: DrillDetailDrillIdRoute,
   PaymentsCheckoutRoute: PaymentsCheckoutRoute,
+  PaymentsConfirmationRoute: PaymentsConfirmationRoute,
   PaymentsConnectRoute: PaymentsConnectRoute,
   SessionDetailSessionIdRoute: SessionDetailSessionIdRoute,
 }
