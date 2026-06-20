@@ -28,6 +28,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useAuth();
   const { hasAccess } = useHasCoachAccess(user?.id);
+  const isChromeless = pathname.startsWith("/book/") || pathname === "/auth";
+  if (isChromeless) {
+    return <div className="min-h-screen bg-background text-foreground">{children}</div>;
+  }
   const nav: NavItem[] = hasAccess
     ? [...baseNav, { to: "/coach", label: "Coach", icon: Shield }]
     : baseNav;
