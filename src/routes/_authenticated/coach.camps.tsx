@@ -130,7 +130,12 @@ function CampsPage() {
               const stats = regCounts.get(c.id) ?? { count: 0, revenue: 0 };
               const pct = c.capacity ? Math.min(100, (stats.count / c.capacity) * 100) : 0;
               return (
-                <article key={c.id} className="rounded-2xl border border-border bg-card p-3">
+                <Link
+                  key={c.id}
+                  to="/coach/camps/$campId"
+                  params={{ campId: c.id }}
+                  className="block rounded-2xl border border-border bg-card p-3 transition-colors hover:border-teal/40"
+                >
                   <div className="flex gap-3">
                     {/* Date block */}
                     <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-surface text-center">
@@ -159,7 +164,7 @@ function CampsPage() {
                       </div>
                     </div>
                   </div>
-                </article>
+                </Link>
               );
             })
           )}
