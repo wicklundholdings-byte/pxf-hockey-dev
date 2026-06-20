@@ -1,9 +1,10 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Dumbbell, CalendarDays, User, Bell } from "lucide-react";
+import { Home, Dumbbell, CalendarDays, User, Bell, Shield } from "lucide-react";
 import type { ReactNode } from "react";
+import { useAuth, useIsAdmin } from "@/hooks/use-auth";
 
 type NavItem = { to: string; label: string; icon: typeof Home; exact?: boolean };
-const nav: NavItem[] = [
+const baseNav: NavItem[] = [
   { to: "/", label: "Home", icon: Home, exact: true },
   { to: "/drills", label: "Drills", icon: Dumbbell },
   { to: "/sessions", label: "Sessions", icon: CalendarDays },
@@ -25,6 +26,11 @@ export function PxfLogo({ className = "" }: { className?: string }) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { user } = useAuth();
+  const { isAdmin } = useIsAdmin(user?.id);
+  const nav: NavItem[] = isAdmin
+    ? [...baseNav, { to: "/coach", label: "Coach", icon: Shield }]
+    : baseNav;
 
   return (
     <div className="relative mx-auto flex min-h-screen w-full max-w-[480px] flex-col bg-background text-foreground">
