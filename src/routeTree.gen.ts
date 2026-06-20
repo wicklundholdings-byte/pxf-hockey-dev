@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as SignatureRouteImport } from './routes/signature'
 import { Route as SessionsRouteImport } from './routes/sessions'
@@ -72,6 +73,11 @@ import { Route as AuthenticatedCoachAttendeesAthleteIdRouteImport } from './rout
 import { Route as AuthenticatedCoachCampsCampIdReviewsRouteImport } from './routes/_authenticated/coach.camps.$campId.reviews'
 import { Route as AuthenticatedCoachCampsCampIdFeedbackRouteImport } from './routes/_authenticated/coach.camps.$campId.feedback'
 
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TeamRoute = TeamRouteImport.update({
   id: '/team',
   path: '/team',
@@ -420,6 +426,7 @@ export interface FileRoutesByFullPath {
   '/sessions': typeof SessionsRoute
   '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
+  '/welcome': typeof WelcomeRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/coach': typeof AuthenticatedCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
@@ -483,6 +490,7 @@ export interface FileRoutesByTo {
   '/sessions': typeof SessionsRoute
   '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
+  '/welcome': typeof WelcomeRoute
   '/book/$slug': typeof BookSlugRoute
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
@@ -546,6 +554,7 @@ export interface FileRoutesById {
   '/sessions': typeof SessionsRoute
   '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
+  '/welcome': typeof WelcomeRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/coach': typeof AuthenticatedCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
@@ -611,6 +620,7 @@ export interface FileRouteTypes {
     | '/sessions'
     | '/signature'
     | '/team'
+    | '/welcome'
     | '/admin'
     | '/coach'
     | '/book/$slug'
@@ -674,6 +684,7 @@ export interface FileRouteTypes {
     | '/sessions'
     | '/signature'
     | '/team'
+    | '/welcome'
     | '/book/$slug'
     | '/camps/browse'
     | '/coaches/$slug'
@@ -736,6 +747,7 @@ export interface FileRouteTypes {
     | '/sessions'
     | '/signature'
     | '/team'
+    | '/welcome'
     | '/_authenticated/admin'
     | '/_authenticated/coach'
     | '/book/$slug'
@@ -801,6 +813,7 @@ export interface RootRouteChildren {
   SessionsRoute: typeof SessionsRoute
   SignatureRoute: typeof SignatureRoute
   TeamRoute: typeof TeamRoute
+  WelcomeRoute: typeof WelcomeRoute
   BookSlugRoute: typeof BookSlugRoute
   CoachesSlugRoute: typeof CoachesSlugRoute
   DrillDetailDrillIdRoute: typeof DrillDetailDrillIdRoute
@@ -820,6 +833,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/team': {
       id: '/team'
       path: '/team'
@@ -1417,6 +1437,7 @@ const rootRouteChildren: RootRouteChildren = {
   SessionsRoute: SessionsRoute,
   SignatureRoute: SignatureRoute,
   TeamRoute: TeamRoute,
+  WelcomeRoute: WelcomeRoute,
   BookSlugRoute: BookSlugRoute,
   CoachesSlugRoute: CoachesSlugRoute,
   DrillDetailDrillIdRoute: DrillDetailDrillIdRoute,
