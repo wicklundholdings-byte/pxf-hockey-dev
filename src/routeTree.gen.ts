@@ -20,6 +20,7 @@ import { Route as GameiqRouteImport } from './routes/gameiq'
 import { Route as FavouritesRouteImport } from './routes/favourites'
 import { Route as DrillsRouteImport } from './routes/drills'
 import { Route as DrillBuilderRouteImport } from './routes/drill-builder'
+import { Route as CampsRouteImport } from './routes/camps'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AchievementsRouteImport } from './routes/achievements'
@@ -98,6 +99,11 @@ const DrillsRoute = DrillsRouteImport.update({
 const DrillBuilderRoute = DrillBuilderRouteImport.update({
   id: '/drill-builder',
   path: '/drill-builder',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CampsRoute = CampsRouteImport.update({
+  id: '/camps',
+  path: '/camps',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CalendarRoute = CalendarRouteImport.update({
@@ -233,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/achievements': typeof AchievementsRoute
   '/auth': typeof AuthRoute
   '/calendar': typeof CalendarRoute
+  '/camps': typeof CampsRoute
   '/drill-builder': typeof DrillBuilderRoute
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
@@ -269,6 +276,7 @@ export interface FileRoutesByTo {
   '/achievements': typeof AchievementsRoute
   '/auth': typeof AuthRoute
   '/calendar': typeof CalendarRoute
+  '/camps': typeof CampsRoute
   '/drill-builder': typeof DrillBuilderRoute
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
@@ -305,6 +313,7 @@ export interface FileRoutesById {
   '/achievements': typeof AchievementsRoute
   '/auth': typeof AuthRoute
   '/calendar': typeof CalendarRoute
+  '/camps': typeof CampsRoute
   '/drill-builder': typeof DrillBuilderRoute
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
@@ -343,6 +352,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/auth'
     | '/calendar'
+    | '/camps'
     | '/drill-builder'
     | '/drills'
     | '/favourites'
@@ -379,6 +389,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/auth'
     | '/calendar'
+    | '/camps'
     | '/drill-builder'
     | '/drills'
     | '/favourites'
@@ -414,6 +425,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/auth'
     | '/calendar'
+    | '/camps'
     | '/drill-builder'
     | '/drills'
     | '/favourites'
@@ -452,6 +464,7 @@ export interface RootRouteChildren {
   AchievementsRoute: typeof AchievementsRoute
   AuthRoute: typeof AuthRoute
   CalendarRoute: typeof CalendarRoute
+  CampsRoute: typeof CampsRoute
   DrillBuilderRoute: typeof DrillBuilderRoute
   DrillsRoute: typeof DrillsRoute
   FavouritesRoute: typeof FavouritesRoute
@@ -545,6 +558,13 @@ declare module '@tanstack/react-router' {
       path: '/drill-builder'
       fullPath: '/drill-builder'
       preLoaderRoute: typeof DrillBuilderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/camps': {
+      id: '/camps'
+      path: '/camps'
+      fullPath: '/camps'
+      preLoaderRoute: typeof CampsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calendar': {
@@ -795,6 +815,7 @@ const rootRouteChildren: RootRouteChildren = {
   AchievementsRoute: AchievementsRoute,
   AuthRoute: AuthRoute,
   CalendarRoute: CalendarRoute,
+  CampsRoute: CampsRoute,
   DrillBuilderRoute: DrillBuilderRoute,
   DrillsRoute: DrillsRoute,
   FavouritesRoute: FavouritesRoute,
