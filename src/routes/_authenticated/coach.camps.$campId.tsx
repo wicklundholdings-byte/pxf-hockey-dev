@@ -34,7 +34,7 @@ type Wait = {
 };
 type Media = { id: string; storage_path: string; created_at: string };
 
-type Tab = "overview" | "roster" | "waitlist" | "sessions" | "media";
+type Tab = "overview" | "roster" | "waitlist" | "sessions" | "evaluations" | "media";
 
 function fmt(d: string | null) {
   if (!d) return "TBA";
@@ -99,7 +99,8 @@ function CampDetailPage() {
     { id: "overview", label: "Overview" },
     { id: "roster", label: "Roster", count: regs.length },
     { id: "waitlist", label: "Waitlist", count: wait.length },
-    { id: "sessions", label: "Sessions", count: sessions.length },
+    { id: "sessions", label: "Attendance", count: sessions.length },
+    { id: "evaluations", label: "Evaluations", count: regs.length },
     { id: "media", label: "Media", count: media.length },
   ];
 
@@ -200,6 +201,7 @@ function CampDetailPage() {
       {tab === "roster" && <RosterTab regs={regs} />}
       {tab === "waitlist" && <WaitlistTab entries={wait} />}
       {tab === "sessions" && <SessionsTab sessions={sessions} regs={regs} campId={campId} />}
+      {tab === "evaluations" && <EvaluationsTab regs={regs} campId={campId} />}
       {tab === "media" && <MediaTab media={media} />}
     </div>
   );
