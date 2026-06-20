@@ -56,7 +56,6 @@ export type Database = {
           category_id: string | null
           coaching_points: string | null
           created_at: string
-          diagram_url: string | null
           difficulty_level:
             | Database["public"]["Enums"]["difficulty_level"]
             | null
@@ -80,7 +79,6 @@ export type Database = {
           category_id?: string | null
           coaching_points?: string | null
           created_at?: string
-          diagram_url?: string | null
           difficulty_level?:
             | Database["public"]["Enums"]["difficulty_level"]
             | null
@@ -104,7 +102,6 @@ export type Database = {
           category_id?: string | null
           coaching_points?: string | null
           created_at?: string
-          diagram_url?: string | null
           difficulty_level?:
             | Database["public"]["Enums"]["difficulty_level"]
             | null
