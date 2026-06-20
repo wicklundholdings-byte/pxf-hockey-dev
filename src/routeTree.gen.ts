@@ -30,6 +30,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as StoreIndexRouteImport } from './routes/store.index'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
 import { Route as PaymentsSubscribeRouteImport } from './routes/payments.subscribe'
 import { Route as PaymentsRefundsRouteImport } from './routes/payments.refunds'
@@ -165,6 +166,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StoreIndexRoute = StoreIndexRouteImport.update({
+  id: '/store/',
+  path: '/store/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SessionDetailSessionIdRoute = SessionDetailSessionIdRouteImport.update({
@@ -375,6 +381,7 @@ export interface FileRoutesByFullPath {
   '/payments/refunds': typeof PaymentsRefundsRoute
   '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
+  '/store/': typeof StoreIndexRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/admin/programs': typeof AuthenticatedAdminProgramsRoute
@@ -427,6 +434,7 @@ export interface FileRoutesByTo {
   '/payments/refunds': typeof PaymentsRefundsRoute
   '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
+  '/store': typeof StoreIndexRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/admin/programs': typeof AuthenticatedAdminProgramsRoute
@@ -483,6 +491,7 @@ export interface FileRoutesById {
   '/payments/refunds': typeof PaymentsRefundsRoute
   '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
+  '/store/': typeof StoreIndexRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/_authenticated/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/_authenticated/admin/programs': typeof AuthenticatedAdminProgramsRoute
@@ -539,6 +548,7 @@ export interface FileRouteTypes {
     | '/payments/refunds'
     | '/payments/subscribe'
     | '/session-detail/$sessionId'
+    | '/store/'
     | '/admin/categories'
     | '/admin/drills'
     | '/admin/programs'
@@ -591,6 +601,7 @@ export interface FileRouteTypes {
     | '/payments/refunds'
     | '/payments/subscribe'
     | '/session-detail/$sessionId'
+    | '/store'
     | '/admin/categories'
     | '/admin/drills'
     | '/admin/programs'
@@ -646,6 +657,7 @@ export interface FileRouteTypes {
     | '/payments/refunds'
     | '/payments/subscribe'
     | '/session-detail/$sessionId'
+    | '/store/'
     | '/_authenticated/admin/categories'
     | '/_authenticated/admin/drills'
     | '/_authenticated/admin/programs'
@@ -700,6 +712,7 @@ export interface RootRouteChildren {
   PaymentsRefundsRoute: typeof PaymentsRefundsRoute
   PaymentsSubscribeRoute: typeof PaymentsSubscribeRoute
   SessionDetailSessionIdRoute: typeof SessionDetailSessionIdRoute
+  StoreIndexRoute: typeof StoreIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -849,6 +862,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/store/': {
+      id: '/store/'
+      path: '/store'
+      fullPath: '/store/'
+      preLoaderRoute: typeof StoreIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/session-detail/$sessionId': {
@@ -1232,6 +1252,7 @@ const rootRouteChildren: RootRouteChildren = {
   PaymentsRefundsRoute: PaymentsRefundsRoute,
   PaymentsSubscribeRoute: PaymentsSubscribeRoute,
   SessionDetailSessionIdRoute: SessionDetailSessionIdRoute,
+  StoreIndexRoute: StoreIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
