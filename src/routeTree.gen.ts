@@ -66,6 +66,7 @@ import { Route as AuthenticatedCoachContactsContactIdRouteImport } from './route
 import { Route as AuthenticatedCoachCampsNewRouteImport } from './routes/_authenticated/coach.camps.new'
 import { Route as AuthenticatedCoachCampsCampIdRouteImport } from './routes/_authenticated/coach.camps.$campId'
 import { Route as AuthenticatedCoachAttendeesAthleteIdRouteImport } from './routes/_authenticated/coach.attendees.$athleteId'
+import { Route as AuthenticatedCoachCampsCampIdReviewsRouteImport } from './routes/_authenticated/coach.camps.$campId.reviews'
 import { Route as AuthenticatedCoachCampsCampIdFeedbackRouteImport } from './routes/_authenticated/coach.camps.$campId.feedback'
 
 const TeamRoute = TeamRouteImport.update({
@@ -364,6 +365,12 @@ const AuthenticatedCoachAttendeesAthleteIdRoute =
     path: '/$athleteId',
     getParentRoute: () => AuthenticatedCoachAttendeesRoute,
   } as any)
+const AuthenticatedCoachCampsCampIdReviewsRoute =
+  AuthenticatedCoachCampsCampIdReviewsRouteImport.update({
+    id: '/reviews',
+    path: '/reviews',
+    getParentRoute: () => AuthenticatedCoachCampsCampIdRoute,
+  } as any)
 const AuthenticatedCoachCampsCampIdFeedbackRoute =
   AuthenticatedCoachCampsCampIdFeedbackRouteImport.update({
     id: '/feedback',
@@ -429,6 +436,7 @@ export interface FileRoutesByFullPath {
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
   '/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
   '/coach/camps/$campId/feedback': typeof AuthenticatedCoachCampsCampIdFeedbackRoute
+  '/coach/camps/$campId/reviews': typeof AuthenticatedCoachCampsCampIdReviewsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -486,6 +494,7 @@ export interface FileRoutesByTo {
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
   '/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
   '/coach/camps/$campId/feedback': typeof AuthenticatedCoachCampsCampIdFeedbackRoute
+  '/coach/camps/$campId/reviews': typeof AuthenticatedCoachCampsCampIdReviewsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -547,6 +556,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
   '/_authenticated/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
   '/_authenticated/coach/camps/$campId/feedback': typeof AuthenticatedCoachCampsCampIdFeedbackRoute
+  '/_authenticated/coach/camps/$campId/reviews': typeof AuthenticatedCoachCampsCampIdReviewsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -608,6 +618,7 @@ export interface FileRouteTypes {
     | '/coach/camps/new'
     | '/coach/contacts/$contactId'
     | '/coach/camps/$campId/feedback'
+    | '/coach/camps/$campId/reviews'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -665,6 +676,7 @@ export interface FileRouteTypes {
     | '/coach/camps/new'
     | '/coach/contacts/$contactId'
     | '/coach/camps/$campId/feedback'
+    | '/coach/camps/$campId/reviews'
   id:
     | '__root__'
     | '/'
@@ -725,6 +737,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach/camps/new'
     | '/_authenticated/coach/contacts/$contactId'
     | '/_authenticated/coach/camps/$campId/feedback'
+    | '/_authenticated/coach/camps/$campId/reviews'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1168,6 +1181,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachAttendeesAthleteIdRouteImport
       parentRoute: typeof AuthenticatedCoachAttendeesRoute
     }
+    '/_authenticated/coach/camps/$campId/reviews': {
+      id: '/_authenticated/coach/camps/$campId/reviews'
+      path: '/reviews'
+      fullPath: '/coach/camps/$campId/reviews'
+      preLoaderRoute: typeof AuthenticatedCoachCampsCampIdReviewsRouteImport
+      parentRoute: typeof AuthenticatedCoachCampsCampIdRoute
+    }
     '/_authenticated/coach/camps/$campId/feedback': {
       id: '/_authenticated/coach/camps/$campId/feedback'
       path: '/feedback'
@@ -1212,12 +1232,15 @@ const AuthenticatedCoachAttendeesRouteWithChildren =
 
 interface AuthenticatedCoachCampsCampIdRouteChildren {
   AuthenticatedCoachCampsCampIdFeedbackRoute: typeof AuthenticatedCoachCampsCampIdFeedbackRoute
+  AuthenticatedCoachCampsCampIdReviewsRoute: typeof AuthenticatedCoachCampsCampIdReviewsRoute
 }
 
 const AuthenticatedCoachCampsCampIdRouteChildren: AuthenticatedCoachCampsCampIdRouteChildren =
   {
     AuthenticatedCoachCampsCampIdFeedbackRoute:
       AuthenticatedCoachCampsCampIdFeedbackRoute,
+    AuthenticatedCoachCampsCampIdReviewsRoute:
+      AuthenticatedCoachCampsCampIdReviewsRoute,
   }
 
 const AuthenticatedCoachCampsCampIdRouteWithChildren =
