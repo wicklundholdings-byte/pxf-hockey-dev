@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TeamRouteImport } from './routes/team'
+import { Route as SignatureRouteImport } from './routes/signature'
 import { Route as SessionsRouteImport } from './routes/sessions'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SavedSessionsRouteImport } from './routes/saved-sessions'
@@ -70,6 +71,11 @@ import { Route as AuthenticatedCoachCampsCampIdFeedbackRouteImport } from './rou
 const TeamRoute = TeamRouteImport.update({
   id: '/team',
   path: '/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignatureRoute = SignatureRouteImport.update({
+  id: '/signature',
+  path: '/signature',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SessionsRoute = SessionsRouteImport.update({
@@ -385,6 +391,7 @@ export interface FileRoutesByFullPath {
   '/saved-sessions': typeof SavedSessionsRoute
   '/search': typeof SearchRoute
   '/sessions': typeof SessionsRoute
+  '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/coach': typeof AuthenticatedCoachRouteWithChildren
@@ -443,6 +450,7 @@ export interface FileRoutesByTo {
   '/saved-sessions': typeof SavedSessionsRoute
   '/search': typeof SearchRoute
   '/sessions': typeof SessionsRoute
+  '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
   '/book/$slug': typeof BookSlugRoute
   '/coaches/$slug': typeof CoachesSlugRoute
@@ -501,6 +509,7 @@ export interface FileRoutesById {
   '/saved-sessions': typeof SavedSessionsRoute
   '/search': typeof SearchRoute
   '/sessions': typeof SessionsRoute
+  '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/coach': typeof AuthenticatedCoachRouteWithChildren
@@ -561,6 +570,7 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/search'
     | '/sessions'
+    | '/signature'
     | '/team'
     | '/admin'
     | '/coach'
@@ -619,6 +629,7 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/search'
     | '/sessions'
+    | '/signature'
     | '/team'
     | '/book/$slug'
     | '/coaches/$slug'
@@ -676,6 +687,7 @@ export interface FileRouteTypes {
     | '/saved-sessions'
     | '/search'
     | '/sessions'
+    | '/signature'
     | '/team'
     | '/_authenticated/admin'
     | '/_authenticated/coach'
@@ -736,6 +748,7 @@ export interface RootRouteChildren {
   SavedSessionsRoute: typeof SavedSessionsRoute
   SearchRoute: typeof SearchRoute
   SessionsRoute: typeof SessionsRoute
+  SignatureRoute: typeof SignatureRoute
   TeamRoute: typeof TeamRoute
   BookSlugRoute: typeof BookSlugRoute
   CoachesSlugRoute: typeof CoachesSlugRoute
@@ -761,6 +774,13 @@ declare module '@tanstack/react-router' {
       path: '/team'
       fullPath: '/team'
       preLoaderRoute: typeof TeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signature': {
+      id: '/signature'
+      path: '/signature'
+      fullPath: '/signature'
+      preLoaderRoute: typeof SignatureRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sessions': {
@@ -1301,6 +1321,7 @@ const rootRouteChildren: RootRouteChildren = {
   SavedSessionsRoute: SavedSessionsRoute,
   SearchRoute: SearchRoute,
   SessionsRoute: SessionsRoute,
+  SignatureRoute: SignatureRoute,
   TeamRoute: TeamRoute,
   BookSlugRoute: BookSlugRoute,
   CoachesSlugRoute: CoachesSlugRoute,
