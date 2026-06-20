@@ -1,0 +1,1 @@
+ALTER TABLE public.evaluations ADD CONSTRAINT evaluations_registration_id_key UNIQUE (registration_id);
