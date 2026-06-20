@@ -188,8 +188,6 @@ export const submitBooking = createServerFn({ method: "POST" })
     if (rErr) throw new Error(rErr.message);
 
     if (couponId) {
-      await supabaseAdmin.rpc as never;
-      // Increment used_count
       const { data: cRow } = await supabaseAdmin.from("coupons").select("used_count").eq("id", couponId).maybeSingle();
       await supabaseAdmin
         .from("coupons")
