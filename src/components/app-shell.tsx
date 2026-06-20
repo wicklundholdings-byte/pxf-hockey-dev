@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Dumbbell, CalendarDays, User, Bell, Shield } from "lucide-react";
 import type { ReactNode } from "react";
-import { useAuth, useIsAdmin } from "@/hooks/use-auth";
+import { useAuth, useHasCoachAccess } from "@/hooks/use-auth";
 
 type NavItem = { to: string; label: string; icon: typeof Home; exact?: boolean };
 const baseNav: NavItem[] = [
@@ -27,8 +27,8 @@ export function PxfLogo({ className = "" }: { className?: string }) {
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useAuth();
-  const { isAdmin } = useIsAdmin(user?.id);
-  const nav: NavItem[] = isAdmin
+  const { hasAccess } = useHasCoachAccess(user?.id);
+  const nav: NavItem[] = hasAccess
     ? [...baseNav, { to: "/coach", label: "Coach", icon: Shield }]
     : baseNav;
 
