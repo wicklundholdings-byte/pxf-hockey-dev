@@ -17,7 +17,52 @@ const submitSchema = z.object({
     jersey_number: z.string().max(10).optional().nullable(),
   }),
   customFieldValues: z.record(z.string(), z.unknown()).optional(),
+  couponCode: z.string().trim().max(40).optional().nullable(),
 });
+
+const previewCouponSchema = z.object({
+  campId: z.string().uuid(),
+  code: z.string().trim().min(1).max(40),
+});
+
+export const previewCoupon = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => previewCouponSchema.parse(data))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: camp } = await supabaseAdmin
+      .from("camps")
+      .select("owner_id, price_cents, early_bird_price_cents, early_bird_expires_at, status")
+      .eq("id", data.campId)
+      .maybeSingle();
+    if (!camp || camp.status !== "live") return { ok: false as const, error: "Camp not available" };
+    const { data: coupon } = await supabaseAdmin
+      .from("coupons")
+      .select("id, percent_off, amount_off_cents, expires_at, usage_limit, used_count")
+      .eq("owner_id", camp.owner_id)
+      .ilike("code", data.code)
+      .maybeSingle();
+    if (!coupon) return { ok: false as const, error: "Invalid code" };
+    if (coupon.expires_at && new Date(coupon.expires_at) < new Date())
+      return { ok: false as const, error: "Code expired" };
+    if (coupon.usage_limit != null && (coupon.used_count ?? 0) >= coupon.usage_limit)
+      return { ok: false as const, error: "Code usage limit reached" };
+    const earlyActive =
+      camp.early_bird_price_cents != null &&
+      camp.early_bird_expires_at != null &&
+      new Date(camp.early_bird_expires_at) > new Date();
+    const base = earlyActive ? camp.early_bird_price_cents! : camp.price_cents;
+    const discount = coupon.percent_off
+      ? Math.round((base * coupon.percent_off) / 100)
+      : coupon.amount_off_cents ?? 0;
+    const finalAmount = Math.max(0, base - discount);
+    return {
+      ok: true as const,
+      baseCents: base,
+      discountCents: discount,
+      finalCents: finalAmount,
+      label: coupon.percent_off ? `${coupon.percent_off}% off` : `$${((coupon.amount_off_cents ?? 0) / 100).toFixed(0)} off`,
+    };
+  });
 
 export const submitBooking = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => submitSchema.parse(data))
@@ -103,7 +148,30 @@ export const submitBooking = createServerFn({ method: "POST" })
       camp.early_bird_price_cents != null &&
       camp.early_bird_expires_at != null &&
       new Date(camp.early_bird_expires_at) > new Date();
-    const amount = earlyBirdActive ? camp.early_bird_price_cents! : camp.price_cents;
+    const baseAmount = earlyBirdActive ? camp.early_bird_price_cents! : camp.price_cents;
+
+    // Apply coupon if provided & valid
+    let amount = baseAmount;
+    let couponId: string | null = null;
+    if (data.couponCode && data.couponCode.trim()) {
+      const { data: coupon } = await supabaseAdmin
+        .from("coupons")
+        .select("id, percent_off, amount_off_cents, expires_at, usage_limit, used_count")
+        .eq("owner_id", camp.owner_id)
+        .ilike("code", data.couponCode.trim())
+        .maybeSingle();
+      const valid =
+        coupon &&
+        (!coupon.expires_at || new Date(coupon.expires_at) >= new Date()) &&
+        (coupon.usage_limit == null || (coupon.used_count ?? 0) < coupon.usage_limit);
+      if (valid) {
+        const discount = coupon.percent_off
+          ? Math.round((baseAmount * coupon.percent_off) / 100)
+          : coupon.amount_off_cents ?? 0;
+        amount = Math.max(0, baseAmount - discount);
+        couponId = coupon.id;
+      }
+    }
 
     const { data: reg, error: rErr } = await supabaseAdmin
       .from("registrations")
@@ -118,6 +186,14 @@ export const submitBooking = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (rErr) throw new Error(rErr.message);
+
+    if (couponId) {
+      const { data: cRow } = await supabaseAdmin.from("coupons").select("used_count").eq("id", couponId).maybeSingle();
+      await supabaseAdmin
+        .from("coupons")
+        .update({ used_count: (cRow?.used_count ?? 0) + 1 })
+        .eq("id", couponId);
+    }
 
     return { kind: "registered" as const, registrationId: reg.id, amountCents: amount };
   });
