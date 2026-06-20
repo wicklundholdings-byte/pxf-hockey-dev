@@ -47,6 +47,7 @@ import { Route as PaymentsConfirmationRouteImport } from './routes/payments.conf
 import { Route as PaymentsCheckoutRouteImport } from './routes/payments.checkout'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
 import { Route as CoachesSlugRouteImport } from './routes/coaches.$slug'
+import { Route as CampsBrowseRouteImport } from './routes/camps.browse'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
 import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -260,6 +261,11 @@ const CoachesSlugRoute = CoachesSlugRouteImport.update({
   path: '/coaches/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CampsBrowseRoute = CampsBrowseRouteImport.update({
+  id: '/browse',
+  path: '/browse',
+  getParentRoute: () => CampsRoute,
+} as any)
 const BookSlugRoute = BookSlugRouteImport.update({
   id: '/book/$slug',
   path: '/book/$slug',
@@ -396,7 +402,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/bookings': typeof BookingsRoute
   '/calendar': typeof CalendarRoute
-  '/camps': typeof CampsRoute
+  '/camps': typeof CampsRouteWithChildren
   '/drill-builder': typeof DrillBuilderRoute
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
@@ -417,6 +423,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/coach': typeof AuthenticatedCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
+  '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
@@ -458,7 +465,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/bookings': typeof BookingsRoute
   '/calendar': typeof CalendarRoute
-  '/camps': typeof CampsRoute
+  '/camps': typeof CampsRouteWithChildren
   '/drill-builder': typeof DrillBuilderRoute
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
@@ -477,6 +484,7 @@ export interface FileRoutesByTo {
   '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
   '/book/$slug': typeof BookSlugRoute
+  '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
@@ -520,7 +528,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/bookings': typeof BookingsRoute
   '/calendar': typeof CalendarRoute
-  '/camps': typeof CampsRoute
+  '/camps': typeof CampsRouteWithChildren
   '/drill-builder': typeof DrillBuilderRoute
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
@@ -541,6 +549,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/coach': typeof AuthenticatedCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
+  '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
@@ -605,6 +614,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/coach'
     | '/book/$slug'
+    | '/camps/browse'
     | '/coaches/$slug'
     | '/drill-detail/$drillId'
     | '/payments/checkout'
@@ -665,6 +675,7 @@ export interface FileRouteTypes {
     | '/signature'
     | '/team'
     | '/book/$slug'
+    | '/camps/browse'
     | '/coaches/$slug'
     | '/drill-detail/$drillId'
     | '/payments/checkout'
@@ -728,6 +739,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/coach'
     | '/book/$slug'
+    | '/camps/browse'
     | '/coaches/$slug'
     | '/drill-detail/$drillId'
     | '/payments/checkout'
@@ -771,7 +783,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BookingsRoute: typeof BookingsRoute
   CalendarRoute: typeof CalendarRoute
-  CampsRoute: typeof CampsRoute
+  CampsRoute: typeof CampsRouteWithChildren
   DrillBuilderRoute: typeof DrillBuilderRoute
   DrillsRoute: typeof DrillsRoute
   FavouritesRoute: typeof FavouritesRoute
@@ -1074,6 +1086,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoachesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/camps/browse': {
+      id: '/camps/browse'
+      path: '/browse'
+      fullPath: '/camps/browse'
+      preLoaderRoute: typeof CampsBrowseRouteImport
+      parentRoute: typeof CampsRoute
+    }
     '/book/$slug': {
       id: '/book/$slug'
       path: '/book/$slug'
@@ -1363,6 +1382,16 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface CampsRouteChildren {
+  CampsBrowseRoute: typeof CampsBrowseRoute
+}
+
+const CampsRouteChildren: CampsRouteChildren = {
+  CampsBrowseRoute: CampsBrowseRoute,
+}
+
+const CampsRouteWithChildren = CampsRoute._addFileChildren(CampsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -1370,7 +1399,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BookingsRoute: BookingsRoute,
   CalendarRoute: CalendarRoute,
-  CampsRoute: CampsRoute,
+  CampsRoute: CampsRouteWithChildren,
   DrillBuilderRoute: DrillBuilderRoute,
   DrillsRoute: DrillsRoute,
   FavouritesRoute: FavouritesRoute,
