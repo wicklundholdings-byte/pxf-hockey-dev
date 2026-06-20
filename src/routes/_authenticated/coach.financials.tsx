@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { DollarSign, TrendingUp, Wallet, Tag, Plus, X, Copy, CheckCircle2 } from "lucide-react";
+import { DollarSign, TrendingUp, Wallet, Tag, Plus, X, Copy, CheckCircle2, BarChart3, Percent, Download } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/financials")({
   component: FinancialsPage,
@@ -19,7 +19,7 @@ type Reg = {
 type Payout = { id: string; amount_cents: number; status: string; period_start: string | null; period_end: string | null; paid_at: string | null; created_at: string };
 type Coupon = { id: string; code: string; percent_off: number | null; amount_off_cents: number | null; expires_at: string | null; usage_limit: number | null; used_count: number };
 
-type Tab = "overview" | "orders" | "payouts" | "coupons";
+type Tab = "overview" | "orders" | "reports" | "taxes" | "payouts" | "coupons";
 
 function FinancialsPage() {
   const [tab, setTab] = useState<Tab>("overview");
@@ -73,7 +73,7 @@ function FinancialsPage() {
 
       <nav className="-mx-5 overflow-x-auto px-5">
         <div className="flex gap-2">
-          {(["overview", "orders", "payouts", "coupons"] as Tab[]).map((t) => (
+          {(["overview", "orders", "reports", "taxes", "payouts", "coupons"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -92,6 +92,8 @@ function FinancialsPage() {
         <>
           {tab === "overview" && <OverviewTab regs={regs} />}
           {tab === "orders" && <OrdersTab regs={regs} />}
+          {tab === "reports" && <ReportsTab regs={regs} />}
+          {tab === "taxes" && <TaxesTab />}
           {tab === "payouts" && <PayoutsTab payouts={payouts} balance={stats.balance} onReload={load} />}
           {tab === "coupons" && <CouponsTab coupons={coupons} onReload={load} />}
         </>
@@ -198,6 +200,119 @@ function OrdersTab({ regs }: { regs: Reg[] }) {
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+function ReportsTab({ regs }: { regs: Reg[] }) {
+  const [range, setRange] = useState<"7d" | "30d" | "90d" | "ytd">("30d");
+  const gross = useMemo(() => regs.filter((r) => r.status === "paid").reduce((s, r) => s + (r.amount_cents ?? 0), 0), [regs]);
+  const refunded = useMemo(() => regs.filter((r) => r.status === "refunded").reduce((s, r) => s + (r.amount_cents ?? 0), 0), [regs]);
+  const net = gross - refunded;
+  // Synthetic 14-day spark
+  const bars = Array.from({ length: 14 }).map((_, i) => 30 + ((i * 73) % 70));
+  const max = Math.max(...bars);
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex gap-1.5">
+          {(["7d", "30d", "90d", "ytd"] as const).map((r) => (
+            <button
+              key={r}
+              onClick={() => setRange(r)}
+              className={
+                "rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase " +
+                (range === r ? "border-teal bg-teal/10 text-teal" : "border-border bg-card text-muted-foreground")
+              }
+            >{r}</button>
+          ))}
+        </div>
+        <button className="flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-[10px] font-semibold text-foreground">
+          <Download size={11} /> Export CSV
+        </button>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <h3 className="mb-3 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
+          <BarChart3 size={11} /> Revenue trend
+        </h3>
+        <div className="flex h-32 items-end gap-1">
+          {bars.map((b, i) => (
+            <div key={i} className="flex-1 rounded-t bg-gradient-to-t from-teal/40 to-teal" style={{ height: `${(b / max) * 100}%` }} />
+          ))}
+        </div>
+        <div className="mt-1 flex justify-between text-[9px] text-muted-foreground">
+          <span>14 days ago</span><span>Today</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-2xl border border-border bg-card p-3 text-center">
+          <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Gross</p>
+          <p className="font-display text-lg font-bold text-teal">${(gross / 100).toLocaleString()}</p>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-3 text-center">
+          <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Refunds</p>
+          <p className="font-display text-lg font-bold text-red-400">-${(refunded / 100).toLocaleString()}</p>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-3 text-center">
+          <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Net</p>
+          <p className="font-display text-lg font-bold text-emerald-400">${(net / 100).toLocaleString()}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TaxesTab() {
+  const [country, setCountry] = useState<"CA" | "US">("CA");
+  const [rate, setRate] = useState("13");
+  const [perCamp, setPerCamp] = useState<Record<string, boolean>>({
+    "Summer Skills Camp": true,
+    "Goalie Intensive": false,
+    "Game IQ Weekend": true,
+  });
+  return (
+    <div className="space-y-3">
+      <div className="flex items-start gap-2 rounded-xl border border-teal/30 bg-teal/5 p-2.5">
+        <Percent size={12} className="mt-0.5 shrink-0 text-teal" />
+        <p className="text-[10px] leading-relaxed text-foreground/80">
+          Set a default tax rate and toggle which camps collect tax at checkout.
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card p-3">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-foreground">Region</p>
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={() => { setCountry("CA"); setRate("13"); }} className={"rounded-xl border py-2 text-xs font-bold " + (country === "CA" ? "border-teal bg-teal/10 text-teal" : "border-border bg-surface text-muted-foreground")}>🇨🇦 Canada (GST/HST)</button>
+          <button onClick={() => { setCountry("US"); setRate("0"); }} className={"rounded-xl border py-2 text-xs font-bold " + (country === "US" ? "border-teal bg-teal/10 text-teal" : "border-border bg-surface text-muted-foreground")}>🇺🇸 US (Sales tax)</button>
+        </div>
+        <label className="mt-3 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Default rate (%)</label>
+        <input
+          value={rate}
+          onChange={(e) => setRate(e.target.value)}
+          className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground focus:border-teal focus:outline-none"
+        />
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card p-3">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-foreground">Apply per camp</p>
+        <ul className="space-y-1.5">
+          {Object.entries(perCamp).map(([name, on]) => (
+            <li key={name} className="flex items-center justify-between rounded-lg bg-surface px-3 py-2">
+              <span className="text-xs text-foreground">{name}</span>
+              <button
+                onClick={() => setPerCamp({ ...perCamp, [name]: !on })}
+                className={"rounded-full px-2.5 py-0.5 text-[10px] font-bold " + (on ? "bg-teal text-black" : "bg-muted text-muted-foreground")}
+              >
+                {on ? "On" : "Off"}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <button className="w-full rounded-full bg-teal py-3 text-sm font-bold text-black">Save tax settings</button>
     </div>
   );
 }

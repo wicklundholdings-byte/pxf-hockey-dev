@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { MessageSquare, Send, ArrowLeft, Users, Plus, Pin, X } from "lucide-react";
+import { MessageSquare, Send, ArrowLeft, Users, Plus, Pin, X, Megaphone } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/inbox")({
   component: InboxPage,
@@ -33,6 +33,7 @@ function InboxPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
+  const [showBroadcast, setShowBroadcast] = useState(false);
 
   async function load() {
     if (!user) return;
@@ -79,12 +80,20 @@ function InboxPage() {
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Inbox</p>
           <h2 className="font-display text-lg font-bold text-foreground">Conversations</h2>
         </div>
-        <button
-          onClick={() => setShowNew(true)}
-          className="flex items-center gap-1 rounded-full bg-teal px-3 py-1.5 text-[11px] font-bold text-black"
-        >
-          <Plus size={12} /> New
-        </button>
+        <div className="flex gap-1.5">
+          <button
+            onClick={() => setShowBroadcast(true)}
+            className="flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-[11px] font-bold text-amber-400"
+          >
+            <Megaphone size={12} /> Broadcast
+          </button>
+          <button
+            onClick={() => setShowNew(true)}
+            className="flex items-center gap-1 rounded-full bg-teal px-3 py-1.5 text-[11px] font-bold text-black"
+          >
+            <Plus size={12} /> New
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -138,6 +147,7 @@ function InboxPage() {
       )}
 
       {showNew && <NewConvoSheet onClose={() => setShowNew(false)} onCreated={(id) => { setShowNew(false); load(); setActiveId(id); }} />}
+      {showBroadcast && <BroadcastSheet onClose={() => setShowBroadcast(false)} />}
     </div>
   );
 }
@@ -345,4 +355,67 @@ function timeAgo(iso: string): string {
   const d = Math.floor(h / 24);
   if (d < 7) return `${d}d`;
   return new Date(iso).toLocaleDateString();
+}
+
+function BroadcastSheet({ onClose }: { onClose: () => void }) {
+  const [target, setTarget] = useState<"all" | "camp">("all");
+  const [msg, setMsg] = useState("");
+  const [sent, setSent] = useState(false);
+  if (sent) {
+    return (
+      <div onClick={onClose} className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm">
+        <div onClick={(e) => e.stopPropagation()} className="w-full max-w-[480px] rounded-t-3xl border-t border-border bg-background p-6 text-center">
+          <Megaphone size={36} className="mx-auto text-emerald-400" />
+          <h2 className="mt-2 font-display text-lg font-bold text-foreground">Broadcast sent</h2>
+          <p className="mt-1 text-[11px] text-muted-foreground">Recipients can read but cannot reply.</p>
+          <button onClick={onClose} className="mt-4 w-full rounded-full bg-teal py-2.5 text-sm font-bold text-black">Done</button>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div onClick={onClose} className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm">
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-[480px] rounded-t-3xl border-t border-border bg-background p-5">
+        <div className="flex items-center justify-between">
+          <h2 className="flex items-center gap-2 font-display text-lg font-bold text-foreground">
+            <Megaphone size={16} className="text-amber-400" /> Broadcast
+          </h2>
+          <button onClick={onClose} className="rounded-full bg-surface p-1.5 text-muted-foreground"><X size={14} /></button>
+        </div>
+        <p className="mt-1 text-[11px] text-muted-foreground">One-way announcement. Recipients receive it but cannot reply.</p>
+
+        <label className="mt-4 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Audience</label>
+        <div className="mt-1 grid grid-cols-2 gap-2">
+          <button onClick={() => setTarget("all")} className={"rounded-xl border py-2 text-xs font-bold " + (target === "all" ? "border-teal bg-teal/10 text-teal" : "border-border bg-surface text-muted-foreground")}>All members</button>
+          <button onClick={() => setTarget("camp")} className={"rounded-xl border py-2 text-xs font-bold " + (target === "camp" ? "border-teal bg-teal/10 text-teal" : "border-border bg-surface text-muted-foreground")}>Specific camps</button>
+        </div>
+        {target === "camp" && (
+          <div className="mt-2 space-y-1.5 rounded-xl border border-border bg-surface p-2">
+            {["Summer Skills Camp", "Goalie Intensive", "Game IQ Weekend"].map((c) => (
+              <label key={c} className="flex items-center gap-2 text-xs text-foreground">
+                <input type="checkbox" className="h-3.5 w-3.5" /> {c}
+              </label>
+            ))}
+          </div>
+        )}
+
+        <label className="mt-4 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Message</label>
+        <textarea
+          value={msg}
+          onChange={(e) => setMsg(e.target.value)}
+          rows={5}
+          placeholder="Write your announcement…"
+          className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground focus:border-teal focus:outline-none"
+        />
+
+        <button
+          disabled={!msg.trim()}
+          onClick={() => setSent(true)}
+          className="mt-4 w-full rounded-full bg-teal py-3 text-sm font-bold text-black disabled:opacity-40"
+        >
+          Send broadcast
+        </button>
+      </div>
+    </div>
+  );
 }

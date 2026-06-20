@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/$campId")({
@@ -34,7 +34,7 @@ type Wait = {
 };
 type Media = { id: string; storage_path: string; created_at: string };
 
-type Tab = "overview" | "roster" | "waitlist" | "sessions" | "evaluations" | "media";
+type Tab = "overview" | "description" | "options" | "roster" | "waitlist" | "sessions" | "evaluations" | "media";
 
 function fmt(d: string | null) {
   if (!d) return "TBA";
@@ -97,6 +97,8 @@ function CampDetailPage() {
   const pct = camp.capacity ? Math.min(100, (stats.paid / camp.capacity) * 100) : 0;
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: "overview", label: "Overview" },
+    { id: "description", label: "Description" },
+    { id: "options", label: "Order Options" },
     { id: "roster", label: "Roster", count: regs.length },
     { id: "waitlist", label: "Waitlist", count: wait.length },
     { id: "sessions", label: "Attendance", count: sessions.length },
@@ -198,6 +200,8 @@ function CampDetailPage() {
       </nav>
 
       {tab === "overview" && <OverviewTab camp={camp} />}
+      {tab === "description" && <DescriptionTab camp={camp} />}
+      {tab === "options" && <OptionsTab camp={camp} />}
       {tab === "roster" && <RosterTab regs={regs} />}
       {tab === "waitlist" && <WaitlistTab entries={wait} />}
       {tab === "sessions" && <SessionsTab sessions={sessions} regs={regs} campId={campId} />}
@@ -566,6 +570,159 @@ function MediaTab({ media }: { media: Media[] }) {
           <img src={m.storage_path} alt="" className="h-full w-full object-cover" />
         </div>
       ))}
+    </div>
+  );
+}
+
+function DescriptionTab({ camp }: { camp: Camp }) {
+  const [val, setVal] = useState(camp.description ?? "");
+  const [saved, setSaved] = useState(false);
+  return (
+    <div className="space-y-3">
+      <div className="flex items-start gap-2 rounded-xl border border-teal/30 bg-teal/5 p-2.5">
+        <FileText size={12} className="mt-0.5 shrink-0 text-teal" />
+        <p className="text-[10px] leading-relaxed text-foreground/80">
+          Edit the public camp description shown on the booking page. Markdown supported.
+        </p>
+      </div>
+      <div className="rounded-2xl border border-border bg-card p-3">
+        <div className="mb-2 flex flex-wrap gap-1">
+          {["B", "I", "H1", "H2", "• List", "1. List", "Link", "Image"].map((b) => (
+            <button key={b} className="rounded-md border border-border bg-surface px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:text-teal">
+              {b}
+            </button>
+          ))}
+        </div>
+        <textarea
+          value={val}
+          onChange={(e) => { setVal(e.target.value); setSaved(false); }}
+          rows={14}
+          placeholder="Write your camp description…"
+          className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground focus:border-teal focus:outline-none"
+        />
+        <div className="mt-2 flex items-center justify-between">
+          <span className="text-[10px] text-muted-foreground">{val.length} characters</span>
+          <button
+            onClick={() => setSaved(true)}
+            className="rounded-full bg-teal px-4 py-1.5 text-[11px] font-bold text-black"
+          >
+            {saved ? "Saved ✓" : "Save description"}
+          </button>
+        </div>
+      </div>
+      <div className="rounded-2xl border border-border bg-card p-3">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-foreground">Preview</p>
+        <p className="whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
+          {val || "Nothing to preview yet."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function OptionsTab({ camp }: { camp: Camp }) {
+  const [price, setPrice] = useState((camp.price_cents / 100).toString());
+  const [capacity, setCapacity] = useState(String(camp.capacity));
+  const [ebPrice, setEbPrice] = useState(((camp.early_bird_price_cents ?? 0) / 100).toString());
+  const [ebDate, setEbDate] = useState(camp.early_bird_expires_at?.slice(0, 10) ?? "");
+  const [plans, setPlans] = useState(true);
+  const [plan2, setPlan2] = useState(true);
+  const [plan3, setPlan3] = useState(false);
+  const [coupons] = useState([
+    { code: "EARLY25", off: "25% off", uses: "12 / 50" },
+    { code: "TEAM10", off: "$10 off", uses: "3 / ∞" },
+  ]);
+  return (
+    <div className="space-y-3">
+      <div className="flex items-start gap-2 rounded-xl border border-amber-400/30 bg-amber-400/5 p-2.5">
+        <Settings2 size={12} className="mt-0.5 shrink-0 text-amber-400" />
+        <p className="text-[10px] leading-relaxed text-amber-200/90">
+          Change pricing and availability after publishing. Already-paid registrations keep their original price.
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card p-3">
+        <h3 className="mb-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
+          <DollarSign size={11} /> Pricing
+        </h3>
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="Standard price ($)" value={price} onChange={setPrice} />
+          <Field label="Available spots" value={capacity} onChange={setCapacity} />
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card p-3">
+        <h3 className="mb-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
+          <Tag size={11} /> Early bird
+        </h3>
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="Early bird price ($)" value={ebPrice} onChange={setEbPrice} />
+          <Field label="Expires on" value={ebDate} onChange={setEbDate} type="date" />
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card p-3">
+        <div className="flex items-center justify-between">
+          <h3 className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
+            <CreditCard size={11} /> Payment plans
+          </h3>
+          <button onClick={() => setPlans(!plans)} className={"rounded-full px-2.5 py-0.5 text-[10px] font-bold " + (plans ? "bg-teal text-black" : "bg-surface text-muted-foreground")}>
+            {plans ? "On" : "Off"}
+          </button>
+        </div>
+        {plans && (
+          <div className="mt-2 space-y-1.5">
+            <label className="flex items-center gap-2 rounded-lg bg-surface px-3 py-2 text-xs text-foreground">
+              <input type="checkbox" checked={plan2} onChange={() => setPlan2(!plan2)} className="h-3.5 w-3.5" />
+              2 installments — Today + 30 days
+            </label>
+            <label className="flex items-center gap-2 rounded-lg bg-surface px-3 py-2 text-xs text-foreground">
+              <input type="checkbox" checked={plan3} onChange={() => setPlan3(!plan3)} className="h-3.5 w-3.5" />
+              3 installments — Today + 30 + 60 days
+            </label>
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card p-3">
+        <div className="mb-2 flex items-center justify-between">
+          <h3 className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
+            <Tag size={11} /> Active coupons
+          </h3>
+          <button className="flex items-center gap-1 rounded-full bg-teal px-2.5 py-1 text-[10px] font-bold text-black">
+            <Plus size={10} /> Add
+          </button>
+        </div>
+        <ul className="space-y-1.5">
+          {coupons.map((c) => (
+            <li key={c.code} className="flex items-center justify-between rounded-lg bg-surface px-3 py-2">
+              <div>
+                <p className="font-mono text-xs font-bold text-foreground">{c.code}</p>
+                <p className="text-[10px] text-muted-foreground">{c.off} · {c.uses}</p>
+              </div>
+              <button className="text-muted-foreground hover:text-red-400"><X size={12} /></button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <button className="w-full rounded-full bg-teal py-3 text-sm font-bold text-black">
+        Save changes
+      </button>
+    </div>
+  );
+}
+
+function Field({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
+  return (
+    <div>
+      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground focus:border-teal focus:outline-none"
+      />
     </div>
   );
 }
