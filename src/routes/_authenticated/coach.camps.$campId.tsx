@@ -24,7 +24,14 @@ type Reg = {
   contacts?: { full_name: string | null; email: string | null; phone: string | null } | null;
 };
 type Session = { id: string; session_date: string; start_time: string | null; end_time: string | null };
-type Wait = { id: string; full_name: string; email: string; phone: string | null; created_at: string };
+type Wait = {
+  id: string;
+  position: number;
+  status: string;
+  created_at: string;
+  contacts?: { full_name: string | null; email: string | null; phone: string | null } | null;
+  attendees?: { full_name: string | null } | null;
+};
 type Media = { id: string; storage_path: string; created_at: string };
 
 type Tab = "overview" | "roster" | "waitlist" | "sessions" | "media";
@@ -55,13 +62,17 @@ function CampDetailPage() {
           .eq("camp_id", campId)
           .order("created_at", { ascending: false }),
         supabase.from("camp_sessions").select("*").eq("camp_id", campId).order("session_date"),
-        supabase.from("waitlist_entries").select("*").eq("camp_id", campId).order("created_at"),
+        supabase
+          .from("waitlist_entries")
+          .select("*, contacts(full_name,email,phone), attendees(full_name)")
+          .eq("camp_id", campId)
+          .order("position"),
         supabase.from("camp_media").select("*").eq("camp_id", campId).order("created_at", { ascending: false }),
       ]);
       setCamp((c.data ?? null) as Camp | null);
       setRegs((r.data ?? []) as unknown as Reg[]);
       setSessions((s.data ?? []) as Session[]);
-      setWait((w.data ?? []) as Wait[]);
+      setWait((w.data ?? []) as unknown as Wait[]);
       setMedia((m.data ?? []) as Media[]);
       setLoading(false);
     })();
@@ -365,11 +376,15 @@ function WaitlistTab({ entries }: { entries: Wait[] }) {
       {entries.map((w, i) => (
         <li key={w.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
           <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-400/15 text-[10px] font-bold text-amber-400">
-            #{i + 1}
+            #{w.position ?? i + 1}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-foreground">{w.full_name}</p>
-            <p className="truncate text-[10px] text-muted-foreground">{w.email} {w.phone ? `· ${w.phone}` : ""}</p>
+            <p className="truncate text-sm font-semibold text-foreground">
+              {w.attendees?.full_name ?? w.contacts?.full_name ?? "Unknown"}
+            </p>
+            <p className="truncate text-[10px] text-muted-foreground">
+              {w.contacts?.email ?? ""} {w.contacts?.phone ? `· ${w.contacts.phone}` : ""}
+            </p>
           </div>
           <button className="rounded-full bg-teal px-3 py-1 text-[10px] font-bold text-black">Invite</button>
         </li>
