@@ -15,6 +15,7 @@ import { Route as SavedSessionsRouteImport } from './routes/saved-sessions'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ProgramsRouteImport } from './routes/programs'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PaymentsPreviewRouteImport } from './routes/payments-preview'
 import { Route as MembershipRouteImport } from './routes/membership'
 import { Route as GameiqRouteImport } from './routes/gameiq'
 import { Route as FavouritesRouteImport } from './routes/favourites'
@@ -27,6 +28,14 @@ import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
+import { Route as PaymentsSubscribeRouteImport } from './routes/payments.subscribe'
+import { Route as PaymentsRefundsRouteImport } from './routes/payments.refunds'
+import { Route as PaymentsPlanRouteImport } from './routes/payments.plan'
+import { Route as PaymentsPayoutsRouteImport } from './routes/payments.payouts'
+import { Route as PaymentsCouponRouteImport } from './routes/payments.coupon'
+import { Route as PaymentsConnectRouteImport } from './routes/payments.connect'
+import { Route as PaymentsConfirmationRouteImport } from './routes/payments.confirmation'
+import { Route as PaymentsCheckoutRouteImport } from './routes/payments.checkout'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
 import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
@@ -74,6 +83,11 @@ const ProgramsRoute = ProgramsRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsPreviewRoute = PaymentsPreviewRouteImport.update({
+  id: '/payments-preview',
+  path: '/payments-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MembershipRoute = MembershipRouteImport.update({
@@ -133,6 +147,46 @@ const IndexRoute = IndexRouteImport.update({
 const SessionDetailSessionIdRoute = SessionDetailSessionIdRouteImport.update({
   id: '/session-detail/$sessionId',
   path: '/session-detail/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsSubscribeRoute = PaymentsSubscribeRouteImport.update({
+  id: '/payments/subscribe',
+  path: '/payments/subscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsRefundsRoute = PaymentsRefundsRouteImport.update({
+  id: '/payments/refunds',
+  path: '/payments/refunds',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsPlanRoute = PaymentsPlanRouteImport.update({
+  id: '/payments/plan',
+  path: '/payments/plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsPayoutsRoute = PaymentsPayoutsRouteImport.update({
+  id: '/payments/payouts',
+  path: '/payments/payouts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsCouponRoute = PaymentsCouponRouteImport.update({
+  id: '/payments/coupon',
+  path: '/payments/coupon',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsConnectRoute = PaymentsConnectRouteImport.update({
+  id: '/payments/connect',
+  path: '/payments/connect',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsConfirmationRoute = PaymentsConfirmationRouteImport.update({
+  id: '/payments/confirmation',
+  path: '/payments/confirmation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsCheckoutRoute = PaymentsCheckoutRouteImport.update({
+  id: '/payments/checkout',
+  path: '/payments/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DrillDetailDrillIdRoute = DrillDetailDrillIdRouteImport.update({
@@ -245,6 +299,7 @@ export interface FileRoutesByFullPath {
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
   '/membership': typeof MembershipRoute
+  '/payments-preview': typeof PaymentsPreviewRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
@@ -255,6 +310,14 @@ export interface FileRoutesByFullPath {
   '/coach': typeof AuthenticatedCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/payments/checkout': typeof PaymentsCheckoutRoute
+  '/payments/confirmation': typeof PaymentsConfirmationRoute
+  '/payments/connect': typeof PaymentsConnectRoute
+  '/payments/coupon': typeof PaymentsCouponRoute
+  '/payments/payouts': typeof PaymentsPayoutsRoute
+  '/payments/plan': typeof PaymentsPlanRoute
+  '/payments/refunds': typeof PaymentsRefundsRoute
+  '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
@@ -282,6 +345,7 @@ export interface FileRoutesByTo {
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
   '/membership': typeof MembershipRoute
+  '/payments-preview': typeof PaymentsPreviewRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
@@ -290,6 +354,14 @@ export interface FileRoutesByTo {
   '/team': typeof TeamRoute
   '/book/$slug': typeof BookSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/payments/checkout': typeof PaymentsCheckoutRoute
+  '/payments/confirmation': typeof PaymentsConfirmationRoute
+  '/payments/connect': typeof PaymentsConnectRoute
+  '/payments/coupon': typeof PaymentsCouponRoute
+  '/payments/payouts': typeof PaymentsPayoutsRoute
+  '/payments/plan': typeof PaymentsPlanRoute
+  '/payments/refunds': typeof PaymentsRefundsRoute
+  '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
@@ -319,6 +391,7 @@ export interface FileRoutesById {
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
   '/membership': typeof MembershipRoute
+  '/payments-preview': typeof PaymentsPreviewRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
   '/progress': typeof ProgressRoute
@@ -329,6 +402,14 @@ export interface FileRoutesById {
   '/_authenticated/coach': typeof AuthenticatedCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/payments/checkout': typeof PaymentsCheckoutRoute
+  '/payments/confirmation': typeof PaymentsConfirmationRoute
+  '/payments/connect': typeof PaymentsConnectRoute
+  '/payments/coupon': typeof PaymentsCouponRoute
+  '/payments/payouts': typeof PaymentsPayoutsRoute
+  '/payments/plan': typeof PaymentsPlanRoute
+  '/payments/refunds': typeof PaymentsRefundsRoute
+  '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/_authenticated/admin/drills': typeof AuthenticatedAdminDrillsRoute
@@ -358,6 +439,7 @@ export interface FileRouteTypes {
     | '/favourites'
     | '/gameiq'
     | '/membership'
+    | '/payments-preview'
     | '/profile'
     | '/programs'
     | '/progress'
@@ -368,6 +450,14 @@ export interface FileRouteTypes {
     | '/coach'
     | '/book/$slug'
     | '/drill-detail/$drillId'
+    | '/payments/checkout'
+    | '/payments/confirmation'
+    | '/payments/connect'
+    | '/payments/coupon'
+    | '/payments/payouts'
+    | '/payments/plan'
+    | '/payments/refunds'
+    | '/payments/subscribe'
     | '/session-detail/$sessionId'
     | '/admin/categories'
     | '/admin/drills'
@@ -395,6 +485,7 @@ export interface FileRouteTypes {
     | '/favourites'
     | '/gameiq'
     | '/membership'
+    | '/payments-preview'
     | '/profile'
     | '/programs'
     | '/progress'
@@ -403,6 +494,14 @@ export interface FileRouteTypes {
     | '/team'
     | '/book/$slug'
     | '/drill-detail/$drillId'
+    | '/payments/checkout'
+    | '/payments/confirmation'
+    | '/payments/connect'
+    | '/payments/coupon'
+    | '/payments/payouts'
+    | '/payments/plan'
+    | '/payments/refunds'
+    | '/payments/subscribe'
     | '/session-detail/$sessionId'
     | '/admin/categories'
     | '/admin/drills'
@@ -431,6 +530,7 @@ export interface FileRouteTypes {
     | '/favourites'
     | '/gameiq'
     | '/membership'
+    | '/payments-preview'
     | '/profile'
     | '/programs'
     | '/progress'
@@ -441,6 +541,14 @@ export interface FileRouteTypes {
     | '/_authenticated/coach'
     | '/book/$slug'
     | '/drill-detail/$drillId'
+    | '/payments/checkout'
+    | '/payments/confirmation'
+    | '/payments/connect'
+    | '/payments/coupon'
+    | '/payments/payouts'
+    | '/payments/plan'
+    | '/payments/refunds'
+    | '/payments/subscribe'
     | '/session-detail/$sessionId'
     | '/_authenticated/admin/categories'
     | '/_authenticated/admin/drills'
@@ -470,6 +578,7 @@ export interface RootRouteChildren {
   FavouritesRoute: typeof FavouritesRoute
   GameiqRoute: typeof GameiqRoute
   MembershipRoute: typeof MembershipRoute
+  PaymentsPreviewRoute: typeof PaymentsPreviewRoute
   ProfileRoute: typeof ProfileRoute
   ProgramsRoute: typeof ProgramsRoute
   ProgressRoute: typeof ProgressRoute
@@ -478,6 +587,14 @@ export interface RootRouteChildren {
   TeamRoute: typeof TeamRoute
   BookSlugRoute: typeof BookSlugRoute
   DrillDetailDrillIdRoute: typeof DrillDetailDrillIdRoute
+  PaymentsCheckoutRoute: typeof PaymentsCheckoutRoute
+  PaymentsConfirmationRoute: typeof PaymentsConfirmationRoute
+  PaymentsConnectRoute: typeof PaymentsConnectRoute
+  PaymentsCouponRoute: typeof PaymentsCouponRoute
+  PaymentsPayoutsRoute: typeof PaymentsPayoutsRoute
+  PaymentsPlanRoute: typeof PaymentsPlanRoute
+  PaymentsRefundsRoute: typeof PaymentsRefundsRoute
+  PaymentsSubscribeRoute: typeof PaymentsSubscribeRoute
   SessionDetailSessionIdRoute: typeof SessionDetailSessionIdRoute
 }
 
@@ -523,6 +640,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments-preview': {
+      id: '/payments-preview'
+      path: '/payments-preview'
+      fullPath: '/payments-preview'
+      preLoaderRoute: typeof PaymentsPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/membership': {
@@ -607,6 +731,62 @@ declare module '@tanstack/react-router' {
       path: '/session-detail/$sessionId'
       fullPath: '/session-detail/$sessionId'
       preLoaderRoute: typeof SessionDetailSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments/subscribe': {
+      id: '/payments/subscribe'
+      path: '/payments/subscribe'
+      fullPath: '/payments/subscribe'
+      preLoaderRoute: typeof PaymentsSubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments/refunds': {
+      id: '/payments/refunds'
+      path: '/payments/refunds'
+      fullPath: '/payments/refunds'
+      preLoaderRoute: typeof PaymentsRefundsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments/plan': {
+      id: '/payments/plan'
+      path: '/payments/plan'
+      fullPath: '/payments/plan'
+      preLoaderRoute: typeof PaymentsPlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments/payouts': {
+      id: '/payments/payouts'
+      path: '/payments/payouts'
+      fullPath: '/payments/payouts'
+      preLoaderRoute: typeof PaymentsPayoutsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments/coupon': {
+      id: '/payments/coupon'
+      path: '/payments/coupon'
+      fullPath: '/payments/coupon'
+      preLoaderRoute: typeof PaymentsCouponRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments/connect': {
+      id: '/payments/connect'
+      path: '/payments/connect'
+      fullPath: '/payments/connect'
+      preLoaderRoute: typeof PaymentsConnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments/confirmation': {
+      id: '/payments/confirmation'
+      path: '/payments/confirmation'
+      fullPath: '/payments/confirmation'
+      preLoaderRoute: typeof PaymentsConfirmationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments/checkout': {
+      id: '/payments/checkout'
+      path: '/payments/checkout'
+      fullPath: '/payments/checkout'
+      preLoaderRoute: typeof PaymentsCheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/drill-detail/$drillId': {
@@ -821,6 +1001,7 @@ const rootRouteChildren: RootRouteChildren = {
   FavouritesRoute: FavouritesRoute,
   GameiqRoute: GameiqRoute,
   MembershipRoute: MembershipRoute,
+  PaymentsPreviewRoute: PaymentsPreviewRoute,
   ProfileRoute: ProfileRoute,
   ProgramsRoute: ProgramsRoute,
   ProgressRoute: ProgressRoute,
@@ -829,18 +1010,16 @@ const rootRouteChildren: RootRouteChildren = {
   TeamRoute: TeamRoute,
   BookSlugRoute: BookSlugRoute,
   DrillDetailDrillIdRoute: DrillDetailDrillIdRoute,
+  PaymentsCheckoutRoute: PaymentsCheckoutRoute,
+  PaymentsConfirmationRoute: PaymentsConfirmationRoute,
+  PaymentsConnectRoute: PaymentsConnectRoute,
+  PaymentsCouponRoute: PaymentsCouponRoute,
+  PaymentsPayoutsRoute: PaymentsPayoutsRoute,
+  PaymentsPlanRoute: PaymentsPlanRoute,
+  PaymentsRefundsRoute: PaymentsRefundsRoute,
+  PaymentsSubscribeRoute: PaymentsSubscribeRoute,
   SessionDetailSessionIdRoute: SessionDetailSessionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
