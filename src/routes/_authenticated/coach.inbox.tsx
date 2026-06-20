@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { MessageSquare, Send, ArrowLeft, Users, Plus, Pin, X } from "lucide-react";
+import { MessageSquare, Send, ArrowLeft, Users, Plus, Pin, X, Megaphone } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/inbox")({
   component: InboxPage,
@@ -33,6 +33,7 @@ function InboxPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
+  const [showBroadcast, setShowBroadcast] = useState(false);
 
   async function load() {
     if (!user) return;
@@ -79,12 +80,20 @@ function InboxPage() {
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Inbox</p>
           <h2 className="font-display text-lg font-bold text-foreground">Conversations</h2>
         </div>
-        <button
-          onClick={() => setShowNew(true)}
-          className="flex items-center gap-1 rounded-full bg-teal px-3 py-1.5 text-[11px] font-bold text-black"
-        >
-          <Plus size={12} /> New
-        </button>
+        <div className="flex gap-1.5">
+          <button
+            onClick={() => setShowBroadcast(true)}
+            className="flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-[11px] font-bold text-amber-400"
+          >
+            <Megaphone size={12} /> Broadcast
+          </button>
+          <button
+            onClick={() => setShowNew(true)}
+            className="flex items-center gap-1 rounded-full bg-teal px-3 py-1.5 text-[11px] font-bold text-black"
+          >
+            <Plus size={12} /> New
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -138,6 +147,7 @@ function InboxPage() {
       )}
 
       {showNew && <NewConvoSheet onClose={() => setShowNew(false)} onCreated={(id) => { setShowNew(false); load(); setActiveId(id); }} />}
+      {showBroadcast && <BroadcastSheet onClose={() => setShowBroadcast(false)} />}
     </div>
   );
 }
