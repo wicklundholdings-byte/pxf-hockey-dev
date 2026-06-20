@@ -489,6 +489,66 @@ function SessionsTab({ sessions, regs, campId }: { sessions: Session[]; regs: Re
   );
 }
 
+function EvaluationsTab({ regs, campId: _campId }: { regs: Reg[]; campId: string }) {
+  const skills = ["Skating", "Puck Control", "Shooting", "Hockey IQ", "Compete"];
+  const seed = (s: string, i: number) => 2 + ((s.charCodeAt(0) + i) % 4); // 2-5
+  const [sentTo, setSentTo] = useState<Set<string>>(new Set());
+  if (regs.length === 0) {
+    return (
+      <p className="rounded-2xl border border-border bg-card p-6 text-center text-xs text-muted-foreground">
+        No athletes to evaluate yet.
+      </p>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      <p className="text-[10px] text-muted-foreground">Rate each athlete 1–5 across core skills. Send the report card to parents when ready.</p>
+      {regs.map((r) => {
+        const name = r.attendees?.full_name ?? r.contacts?.full_name ?? "Unknown";
+        const sent = sentTo.has(r.id);
+        return (
+          <div key={r.id} className="rounded-2xl border border-border bg-card p-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-foreground">{name}</p>
+              <button
+                onClick={() => setSentTo((p) => new Set(p).add(r.id))}
+                className={
+                  "rounded-full px-3 py-1 text-[10px] font-bold " +
+                  (sent ? "bg-emerald-400/15 text-emerald-400" : "bg-teal text-black")
+                }
+              >
+                {sent ? "Sent ✓" : "Send to parent"}
+              </button>
+            </div>
+            <div className="mt-2 space-y-1.5">
+              {skills.map((sk, i) => {
+                const rating = seed(name + sk, i);
+                return (
+                  <div key={sk} className="flex items-center gap-3">
+                    <span className="w-24 text-[11px] text-muted-foreground">{sk}</span>
+                    <div className="flex flex-1 gap-1">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <span
+                          key={n}
+                          className={
+                            "h-2 flex-1 rounded-full " +
+                            (n <= rating ? "bg-teal" : "bg-surface")
+                          }
+                        />
+                      ))}
+                    </div>
+                    <span className="w-6 text-right text-[11px] font-bold text-foreground">{rating}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function MediaTab({ media }: { media: Media[] }) {
   if (media.length === 0) {
     return (
