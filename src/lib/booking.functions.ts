@@ -113,7 +113,7 @@ export const submitBooking = createServerFn({ method: "POST" })
         attendee_id: attendee.id,
         status: "pending",
         amount_cents: amount,
-        custom_field_values: data.customFieldValues ?? {},
+        custom_field_values: (data.customFieldValues ?? {}) as never,
       })
       .select("id")
       .single();
