@@ -33,6 +33,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authenticated/coach.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedCoachInboxRouteImport } from './routes/_authenticated/coach.inbox'
+import { Route as AuthenticatedCoachFinancialsRouteImport } from './routes/_authenticated/coach.financials'
 import { Route as AuthenticatedCoachContactsRouteImport } from './routes/_authenticated/coach.contacts'
 import { Route as AuthenticatedCoachCampsRouteImport } from './routes/_authenticated/coach.camps'
 import { Route as AuthenticatedAdminProgramsRouteImport } from './routes/_authenticated/admin.programs'
@@ -160,6 +161,12 @@ const AuthenticatedCoachInboxRoute = AuthenticatedCoachInboxRouteImport.update({
   path: '/inbox',
   getParentRoute: () => AuthenticatedCoachRoute,
 } as any)
+const AuthenticatedCoachFinancialsRoute =
+  AuthenticatedCoachFinancialsRouteImport.update({
+    id: '/financials',
+    path: '/financials',
+    getParentRoute: () => AuthenticatedCoachRoute,
+  } as any)
 const AuthenticatedCoachContactsRoute =
   AuthenticatedCoachContactsRouteImport.update({
     id: '/contacts',
@@ -228,6 +235,7 @@ export interface FileRoutesByFullPath {
   '/admin/programs': typeof AuthenticatedAdminProgramsRoute
   '/coach/camps': typeof AuthenticatedCoachCampsRouteWithChildren
   '/coach/contacts': typeof AuthenticatedCoachContactsRoute
+  '/coach/financials': typeof AuthenticatedCoachFinancialsRoute
   '/coach/inbox': typeof AuthenticatedCoachInboxRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/coach/': typeof AuthenticatedCoachIndexRoute
@@ -258,6 +266,7 @@ export interface FileRoutesByTo {
   '/admin/programs': typeof AuthenticatedAdminProgramsRoute
   '/coach/camps': typeof AuthenticatedCoachCampsRouteWithChildren
   '/coach/contacts': typeof AuthenticatedCoachContactsRoute
+  '/coach/financials': typeof AuthenticatedCoachFinancialsRoute
   '/coach/inbox': typeof AuthenticatedCoachInboxRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/coach': typeof AuthenticatedCoachIndexRoute
@@ -292,6 +301,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/programs': typeof AuthenticatedAdminProgramsRoute
   '/_authenticated/coach/camps': typeof AuthenticatedCoachCampsRouteWithChildren
   '/_authenticated/coach/contacts': typeof AuthenticatedCoachContactsRoute
+  '/_authenticated/coach/financials': typeof AuthenticatedCoachFinancialsRoute
   '/_authenticated/coach/inbox': typeof AuthenticatedCoachInboxRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/coach/': typeof AuthenticatedCoachIndexRoute
@@ -326,6 +336,7 @@ export interface FileRouteTypes {
     | '/admin/programs'
     | '/coach/camps'
     | '/coach/contacts'
+    | '/coach/financials'
     | '/coach/inbox'
     | '/admin/'
     | '/coach/'
@@ -356,6 +367,7 @@ export interface FileRouteTypes {
     | '/admin/programs'
     | '/coach/camps'
     | '/coach/contacts'
+    | '/coach/financials'
     | '/coach/inbox'
     | '/admin'
     | '/coach'
@@ -389,6 +401,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/programs'
     | '/_authenticated/coach/camps'
     | '/_authenticated/coach/contacts'
+    | '/_authenticated/coach/financials'
     | '/_authenticated/coach/inbox'
     | '/_authenticated/admin/'
     | '/_authenticated/coach/'
@@ -588,6 +601,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachInboxRouteImport
       parentRoute: typeof AuthenticatedCoachRoute
     }
+    '/_authenticated/coach/financials': {
+      id: '/_authenticated/coach/financials'
+      path: '/financials'
+      fullPath: '/coach/financials'
+      preLoaderRoute: typeof AuthenticatedCoachFinancialsRouteImport
+      parentRoute: typeof AuthenticatedCoachRoute
+    }
     '/_authenticated/coach/contacts': {
       id: '/_authenticated/coach/contacts'
       path: '/contacts'
@@ -676,6 +696,7 @@ const AuthenticatedCoachCampsRouteWithChildren =
 interface AuthenticatedCoachRouteChildren {
   AuthenticatedCoachCampsRoute: typeof AuthenticatedCoachCampsRouteWithChildren
   AuthenticatedCoachContactsRoute: typeof AuthenticatedCoachContactsRoute
+  AuthenticatedCoachFinancialsRoute: typeof AuthenticatedCoachFinancialsRoute
   AuthenticatedCoachInboxRoute: typeof AuthenticatedCoachInboxRoute
   AuthenticatedCoachIndexRoute: typeof AuthenticatedCoachIndexRoute
 }
@@ -683,6 +704,7 @@ interface AuthenticatedCoachRouteChildren {
 const AuthenticatedCoachRouteChildren: AuthenticatedCoachRouteChildren = {
   AuthenticatedCoachCampsRoute: AuthenticatedCoachCampsRouteWithChildren,
   AuthenticatedCoachContactsRoute: AuthenticatedCoachContactsRoute,
+  AuthenticatedCoachFinancialsRoute: AuthenticatedCoachFinancialsRoute,
   AuthenticatedCoachInboxRoute: AuthenticatedCoachInboxRoute,
   AuthenticatedCoachIndexRoute: AuthenticatedCoachIndexRoute,
 }
