@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, redirect, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, CalendarDays, Users, MessageSquare, Wallet, Mail, UserCog, ArrowLeft, Bell, Megaphone } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, MessageSquare, Wallet, Mail, UserCog, ArrowLeft, Bell, Megaphone, ClipboardCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach")({
   ssr: false,
@@ -35,6 +35,7 @@ function CoachLayout() {
     { to: "/coach/financials", label: "Financials", icon: Wallet, exact: false, soon: false },
     { to: "/coach/email", label: "Email", icon: Mail, exact: false, soon: false },
     { to: "/coach/team", label: "Team", icon: UserCog, exact: false, soon: false },
+    { to: "/coach/roster", label: "Roster", icon: ClipboardCheck, exact: false, soon: false },
   ];
 
   const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
