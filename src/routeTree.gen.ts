@@ -30,6 +30,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
 import { Route as PaymentsRefundsRouteImport } from './routes/payments.refunds'
 import { Route as PaymentsPayoutsRouteImport } from './routes/payments.payouts'
+import { Route as PaymentsCouponRouteImport } from './routes/payments.coupon'
 import { Route as PaymentsConnectRouteImport } from './routes/payments.connect'
 import { Route as PaymentsConfirmationRouteImport } from './routes/payments.confirmation'
 import { Route as PaymentsCheckoutRouteImport } from './routes/payments.checkout'
@@ -154,6 +155,11 @@ const PaymentsRefundsRoute = PaymentsRefundsRouteImport.update({
 const PaymentsPayoutsRoute = PaymentsPayoutsRouteImport.update({
   id: '/payments/payouts',
   path: '/payments/payouts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsCouponRoute = PaymentsCouponRouteImport.update({
+  id: '/payments/coupon',
+  path: '/payments/coupon',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PaymentsConnectRoute = PaymentsConnectRouteImport.update({
@@ -295,6 +301,7 @@ export interface FileRoutesByFullPath {
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
+  '/payments/coupon': typeof PaymentsCouponRoute
   '/payments/payouts': typeof PaymentsPayoutsRoute
   '/payments/refunds': typeof PaymentsRefundsRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
@@ -336,6 +343,7 @@ export interface FileRoutesByTo {
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
+  '/payments/coupon': typeof PaymentsCouponRoute
   '/payments/payouts': typeof PaymentsPayoutsRoute
   '/payments/refunds': typeof PaymentsRefundsRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
@@ -381,6 +389,7 @@ export interface FileRoutesById {
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
+  '/payments/coupon': typeof PaymentsCouponRoute
   '/payments/payouts': typeof PaymentsPayoutsRoute
   '/payments/refunds': typeof PaymentsRefundsRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
@@ -426,6 +435,7 @@ export interface FileRouteTypes {
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
+    | '/payments/coupon'
     | '/payments/payouts'
     | '/payments/refunds'
     | '/session-detail/$sessionId'
@@ -467,6 +477,7 @@ export interface FileRouteTypes {
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
+    | '/payments/coupon'
     | '/payments/payouts'
     | '/payments/refunds'
     | '/session-detail/$sessionId'
@@ -511,6 +522,7 @@ export interface FileRouteTypes {
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
+    | '/payments/coupon'
     | '/payments/payouts'
     | '/payments/refunds'
     | '/session-detail/$sessionId'
@@ -554,6 +566,7 @@ export interface RootRouteChildren {
   PaymentsCheckoutRoute: typeof PaymentsCheckoutRoute
   PaymentsConfirmationRoute: typeof PaymentsConfirmationRoute
   PaymentsConnectRoute: typeof PaymentsConnectRoute
+  PaymentsCouponRoute: typeof PaymentsCouponRoute
   PaymentsPayoutsRoute: typeof PaymentsPayoutsRoute
   PaymentsRefundsRoute: typeof PaymentsRefundsRoute
   SessionDetailSessionIdRoute: typeof SessionDetailSessionIdRoute
@@ -706,6 +719,13 @@ declare module '@tanstack/react-router' {
       path: '/payments/payouts'
       fullPath: '/payments/payouts'
       preLoaderRoute: typeof PaymentsPayoutsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments/coupon': {
+      id: '/payments/coupon'
+      path: '/payments/coupon'
+      fullPath: '/payments/coupon'
+      preLoaderRoute: typeof PaymentsCouponRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/payments/connect': {
@@ -953,6 +973,7 @@ const rootRouteChildren: RootRouteChildren = {
   PaymentsCheckoutRoute: PaymentsCheckoutRoute,
   PaymentsConfirmationRoute: PaymentsConfirmationRoute,
   PaymentsConnectRoute: PaymentsConnectRoute,
+  PaymentsCouponRoute: PaymentsCouponRoute,
   PaymentsPayoutsRoute: PaymentsPayoutsRoute,
   PaymentsRefundsRoute: PaymentsRefundsRoute,
   SessionDetailSessionIdRoute: SessionDetailSessionIdRoute,
