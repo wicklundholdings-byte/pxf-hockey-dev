@@ -30,7 +30,7 @@ function CoachLayout() {
   const tabs = [
     { to: "/coach", label: "Dashboard", icon: LayoutDashboard, exact: true, soon: false },
     { to: "/coach/camps", label: "Events", icon: CalendarDays, exact: false, soon: false },
-    { to: "/coach", label: "Contacts", icon: Users, exact: false, soon: true },
+    { to: "/coach/contacts", label: "Contacts", icon: Users, exact: false, soon: false },
     { to: "/coach", label: "Inbox", icon: MessageSquare, exact: false, soon: true },
     { to: "/coach", label: "Financials", icon: Wallet, exact: false, soon: true },
     { to: "/coach", label: "Email", icon: Mail, exact: false, soon: true },

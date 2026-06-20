@@ -320,9 +320,11 @@ export type Database = {
           full_name: string
           id: string
           joined_at: string
+          notes: string | null
           owner_id: string
           phone: string | null
           subscribed: boolean
+          tags: string[]
           updated_at: string
         }
         Insert: {
@@ -331,9 +333,11 @@ export type Database = {
           full_name: string
           id?: string
           joined_at?: string
+          notes?: string | null
           owner_id: string
           phone?: string | null
           subscribed?: boolean
+          tags?: string[]
           updated_at?: string
         }
         Update: {
@@ -342,9 +346,11 @@ export type Database = {
           full_name?: string
           id?: string
           joined_at?: string
+          notes?: string | null
           owner_id?: string
           phone?: string | null
           subscribed?: boolean
+          tags?: string[]
           updated_at?: string
         }
         Relationships: []
