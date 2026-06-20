@@ -32,7 +32,7 @@ function CoachLayout() {
     { to: "/coach/camps", label: "Events", icon: CalendarDays, exact: false, soon: false },
     { to: "/coach/contacts", label: "Contacts", icon: Users, exact: false, soon: false },
     { to: "/coach/inbox", label: "Inbox", icon: MessageSquare, exact: false, soon: false },
-    { to: "/coach", label: "Financials", icon: Wallet, exact: false, soon: true },
+    { to: "/coach/financials", label: "Financials", icon: Wallet, exact: false, soon: false },
     { to: "/coach", label: "Email", icon: Mail, exact: false, soon: true },
     { to: "/coach", label: "Team", icon: UserCog, exact: false, soon: true },
   ];
