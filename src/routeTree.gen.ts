@@ -29,6 +29,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
 import { Route as PaymentsConnectRouteImport } from './routes/payments.connect'
+import { Route as PaymentsCheckoutRouteImport } from './routes/payments.checkout'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
 import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
@@ -145,6 +146,11 @@ const SessionDetailSessionIdRoute = SessionDetailSessionIdRouteImport.update({
 const PaymentsConnectRoute = PaymentsConnectRouteImport.update({
   id: '/payments/connect',
   path: '/payments/connect',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsCheckoutRoute = PaymentsCheckoutRouteImport.update({
+  id: '/payments/checkout',
+  path: '/payments/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DrillDetailDrillIdRoute = DrillDetailDrillIdRouteImport.update({
@@ -268,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/coach': typeof AuthenticatedCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/connect': typeof PaymentsConnectRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/team': typeof TeamRoute
   '/book/$slug': typeof BookSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/connect': typeof PaymentsConnectRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -346,6 +354,7 @@ export interface FileRoutesById {
   '/_authenticated/coach': typeof AuthenticatedCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/connect': typeof PaymentsConnectRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -387,6 +396,7 @@ export interface FileRouteTypes {
     | '/coach'
     | '/book/$slug'
     | '/drill-detail/$drillId'
+    | '/payments/checkout'
     | '/payments/connect'
     | '/session-detail/$sessionId'
     | '/admin/categories'
@@ -424,6 +434,7 @@ export interface FileRouteTypes {
     | '/team'
     | '/book/$slug'
     | '/drill-detail/$drillId'
+    | '/payments/checkout'
     | '/payments/connect'
     | '/session-detail/$sessionId'
     | '/admin/categories'
@@ -464,6 +475,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach'
     | '/book/$slug'
     | '/drill-detail/$drillId'
+    | '/payments/checkout'
     | '/payments/connect'
     | '/session-detail/$sessionId'
     | '/_authenticated/admin/categories'
@@ -503,6 +515,7 @@ export interface RootRouteChildren {
   TeamRoute: typeof TeamRoute
   BookSlugRoute: typeof BookSlugRoute
   DrillDetailDrillIdRoute: typeof DrillDetailDrillIdRoute
+  PaymentsCheckoutRoute: typeof PaymentsCheckoutRoute
   PaymentsConnectRoute: typeof PaymentsConnectRoute
   SessionDetailSessionIdRoute: typeof SessionDetailSessionIdRoute
 }
@@ -647,6 +660,13 @@ declare module '@tanstack/react-router' {
       path: '/payments/connect'
       fullPath: '/payments/connect'
       preLoaderRoute: typeof PaymentsConnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments/checkout': {
+      id: '/payments/checkout'
+      path: '/payments/checkout'
+      fullPath: '/payments/checkout'
+      preLoaderRoute: typeof PaymentsCheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/drill-detail/$drillId': {
@@ -870,6 +890,7 @@ const rootRouteChildren: RootRouteChildren = {
   TeamRoute: TeamRoute,
   BookSlugRoute: BookSlugRoute,
   DrillDetailDrillIdRoute: DrillDetailDrillIdRoute,
+  PaymentsCheckoutRoute: PaymentsCheckoutRoute,
   PaymentsConnectRoute: PaymentsConnectRoute,
   SessionDetailSessionIdRoute: SessionDetailSessionIdRoute,
 }
