@@ -34,7 +34,7 @@ function CoachLayout() {
     { to: "/coach/inbox", label: "Inbox", icon: MessageSquare, exact: false, soon: false },
     { to: "/coach/financials", label: "Financials", icon: Wallet, exact: false, soon: false },
     { to: "/coach/email", label: "Email", icon: Mail, exact: false, soon: false },
-    { to: "/coach", label: "Team", icon: UserCog, exact: false, soon: true },
+    { to: "/coach/team", label: "Team", icon: UserCog, exact: false, soon: false },
   ];
 
   const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
