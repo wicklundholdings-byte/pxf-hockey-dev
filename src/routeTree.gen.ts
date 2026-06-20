@@ -28,6 +28,7 @@ import { Route as DrillsRouteImport } from './routes/drills'
 import { Route as DrillBuilderRouteImport } from './routes/drill-builder'
 import { Route as CampsRouteImport } from './routes/camps'
 import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as BookingsRouteImport } from './routes/bookings'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -163,6 +164,11 @@ const CampsRoute = CampsRouteImport.update({
 const CalendarRoute = CalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookingsRoute = BookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -388,6 +394,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/auth': typeof AuthRoute
+  '/bookings': typeof BookingsRoute
   '/calendar': typeof CalendarRoute
   '/camps': typeof CampsRoute
   '/drill-builder': typeof DrillBuilderRoute
@@ -449,6 +456,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/achievements': typeof AchievementsRoute
   '/auth': typeof AuthRoute
+  '/bookings': typeof BookingsRoute
   '/calendar': typeof CalendarRoute
   '/camps': typeof CampsRoute
   '/drill-builder': typeof DrillBuilderRoute
@@ -510,6 +518,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/achievements': typeof AchievementsRoute
   '/auth': typeof AuthRoute
+  '/bookings': typeof BookingsRoute
   '/calendar': typeof CalendarRoute
   '/camps': typeof CampsRoute
   '/drill-builder': typeof DrillBuilderRoute
@@ -573,6 +582,7 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/auth'
+    | '/bookings'
     | '/calendar'
     | '/camps'
     | '/drill-builder'
@@ -634,6 +644,7 @@ export interface FileRouteTypes {
     | '/'
     | '/achievements'
     | '/auth'
+    | '/bookings'
     | '/calendar'
     | '/camps'
     | '/drill-builder'
@@ -694,6 +705,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/achievements'
     | '/auth'
+    | '/bookings'
     | '/calendar'
     | '/camps'
     | '/drill-builder'
@@ -757,6 +769,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AchievementsRoute: typeof AchievementsRoute
   AuthRoute: typeof AuthRoute
+  BookingsRoute: typeof BookingsRoute
   CalendarRoute: typeof CalendarRoute
   CampsRoute: typeof CampsRoute
   DrillBuilderRoute: typeof DrillBuilderRoute
@@ -926,6 +939,13 @@ declare module '@tanstack/react-router' {
       path: '/calendar'
       fullPath: '/calendar'
       preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bookings': {
+      id: '/bookings'
+      path: '/bookings'
+      fullPath: '/bookings'
+      preLoaderRoute: typeof BookingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -1348,6 +1368,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AchievementsRoute: AchievementsRoute,
   AuthRoute: AuthRoute,
+  BookingsRoute: BookingsRoute,
   CalendarRoute: CalendarRoute,
   CampsRoute: CampsRoute,
   DrillBuilderRoute: DrillBuilderRoute,
