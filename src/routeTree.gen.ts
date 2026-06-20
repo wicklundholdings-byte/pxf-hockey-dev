@@ -18,6 +18,7 @@ import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ProgramsRouteImport } from './routes/programs'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PaymentsPreviewRouteImport } from './routes/payments-preview'
+import { Route as ParentRouteImport } from './routes/parent'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MembershipRouteImport } from './routes/membership'
@@ -112,6 +113,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const PaymentsPreviewRoute = PaymentsPreviewRouteImport.update({
   id: '/payments-preview',
   path: '/payments-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParentRoute = ParentRouteImport.update({
+  id: '/parent',
+  path: '/parent',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -391,6 +397,7 @@ export interface FileRoutesByFullPath {
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
+  '/parent': typeof ParentRoute
   '/payments-preview': typeof PaymentsPreviewRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
@@ -451,6 +458,7 @@ export interface FileRoutesByTo {
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
+  '/parent': typeof ParentRoute
   '/payments-preview': typeof PaymentsPreviewRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
@@ -511,6 +519,7 @@ export interface FileRoutesById {
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
+  '/parent': typeof ParentRoute
   '/payments-preview': typeof PaymentsPreviewRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
@@ -573,6 +582,7 @@ export interface FileRouteTypes {
     | '/membership'
     | '/notifications'
     | '/onboarding'
+    | '/parent'
     | '/payments-preview'
     | '/profile'
     | '/programs'
@@ -633,6 +643,7 @@ export interface FileRouteTypes {
     | '/membership'
     | '/notifications'
     | '/onboarding'
+    | '/parent'
     | '/payments-preview'
     | '/profile'
     | '/programs'
@@ -692,6 +703,7 @@ export interface FileRouteTypes {
     | '/membership'
     | '/notifications'
     | '/onboarding'
+    | '/parent'
     | '/payments-preview'
     | '/profile'
     | '/programs'
@@ -754,6 +766,7 @@ export interface RootRouteChildren {
   MembershipRoute: typeof MembershipRoute
   NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRoute
+  ParentRoute: typeof ParentRoute
   PaymentsPreviewRoute: typeof PaymentsPreviewRoute
   ProfileRoute: typeof ProfileRoute
   ProgramsRoute: typeof ProgramsRoute
@@ -843,6 +856,13 @@ declare module '@tanstack/react-router' {
       path: '/payments-preview'
       fullPath: '/payments-preview'
       preLoaderRoute: typeof PaymentsPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/parent': {
+      id: '/parent'
+      path: '/parent'
+      fullPath: '/parent'
+      preLoaderRoute: typeof ParentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -1337,6 +1357,7 @@ const rootRouteChildren: RootRouteChildren = {
   MembershipRoute: MembershipRoute,
   NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRoute,
+  ParentRoute: ParentRoute,
   PaymentsPreviewRoute: PaymentsPreviewRoute,
   ProfileRoute: ProfileRoute,
   ProgramsRoute: ProgramsRoute,
