@@ -185,6 +185,7 @@ function SessionDetail() {
 
   function exportPDF() {
     if (!session || typeof window === "undefined") return;
+    const escape = (s: string) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
     const total = session.blocks.reduce((t, b) => t + b.mins, 0);
     const rows = session.blocks.map((b, i) => {
       const d = findDrill(b.drillId);
