@@ -83,14 +83,14 @@ function CampsPage() {
           <div className="flex rounded-full border border-border bg-card p-0.5">
             <button
               onClick={() => setView("list")}
-              className={"rounded-full px-2 py-1 " + (view === "list" ? "bg-teal text-black" : "text-muted-foreground")}
+              className={"rounded-full px-2 py-1 " + (view === "list" ? "bg-gradient-brand text-primary-foreground" : "text-muted-foreground")}
               aria-label="List view"
             >
               <List size={12} />
             </button>
             <button
               onClick={() => setView("calendar")}
-              className={"rounded-full px-2 py-1 " + (view === "calendar" ? "bg-teal text-black" : "text-muted-foreground")}
+              className={"rounded-full px-2 py-1 " + (view === "calendar" ? "bg-gradient-brand text-primary-foreground" : "text-muted-foreground")}
               aria-label="Calendar view"
             >
               <CalendarIcon size={12} />
@@ -98,7 +98,7 @@ function CampsPage() {
           </div>
           <Link
             to="/coach/camps/new"
-            className="flex items-center gap-1 rounded-full bg-teal px-3 py-2 text-[11px] font-bold text-black"
+            className="flex items-center gap-1 rounded-full bg-gradient-brand px-3 py-2 text-[11px] font-bold text-primary-foreground"
           >
             <Plus size={12} /> New
           </Link>

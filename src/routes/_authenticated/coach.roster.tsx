@@ -200,7 +200,7 @@ function RosterPage() {
             onClick={() => setTab(t)}
             className={
               "flex-1 rounded-full py-1.5 text-xs font-bold capitalize transition " +
-              (tab === t ? "bg-teal text-black" : "text-muted-foreground")
+              (tab === t ? "bg-gradient-brand text-primary-foreground" : "text-muted-foreground")
             }
           >
             {t}
@@ -260,7 +260,7 @@ function RosterPage() {
                       <div
                         className={
                           "flex h-8 w-8 items-center justify-center rounded-full " +
-                          (present ? "bg-teal text-black" : "border border-border bg-background text-muted-foreground")
+                          (present ? "bg-gradient-brand text-primary-foreground" : "border border-border bg-background text-muted-foreground")
                         }
                       >
                         {present ? <Check size={16} /> : <X size={14} />}
@@ -329,7 +329,7 @@ function RosterPage() {
                                 onClick={() => saveEval(r.id, { [sk.key]: n } as Partial<EvalRow>)}
                                 className={
                                   "h-7 flex-1 rounded-md text-[11px] font-bold " +
-                                  (val >= n ? "bg-teal text-black" : "bg-background text-muted-foreground border border-border")
+                                  (val >= n ? "bg-gradient-brand text-primary-foreground" : "bg-background text-muted-foreground border border-border")
                                 }
                               >
                                 {n}

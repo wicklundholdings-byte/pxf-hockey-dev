@@ -89,7 +89,7 @@ function TeamPage() {
         </div>
         <button
           onClick={() => setShowInvite(true)}
-          className="flex items-center gap-1 rounded-full bg-teal px-3 py-1.5 text-[11px] font-bold text-black"
+          className="flex items-center gap-1 rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-primary-foreground"
         >
           <Plus size={12} /> Invite
         </button>
@@ -172,7 +172,7 @@ function TeamPage() {
               <button
                 disabled={saving || !form.email.trim()}
                 onClick={invite}
-                className="w-full rounded-xl bg-teal py-2.5 text-sm font-bold text-black disabled:opacity-50"
+                className="w-full rounded-xl bg-gradient-brand py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50"
               >
                 {saving ? "Sending…" : "Send invite"}
               </button>

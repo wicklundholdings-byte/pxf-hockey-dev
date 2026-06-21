@@ -303,7 +303,7 @@ function TaxesTab() {
               <span className="text-xs text-foreground">{name}</span>
               <button
                 onClick={() => setPerCamp({ ...perCamp, [name]: !on })}
-                className={"rounded-full px-2.5 py-0.5 text-[10px] font-bold " + (on ? "bg-teal text-black" : "bg-muted text-muted-foreground")}
+                className={"rounded-full px-2.5 py-0.5 text-[10px] font-bold " + (on ? "bg-gradient-brand text-primary-foreground" : "bg-muted text-muted-foreground")}
               >
                 {on ? "On" : "Off"}
               </button>
@@ -312,7 +312,7 @@ function TaxesTab() {
         </ul>
       </div>
 
-      <button className="w-full rounded-full bg-teal py-3 text-sm font-bold text-black">Save tax settings</button>
+      <button className="w-full rounded-full bg-gradient-brand py-3 text-sm font-bold text-primary-foreground">Save tax settings</button>
     </div>
   );
 }
@@ -342,7 +342,7 @@ function PayoutsTab({ payouts, balance, onReload }: { payouts: Payout[]; balance
         <button
           disabled={balance <= 0 || requesting}
           onClick={requestPayout}
-          className="mt-3 w-full rounded-full bg-teal py-2.5 text-sm font-bold text-black disabled:opacity-40"
+          className="mt-3 w-full rounded-full bg-gradient-brand py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-40"
         >
           {requesting ? "Requesting…" : "Request payout"}
         </button>
@@ -411,7 +411,7 @@ function CouponsTab({ coupons, onReload }: { coupons: Coupon[]; onReload: () => 
     <div className="space-y-3">
       <button
         onClick={() => setShowNew(true)}
-        className="flex w-full items-center justify-center gap-1 rounded-full bg-teal py-2.5 text-sm font-bold text-black"
+        className="flex w-full items-center justify-center gap-1 rounded-full bg-gradient-brand py-2.5 text-sm font-bold text-primary-foreground"
       >
         <Plus size={14} /> New coupon
       </button>
@@ -500,7 +500,7 @@ function CouponsTab({ coupons, onReload }: { coupons: Coupon[]; onReload: () => 
               <button
                 onClick={create}
                 disabled={!code.trim() || discount <= 0}
-                className="mt-4 w-full rounded-full bg-teal py-3 text-sm font-bold text-black disabled:opacity-40"
+                className="mt-4 w-full rounded-full bg-gradient-brand py-3 text-sm font-bold text-primary-foreground disabled:opacity-40"
               >Create coupon</button>
             </div>
           </div>

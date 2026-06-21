@@ -89,7 +89,7 @@ function InboxPage() {
           </button>
           <button
             onClick={() => setShowNew(true)}
-            className="flex items-center gap-1 rounded-full bg-teal px-3 py-1.5 text-[11px] font-bold text-black"
+            className="flex items-center gap-1 rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-primary-foreground"
           >
             <Plus size={12} /> New
           </button>
@@ -104,7 +104,7 @@ function InboxPage() {
           <p className="mt-2 text-xs text-muted-foreground">No conversations yet.</p>
           <button
             onClick={() => setShowNew(true)}
-            className="mt-3 rounded-full bg-teal px-4 py-1.5 text-[11px] font-bold text-black"
+            className="mt-3 rounded-full bg-gradient-brand px-4 py-1.5 text-[11px] font-bold text-primary-foreground"
           >
             Start one
           </button>
@@ -241,7 +241,7 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
                 <div className="group flex max-w-[80%] items-end gap-1">
                   <div className={
                     "rounded-2xl px-3 py-2 text-sm " +
-                    (mine ? "rounded-br-sm bg-teal text-black" : "rounded-bl-sm bg-card text-foreground border border-border")
+                    (mine ? "rounded-br-sm bg-gradient-brand text-primary-foreground" : "rounded-bl-sm bg-card text-foreground border border-border")
                   }>
                     <p className="whitespace-pre-wrap">{m.body}</p>
                     <p className={"mt-0.5 text-[9px] " + (mine ? "text-black/60" : "text-muted-foreground")}>
@@ -272,7 +272,7 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
         <button
           onClick={send}
           disabled={sending || !body.trim()}
-          className="grid h-10 w-10 place-items-center rounded-full bg-teal text-black disabled:opacity-40"
+          className="grid h-10 w-10 place-items-center rounded-full bg-gradient-brand text-primary-foreground disabled:opacity-40"
         >
           <Send size={14} />
         </button>
@@ -333,7 +333,7 @@ function NewConvoSheet({ onClose, onCreated }: { onClose: () => void; onCreated:
         <button
           disabled={!campId || creating}
           onClick={createGroup}
-          className="mt-5 w-full rounded-full bg-teal py-3 text-sm font-bold text-black disabled:opacity-40"
+          className="mt-5 w-full rounded-full bg-gradient-brand py-3 text-sm font-bold text-primary-foreground disabled:opacity-40"
         >
           {creating ? "Creating…" : "Create group"}
         </button>
@@ -368,7 +368,7 @@ function BroadcastSheet({ onClose }: { onClose: () => void }) {
           <Megaphone size={36} className="mx-auto text-emerald-400" />
           <h2 className="mt-2 font-display text-lg font-bold text-foreground">Broadcast sent</h2>
           <p className="mt-1 text-[11px] text-muted-foreground">Recipients can read but cannot reply.</p>
-          <button onClick={onClose} className="mt-4 w-full rounded-full bg-teal py-2.5 text-sm font-bold text-black">Done</button>
+          <button onClick={onClose} className="mt-4 w-full rounded-full bg-gradient-brand py-2.5 text-sm font-bold text-primary-foreground">Done</button>
         </div>
       </div>
     );
@@ -411,7 +411,7 @@ function BroadcastSheet({ onClose }: { onClose: () => void }) {
         <button
           disabled={!msg.trim()}
           onClick={() => setSent(true)}
-          className="mt-4 w-full rounded-full bg-teal py-3 text-sm font-bold text-black disabled:opacity-40"
+          className="mt-4 w-full rounded-full bg-gradient-brand py-3 text-sm font-bold text-primary-foreground disabled:opacity-40"
         >
           Send broadcast
         </button>

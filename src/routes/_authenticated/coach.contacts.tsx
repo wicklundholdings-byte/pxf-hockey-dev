@@ -89,7 +89,7 @@ function ContactsPage() {
           </span>
           <Link
             to="/coach/email"
-            className="flex items-center gap-1 rounded-full bg-teal px-3 py-1.5 text-[11px] font-bold text-black"
+            className="flex items-center gap-1 rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-primary-foreground"
           >
             <Mail size={12} /> Broadcast Email
           </Link>

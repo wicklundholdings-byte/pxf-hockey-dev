@@ -227,7 +227,7 @@ function CampDetailPage() {
               href={`/book/${camp.slug}`}
               target="_blank"
               rel="noreferrer"
-              className="flex flex-1 items-center justify-center gap-1 rounded-full bg-teal py-2 text-[11px] font-bold text-black"
+              className="flex flex-1 items-center justify-center gap-1 rounded-full bg-gradient-brand py-2 text-[11px] font-bold text-primary-foreground"
             >
               <Share2 size={12} /> Booking page
             </a>
@@ -249,14 +249,14 @@ function CampDetailPage() {
       <div className="grid grid-cols-2 gap-2">
         <a
           href="#session-plans"
-          className="flex items-center justify-center gap-2 rounded-2xl bg-teal py-4 text-sm font-bold text-black"
+          className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-brand py-4 text-sm font-bold text-primary-foreground"
         >
           <ClipboardList size={16} /> Session Plans
         </a>
         <Link
           to="/coach/broadcast"
           search={{ campId } as never}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-teal py-4 text-sm font-bold text-black"
+          className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-brand py-4 text-sm font-bold text-primary-foreground"
         >
           <MessageSquare size={16} /> Message Group
         </Link>
@@ -487,7 +487,7 @@ function CampSchedule({ sessions, campId }: { sessions: Session[]; campId: strin
             {library.length === 0 ? (
               <div className="space-y-2 py-4 text-center">
                 <p className="text-xs text-muted-foreground">No saved sessions yet.</p>
-                <Link to="/drill-builder" className="inline-flex items-center gap-1 rounded-full bg-teal px-4 py-1.5 text-[11px] font-bold text-black">
+                <Link to="/drill-builder" className="inline-flex items-center gap-1 rounded-full bg-gradient-brand px-4 py-1.5 text-[11px] font-bold text-primary-foreground">
                   <Plus size={12} /> Build one now
                 </Link>
               </div>
@@ -574,7 +574,7 @@ function TodayRsvpCard({ attending, notAttending, noResponse, hasSession, campId
       <button
         onClick={() => setSent(true)}
         disabled={!hasSession || noResponse === 0}
-        className={"mt-3 w-full rounded-full px-3 py-1.5 text-[10px] font-bold disabled:opacity-40 " + (sent ? "bg-emerald-400/15 text-emerald-400" : "bg-teal text-black")}
+        className={"mt-3 w-full rounded-full px-3 py-1.5 text-[10px] font-bold disabled:opacity-40 " + (sent ? "bg-emerald-400/15 text-emerald-400" : "bg-gradient-brand text-primary-foreground")}
       >
         {sent ? "Sent ✓" : "Send Reminder"}
       </button>
@@ -837,7 +837,7 @@ function WaitlistTab({ entries }: { entries: Wait[] }) {
               <button
                 onClick={() => invite(w)}
                 disabled={busyId === w.id}
-                className="rounded-full bg-teal px-3 py-1 text-[10px] font-bold text-black disabled:opacity-50"
+                className="rounded-full bg-gradient-brand px-3 py-1 text-[10px] font-bold text-primary-foreground disabled:opacity-50"
               >
                 {busyId === w.id ? "…" : "Invite"}
               </button>
@@ -922,7 +922,7 @@ function SessionsTab({ sessions, regs, campId }: { sessions: Session[]; regs: Re
         <button
           onClick={() => setScannerOpen(true)}
           disabled={!activeSessionId || paid.length === 0}
-          className="flex items-center gap-1.5 rounded-full bg-teal px-3 py-2 text-[11px] font-bold text-black disabled:opacity-40"
+          className="flex items-center gap-1.5 rounded-full bg-gradient-brand px-3 py-2 text-[11px] font-bold text-primary-foreground disabled:opacity-40"
         >
           <QrCode size={14} /> Scan
         </button>
@@ -1014,7 +1014,7 @@ function EvaluationsTab({ regs, campId: _campId }: { regs: Reg[]; campId: string
                 onClick={() => setSentTo((p) => new Set(p).add(r.id))}
                 className={
                   "rounded-full px-3 py-1 text-[10px] font-bold " +
-                  (sent ? "bg-emerald-400/15 text-emerald-400" : "bg-teal text-black")
+                  (sent ? "bg-emerald-400/15 text-emerald-400" : "bg-gradient-brand text-primary-foreground")
                 }
               >
                 {sent ? "Sent ✓" : "Send to parent"}
@@ -1055,7 +1055,7 @@ function MediaTab({ media }: { media: Media[] }) {
       <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
         <ImageIcon size={28} className="mx-auto text-muted-foreground" />
         <p className="mt-2 text-xs text-muted-foreground">No photos or videos uploaded yet.</p>
-        <button className="mt-3 rounded-full bg-teal px-4 py-1.5 text-[11px] font-bold text-black">Upload</button>
+        <button className="mt-3 rounded-full bg-gradient-brand px-4 py-1.5 text-[11px] font-bold text-primary-foreground">Upload</button>
       </div>
     );
   }
@@ -1100,7 +1100,7 @@ function DescriptionTab({ camp }: { camp: Camp }) {
           <span className="text-[10px] text-muted-foreground">{val.length} characters</span>
           <button
             onClick={() => setSaved(true)}
-            className="rounded-full bg-teal px-4 py-1.5 text-[11px] font-bold text-black"
+            className="rounded-full bg-gradient-brand px-4 py-1.5 text-[11px] font-bold text-primary-foreground"
           >
             {saved ? "Saved ✓" : "Save description"}
           </button>
@@ -1304,7 +1304,7 @@ function OptionsTab({ camp }: { camp: Camp }) {
       <button
         onClick={saveCamp}
         disabled={saving}
-        className="w-full rounded-full bg-teal py-3 text-sm font-bold text-black disabled:opacity-50"
+        className="w-full rounded-full bg-gradient-brand py-3 text-sm font-bold text-primary-foreground disabled:opacity-50"
       >
         {saving ? "Saving…" : savedTick ? "Saved ✓" : "Save event settings"}
       </button>
@@ -1324,7 +1324,7 @@ function WaiverEditor({
         <button
           onClick={() => setRequired(!required)}
           className={"rounded-full px-2.5 py-0.5 text-[10px] font-bold " +
-            (required ? "bg-teal text-black" : "bg-surface text-muted-foreground")}
+            (required ? "bg-gradient-brand text-primary-foreground" : "bg-surface text-muted-foreground")}
         >
           {required ? "Required" : "Off"}
         </button>
@@ -1390,7 +1390,7 @@ function PromoCodesPanel({
         <h3 className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
           <Tag size={11} /> Promo codes
         </h3>
-        <button onClick={() => setOpen(!open)} className="flex items-center gap-1 rounded-full bg-teal px-2.5 py-1 text-[10px] font-bold text-black">
+        <button onClick={() => setOpen(!open)} className="flex items-center gap-1 rounded-full bg-gradient-brand px-2.5 py-1 text-[10px] font-bold text-primary-foreground">
           <Plus size={10} /> Add
         </button>
       </div>
@@ -1402,8 +1402,8 @@ function PromoCodesPanel({
             <div>
               <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Type</label>
               <div className="flex gap-1">
-                <button onClick={() => setType("percent")} className={"flex-1 rounded-md px-2 py-2 text-[10px] font-bold " + (type === "percent" ? "bg-teal text-black" : "bg-card text-muted-foreground")}>% off</button>
-                <button onClick={() => setType("amount")} className={"flex-1 rounded-md px-2 py-2 text-[10px] font-bold " + (type === "amount" ? "bg-teal text-black" : "bg-card text-muted-foreground")}>$ off</button>
+                <button onClick={() => setType("percent")} className={"flex-1 rounded-md px-2 py-2 text-[10px] font-bold " + (type === "percent" ? "bg-gradient-brand text-primary-foreground" : "bg-card text-muted-foreground")}>% off</button>
+                <button onClick={() => setType("amount")} className={"flex-1 rounded-md px-2 py-2 text-[10px] font-bold " + (type === "amount" ? "bg-gradient-brand text-primary-foreground" : "bg-card text-muted-foreground")}>$ off</button>
               </div>
             </div>
             <Field label={type === "percent" ? "Percent" : "Amount ($)"} value={val} onChange={setVal} />
@@ -1413,7 +1413,7 @@ function PromoCodesPanel({
           {err && <p className="text-[10px] text-red-400">{err}</p>}
           <div className="flex gap-2">
             <button onClick={() => setOpen(false)} className="flex-1 rounded-lg border border-border bg-card py-2 text-[10px] font-semibold text-muted-foreground">Cancel</button>
-            <button onClick={add} className="flex-1 rounded-lg bg-teal py-2 text-[10px] font-bold text-black">Create code</button>
+            <button onClick={add} className="flex-1 rounded-lg bg-gradient-brand py-2 text-[10px] font-bold text-primary-foreground">Create code</button>
           </div>
         </div>
       )}
@@ -1612,7 +1612,7 @@ function PlansTab({ sessions, campId }: { sessions: Session[]; campId: string })
         <Link to="/coach/playbook" className="flex flex-1 items-center justify-center gap-1 rounded-full border border-border bg-card py-2 text-[11px] font-semibold text-foreground">
           <BookOpen size={12} /> Open Playbook
         </Link>
-        <Link to="/drill-builder" className="flex flex-1 items-center justify-center gap-1 rounded-full bg-teal py-2 text-[11px] font-bold text-black">
+        <Link to="/drill-builder" className="flex flex-1 items-center justify-center gap-1 rounded-full bg-gradient-brand py-2 text-[11px] font-bold text-primary-foreground">
           <Plus size={12} /> Build new session
         </Link>
       </div>
@@ -1672,7 +1672,7 @@ function PlansTab({ sessions, campId }: { sessions: Session[]; campId: string })
             {library.length === 0 ? (
               <div className="space-y-2 py-4 text-center">
                 <p className="text-xs text-muted-foreground">No saved sessions yet.</p>
-                <Link to="/drill-builder" className="inline-flex items-center gap-1 rounded-full bg-teal px-4 py-1.5 text-[11px] font-bold text-black">
+                <Link to="/drill-builder" className="inline-flex items-center gap-1 rounded-full bg-gradient-brand px-4 py-1.5 text-[11px] font-bold text-primary-foreground">
                   <Plus size={12} /> Build one now
                 </Link>
               </div>

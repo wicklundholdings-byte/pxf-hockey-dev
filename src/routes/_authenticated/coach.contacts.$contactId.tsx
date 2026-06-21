@@ -46,7 +46,7 @@ function ContactDetail() {
             <h1 className="font-display text-xl font-bold text-foreground">{contact.name}</h1>
             <p className="text-[10px] text-muted-foreground">Contact #{contactId.slice(0, 6)} · Since {contact.since}</p>
           </div>
-          <button className="rounded-full bg-teal px-3 py-1.5 text-[11px] font-bold text-black">Message</button>
+          <button className="rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-primary-foreground">Message</button>
         </div>
         <div className="mt-3 grid grid-cols-1 gap-1.5 text-[11px] text-muted-foreground">
           <p className="flex items-center gap-2"><Mail size={11} /> {contact.email}</p>
@@ -116,7 +116,7 @@ function ContactDetail() {
         />
         <div className="mt-2 flex items-center justify-between">
           <span className="text-[10px] text-muted-foreground">{note === savedNote ? "Saved" : "Unsaved changes"}</span>
-          <button onClick={() => setSavedNote(note)} className="rounded-full bg-teal px-3 py-1 text-[10px] font-bold text-black">Save note</button>
+          <button onClick={() => setSavedNote(note)} className="rounded-full bg-gradient-brand px-3 py-1 text-[10px] font-bold text-primary-foreground">Save note</button>
         </div>
       </Section>
     </div>

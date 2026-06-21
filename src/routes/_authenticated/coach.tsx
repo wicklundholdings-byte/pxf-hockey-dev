@@ -51,7 +51,7 @@ function CoachLayout() {
             <button className="rounded-full border border-border bg-surface p-1.5 text-muted-foreground hover:text-foreground">
               <Bell size={14} />
             </button>
-            <Link to="/coach/broadcast" className="flex items-center gap-1 rounded-full bg-teal px-3 py-1.5 text-[11px] font-bold text-black">
+            <Link to="/coach/broadcast" className="flex items-center gap-1 rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-primary-foreground">
               <Megaphone size={12} /> Broadcast
             </Link>
             <Link to="/settings" className="rounded-full border border-border bg-surface p-1.5 text-muted-foreground hover:text-foreground" aria-label="Settings">
