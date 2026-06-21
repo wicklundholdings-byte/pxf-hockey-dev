@@ -277,6 +277,85 @@ export type Database = {
           },
         ]
       }
+      camp_template_days: {
+        Row: {
+          created_at: string
+          day_number: number
+          id: string
+          session_name: string | null
+          session_snapshot: Json | null
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_number: number
+          id?: string
+          session_name?: string | null
+          session_snapshot?: Json | null
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_number?: number
+          id?: string
+          session_name?: string | null
+          session_snapshot?: Json | null
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "camp_template_days_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "camp_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      camp_templates: {
+        Row: {
+          created_at: string
+          description: string | null
+          folder_id: string | null
+          id: string
+          name: string
+          num_days: number
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          folder_id?: string | null
+          id?: string
+          name: string
+          num_days?: number
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          folder_id?: string | null
+          id?: string
+          name?: string
+          num_days?: number
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "camp_templates_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "playbook_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       camps: {
         Row: {
           absent_alert: boolean
@@ -598,10 +677,12 @@ export type Database = {
             | null
           duration_minutes: number | null
           equipment_needed: string | null
+          folder_id: string | null
           full_description: string | null
           id: string
           is_premium: boolean
           is_published: boolean
+          owner_id: string | null
           short_description: string | null
           skill_focus: string | null
           slug: string
@@ -622,10 +703,12 @@ export type Database = {
             | null
           duration_minutes?: number | null
           equipment_needed?: string | null
+          folder_id?: string | null
           full_description?: string | null
           id?: string
           is_premium?: boolean
           is_published?: boolean
+          owner_id?: string | null
           short_description?: string | null
           skill_focus?: string | null
           slug: string
@@ -646,10 +729,12 @@ export type Database = {
             | null
           duration_minutes?: number | null
           equipment_needed?: string | null
+          folder_id?: string | null
           full_description?: string | null
           id?: string
           is_premium?: boolean
           is_published?: boolean
+          owner_id?: string | null
           short_description?: string | null
           skill_focus?: string | null
           slug?: string
@@ -1087,6 +1172,33 @@ export type Database = {
           period_end?: string | null
           period_start?: string | null
           status?: string
+        }
+        Relationships: []
+      }
+      playbook_folders: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          name: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
