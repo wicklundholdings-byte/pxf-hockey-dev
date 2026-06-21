@@ -1,4 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useAuth, useHasCoachAccess } from "@/hooks/use-auth";
 import {
   Flame,
   ChevronRight,
@@ -55,6 +57,15 @@ const quickAccess = [
 ];
 
 function Home() {
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const { hasAccess, loading: roleLoading } = useHasCoachAccess(user?.id);
+
+  useEffect(() => {
+    if (authLoading || roleLoading) return;
+    if (user && hasAccess) navigate({ to: "/coach", replace: true });
+  }, [authLoading, roleLoading, user, hasAccess, navigate]);
+
   return (
     <div className="px-5 pt-4">
       <section className="flex items-end justify-between">
