@@ -66,6 +66,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as CampsSlugIndexRouteImport } from './routes/camps.$slug.index'
 import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authenticated/coach.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as ParentCampCampIdRouteImport } from './routes/parent.camp.$campId'
 import { Route as CampsSlugWaiverRouteImport } from './routes/camps.$slug.waiver'
 import { Route as CampsSlugRegisterRouteImport } from './routes/camps.$slug.register'
 import { Route as CampsSlugPaymentRouteImport } from './routes/camps.$slug.payment'
@@ -385,6 +386,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const ParentCampCampIdRoute = ParentCampCampIdRouteImport.update({
+  id: '/camp/$campId',
+  path: '/camp/$campId',
+  getParentRoute: () => ParentRoute,
+} as any)
 const CampsSlugWaiverRoute = CampsSlugWaiverRouteImport.update({
   id: '/waiver',
   path: '/waiver',
@@ -661,6 +667,7 @@ export interface FileRoutesByFullPath {
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
+  '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/coach/': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug/': typeof CampsSlugIndexRoute
@@ -748,6 +755,7 @@ export interface FileRoutesByTo {
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
+  '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/coach': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug': typeof CampsSlugIndexRoute
@@ -842,6 +850,7 @@ export interface FileRoutesById {
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
+  '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/coach/': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug/': typeof CampsSlugIndexRoute
@@ -936,6 +945,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/payment'
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
+    | '/parent/camp/$campId'
     | '/admin/'
     | '/coach/'
     | '/camps/$slug/'
@@ -1023,6 +1033,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/payment'
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
+    | '/parent/camp/$campId'
     | '/admin'
     | '/coach'
     | '/camps/$slug'
@@ -1116,6 +1127,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/payment'
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
+    | '/parent/camp/$campId'
     | '/_authenticated/admin/'
     | '/_authenticated/coach/'
     | '/camps/$slug/'
@@ -1577,6 +1589,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/parent/camp/$campId': {
+      id: '/parent/camp/$campId'
+      path: '/camp/$campId'
+      fullPath: '/parent/camp/$campId'
+      preLoaderRoute: typeof ParentCampCampIdRouteImport
+      parentRoute: typeof ParentRoute
+    }
     '/camps/$slug/waiver': {
       id: '/camps/$slug/waiver'
       path: '/waiver'
@@ -2021,6 +2040,7 @@ interface ParentRouteChildren {
   ParentProfileRoute: typeof ParentProfileRoute
   ParentScheduleRoute: typeof ParentScheduleRoute
   ParentIndexRoute: typeof ParentIndexRoute
+  ParentCampCampIdRoute: typeof ParentCampCampIdRoute
 }
 
 const ParentRouteChildren: ParentRouteChildren = {
@@ -2028,6 +2048,7 @@ const ParentRouteChildren: ParentRouteChildren = {
   ParentProfileRoute: ParentProfileRoute,
   ParentScheduleRoute: ParentScheduleRoute,
   ParentIndexRoute: ParentIndexRoute,
+  ParentCampCampIdRoute: ParentCampCampIdRoute,
 }
 
 const ParentRouteWithChildren =
