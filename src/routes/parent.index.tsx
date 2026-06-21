@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { CalendarDays, MapPin, Star, MessageCircle, ShoppingBag, User, Search, BookOpen, ChevronDown, Check } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CalendarDays, MapPin, Star, MessageCircle, ShoppingBag, User, Search, BookOpen, ChevronDown, Check, ChevronRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/parent/")({
   head: () => ({ meta: [{ title: "Home — PXF Hockey" }] }),
@@ -38,6 +40,31 @@ function ParentHome() {
   ];
   const [active, setActive] = useState(coaches[0]);
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
+  const [myCamps, setMyCamps] = useState<Array<{ id: string; name: string; start_date: string | null; end_date: string | null; venue_name: string | null }>>([]);
+
+  useEffect(() => {
+    if (!user?.email) return;
+    (async () => {
+      const { data: regs } = await supabase
+        .from("registrations")
+        .select("camp_id, camps(id, name, start_date, end_date, venue_name)")
+        .eq("status", "paid");
+      const camps = (regs ?? [])
+        .map((r) => (r as unknown as { camps: { id: string; name: string; start_date: string | null; end_date: string | null; venue_name: string | null } }).camps)
+        .filter(Boolean);
+      // Deduplicate
+      const seen = new Set<string>();
+      const unique = camps.filter((c) => (c && !seen.has(c.id) ? (seen.add(c.id), true) : false));
+      setMyCamps(unique);
+    })();
+  }, [user?.email]);
+
+  function daysUntil(d: string | null) {
+    if (!d) return null;
+    return Math.max(0, Math.ceil((new Date(d + "T00:00:00").getTime() - Date.now()) / 86400000));
+  }
+
   return (
     <div className="min-h-screen bg-background px-5 pt-4 pb-24 text-foreground">
       {/* Coach switcher */}
@@ -82,19 +109,31 @@ function ParentHome() {
       <section className="mt-5">
         <h2 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Upcoming Camps</h2>
         <div className="mt-2 space-y-2">
-          {bookings.map((b) => (
-            <div key={b.name} className="rounded-2xl border border-border bg-card p-4">
-              <div className="flex items-center justify-between">
-                <p className="font-semibold">{b.name}</p>
-                <span className="rounded-full bg-volt/15 px-2 py-0.5 text-[10px] font-bold text-volt">{b.days}d</span>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">{b.coach}</p>
-              <div className="mt-2 flex gap-3 text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1"><CalendarDays size={11} />{b.date}</span>
-                <span className="flex items-center gap-1"><MapPin size={11} />{b.location}</span>
-              </div>
-            </div>
-          ))}
+          {(myCamps.length > 0 ? myCamps : bookings.map((b, i) => ({ id: `demo-${i}`, name: b.name, start_date: null, end_date: null, venue_name: b.location }))).map((c) => {
+            const isReal = !c.id.startsWith("demo-");
+            const countdown = daysUntil(c.start_date);
+            const card = (
+              <>
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold">{c.name}</p>
+                  {countdown != null && (
+                    <span className="rounded-full bg-volt/15 px-2 py-0.5 text-[10px] font-bold text-volt">{countdown === 0 ? "Today" : `${countdown}d`}</span>
+                  )}
+                </div>
+                <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1"><MapPin size={11} />{c.venue_name ?? "Venue TBA"}</span>
+                  {isReal && <ChevronRight size={14} className="text-teal" />}
+                </div>
+              </>
+            );
+            return isReal ? (
+              <Link key={c.id} to="/parent/camp/$campId" params={{ campId: c.id }} className="block rounded-2xl border border-border bg-card p-4">
+                {card}
+              </Link>
+            ) : (
+              <div key={c.id} className="rounded-2xl border border-border bg-card p-4">{card}</div>
+            );
+          })}
         </div>
       </section>
 

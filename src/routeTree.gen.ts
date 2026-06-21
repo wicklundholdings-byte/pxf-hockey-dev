@@ -58,12 +58,19 @@ import { Route as OnboardingCoachRouteImport } from './routes/onboarding.coach'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
 import { Route as CoachesSlugRouteImport } from './routes/coaches.$slug'
 import { Route as CampsBrowseRouteImport } from './routes/camps.browse'
+import { Route as CampsSlugRouteImport } from './routes/camps.$slug'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
 import { Route as AuthenticatedHomeCoachRouteImport } from './routes/_authenticated/home-coach'
 import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as CampsSlugIndexRouteImport } from './routes/camps.$slug.index'
 import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authenticated/coach.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as ParentCampCampIdRouteImport } from './routes/parent.camp.$campId'
+import { Route as CampsSlugWaiverRouteImport } from './routes/camps.$slug.waiver'
+import { Route as CampsSlugRegisterRouteImport } from './routes/camps.$slug.register'
+import { Route as CampsSlugPaymentRouteImport } from './routes/camps.$slug.payment'
+import { Route as CampsSlugConfirmedRouteImport } from './routes/camps.$slug.confirmed'
 import { Route as AuthenticatedHomeCoachSessionsRouteImport } from './routes/_authenticated/home-coach.sessions'
 import { Route as AuthenticatedHomeCoachProfileRouteImport } from './routes/_authenticated/home-coach.profile'
 import { Route as AuthenticatedHomeCoachInboxRouteImport } from './routes/_authenticated/home-coach.inbox'
@@ -339,6 +346,11 @@ const CampsBrowseRoute = CampsBrowseRouteImport.update({
   path: '/browse',
   getParentRoute: () => CampsRoute,
 } as any)
+const CampsSlugRoute = CampsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => CampsRoute,
+} as any)
 const BookSlugRoute = BookSlugRouteImport.update({
   id: '/book/$slug',
   path: '/book/$slug',
@@ -359,6 +371,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const CampsSlugIndexRoute = CampsSlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CampsSlugRoute,
+} as any)
 const AuthenticatedCoachIndexRoute = AuthenticatedCoachIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -368,6 +385,31 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const ParentCampCampIdRoute = ParentCampCampIdRouteImport.update({
+  id: '/camp/$campId',
+  path: '/camp/$campId',
+  getParentRoute: () => ParentRoute,
+} as any)
+const CampsSlugWaiverRoute = CampsSlugWaiverRouteImport.update({
+  id: '/waiver',
+  path: '/waiver',
+  getParentRoute: () => CampsSlugRoute,
+} as any)
+const CampsSlugRegisterRoute = CampsSlugRegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => CampsSlugRoute,
+} as any)
+const CampsSlugPaymentRoute = CampsSlugPaymentRouteImport.update({
+  id: '/payment',
+  path: '/payment',
+  getParentRoute: () => CampsSlugRoute,
+} as any)
+const CampsSlugConfirmedRoute = CampsSlugConfirmedRouteImport.update({
+  id: '/confirmed',
+  path: '/confirmed',
+  getParentRoute: () => CampsSlugRoute,
 } as any)
 const AuthenticatedHomeCoachSessionsRoute =
   AuthenticatedHomeCoachSessionsRouteImport.update({
@@ -576,6 +618,7 @@ export interface FileRoutesByFullPath {
   '/coach': typeof AuthenticatedCoachRouteWithChildren
   '/home-coach': typeof AuthenticatedHomeCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
+  '/camps/$slug': typeof CampsSlugRouteWithChildren
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
@@ -620,8 +663,14 @@ export interface FileRoutesByFullPath {
   '/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
   '/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
+  '/camps/$slug/confirmed': typeof CampsSlugConfirmedRoute
+  '/camps/$slug/payment': typeof CampsSlugPaymentRoute
+  '/camps/$slug/register': typeof CampsSlugRegisterRoute
+  '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
+  '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/coach/': typeof AuthenticatedCoachIndexRoute
+  '/camps/$slug/': typeof CampsSlugIndexRoute
   '/coach/attendees/$athleteId': typeof AuthenticatedCoachAttendeesAthleteIdRoute
   '/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
@@ -702,8 +751,14 @@ export interface FileRoutesByTo {
   '/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
   '/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
+  '/camps/$slug/confirmed': typeof CampsSlugConfirmedRoute
+  '/camps/$slug/payment': typeof CampsSlugPaymentRoute
+  '/camps/$slug/register': typeof CampsSlugRegisterRoute
+  '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
+  '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/coach': typeof AuthenticatedCoachIndexRoute
+  '/camps/$slug': typeof CampsSlugIndexRoute
   '/coach/attendees/$athleteId': typeof AuthenticatedCoachAttendeesAthleteIdRoute
   '/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
@@ -746,6 +801,7 @@ export interface FileRoutesById {
   '/_authenticated/coach': typeof AuthenticatedCoachRouteWithChildren
   '/_authenticated/home-coach': typeof AuthenticatedHomeCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
+  '/camps/$slug': typeof CampsSlugRouteWithChildren
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
@@ -790,8 +846,14 @@ export interface FileRoutesById {
   '/_authenticated/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
   '/_authenticated/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/_authenticated/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
+  '/camps/$slug/confirmed': typeof CampsSlugConfirmedRoute
+  '/camps/$slug/payment': typeof CampsSlugPaymentRoute
+  '/camps/$slug/register': typeof CampsSlugRegisterRoute
+  '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
+  '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/coach/': typeof AuthenticatedCoachIndexRoute
+  '/camps/$slug/': typeof CampsSlugIndexRoute
   '/_authenticated/coach/attendees/$athleteId': typeof AuthenticatedCoachAttendeesAthleteIdRoute
   '/_authenticated/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/_authenticated/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
@@ -834,6 +896,7 @@ export interface FileRouteTypes {
     | '/coach'
     | '/home-coach'
     | '/book/$slug'
+    | '/camps/$slug'
     | '/camps/browse'
     | '/coaches/$slug'
     | '/drill-detail/$drillId'
@@ -878,8 +941,14 @@ export interface FileRouteTypes {
     | '/home-coach/inbox'
     | '/home-coach/profile'
     | '/home-coach/sessions'
+    | '/camps/$slug/confirmed'
+    | '/camps/$slug/payment'
+    | '/camps/$slug/register'
+    | '/camps/$slug/waiver'
+    | '/parent/camp/$campId'
     | '/admin/'
     | '/coach/'
+    | '/camps/$slug/'
     | '/coach/attendees/$athleteId'
     | '/coach/camps/$campId'
     | '/coach/camps/new'
@@ -960,8 +1029,14 @@ export interface FileRouteTypes {
     | '/home-coach/inbox'
     | '/home-coach/profile'
     | '/home-coach/sessions'
+    | '/camps/$slug/confirmed'
+    | '/camps/$slug/payment'
+    | '/camps/$slug/register'
+    | '/camps/$slug/waiver'
+    | '/parent/camp/$campId'
     | '/admin'
     | '/coach'
+    | '/camps/$slug'
     | '/coach/attendees/$athleteId'
     | '/coach/camps/$campId'
     | '/coach/camps/new'
@@ -1003,6 +1078,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach'
     | '/_authenticated/home-coach'
     | '/book/$slug'
+    | '/camps/$slug'
     | '/camps/browse'
     | '/coaches/$slug'
     | '/drill-detail/$drillId'
@@ -1047,8 +1123,14 @@ export interface FileRouteTypes {
     | '/_authenticated/home-coach/inbox'
     | '/_authenticated/home-coach/profile'
     | '/_authenticated/home-coach/sessions'
+    | '/camps/$slug/confirmed'
+    | '/camps/$slug/payment'
+    | '/camps/$slug/register'
+    | '/camps/$slug/waiver'
+    | '/parent/camp/$campId'
     | '/_authenticated/admin/'
     | '/_authenticated/coach/'
+    | '/camps/$slug/'
     | '/_authenticated/coach/attendees/$athleteId'
     | '/_authenticated/coach/camps/$campId'
     | '/_authenticated/coach/camps/new'
@@ -1451,6 +1533,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CampsBrowseRouteImport
       parentRoute: typeof CampsRoute
     }
+    '/camps/$slug': {
+      id: '/camps/$slug'
+      path: '/$slug'
+      fullPath: '/camps/$slug'
+      preLoaderRoute: typeof CampsSlugRouteImport
+      parentRoute: typeof CampsRoute
+    }
     '/book/$slug': {
       id: '/book/$slug'
       path: '/book/$slug'
@@ -1479,6 +1568,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/camps/$slug/': {
+      id: '/camps/$slug/'
+      path: '/'
+      fullPath: '/camps/$slug/'
+      preLoaderRoute: typeof CampsSlugIndexRouteImport
+      parentRoute: typeof CampsSlugRoute
+    }
     '/_authenticated/coach/': {
       id: '/_authenticated/coach/'
       path: '/'
@@ -1492,6 +1588,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/parent/camp/$campId': {
+      id: '/parent/camp/$campId'
+      path: '/camp/$campId'
+      fullPath: '/parent/camp/$campId'
+      preLoaderRoute: typeof ParentCampCampIdRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/camps/$slug/waiver': {
+      id: '/camps/$slug/waiver'
+      path: '/waiver'
+      fullPath: '/camps/$slug/waiver'
+      preLoaderRoute: typeof CampsSlugWaiverRouteImport
+      parentRoute: typeof CampsSlugRoute
+    }
+    '/camps/$slug/register': {
+      id: '/camps/$slug/register'
+      path: '/register'
+      fullPath: '/camps/$slug/register'
+      preLoaderRoute: typeof CampsSlugRegisterRouteImport
+      parentRoute: typeof CampsSlugRoute
+    }
+    '/camps/$slug/payment': {
+      id: '/camps/$slug/payment'
+      path: '/payment'
+      fullPath: '/camps/$slug/payment'
+      preLoaderRoute: typeof CampsSlugPaymentRouteImport
+      parentRoute: typeof CampsSlugRoute
+    }
+    '/camps/$slug/confirmed': {
+      id: '/camps/$slug/confirmed'
+      path: '/confirmed'
+      fullPath: '/camps/$slug/confirmed'
+      preLoaderRoute: typeof CampsSlugConfirmedRouteImport
+      parentRoute: typeof CampsSlugRoute
     }
     '/_authenticated/home-coach/sessions': {
       id: '/_authenticated/home-coach/sessions'
@@ -1856,11 +1987,33 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface CampsSlugRouteChildren {
+  CampsSlugConfirmedRoute: typeof CampsSlugConfirmedRoute
+  CampsSlugPaymentRoute: typeof CampsSlugPaymentRoute
+  CampsSlugRegisterRoute: typeof CampsSlugRegisterRoute
+  CampsSlugWaiverRoute: typeof CampsSlugWaiverRoute
+  CampsSlugIndexRoute: typeof CampsSlugIndexRoute
+}
+
+const CampsSlugRouteChildren: CampsSlugRouteChildren = {
+  CampsSlugConfirmedRoute: CampsSlugConfirmedRoute,
+  CampsSlugPaymentRoute: CampsSlugPaymentRoute,
+  CampsSlugRegisterRoute: CampsSlugRegisterRoute,
+  CampsSlugWaiverRoute: CampsSlugWaiverRoute,
+  CampsSlugIndexRoute: CampsSlugIndexRoute,
+}
+
+const CampsSlugRouteWithChildren = CampsSlugRoute._addFileChildren(
+  CampsSlugRouteChildren,
+)
+
 interface CampsRouteChildren {
+  CampsSlugRoute: typeof CampsSlugRouteWithChildren
   CampsBrowseRoute: typeof CampsBrowseRoute
 }
 
 const CampsRouteChildren: CampsRouteChildren = {
+  CampsSlugRoute: CampsSlugRouteWithChildren,
   CampsBrowseRoute: CampsBrowseRoute,
 }
 
@@ -1887,6 +2040,7 @@ interface ParentRouteChildren {
   ParentProfileRoute: typeof ParentProfileRoute
   ParentScheduleRoute: typeof ParentScheduleRoute
   ParentIndexRoute: typeof ParentIndexRoute
+  ParentCampCampIdRoute: typeof ParentCampCampIdRoute
 }
 
 const ParentRouteChildren: ParentRouteChildren = {
@@ -1894,6 +2048,7 @@ const ParentRouteChildren: ParentRouteChildren = {
   ParentProfileRoute: ParentProfileRoute,
   ParentScheduleRoute: ParentScheduleRoute,
   ParentIndexRoute: ParentIndexRoute,
+  ParentCampCampIdRoute: ParentCampCampIdRoute,
 }
 
 const ParentRouteWithChildren =
