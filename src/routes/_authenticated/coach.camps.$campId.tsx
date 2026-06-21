@@ -76,9 +76,34 @@ function CampDetailPage() {
           .order("position"),
         supabase.from("camp_media").select("*").eq("camp_id", campId).order("created_at", { ascending: false }),
       ]);
-      setCamp((c.data ?? null) as Camp | null);
+      const campRow = (c.data ?? null) as Camp | null;
+      setCamp(campRow);
       setRegs((r.data ?? []) as unknown as Reg[]);
-      setSessions((s.data ?? []) as Session[]);
+      let sess = (s.data ?? []) as Session[];
+      // Backfill: if no camp_sessions exist but the camp has a date range, create one per day.
+      if (sess.length === 0 && campRow?.start_date && campRow?.end_date) {
+        const rows: { camp_id: string; session_date: string; start_time: string | null; end_time: string | null; sort_order: number }[] = [];
+        const start = new Date(campRow.start_date + "T00:00:00");
+        const end = new Date(campRow.end_date + "T00:00:00");
+        let i = 0;
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          rows.push({
+            camp_id: campRow.id,
+            session_date: d.toISOString().slice(0, 10),
+            start_time: campRow.start_time,
+            end_time: campRow.end_time,
+            sort_order: i++,
+          });
+        }
+        if (rows.length > 0) {
+          const { data: inserted } = await supabase
+            .from("camp_sessions")
+            .insert(rows)
+            .select("*");
+          if (inserted) sess = inserted as Session[];
+        }
+      }
+      setSessions(sess);
       setWait((w.data ?? []) as unknown as Wait[]);
       setMedia((m.data ?? []) as Media[]);
       setLoading(false);
