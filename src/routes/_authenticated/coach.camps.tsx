@@ -217,9 +217,14 @@ function CalendarView({ camps }: { camps: Camp[] }) {
           >
             {cell.day && <div className="text-muted-foreground">{cell.day}</div>}
             {cell.camps.slice(0, 2).map((c) => (
-              <div key={c.id} className="mt-0.5 truncate rounded bg-teal/20 px-1 text-[8px] font-bold text-teal">
+              <Link
+                key={c.id}
+                to="/coach/camps/$campId"
+                params={{ campId: c.id }}
+                className="mt-0.5 block truncate rounded bg-teal/20 px-1 text-[8px] font-bold text-teal hover:bg-teal/30"
+              >
                 {c.name}
-              </div>
+              </Link>
             ))}
           </div>
         ))}
