@@ -193,7 +193,7 @@ function SessionDetail() {
           <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;width:32px;font-weight:700;color:#0f766e;">${i + 1}</td>
           <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;">
             <div style="font-weight:700;font-size:14px;">${escape(d?.name ?? "Drill")}</div>
-            ${d?.focus ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;">${escape(d.focus)}</div>` : ""}
+            ${d?.category ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;">${escape(d.category)}</div>` : ""}
             ${b.notes ? `<div style="font-size:11px;color:#374151;margin-top:4px;">${escape(b.notes)}</div>` : ""}
           </td>
           <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700;white-space:nowrap;">${b.mins} min</td>
