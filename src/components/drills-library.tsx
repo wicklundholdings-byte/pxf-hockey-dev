@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { Search, Filter, Play, BarChart3, Clock, Users, Wrench, ChevronRight, Heart, Plus, X, CheckCircle2, ListChecks, Sparkles, Calendar as CalendarIcon, Folder as FolderIcon, FolderPlus, Check } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { type Category, type Drill } from "@/data/pxf";
@@ -55,18 +55,6 @@ function mapCategories(rows: DbCategory[]): CategoryMeta[] {
     blurb: c.description ?? "",
   }));
 }
-
-export const Route = createFileRoute("/drills")({
-  head: () => ({
-    meta: [
-      { title: "Drill Library — PXF Hockey" },
-      { name: "description", content: "Drills organized by category with video, equipment, age and progression levels." },
-      { property: "og:title", content: "Drill Library — PXF Hockey" },
-      { property: "og:description", content: "Drills organized by category with video and progressions." },
-    ],
-  }),
-  component: Drills,
-});
 
 const AGE_GROUPS = ["U9+", "U11+", "U13+", "U15+"] as const;
 const LEVELS = ["Beginner", "Intermediate", "Advanced", "Elite"] as const;
