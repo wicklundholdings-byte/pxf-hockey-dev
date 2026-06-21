@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check } from "lucide-react";
+import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon } from "lucide-react";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings — PXF Hockey" }] }),
@@ -64,6 +64,43 @@ function SettingsScreen() {
           </div>
           <Field label="Location" defaultValue="Mississauga, ON" />
           <Field label="Website" defaultValue="https://pxfhockey.com" />
+        </Section>
+
+        <Section icon={Palette} title="Branding (Platinum)">
+          <p className="text-[11px] text-muted-foreground">Your branding appears on your public booking page and in the app when your athletes log in.</p>
+          <Field label="Tagline" defaultValue="Elite hockey training that moves the needle." />
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Program logo</span>
+            <div className="mt-1 flex items-center gap-3">
+              <div className="grid h-16 w-16 place-items-center rounded-xl border border-dashed border-border bg-background text-muted-foreground"><ImageIcon size={18} /></div>
+              <button className="rounded-lg border border-border px-3 py-2 text-xs">Upload logo</button>
+            </div>
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Banner image</span>
+            <div className="mt-1 flex h-24 items-center justify-center rounded-xl border border-dashed border-border bg-gradient-to-br from-teal/15 to-volt/10 text-[11px] text-muted-foreground">
+              1600 × 600 · click to upload
+            </div>
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Primary color</span>
+            <div className="mt-2 flex items-center gap-2">
+              {["#00C4B4", "#3DFF8F", "#3B82F6", "#A855F7", "#EF4444", "#F59E0B"].map((c, i) => (
+                <button key={c} className={`h-8 w-8 rounded-full border-2 ${i === 0 ? "border-foreground" : "border-transparent"}`} style={{ backgroundColor: c }} />
+              ))}
+              <input defaultValue="#00C4B4" className="ml-2 w-24 rounded-lg border border-border bg-background px-2 py-1 text-xs" />
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-background p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Preview</p>
+            <div className="mt-2 flex items-center gap-3">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-teal/20 text-[10px] font-bold text-teal">PXF</div>
+              <div>
+                <p className="text-sm font-bold">PXF Skills Academy</p>
+                <p className="text-[10px] text-muted-foreground">Elite hockey training that moves the needle.</p>
+              </div>
+            </div>
+          </div>
         </Section>
 
         <Section icon={Bell} title="Notifications">
