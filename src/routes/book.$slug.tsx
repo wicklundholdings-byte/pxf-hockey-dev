@@ -1,9 +1,9 @@
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { submitBooking, previewCoupon } from "@/lib/booking.functions";
 import { Calendar, MapPin, Clock, Users, CheckCircle2, Loader2, Tag, X, PenLine, Type as TypeIcon, FileText } from "lucide-react";
-import { useRef } from "react";
+
 
 export const Route = createFileRoute("/book/$slug")({
   component: BookingPage,
