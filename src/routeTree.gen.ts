@@ -41,6 +41,7 @@ import { Route as OnboardingIndexRouteImport } from './routes/onboarding.index'
 import { Route as StoreCartRouteImport } from './routes/store.cart'
 import { Route as StoreProductIdRouteImport } from './routes/store.$productId'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
+import { Route as RsvpTokenRouteImport } from './routes/rsvp.$token'
 import { Route as PaymentsSubscribeRouteImport } from './routes/payments.subscribe'
 import { Route as PaymentsRefundsRouteImport } from './routes/payments.refunds'
 import { Route as PaymentsPlanRouteImport } from './routes/payments.plan'
@@ -250,6 +251,11 @@ const StoreProductIdRoute = StoreProductIdRouteImport.update({
 const SessionDetailSessionIdRoute = SessionDetailSessionIdRouteImport.update({
   id: '/session-detail/$sessionId',
   path: '/session-detail/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RsvpTokenRoute = RsvpTokenRouteImport.update({
+  id: '/rsvp/$token',
+  path: '/rsvp/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PaymentsSubscribeRoute = PaymentsSubscribeRouteImport.update({
@@ -578,6 +584,7 @@ export interface FileRoutesByFullPath {
   '/payments/plan': typeof PaymentsPlanRoute
   '/payments/refunds': typeof PaymentsRefundsRoute
   '/payments/subscribe': typeof PaymentsSubscribeRoute
+  '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
@@ -658,6 +665,7 @@ export interface FileRoutesByTo {
   '/payments/plan': typeof PaymentsPlanRoute
   '/payments/refunds': typeof PaymentsRefundsRoute
   '/payments/subscribe': typeof PaymentsSubscribeRoute
+  '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
@@ -744,6 +752,7 @@ export interface FileRoutesById {
   '/payments/plan': typeof PaymentsPlanRoute
   '/payments/refunds': typeof PaymentsRefundsRoute
   '/payments/subscribe': typeof PaymentsSubscribeRoute
+  '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
@@ -830,6 +839,7 @@ export interface FileRouteTypes {
     | '/payments/plan'
     | '/payments/refunds'
     | '/payments/subscribe'
+    | '/rsvp/$token'
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
@@ -910,6 +920,7 @@ export interface FileRouteTypes {
     | '/payments/plan'
     | '/payments/refunds'
     | '/payments/subscribe'
+    | '/rsvp/$token'
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
@@ -995,6 +1006,7 @@ export interface FileRouteTypes {
     | '/payments/plan'
     | '/payments/refunds'
     | '/payments/subscribe'
+    | '/rsvp/$token'
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
@@ -1072,6 +1084,7 @@ export interface RootRouteChildren {
   PaymentsPlanRoute: typeof PaymentsPlanRoute
   PaymentsRefundsRoute: typeof PaymentsRefundsRoute
   PaymentsSubscribeRoute: typeof PaymentsSubscribeRoute
+  RsvpTokenRoute: typeof RsvpTokenRoute
   SessionDetailSessionIdRoute: typeof SessionDetailSessionIdRoute
   StoreProductIdRoute: typeof StoreProductIdRoute
   StoreCartRoute: typeof StoreCartRoute
@@ -1302,6 +1315,13 @@ declare module '@tanstack/react-router' {
       path: '/session-detail/$sessionId'
       fullPath: '/session-detail/$sessionId'
       preLoaderRoute: typeof SessionDetailSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rsvp/$token': {
+      id: '/rsvp/$token'
+      path: '/rsvp/$token'
+      fullPath: '/rsvp/$token'
+      preLoaderRoute: typeof RsvpTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/payments/subscribe': {
@@ -1907,6 +1927,7 @@ const rootRouteChildren: RootRouteChildren = {
   PaymentsPlanRoute: PaymentsPlanRoute,
   PaymentsRefundsRoute: PaymentsRefundsRoute,
   PaymentsSubscribeRoute: PaymentsSubscribeRoute,
+  RsvpTokenRoute: RsvpTokenRoute,
   SessionDetailSessionIdRoute: SessionDetailSessionIdRoute,
   StoreProductIdRoute: StoreProductIdRoute,
   StoreCartRoute: StoreCartRoute,

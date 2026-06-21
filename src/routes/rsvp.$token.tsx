@@ -51,7 +51,7 @@ function RsvpPage() {
 
   async function submit(status: "attending" | "not_attending", explanation?: string) {
     setSubmitting(true);
-    const { error } = await supabase.rpc("respond_to_rsvp", { _token: token, _status: status, _reason: explanation ?? null });
+    const { error } = await supabase.rpc("respond_to_rsvp", { _token: token, _status: status, _reason: explanation });
     setSubmitting(false);
     if (error) { setError("Could not save your response. Please try again."); return; }
     setCtx((prev) => prev ? { ...prev, status, reason: explanation ?? null, responded_at: new Date().toISOString() } : prev);
