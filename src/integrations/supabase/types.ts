@@ -629,6 +629,79 @@ export type Database = {
           },
         ]
       }
+      daily_rsvps: {
+        Row: {
+          camp_id: string
+          camp_session_id: string
+          created_at: string
+          id: string
+          overridden_at: string | null
+          overridden_by: string | null
+          reason: string | null
+          registration_id: string
+          reminder_evening_sent_at: string | null
+          reminder_morning_sent_at: string | null
+          responded_at: string | null
+          rsvp_token: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          camp_id: string
+          camp_session_id: string
+          created_at?: string
+          id?: string
+          overridden_at?: string | null
+          overridden_by?: string | null
+          reason?: string | null
+          registration_id: string
+          reminder_evening_sent_at?: string | null
+          reminder_morning_sent_at?: string | null
+          responded_at?: string | null
+          rsvp_token?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          camp_id?: string
+          camp_session_id?: string
+          created_at?: string
+          id?: string
+          overridden_at?: string | null
+          overridden_by?: string | null
+          reason?: string | null
+          registration_id?: string
+          reminder_evening_sent_at?: string | null
+          reminder_morning_sent_at?: string | null
+          responded_at?: string | null
+          rsvp_token?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_rsvps_camp_id_fkey"
+            columns: ["camp_id"]
+            isOneToOne: false
+            referencedRelation: "camps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_rsvps_camp_session_id_fkey"
+            columns: ["camp_session_id"]
+            isOneToOne: false
+            referencedRelation: "camp_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_rsvps_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drill_categories: {
         Row: {
           created_at: string
@@ -1777,6 +1850,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_rsvp_by_token: { Args: { _token: string }; Returns: Json }
       has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -1788,6 +1862,10 @@ export type Database = {
       is_conversation_member: {
         Args: { _conv: string; _user: string }
         Returns: boolean
+      }
+      respond_to_rsvp: {
+        Args: { _reason?: string; _status: string; _token: string }
+        Returns: Json
       }
     }
     Enums: {
