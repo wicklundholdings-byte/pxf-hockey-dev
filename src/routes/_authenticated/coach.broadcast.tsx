@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Megaphone, Bell, Calendar, Eye, Send } from "lucide-react";
+import { Megaphone, Bell, Calendar, Eye, Send, Mail, Smartphone } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/broadcast")({
   head: () => ({ meta: [{ title: "Broadcast — Coach" }] }),
@@ -18,6 +18,7 @@ function BroadcastScreen() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [push, setPush] = useState(true);
+  const [email, setEmail] = useState(true);
   const [when, setWhen] = useState<"now" | "schedule">("now");
   const [preview, setPreview] = useState(false);
 
@@ -62,10 +63,23 @@ function BroadcastScreen() {
           <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Hey team — due to rain we're moving…" className="mt-2 h-28 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
         </div>
 
-        <label className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-xs">
-          <span className="flex items-center gap-2"><Bell size={14} className="text-teal" /> Also send as push notification</span>
-          <input type="checkbox" checked={push} onChange={(e) => setPush(e.target.checked)} />
-        </label>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Channels</p>
+          <div className="mt-2 space-y-2">
+            <label className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-xs">
+              <span className="flex items-center gap-2"><Smartphone size={14} className="text-teal" /> In-app push notification <span className="text-muted-foreground">· all members</span></span>
+              <input type="checkbox" checked={push} onChange={(e) => setPush(e.target.checked)} className="accent-teal" />
+            </label>
+            <label className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-xs">
+              <span className="flex items-center gap-2"><Mail size={14} className="text-teal" /> Email <span className="text-muted-foreground">· opted-in contacts only</span></span>
+              <input type="checkbox" checked={email} onChange={(e) => setEmail(e.target.checked)} className="accent-teal" />
+            </label>
+            <p className="rounded-lg bg-surface/50 px-3 py-2 text-[10px] text-muted-foreground">
+              <Bell size={10} className="mr-1 inline text-teal" />
+              Contacts who opted out at registration still receive the in-app notification. Unsubscribe is handled automatically in every email.
+            </p>
+          </div>
+        </div>
 
         <div className="grid grid-cols-2 gap-2 text-xs">
           <button onClick={() => setWhen("now")} className={`rounded-lg border px-3 py-2 font-semibold ${when === "now" ? "border-teal bg-teal/10 text-teal" : "border-border text-muted-foreground"}`}>Send Now</button>
