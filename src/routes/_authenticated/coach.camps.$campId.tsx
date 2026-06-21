@@ -5,6 +5,7 @@ import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, 
 import { StatusBadge } from "@/components/coach/status-badge";
 import { QRScannerModal } from "@/components/coach/qr-scanner";
 import { ApplyCampTemplate } from "@/components/coach/apply-camp-template";
+import { DailyAttendance } from "@/components/coach/daily-attendance";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/$campId")({
   component: CampDetailPage,
@@ -40,7 +41,7 @@ type Wait = {
 };
 type Media = { id: string; storage_path: string; created_at: string };
 
-type Tab = "overview" | "description" | "options" | "roster" | "waitlist" | "plans" | "sessions" | "evaluations" | "media";
+type Tab = "overview" | "description" | "options" | "roster" | "rsvp" | "waitlist" | "plans" | "sessions" | "evaluations" | "media";
 
 function fmt(d: string | null) {
   if (!d) return "TBA";
@@ -106,6 +107,7 @@ function CampDetailPage() {
     { id: "description", label: "Description" },
     { id: "options", label: "Order Options" },
     { id: "roster", label: "Roster", count: regs.length },
+    { id: "rsvp", label: "Daily RSVP", count: sessions.length },
     { id: "waitlist", label: "Waitlist", count: wait.length },
     { id: "plans", label: "Session Plans", count: sessions.length },
     { id: "sessions", label: "Attendance", count: sessions.length },
@@ -210,6 +212,7 @@ function CampDetailPage() {
       {tab === "description" && <DescriptionTab camp={camp} />}
       {tab === "options" && <OptionsTab camp={camp} />}
       {tab === "roster" && <RosterTab regs={regs} />}
+      {tab === "rsvp" && <DailyAttendance campId={campId} sessions={sessions} regs={regs} />}
       {tab === "waitlist" && <WaitlistTab entries={wait} />}
       {tab === "plans" && <PlansTab sessions={sessions} campId={campId} />}
       {tab === "sessions" && <SessionsTab sessions={sessions} regs={regs} campId={campId} />}
