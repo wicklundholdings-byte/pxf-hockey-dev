@@ -52,10 +52,11 @@ function BookingPage() {
   const [paymentPlan, setPaymentPlan] = useState<"none" | "two" | "three">("none");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<
-    | { kind: "registered"; amountCents: number; count: number; paymentPlan: "none" | "two" | "three" }
+    | { kind: "registered"; amountCents: number; count: number; paymentPlan: "none" | "two" | "three"; registrationIds: string[] }
     | { kind: "waitlisted"; count: number }
     | null
   >(null);
+  const [qrDataUrls, setQrDataUrls] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState("");
   const [coupon, setCoupon] = useState<{ baseCents: number; discountCents: number; finalCents: number; label: string } | null>(null);
@@ -65,6 +66,14 @@ function BookingPage() {
   const [waiverMode, setWaiverMode] = useState<"drawn" | "typed">("drawn");
   const [waiverTyped, setWaiverTyped] = useState("");
   const [waiverDrawn, setWaiverDrawn] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (result && result.kind === "registered") {
+      Promise.all(
+        result.registrationIds.map((id) => QRCode.toDataURL(id, { width: 280, margin: 1 })),
+      ).then(setQrDataUrls);
+    }
+  }, [result]);
 
   useEffect(() => {
     (async () => {
