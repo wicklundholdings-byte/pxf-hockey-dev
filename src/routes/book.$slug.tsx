@@ -290,20 +290,50 @@ function BookingPage() {
           {step === 2 && (
             <div className="space-y-3">
               <h2 className="font-display text-lg font-bold text-foreground">Athlete details</h2>
-              <Input label="Player name" value={attendee.full_name} onChange={(v) => setAttendee({ ...attendee, full_name: v })} />
-              <Input label="Birthday" type="date" value={attendee.birthday} onChange={(v) => setAttendee({ ...attendee, birthday: v })} />
-              <div className="grid grid-cols-2 gap-2">
-                <Input label="Position" value={attendee.position} onChange={(v) => setAttendee({ ...attendee, position: v })} />
-                <Input label="Skill level" value={attendee.skill_level} onChange={(v) => setAttendee({ ...attendee, skill_level: v })} />
-                <Input label="Handedness" value={attendee.handedness} onChange={(v) => setAttendee({ ...attendee, handedness: v })} />
-                <Input label="Jersey #" value={attendee.jersey_number} onChange={(v) => setAttendee({ ...attendee, jersey_number: v })} />
-              </div>
+              {athletes.map((a, idx) => (
+                <div key={idx} className="space-y-2 rounded-2xl border border-border bg-surface p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-teal">
+                      Child {idx + 1}
+                      {idx > 0 && siblingPct > 0 && (
+                        <span className="ml-2 rounded-full bg-teal/15 px-2 py-0.5 text-[9px] text-teal">
+                          {siblingPct}% sibling off
+                        </span>
+                      )}
+                    </span>
+                    {athletes.length > 1 && (
+                      <button
+                        onClick={() => setAthletes(athletes.filter((_, i) => i !== idx))}
+                        className="text-muted-foreground"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                  <Input label="Player name" value={a.full_name} onChange={(v) => setAthletes(athletes.map((x, i) => i === idx ? { ...x, full_name: v } : x))} />
+                  <Input label="Birthday" type="date" value={a.birthday} onChange={(v) => setAthletes(athletes.map((x, i) => i === idx ? { ...x, birthday: v } : x))} />
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input label="Position" value={a.position} onChange={(v) => setAthletes(athletes.map((x, i) => i === idx ? { ...x, position: v } : x))} />
+                    <Input label="Skill level" value={a.skill_level} onChange={(v) => setAthletes(athletes.map((x, i) => i === idx ? { ...x, skill_level: v } : x))} />
+                    <Input label="Handedness" value={a.handedness} onChange={(v) => setAthletes(athletes.map((x, i) => i === idx ? { ...x, handedness: v } : x))} />
+                    <Input label="Jersey #" value={a.jersey_number} onChange={(v) => setAthletes(athletes.map((x, i) => i === idx ? { ...x, jersey_number: v } : x))} />
+                  </div>
+                </div>
+              ))}
+              {athletes.length < 6 && (
+                <button
+                  onClick={() => setAthletes([...athletes, blankAthlete()])}
+                  className="flex w-full items-center justify-center gap-1 rounded-2xl border border-dashed border-border bg-surface py-3 text-xs font-semibold text-teal"
+                >
+                  <Plus size={14} /> Add another child{camp.sibling_discount && siblingPct > 0 ? ` (${siblingPct}% sibling discount)` : ""}
+                </button>
+              )}
               <div className="mt-4 flex gap-2">
                 <button onClick={() => setStep(1)} className="flex-1 rounded-full border border-border bg-surface py-3 text-sm font-semibold text-foreground">
                   Back
                 </button>
                 <button
-                  disabled={!attendee.full_name}
+                  disabled={athletes.some((a) => !a.full_name.trim())}
                   onClick={() => setStep(3)}
                   className="flex-1 rounded-full bg-teal py-3 text-sm font-bold text-black disabled:opacity-40"
                 >
@@ -316,8 +346,11 @@ function BookingPage() {
           {step === 3 && (
             <div className="space-y-3">
               <h2 className="font-display text-lg font-bold text-foreground">Review & confirm</h2>
-              {fields.length > 0 && (
-                <div className="space-y-3">
+              {fields.length > 0 && athletes.map((a, idx) => (
+                <div key={idx} className="space-y-2 rounded-2xl border border-border bg-surface p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-teal">
+                    {a.full_name || `Child ${idx + 1}`} — extra info
+                  </p>
                   {fields.map((f) => (
                     <div key={f.id}>
                       <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -325,9 +358,9 @@ function BookingPage() {
                       </label>
                       {f.field_type === "select" && f.options ? (
                         <select
-                          value={customs[f.id] ?? ""}
-                          onChange={(e) => setCustoms({ ...customs, [f.id]: e.target.value })}
-                          className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground"
+                          value={a.customs[f.id] ?? ""}
+                          onChange={(e) => setAthletes(athletes.map((x, i) => i === idx ? { ...x, customs: { ...x.customs, [f.id]: e.target.value } } : x))}
+                          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
                         >
                           <option value="">—</option>
                           {f.options.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -335,32 +368,67 @@ function BookingPage() {
                       ) : (
                         <input
                           type={f.field_type === "number" ? "number" : "text"}
-                          value={customs[f.id] ?? ""}
-                          onChange={(e) => setCustoms({ ...customs, [f.id]: e.target.value })}
-                          className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground focus:border-teal focus:outline-none"
+                          value={a.customs[f.id] ?? ""}
+                          onChange={(e) => setAthletes(athletes.map((x, i) => i === idx ? { ...x, customs: { ...x.customs, [f.id]: e.target.value } } : x))}
+                          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-teal focus:outline-none"
                         />
                       )}
                     </div>
                   ))}
                 </div>
-              )}
+              ))}
 
               <div className="mt-4 space-y-2 rounded-2xl border border-border bg-surface p-3 text-xs">
                 <Row k="Parent" v={parent.full_name} />
                 <Row k="Email" v={parent.email} />
-                <Row k="Athlete" v={attendee.full_name} />
+                {athletes.map((a, i) => (
+                  <Row
+                    key={i}
+                    k={a.full_name || `Child ${i + 1}`}
+                    v={`$${(childBases[i] / 100).toFixed(0)}${i > 0 && siblingPct > 0 ? ` (−${siblingPct}%)` : ""}`}
+                  />
+                ))}
+                {!isFull && athletes.length > 1 && (
+                  <Row k="Subtotal" v={`$${(subtotal / 100).toFixed(0)}`} />
+                )}
                 {!isFull && coupon && (
-                  <>
-                    <Row k="Subtotal" v={`$${(coupon.baseCents / 100).toFixed(0)}`} />
-                    <Row k={`Coupon (${coupon.label})`} v={`-$${(coupon.discountCents / 100).toFixed(0)}`} />
-                  </>
+                  <Row k={`Coupon (${coupon.label})`} v={`-$${(couponDiscount / 100).toFixed(0)}`} />
                 )}
                 <Row
                   k={isFull ? "Status" : "Total"}
-                  v={isFull ? "Waitlist" : `$${((coupon?.finalCents ?? price) / 100).toFixed(0)}`}
+                  v={isFull ? "Waitlist" : `$${(totalCents / 100).toFixed(0)}`}
                   highlight
                 />
               </div>
+
+              {!isFull && camp.payment_plan !== "none" && (
+                <div className="rounded-2xl border border-border bg-surface p-3">
+                  <p className="mb-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <CalendarClock size={11} /> Payment plan
+                  </p>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {([
+                      { v: "none" as const, label: "Pay in full" },
+                      camp.payment_plan === "two" || camp.payment_plan === "three" ? { v: "two" as const, label: "2 payments" } : null,
+                      camp.payment_plan === "three" ? { v: "three" as const, label: "3 payments" } : null,
+                    ].filter(Boolean) as { v: "none" | "two" | "three"; label: string }[]).map((opt) => (
+                      <button
+                        key={opt.v}
+                        onClick={() => setPaymentPlan(opt.v)}
+                        className={"rounded-lg border px-2 py-2 text-[10px] font-semibold " +
+                          (paymentPlan === opt.v ? "border-teal bg-teal/10 text-teal" : "border-border bg-background text-muted-foreground")}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                  {paymentPlan !== "none" && (
+                    <p className="mt-2 text-[11px] text-muted-foreground">
+                      ≈ ${(installmentAmount / 100).toFixed(0)} due today, then {installments - 1} monthly {installments - 1 === 1 ? "payment" : "payments"}.
+                    </p>
+                  )}
+                </div>
+              )}
 
               {!isFull && (
                 <div className="rounded-2xl border border-dashed border-border bg-surface p-3">
