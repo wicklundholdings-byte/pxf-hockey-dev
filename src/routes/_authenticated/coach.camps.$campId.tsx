@@ -375,7 +375,36 @@ function RosterTab({ regs }: { regs: Reg[] }) {
 }
 
 function WaitlistTab({ entries }: { entries: Wait[] }) {
-  if (entries.length === 0) {
+  const [local, setLocal] = useState<Wait[]>(entries);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  async function invite(w: Wait) {
+    setBusyId(w.id);
+    const phone = w.contacts?.phone ?? null;
+    const name = w.contacts?.full_name ?? "there";
+    const childName = w.attendees?.full_name ?? "your child";
+    const { data: u } = await supabase.auth.getUser();
+    const ownerId = u.user?.id;
+    if (ownerId) {
+      await supabase.from("sms_logs").insert({
+        owner_id: ownerId,
+        recipient_phone: phone,
+        recipient_name: name,
+        body: `Hi ${name}, a spot just opened for ${childName}! Reply YES within 24 hours to claim it.`,
+        kind: "waitlist_promo",
+        status: phone ? "queued" : "mock",
+      });
+    }
+    const now = new Date().toISOString();
+    await supabase
+      .from("waitlist_entries")
+      .update({ promoted_at: now, notified_at: now, status: "invited" })
+      .eq("id", w.id);
+    setLocal((prev) => prev.map((e) => (e.id === w.id ? { ...e, status: "invited" } : e)));
+    setBusyId(null);
+  }
+
+  if (local.length === 0) {
     return (
       <p className="rounded-2xl border border-border bg-card p-6 text-center text-xs text-muted-foreground">
         Waitlist is empty.
@@ -384,22 +413,35 @@ function WaitlistTab({ entries }: { entries: Wait[] }) {
   }
   return (
     <ul className="space-y-2">
-      {entries.map((w, i) => (
-        <li key={w.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
-          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-400/15 text-[10px] font-bold text-amber-400">
-            #{w.position ?? i + 1}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-foreground">
-              {w.attendees?.full_name ?? w.contacts?.full_name ?? "Unknown"}
-            </p>
-            <p className="truncate text-[10px] text-muted-foreground">
-              {w.contacts?.email ?? ""} {w.contacts?.phone ? `· ${w.contacts.phone}` : ""}
-            </p>
-          </div>
-          <button className="rounded-full bg-teal px-3 py-1 text-[10px] font-bold text-black">Invite</button>
-        </li>
-      ))}
+      {local.map((w, i) => {
+        const invited = w.status === "invited";
+        return (
+          <li key={w.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
+            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-400/15 text-[10px] font-bold text-amber-400">
+              #{w.position ?? i + 1}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-foreground">
+                {w.attendees?.full_name ?? w.contacts?.full_name ?? "Unknown"}
+              </p>
+              <p className="truncate text-[10px] text-muted-foreground">
+                {w.contacts?.email ?? ""} {w.contacts?.phone ? `· ${w.contacts.phone}` : ""}
+              </p>
+            </div>
+            {invited ? (
+              <span className="rounded-full bg-emerald-400/15 px-3 py-1 text-[10px] font-bold text-emerald-400">Invited ✓</span>
+            ) : (
+              <button
+                onClick={() => invite(w)}
+                disabled={busyId === w.id}
+                className="rounded-full bg-teal px-3 py-1 text-[10px] font-bold text-black disabled:opacity-50"
+              >
+                {busyId === w.id ? "…" : "Invite"}
+              </button>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
