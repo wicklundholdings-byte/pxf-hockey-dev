@@ -449,6 +449,8 @@ function WaitlistTab({ entries }: { entries: Wait[] }) {
 function SessionsTab({ sessions, regs, campId }: { sessions: Session[]; regs: Reg[]; campId: string }) {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(sessions[0]?.id ?? null);
   const [attendance, setAttendance] = useState<Map<string, boolean>>(new Map());
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scanFlash, setScanFlash] = useState<string | null>(null);
 
   useEffect(() => {
     if (!activeSessionId) return;
@@ -463,16 +465,35 @@ function SessionsTab({ sessions, regs, campId }: { sessions: Session[]; regs: Re
       });
   }, [activeSessionId]);
 
-  async function toggle(regId: string) {
+  async function mark(regId: string, present: boolean, method: "manual" | "qr") {
     if (!activeSessionId) return;
-    const next = !(attendance.get(regId) ?? false);
     const m = new Map(attendance);
-    m.set(regId, next);
+    m.set(regId, present);
     setAttendance(m);
     await supabase.from("attendance").upsert(
-      { registration_id: regId, session_id: activeSessionId, present: next, marked_at: new Date().toISOString() },
+      { registration_id: regId, session_id: activeSessionId, present, marked_at: new Date().toISOString(), method },
       { onConflict: "registration_id,session_id" },
     );
+  }
+
+  async function toggle(regId: string) {
+    await mark(regId, !(attendance.get(regId) ?? false), "manual");
+  }
+
+  function handleScan(text: string) {
+    setScannerOpen(false);
+    // QR encodes registration_id (uuid). Match against paid registrations.
+    const id = text.trim();
+    const reg = regs.find((r) => r.id === id || r.id.startsWith(id) || id.includes(r.id));
+    if (!reg) {
+      setScanFlash("✗ Unknown QR code");
+      setTimeout(() => setScanFlash(null), 2500);
+      return;
+    }
+    mark(reg.id, true, "qr");
+    const name = reg.attendees?.full_name ?? reg.contacts?.full_name ?? "Attendee";
+    setScanFlash(`✓ ${name} checked in`);
+    setTimeout(() => setScanFlash(null), 2500);
   }
 
   if (sessions.length === 0) {
@@ -484,9 +505,31 @@ function SessionsTab({ sessions, regs, campId }: { sessions: Session[]; regs: Re
   }
 
   const paid = regs.filter((r) => r.status === "paid");
+  const presentCount = paid.filter((r) => attendance.get(r.id)).length;
+  const unscannedCount = paid.length - presentCount;
 
   return (
     <div className="space-y-3">
+      <div className="flex items-center gap-2 rounded-2xl border border-border bg-card p-3">
+        <div className="flex-1 grid grid-cols-3 gap-2 text-center">
+          <div><p className="text-[9px] uppercase text-muted-foreground">Present</p><p className="text-sm font-bold text-emerald-400">{presentCount}</p></div>
+          <div><p className="text-[9px] uppercase text-muted-foreground">Absent</p><p className="text-sm font-bold text-amber-400">{unscannedCount}</p></div>
+          <div><p className="text-[9px] uppercase text-muted-foreground">Total</p><p className="text-sm font-bold text-foreground">{paid.length}</p></div>
+        </div>
+        <button
+          onClick={() => setScannerOpen(true)}
+          disabled={!activeSessionId || paid.length === 0}
+          className="flex items-center gap-1.5 rounded-full bg-teal px-3 py-2 text-[11px] font-bold text-black disabled:opacity-40"
+        >
+          <QrCode size={14} /> Scan
+        </button>
+      </div>
+      {scanFlash && (
+        <div className="rounded-xl border border-border bg-surface px-3 py-2 text-center text-xs font-semibold text-foreground">
+          {scanFlash}
+        </div>
+      )}
+
       <div className="-mx-5 overflow-x-auto px-5">
         <div className="flex gap-2">
           {sessions.map((s, i) => {
@@ -536,6 +579,9 @@ function SessionsTab({ sessions, regs, campId }: { sessions: Session[]; regs: Re
         </ul>
       )}
       <p className="text-center text-[10px] text-muted-foreground">Camp ID: {campId.slice(0, 8)}</p>
+      {scannerOpen && (
+        <QRScannerModal onScan={handleScan} onClose={() => setScannerOpen(false)} />
+      )}
     </div>
   );
 }
