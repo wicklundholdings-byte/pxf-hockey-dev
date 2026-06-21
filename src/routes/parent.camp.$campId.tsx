@@ -31,7 +31,7 @@ function daysUntil(d: string | null) {
 function ParentCampDetail() {
   const { campId } = useParams({ from: "/parent/camp/$campId" });
   const [camp, setCamp] = useState<{ id: string; name: string; venue_name: string | null; address: string | null; start_date: string | null; end_date: string | null } | null>(null);
-  const [sessions, setSessions] = useState<Array<{ id: string; session_date: string; start_time: string | null; end_time: string | null; title: string | null }>>([]);
+  const [sessions, setSessions] = useState<Array<{ id: string; session_date: string; start_time: string | null; end_time: string | null }>>([]);
   const [rosterCount, setRosterCount] = useState(0);
   const [tab, setTab] = useState<Tab>("schedule");
 
@@ -96,7 +96,6 @@ function ParentCampDetail() {
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-teal">Day {i + 1}</p>
                     <p className="text-sm font-semibold">{fmtDate(s.session_date)}</p>
-                    </p>}
                   </div>
                   <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                     <Clock size={11} /> {s.start_time ? `${fmtTime(s.start_time)} – ${fmtTime(s.end_time)}` : "TBA"}
@@ -144,7 +143,7 @@ function ParentCampDetail() {
   );
 }
 
-function InfoRow({ icon: Icon, body, sub }: { icon: typeof MapPin; title: string; body: string; sub?: string }) {
+function InfoRow({ icon: Icon, title, body, sub }: { icon: typeof MapPin; title: string; body: string; sub?: string }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-4">
       <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider"><Icon size={12} className="text-teal" /> {title}</h3>
