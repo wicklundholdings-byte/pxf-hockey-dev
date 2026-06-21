@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft, Pencil, Calendar as CalendarIcon, Clock, Users, BarChart3, Disc3,
   Wrench, ListChecks, GripVertical, Trash2, ChevronRight, Plus, Copy, CheckCircle2,
-  Play, X, SkipForward, Save, Pause, RotateCcw, Video, Image as ImageIcon, Minus,
+  Play, X, SkipForward, Save, Pause, RotateCcw, Video, Image as ImageIcon, Minus, Printer,
 } from "lucide-react";
 import { DRILLS, findDrill, type Category, type Drill } from "@/data/pxf";
 
@@ -183,6 +183,56 @@ function SessionDetail() {
     navigate({ to: "/saved-sessions" });
   }
 
+  function exportPDF() {
+    if (!session || typeof window === "undefined") return;
+    const escape = (s: string) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+    const total = session.blocks.reduce((t, b) => t + b.mins, 0);
+    const rows = session.blocks.map((b, i) => {
+      const d = findDrill(b.drillId);
+      return `
+        <tr>
+          <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;width:32px;font-weight:700;color:#0f766e;">${i + 1}</td>
+          <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;">
+            <div style="font-weight:700;font-size:14px;">${escape(d?.name ?? "Drill")}</div>
+            ${d?.category ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;">${escape(d.category)}</div>` : ""}
+            ${b.notes ? `<div style="font-size:11px;color:#374151;margin-top:4px;">${escape(b.notes)}</div>` : ""}
+          </td>
+          <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700;white-space:nowrap;">${b.mins} min</td>
+        </tr>`;
+    }).join("");
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${escape(session.name)} — Session Plan</title>
+      <style>
+        body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#111;margin:32px;}
+        h1{margin:0 0 4px;font-size:24px;}
+        .meta{color:#6b7280;font-size:12px;margin-bottom:18px;}
+        .summary{display:flex;gap:16px;border:1px solid #e5e7eb;border-radius:12px;padding:12px 16px;margin-bottom:18px;}
+        .summary div{font-size:12px;color:#6b7280;}
+        .summary div b{display:block;font-size:18px;color:#111;}
+        table{width:100%;border-collapse:collapse;}
+        th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;padding:6px 8px;border-bottom:2px solid #111;}
+        .foot{margin-top:24px;font-size:10px;color:#9ca3af;text-align:center;}
+        @media print{@page{margin:18mm;}}
+      </style></head><body>
+      <h1>${escape(session.name)}</h1>
+      <div class="meta">${formatDate(session.date)} · ${escape(session.age)} · ${escape(session.level)}</div>
+      <div class="summary">
+        <div><b>${total} min</b>Total time</div>
+        <div><b>${session.blocks.length}</b>Drills</div>
+        <div><b>${uniqueFocuses(session.blocks).join(", ") || "—"}</b>Focus</div>
+      </div>
+      <table>
+        <thead><tr><th>#</th><th>Drill</th><th style="text-align:right;">Time</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      ${session.notes ? `<p style="margin-top:18px;font-size:12px;"><b>Notes:</b> ${escape(session.notes)}</p>` : ""}
+      <div class="foot">PXF Hockey · Session Plan</div>
+      <script>window.onload=()=>{setTimeout(()=>window.print(),200);};</script>
+      </body></html>`;
+    const w = window.open("", "_blank", "width=820,height=900");
+    if (!w) { setToast("Allow pop-ups to export"); return; }
+    w.document.open(); w.document.write(html); w.document.close();
+  }
+
   return (
     <div className="pb-40">
       {/* Header */}
@@ -204,6 +254,13 @@ function SessionDetail() {
             <Pencil size={16} />
           </button>
         </div>
+
+        <button
+          onClick={exportPDF}
+          className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-surface px-3 py-1.5 text-[11px] font-bold text-foreground"
+        >
+          <Printer size={12} /> Export PDF
+        </button>
 
         {editingName ? (
           <input
