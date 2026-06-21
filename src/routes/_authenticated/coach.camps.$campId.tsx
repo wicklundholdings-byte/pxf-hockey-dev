@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X, ListChecks, BookOpen } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X, ListChecks, BookOpen, ListPlus, ShieldCheck } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/$campId")({
@@ -16,6 +16,8 @@ type Camp = {
   hero_image: string | null; venue_name: string | null; address: string | null;
   location_type: string; description: string | null; format: string;
   early_bird_price_cents: number | null; early_bird_expires_at: string | null;
+  waiver_required: boolean; waiver_text: string | null;
+  payment_plan: string; sibling_discount: boolean;
 };
 type Reg = {
   id: string; camp_id: string; attendee_id: string | null; contact_id: string | null;
@@ -622,95 +624,350 @@ function DescriptionTab({ camp }: { camp: Camp }) {
   );
 }
 
+type CouponRow = {
+  id: string; code: string;
+  percent_off: number | null; amount_off_cents: number | null;
+  expires_at: string | null; usage_limit: number | null; used_count: number;
+};
+type FieldRow = {
+  id: string; label: string; field_type: string;
+  options: string[]; required: boolean; sort_order: number;
+};
+
 function OptionsTab({ camp }: { camp: Camp }) {
+  // Pricing + capacity
   const [price, setPrice] = useState((camp.price_cents / 100).toString());
   const [capacity, setCapacity] = useState(String(camp.capacity));
   const [ebPrice, setEbPrice] = useState(((camp.early_bird_price_cents ?? 0) / 100).toString());
   const [ebDate, setEbDate] = useState(camp.early_bird_expires_at?.slice(0, 10) ?? "");
-  const [plans, setPlans] = useState(true);
-  const [plan2, setPlan2] = useState(true);
-  const [plan3, setPlan3] = useState(false);
-  const [coupons] = useState([
-    { code: "EARLY25", off: "25% off", uses: "12 / 50" },
-    { code: "TEAM10", off: "$10 off", uses: "3 / ∞" },
-  ]);
+  // Payment plan
+  const [paymentPlan, setPaymentPlan] = useState<string>(camp.payment_plan ?? "none");
+  const [siblingDiscount, setSiblingDiscount] = useState<boolean>(camp.sibling_discount);
+  // Waiver
+  const [waiverRequired, setWaiverRequired] = useState<boolean>(camp.waiver_required);
+  const [waiverText, setWaiverText] = useState<string>(camp.waiver_text ?? "");
+  // Persisted records
+  const [coupons, setCoupons] = useState<CouponRow[]>([]);
+  const [fields, setFields] = useState<FieldRow[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [savedTick, setSavedTick] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const [{ data: cps }, { data: fs }] = await Promise.all([
+        supabase.from("coupons").select("*").eq("camp_id", camp.id).order("created_at", { ascending: false }),
+        supabase.from("camp_custom_fields").select("*").eq("camp_id", camp.id).order("sort_order"),
+      ]);
+      setCoupons((cps ?? []) as unknown as CouponRow[]);
+      setFields((fs ?? []) as unknown as FieldRow[]);
+    })();
+  }, [camp.id]);
+
+  async function saveCamp() {
+    setSaving(true);
+    const eb = parseFloat(ebPrice || "0");
+    const updates = {
+      price_cents: Math.round(parseFloat(price || "0") * 100),
+      capacity: parseInt(capacity || "0", 10),
+      payment_plan: paymentPlan as "none" | "two" | "three",
+      sibling_discount: siblingDiscount,
+      waiver_required: waiverRequired,
+      waiver_text: waiverText || null,
+      early_bird_price_cents: eb > 0 ? Math.round(eb * 100) : null,
+      early_bird_expires_at: ebDate ? new Date(ebDate).toISOString() : null,
+    };
+    await supabase.from("camps").update(updates).eq("id", camp.id);
+    setSaving(false);
+    setSavedTick(true);
+    setTimeout(() => setSavedTick(false), 1500);
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-start gap-2 rounded-xl border border-amber-400/30 bg-amber-400/5 p-2.5">
         <Settings2 size={12} className="mt-0.5 shrink-0 text-amber-400" />
         <p className="text-[10px] leading-relaxed text-amber-200/90">
-          Change pricing and availability after publishing. Already-paid registrations keep their original price.
+          Configure registration. Pricing changes don't affect already-paid registrations.
         </p>
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-3">
         <h3 className="mb-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
-          <DollarSign size={11} /> Pricing
+          <DollarSign size={11} /> Pricing & capacity
         </h3>
         <div className="grid grid-cols-2 gap-2">
           <Field label="Standard price ($)" value={price} onChange={setPrice} />
           <Field label="Available spots" value={capacity} onChange={setCapacity} />
+          <Field label="Early bird price ($)" value={ebPrice} onChange={setEbPrice} />
+          <Field label="Early bird ends" value={ebDate} onChange={setEbDate} type="date" />
         </div>
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-3">
         <h3 className="mb-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
-          <Tag size={11} /> Early bird
+          <CreditCard size={11} /> Payment plans
         </h3>
-        <div className="grid grid-cols-2 gap-2">
-          <Field label="Early bird price ($)" value={ebPrice} onChange={setEbPrice} />
-          <Field label="Expires on" value={ebDate} onChange={setEbDate} type="date" />
+        <div className="grid grid-cols-3 gap-1.5">
+          {[
+            { v: "none", label: "Pay in full" },
+            { v: "two", label: "2 installments" },
+            { v: "three", label: "3 installments" },
+          ].map((opt) => (
+            <button
+              key={opt.v}
+              onClick={() => setPaymentPlan(opt.v)}
+              className={"rounded-lg border px-2 py-2 text-[10px] font-semibold " +
+                (paymentPlan === opt.v ? "border-teal bg-teal/10 text-teal" : "border-border bg-surface text-muted-foreground")}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
+        <label className="mt-2 flex items-center gap-2 rounded-lg bg-surface px-3 py-2 text-xs text-foreground">
+          <input type="checkbox" checked={siblingDiscount} onChange={(e) => setSiblingDiscount(e.target.checked)} className="h-3.5 w-3.5" />
+          Offer sibling discount on additional children
+        </label>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-3">
-        <div className="flex items-center justify-between">
-          <h3 className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
-            <CreditCard size={11} /> Payment plans
-          </h3>
-          <button onClick={() => setPlans(!plans)} className={"rounded-full px-2.5 py-0.5 text-[10px] font-bold " + (plans ? "bg-teal text-black" : "bg-surface text-muted-foreground")}>
-            {plans ? "On" : "Off"}
-          </button>
-        </div>
-        {plans && (
-          <div className="mt-2 space-y-1.5">
-            <label className="flex items-center gap-2 rounded-lg bg-surface px-3 py-2 text-xs text-foreground">
-              <input type="checkbox" checked={plan2} onChange={() => setPlan2(!plan2)} className="h-3.5 w-3.5" />
-              2 installments — Today + 30 days
-            </label>
-            <label className="flex items-center gap-2 rounded-lg bg-surface px-3 py-2 text-xs text-foreground">
-              <input type="checkbox" checked={plan3} onChange={() => setPlan3(!plan3)} className="h-3.5 w-3.5" />
-              3 installments — Today + 30 + 60 days
-            </label>
-          </div>
-        )}
+      <WaiverEditor
+        required={waiverRequired}
+        setRequired={setWaiverRequired}
+        text={waiverText}
+        setText={setWaiverText}
+      />
+
+      <PromoCodesPanel campId={camp.id} coupons={coupons} setCoupons={setCoupons} />
+
+      <CustomFieldsPanel campId={camp.id} fields={fields} setFields={setFields} />
+
+      <button
+        onClick={saveCamp}
+        disabled={saving}
+        className="w-full rounded-full bg-teal py-3 text-sm font-bold text-black disabled:opacity-50"
+      >
+        {saving ? "Saving…" : savedTick ? "Saved ✓" : "Save event settings"}
+      </button>
+    </div>
+  );
+}
+
+function WaiverEditor({
+  required, setRequired, text, setText,
+}: { required: boolean; setRequired: (v: boolean) => void; text: string; setText: (v: string) => void }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-3">
+      <div className="flex items-center justify-between">
+        <h3 className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
+          <ShieldCheck size={11} /> Liability waiver
+        </h3>
+        <button
+          onClick={() => setRequired(!required)}
+          className={"rounded-full px-2.5 py-0.5 text-[10px] font-bold " +
+            (required ? "bg-teal text-black" : "bg-surface text-muted-foreground")}
+        >
+          {required ? "Required" : "Off"}
+        </button>
+      </div>
+      {required && (
+        <>
+          <p className="mt-2 text-[10px] text-muted-foreground">
+            Parents must agree and sign this text before completing registration.
+          </p>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={6}
+            placeholder="Paste or write your liability waiver text…"
+            className="mt-2 w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs text-foreground focus:border-teal focus:outline-none"
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+function PromoCodesPanel({
+  campId, coupons, setCoupons,
+}: { campId: string; coupons: CouponRow[]; setCoupons: (c: CouponRow[]) => void }) {
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState("");
+  const [type, setType] = useState<"percent" | "amount">("percent");
+  const [val, setVal] = useState("");
+  const [limit, setLimit] = useState("");
+  const [expires, setExpires] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+
+  async function add() {
+    setErr(null);
+    if (!code.trim() || !val.trim()) { setErr("Code and value are required"); return; }
+    const { data: u } = await supabase.auth.getUser();
+    const ownerId = u.user?.id;
+    if (!ownerId) { setErr("Not signed in"); return; }
+    const row = {
+      owner_id: ownerId,
+      camp_id: campId,
+      code: code.trim().toUpperCase(),
+      percent_off: type === "percent" ? parseInt(val, 10) : null,
+      amount_off_cents: type === "amount" ? Math.round(parseFloat(val) * 100) : null,
+      usage_limit: limit ? parseInt(limit, 10) : null,
+      expires_at: expires ? new Date(expires).toISOString() : null,
+    };
+    const { data, error } = await supabase.from("coupons").insert(row).select("*").single();
+    if (error) { setErr(error.message); return; }
+    setCoupons([data as unknown as CouponRow, ...coupons]);
+    setCode(""); setVal(""); setLimit(""); setExpires(""); setOpen(false);
+  }
+
+  async function remove(id: string) {
+    await supabase.from("coupons").delete().eq("id", id);
+    setCoupons(coupons.filter((c) => c.id !== id));
+  }
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
+          <Tag size={11} /> Promo codes
+        </h3>
+        <button onClick={() => setOpen(!open)} className="flex items-center gap-1 rounded-full bg-teal px-2.5 py-1 text-[10px] font-bold text-black">
+          <Plus size={10} /> Add
+        </button>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-3">
-        <div className="mb-2 flex items-center justify-between">
-          <h3 className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
-            <Tag size={11} /> Active coupons
-          </h3>
-          <button className="flex items-center gap-1 rounded-full bg-teal px-2.5 py-1 text-[10px] font-bold text-black">
-            <Plus size={10} /> Add
-          </button>
-        </div>
-        <ul className="space-y-1.5">
-          {coupons.map((c) => (
-            <li key={c.code} className="flex items-center justify-between rounded-lg bg-surface px-3 py-2">
-              <div>
-                <p className="font-mono text-xs font-bold text-foreground">{c.code}</p>
-                <p className="text-[10px] text-muted-foreground">{c.off} · {c.uses}</p>
+      {open && (
+        <div className="mb-3 space-y-2 rounded-xl border border-border bg-surface p-2.5">
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="Code" value={code} onChange={(v) => setCode(v.toUpperCase())} />
+            <div>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Type</label>
+              <div className="flex gap-1">
+                <button onClick={() => setType("percent")} className={"flex-1 rounded-md px-2 py-2 text-[10px] font-bold " + (type === "percent" ? "bg-teal text-black" : "bg-card text-muted-foreground")}>% off</button>
+                <button onClick={() => setType("amount")} className={"flex-1 rounded-md px-2 py-2 text-[10px] font-bold " + (type === "amount" ? "bg-teal text-black" : "bg-card text-muted-foreground")}>$ off</button>
               </div>
-              <button className="text-muted-foreground hover:text-red-400"><X size={12} /></button>
+            </div>
+            <Field label={type === "percent" ? "Percent" : "Amount ($)"} value={val} onChange={setVal} />
+            <Field label="Usage limit (opt)" value={limit} onChange={setLimit} />
+            <Field label="Expires (opt)" value={expires} onChange={setExpires} type="date" />
+          </div>
+          {err && <p className="text-[10px] text-red-400">{err}</p>}
+          <div className="flex gap-2">
+            <button onClick={() => setOpen(false)} className="flex-1 rounded-lg border border-border bg-card py-2 text-[10px] font-semibold text-muted-foreground">Cancel</button>
+            <button onClick={add} className="flex-1 rounded-lg bg-teal py-2 text-[10px] font-bold text-black">Create code</button>
+          </div>
+        </div>
+      )}
+
+      {coupons.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-border bg-surface px-3 py-3 text-center text-[10px] text-muted-foreground">
+          No promo codes yet.
+        </p>
+      ) : (
+        <ul className="space-y-1.5">
+          {coupons.map((c) => {
+            const off = c.percent_off ? `${c.percent_off}% off` : `$${((c.amount_off_cents ?? 0) / 100).toFixed(0)} off`;
+            const uses = `${c.used_count} / ${c.usage_limit ?? "∞"}`;
+            return (
+              <li key={c.id} className="flex items-center justify-between rounded-lg bg-surface px-3 py-2">
+                <div>
+                  <p className="font-mono text-xs font-bold text-foreground">{c.code}</p>
+                  <p className="text-[10px] text-muted-foreground">{off} · {uses}{c.expires_at ? ` · exp ${new Date(c.expires_at).toLocaleDateString()}` : ""}</p>
+                </div>
+                <button onClick={() => remove(c.id)} className="text-muted-foreground hover:text-red-400"><X size={12} /></button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+const FIELD_PRESETS: { label: string; type: string; options?: string[] }[] = [
+  { label: "Jersey size", type: "select", options: ["YS", "YM", "YL", "AS", "AM", "AL", "AXL"] },
+  { label: "Skill level", type: "select", options: ["Beginner", "Intermediate", "Advanced"] },
+  { label: "Position", type: "select", options: ["Forward", "Defense", "Goalie"] },
+  { label: "Medical conditions", type: "text" },
+  { label: "Allergies", type: "text" },
+  { label: "Emergency contact name", type: "text" },
+  { label: "Emergency contact phone", type: "text" },
+];
+
+function CustomFieldsPanel({
+  campId, fields, setFields,
+}: { campId: string; fields: FieldRow[]; setFields: (f: FieldRow[]) => void }) {
+  async function addPreset(preset: typeof FIELD_PRESETS[number]) {
+    if (fields.some((f) => f.label.toLowerCase() === preset.label.toLowerCase())) return;
+    const row = {
+      camp_id: campId,
+      label: preset.label,
+      field_type: preset.type,
+      options: preset.options ?? [],
+      required: false,
+      sort_order: fields.length,
+    };
+    const { data } = await supabase.from("camp_custom_fields").insert(row).select("*").single();
+    if (data) setFields([...fields, data as unknown as FieldRow]);
+  }
+  async function toggleRequired(f: FieldRow) {
+    await supabase.from("camp_custom_fields").update({ required: !f.required }).eq("id", f.id);
+    setFields(fields.map((x) => x.id === f.id ? { ...x, required: !x.required } : x));
+  }
+  async function remove(id: string) {
+    await supabase.from("camp_custom_fields").delete().eq("id", id);
+    setFields(fields.filter((f) => f.id !== id));
+  }
+  const activeLabels = new Set(fields.map((f) => f.label.toLowerCase()));
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-3">
+      <h3 className="mb-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
+        <ListPlus size={11} /> Custom registration form
+      </h3>
+      <p className="mb-2 text-[10px] text-muted-foreground">
+        Tap a field to add it to the parent registration form. Toggle required as needed.
+      </p>
+      <div className="mb-3 flex flex-wrap gap-1.5">
+        {FIELD_PRESETS.map((p) => {
+          const on = activeLabels.has(p.label.toLowerCase());
+          return (
+            <button
+              key={p.label}
+              onClick={() => !on && addPreset(p)}
+              disabled={on}
+              className={"rounded-full border px-2.5 py-1 text-[10px] font-semibold " +
+                (on ? "border-teal/40 bg-teal/10 text-teal/60" : "border-border bg-surface text-foreground hover:border-teal")}
+            >
+              {on ? "✓ " : "+ "}{p.label}
+            </button>
+          );
+        })}
+      </div>
+      {fields.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-border bg-surface px-3 py-3 text-center text-[10px] text-muted-foreground">
+          No custom fields added.
+        </p>
+      ) : (
+        <ul className="space-y-1.5">
+          {fields.map((f) => (
+            <li key={f.id} className="flex items-center justify-between rounded-lg bg-surface px-3 py-2">
+              <div className="min-w-0">
+                <p className="truncate text-xs font-semibold text-foreground">{f.label}</p>
+                <p className="text-[10px] text-muted-foreground">{f.field_type}{f.options?.length ? ` · ${f.options.length} options` : ""}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => toggleRequired(f)}
+                  className={"rounded-full px-2 py-0.5 text-[9px] font-bold uppercase " +
+                    (f.required ? "bg-amber-400/15 text-amber-400" : "bg-card text-muted-foreground")}
+                >
+                  {f.required ? "Required" : "Optional"}
+                </button>
+                <button onClick={() => remove(f.id)} className="text-muted-foreground hover:text-red-400"><X size={12} /></button>
+              </div>
             </li>
           ))}
         </ul>
-      </div>
-
-      <button className="w-full rounded-full bg-teal py-3 text-sm font-bold text-black">
-        Save changes
-      </button>
+      )}
     </div>
   );
 }

@@ -1,8 +1,9 @@
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { submitBooking, previewCoupon } from "@/lib/booking.functions";
-import { Calendar, MapPin, Clock, Users, CheckCircle2, Loader2, Tag, X } from "lucide-react";
+import { Calendar, MapPin, Clock, Users, CheckCircle2, Loader2, Tag, X, PenLine, Type as TypeIcon, FileText } from "lucide-react";
+
 
 export const Route = createFileRoute("/book/$slug")({
   component: BookingPage,
@@ -22,6 +23,8 @@ type Camp = {
   price_cents: number; early_bird_price_cents: number | null;
   early_bird_expires_at: string | null; capacity: number; show_remaining: boolean;
   status: string;
+  waiver_required: boolean;
+  waiver_text: string | null;
 };
 type Field = { id: string; label: string; field_type: string; options: string[] | null; required: boolean; sort_order: number };
 
@@ -37,7 +40,7 @@ function BookingPage() {
   const [paidCount, setPaidCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [parent, setParent] = useState({ full_name: "", email: "", phone: "" });
   const [attendee, setAttendee] = useState({ full_name: "", birthday: "", position: "", skill_level: "", handedness: "", jersey_number: "" });
   const [customs, setCustoms] = useState<Record<string, string>>({});
@@ -48,6 +51,10 @@ function BookingPage() {
   const [coupon, setCoupon] = useState<{ baseCents: number; discountCents: number; finalCents: number; label: string } | null>(null);
   const [couponErr, setCouponErr] = useState<string | null>(null);
   const [checkingCoupon, setCheckingCoupon] = useState(false);
+  const [waiverAgree, setWaiverAgree] = useState(false);
+  const [waiverMode, setWaiverMode] = useState<"drawn" | "typed">("drawn");
+  const [waiverTyped, setWaiverTyped] = useState("");
+  const [waiverDrawn, setWaiverDrawn] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -100,6 +107,15 @@ function BookingPage() {
     setSubmitting(true);
     setError(null);
     try {
+      const waiverPayload =
+        camp!.waiver_required && camp!.waiver_text
+          ? {
+              signer_name: parent.full_name,
+              signature_method: waiverMode,
+              signature_data: waiverMode === "typed" ? waiverTyped.trim() : (waiverDrawn ?? ""),
+              waiver_text_snapshot: camp!.waiver_text,
+            }
+          : null;
       const res = await submitBooking({
         data: {
           campId: camp!.id,
@@ -107,6 +123,7 @@ function BookingPage() {
           attendee,
           customFieldValues: customs,
           couponCode: coupon ? couponCode : null,
+          waiver: waiverPayload,
         },
       });
       setResult(res);
@@ -205,7 +222,7 @@ function BookingPage() {
 
         {/* Stepper */}
         <div className="mt-6 flex justify-center gap-2">
-          {[1, 2, 3].map((s) => (
+          {(camp.waiver_required ? [1, 2, 3, 4] : [1, 2, 3]).map((s) => (
             <div key={s} className={"h-1.5 w-12 rounded-full " + (s <= step ? "bg-teal" : "bg-surface")} />
           ))}
         </div>
@@ -340,14 +357,45 @@ function BookingPage() {
                   Back
                 </button>
                 <button
-                  onClick={handleSubmit}
+                  onClick={() => {
+                    if (camp.waiver_required && !isFull) {
+                      setStep(4);
+                    } else {
+                      handleSubmit();
+                    }
+                  }}
                   disabled={submitting}
                   className="flex-1 rounded-full bg-teal py-3 text-sm font-bold text-black disabled:opacity-40"
                 >
-                  {submitting ? "Submitting…" : isFull ? "Join waitlist" : "Confirm"}
+                  {submitting
+                    ? "Submitting…"
+                    : isFull
+                      ? "Join waitlist"
+                      : camp.waiver_required
+                        ? "Continue to waiver"
+                        : "Confirm"}
                 </button>
               </div>
             </div>
+          )}
+
+          {step === 4 && camp.waiver_required && (
+            <WaiverStep
+              waiverText={camp.waiver_text ?? ""}
+              signerName={parent.full_name}
+              agree={waiverAgree}
+              setAgree={setWaiverAgree}
+              mode={waiverMode}
+              setMode={setWaiverMode}
+              typed={waiverTyped}
+              setTyped={setWaiverTyped}
+              drawn={waiverDrawn}
+              setDrawn={setWaiverDrawn}
+              onBack={() => setStep(3)}
+              onSubmit={handleSubmit}
+              submitting={submitting}
+              error={error}
+            />
           )}
         </div>
 
@@ -385,6 +433,133 @@ function Row({ k, v, highlight }: { k: string; v: string; highlight?: boolean })
     <div className="flex items-center justify-between">
       <span className="text-muted-foreground">{k}</span>
       <span className={"font-semibold " + (highlight ? "text-teal" : "text-foreground")}>{v}</span>
+    </div>
+  );
+}
+
+function WaiverStep({
+  waiverText, signerName, agree, setAgree, mode, setMode, typed, setTyped, drawn, setDrawn,
+  onBack, onSubmit, submitting, error,
+}: {
+  waiverText: string; signerName: string;
+  agree: boolean; setAgree: (v: boolean) => void;
+  mode: "drawn" | "typed"; setMode: (m: "drawn" | "typed") => void;
+  typed: string; setTyped: (v: string) => void;
+  drawn: string | null; setDrawn: (v: string | null) => void;
+  onBack: () => void; onSubmit: () => void; submitting: boolean; error: string | null;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawing = useRef(false);
+
+  const pos = (e: React.PointerEvent) => {
+    const r = canvasRef.current!.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  };
+
+  function clearCanvas() {
+    const c = canvasRef.current; if (!c) return;
+    const ctx = c.getContext("2d"); if (!ctx) return;
+    ctx.clearRect(0, 0, c.width, c.height);
+    setDrawn(null);
+  }
+
+  const hasSignature = mode === "typed" ? typed.trim().length > 0 : !!drawn;
+  const canSubmit = agree && hasSignature && !submitting;
+
+  return (
+    <div className="space-y-3">
+      <h2 className="flex items-center gap-2 font-display text-lg font-bold text-foreground">
+        <FileText size={16} className="text-teal" /> Liability waiver
+      </h2>
+      <div className="max-h-44 overflow-y-auto rounded-2xl border border-border bg-surface p-3 text-xs leading-relaxed text-foreground/90 whitespace-pre-wrap">
+        {waiverText || "No waiver text provided."}
+      </div>
+
+      <label className="flex items-start gap-2 text-xs text-foreground">
+        <input
+          type="checkbox"
+          checked={agree}
+          onChange={(e) => setAgree(e.target.checked)}
+          className="mt-0.5 h-4 w-4"
+        />
+        <span>I have read and agree to the terms of this waiver on behalf of {signerName || "the athlete"}.</span>
+      </label>
+
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setMode("drawn")}
+          className={"flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-bold " +
+            (mode === "drawn" ? "bg-teal text-background" : "border border-border text-muted-foreground")}
+        >
+          <PenLine size={14} /> Draw
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("typed")}
+          className={"flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-bold " +
+            (mode === "typed" ? "bg-teal text-background" : "border border-border text-muted-foreground")}
+        >
+          <TypeIcon size={14} /> Type
+        </button>
+      </div>
+
+      {mode === "drawn" ? (
+        <div className="space-y-1">
+          <canvas
+            ref={canvasRef}
+            width={600}
+            height={160}
+            className="w-full rounded-2xl border border-border bg-surface touch-none"
+            onPointerDown={(e) => {
+              drawing.current = true;
+              const ctx = canvasRef.current!.getContext("2d")!;
+              ctx.strokeStyle = "#ffffff";
+              ctx.lineWidth = 2;
+              ctx.lineCap = "round";
+              const { x, y } = pos(e);
+              ctx.beginPath();
+              ctx.moveTo(x, y);
+            }}
+            onPointerMove={(e) => {
+              if (!drawing.current) return;
+              const ctx = canvasRef.current!.getContext("2d")!;
+              const { x, y } = pos(e);
+              ctx.lineTo(x, y);
+              ctx.stroke();
+            }}
+            onPointerUp={() => {
+              drawing.current = false;
+              const c = canvasRef.current;
+              if (c) setDrawn(c.toDataURL("image/png"));
+            }}
+            onPointerLeave={() => { drawing.current = false; }}
+          />
+          <button onClick={clearCanvas} className="text-[10px] font-semibold text-muted-foreground">Clear</button>
+        </div>
+      ) : (
+        <input
+          value={typed}
+          onChange={(e) => setTyped(e.target.value)}
+          placeholder="Type your full legal name"
+          className="w-full rounded-2xl border border-border bg-surface px-4 py-5 text-center font-display text-xl italic text-foreground"
+        />
+      )}
+
+      {error && <p className="text-xs text-red-400">{error}</p>}
+
+      <div className="mt-4 flex gap-2">
+        <button onClick={onBack} className="flex-1 rounded-full border border-border bg-surface py-3 text-sm font-semibold text-foreground">
+          Back
+        </button>
+        <button
+          onClick={onSubmit}
+          disabled={!canSubmit}
+          className="flex-1 rounded-full bg-teal py-3 text-sm font-bold text-black disabled:opacity-40"
+        >
+          {submitting ? "Submitting…" : "Sign & confirm"}
+        </button>
+      </div>
     </div>
   );
 }
