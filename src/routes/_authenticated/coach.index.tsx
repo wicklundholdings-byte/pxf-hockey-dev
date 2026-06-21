@@ -179,14 +179,20 @@ function CoachDashboard() {
               const filled = regsByCamp.get(c.id) ?? 0;
               const pct = c.capacity ? Math.min(100, (filled / c.capacity) * 100) : 0;
               return (
-                <li key={c.id} className="space-y-1.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-semibold text-foreground">{c.name}</span>
-                    <span className="text-[11px] text-muted-foreground">{filled}/{c.capacity}</span>
-                  </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-surface">
-                    <div className="h-full rounded-full bg-teal" style={{ width: pct + "%" }} />
-                  </div>
+                <li key={c.id}>
+                  <Link
+                    to="/coach/camps/$campId"
+                    params={{ campId: c.id }}
+                    className="block space-y-1.5 rounded-lg p-1.5 -m-1.5 transition-colors hover:bg-surface"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate text-sm font-semibold text-foreground">{c.name}</span>
+                      <span className="text-[11px] text-muted-foreground">{filled}/{c.capacity}</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-surface">
+                      <div className="h-full rounded-full bg-teal" style={{ width: pct + "%" }} />
+                    </div>
+                  </Link>
                 </li>
               );
             })}
