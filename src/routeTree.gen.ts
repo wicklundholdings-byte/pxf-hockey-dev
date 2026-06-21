@@ -66,6 +66,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as CampsSlugIndexRouteImport } from './routes/camps.$slug.index'
 import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authenticated/coach.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as CampsSlugWaiverRouteImport } from './routes/camps.$slug.waiver'
 import { Route as CampsSlugRegisterRouteImport } from './routes/camps.$slug.register'
 import { Route as AuthenticatedHomeCoachSessionsRouteImport } from './routes/_authenticated/home-coach.sessions'
 import { Route as AuthenticatedHomeCoachProfileRouteImport } from './routes/_authenticated/home-coach.profile'
@@ -382,6 +383,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const CampsSlugWaiverRoute = CampsSlugWaiverRouteImport.update({
+  id: '/waiver',
+  path: '/waiver',
+  getParentRoute: () => CampsSlugRoute,
+} as any)
 const CampsSlugRegisterRoute = CampsSlugRegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -640,6 +646,7 @@ export interface FileRoutesByFullPath {
   '/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
+  '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/coach/': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug/': typeof CampsSlugIndexRoute
@@ -724,6 +731,7 @@ export interface FileRoutesByTo {
   '/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
+  '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/coach': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug': typeof CampsSlugIndexRoute
@@ -815,6 +823,7 @@ export interface FileRoutesById {
   '/_authenticated/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/_authenticated/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
+  '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/coach/': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug/': typeof CampsSlugIndexRoute
@@ -906,6 +915,7 @@ export interface FileRouteTypes {
     | '/home-coach/profile'
     | '/home-coach/sessions'
     | '/camps/$slug/register'
+    | '/camps/$slug/waiver'
     | '/admin/'
     | '/coach/'
     | '/camps/$slug/'
@@ -990,6 +1000,7 @@ export interface FileRouteTypes {
     | '/home-coach/profile'
     | '/home-coach/sessions'
     | '/camps/$slug/register'
+    | '/camps/$slug/waiver'
     | '/admin'
     | '/coach'
     | '/camps/$slug'
@@ -1080,6 +1091,7 @@ export interface FileRouteTypes {
     | '/_authenticated/home-coach/profile'
     | '/_authenticated/home-coach/sessions'
     | '/camps/$slug/register'
+    | '/camps/$slug/waiver'
     | '/_authenticated/admin/'
     | '/_authenticated/coach/'
     | '/camps/$slug/'
@@ -1541,6 +1553,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/camps/$slug/waiver': {
+      id: '/camps/$slug/waiver'
+      path: '/waiver'
+      fullPath: '/camps/$slug/waiver'
+      preLoaderRoute: typeof CampsSlugWaiverRouteImport
+      parentRoute: typeof CampsSlugRoute
+    }
     '/camps/$slug/register': {
       id: '/camps/$slug/register'
       path: '/register'
@@ -1913,11 +1932,13 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface CampsSlugRouteChildren {
   CampsSlugRegisterRoute: typeof CampsSlugRegisterRoute
+  CampsSlugWaiverRoute: typeof CampsSlugWaiverRoute
   CampsSlugIndexRoute: typeof CampsSlugIndexRoute
 }
 
 const CampsSlugRouteChildren: CampsSlugRouteChildren = {
   CampsSlugRegisterRoute: CampsSlugRegisterRoute,
+  CampsSlugWaiverRoute: CampsSlugWaiverRoute,
   CampsSlugIndexRoute: CampsSlugIndexRoute,
 }
 
