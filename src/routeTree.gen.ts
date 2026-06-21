@@ -69,6 +69,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as CampsSlugWaiverRouteImport } from './routes/camps.$slug.waiver'
 import { Route as CampsSlugRegisterRouteImport } from './routes/camps.$slug.register'
 import { Route as CampsSlugPaymentRouteImport } from './routes/camps.$slug.payment'
+import { Route as CampsSlugConfirmedRouteImport } from './routes/camps.$slug.confirmed'
 import { Route as AuthenticatedHomeCoachSessionsRouteImport } from './routes/_authenticated/home-coach.sessions'
 import { Route as AuthenticatedHomeCoachProfileRouteImport } from './routes/_authenticated/home-coach.profile'
 import { Route as AuthenticatedHomeCoachInboxRouteImport } from './routes/_authenticated/home-coach.inbox'
@@ -399,6 +400,11 @@ const CampsSlugPaymentRoute = CampsSlugPaymentRouteImport.update({
   path: '/payment',
   getParentRoute: () => CampsSlugRoute,
 } as any)
+const CampsSlugConfirmedRoute = CampsSlugConfirmedRouteImport.update({
+  id: '/confirmed',
+  path: '/confirmed',
+  getParentRoute: () => CampsSlugRoute,
+} as any)
 const AuthenticatedHomeCoachSessionsRoute =
   AuthenticatedHomeCoachSessionsRouteImport.update({
     id: '/sessions',
@@ -651,6 +657,7 @@ export interface FileRoutesByFullPath {
   '/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
   '/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
+  '/camps/$slug/confirmed': typeof CampsSlugConfirmedRoute
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
@@ -737,6 +744,7 @@ export interface FileRoutesByTo {
   '/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
   '/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
+  '/camps/$slug/confirmed': typeof CampsSlugConfirmedRoute
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
@@ -830,6 +838,7 @@ export interface FileRoutesById {
   '/_authenticated/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
   '/_authenticated/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/_authenticated/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
+  '/camps/$slug/confirmed': typeof CampsSlugConfirmedRoute
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
@@ -923,6 +932,7 @@ export interface FileRouteTypes {
     | '/home-coach/inbox'
     | '/home-coach/profile'
     | '/home-coach/sessions'
+    | '/camps/$slug/confirmed'
     | '/camps/$slug/payment'
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
@@ -1009,6 +1019,7 @@ export interface FileRouteTypes {
     | '/home-coach/inbox'
     | '/home-coach/profile'
     | '/home-coach/sessions'
+    | '/camps/$slug/confirmed'
     | '/camps/$slug/payment'
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
@@ -1101,6 +1112,7 @@ export interface FileRouteTypes {
     | '/_authenticated/home-coach/inbox'
     | '/_authenticated/home-coach/profile'
     | '/_authenticated/home-coach/sessions'
+    | '/camps/$slug/confirmed'
     | '/camps/$slug/payment'
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
@@ -1586,6 +1598,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CampsSlugPaymentRouteImport
       parentRoute: typeof CampsSlugRoute
     }
+    '/camps/$slug/confirmed': {
+      id: '/camps/$slug/confirmed'
+      path: '/confirmed'
+      fullPath: '/camps/$slug/confirmed'
+      preLoaderRoute: typeof CampsSlugConfirmedRouteImport
+      parentRoute: typeof CampsSlugRoute
+    }
     '/_authenticated/home-coach/sessions': {
       id: '/_authenticated/home-coach/sessions'
       path: '/sessions'
@@ -1950,6 +1969,7 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface CampsSlugRouteChildren {
+  CampsSlugConfirmedRoute: typeof CampsSlugConfirmedRoute
   CampsSlugPaymentRoute: typeof CampsSlugPaymentRoute
   CampsSlugRegisterRoute: typeof CampsSlugRegisterRoute
   CampsSlugWaiverRoute: typeof CampsSlugWaiverRoute
@@ -1957,6 +1977,7 @@ interface CampsSlugRouteChildren {
 }
 
 const CampsSlugRouteChildren: CampsSlugRouteChildren = {
+  CampsSlugConfirmedRoute: CampsSlugConfirmedRoute,
   CampsSlugPaymentRoute: CampsSlugPaymentRoute,
   CampsSlugRegisterRoute: CampsSlugRegisterRoute,
   CampsSlugWaiverRoute: CampsSlugWaiverRoute,
