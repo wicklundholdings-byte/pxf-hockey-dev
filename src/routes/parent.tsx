@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CalendarDays, MapPin, Star, MessageCircle, ShoppingBag, User, Search, BookOpen } from "lucide-react";
+import { useState } from "react";
+import { CalendarDays, MapPin, Star, MessageCircle, ShoppingBag, User, Search, BookOpen, ChevronDown, Check } from "lucide-react";
 
 export const Route = createFileRoute("/parent")({
   head: () => ({ meta: [{ title: "Home — PXF Hockey" }] }),
@@ -30,9 +31,51 @@ const messages = [
 ];
 
 function ParentHome() {
+  const coaches = [
+    { id: "pep", name: "Power Edge Pro", initials: "PEP", color: "from-teal/40 to-volt/30" },
+    { id: "pxf", name: "PXF Skills Academy", initials: "PXF", color: "from-volt/30 to-teal/40" },
+    { id: "park", name: "Coach Park Hockey", initials: "CP", color: "from-teal/30 to-blue-500/30" },
+  ];
+  const [active, setActive] = useState(coaches[0]);
+  const [open, setOpen] = useState(false);
   return (
     <div className="min-h-screen bg-background px-5 pt-4 pb-24 text-foreground">
-      <p className="text-xs text-muted-foreground">Welcome back, Sarah</p>
+      {/* Coach switcher */}
+      <div className="relative">
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-3"
+        >
+          <div className="flex items-center gap-3">
+            <div className={`grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br ${active.color} text-[10px] font-bold`}>{active.initials}</div>
+            <div className="text-left">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">You are viewing</p>
+              <p className="text-sm font-semibold">{active.name}</p>
+            </div>
+          </div>
+          <ChevronDown size={16} className={`text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+        </button>
+        {open && (
+          <div className="absolute z-20 mt-2 w-full rounded-2xl border border-border bg-card p-2 shadow-xl">
+            {coaches.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => { setActive(c); setOpen(false); }}
+                className="flex w-full items-center gap-3 rounded-xl p-2 text-left hover:bg-surface"
+              >
+                <div className={`grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br ${c.color} text-[9px] font-bold`}>{c.initials}</div>
+                <span className="flex-1 text-xs font-semibold">{c.name}</span>
+                {active.id === c.id && <Check size={14} className="text-teal" />}
+              </button>
+            ))}
+            <Link to="/search" className="mt-1 block rounded-xl border border-dashed border-border p-2 text-center text-[11px] text-muted-foreground">
+              + Find another coach
+            </Link>
+          </div>
+        )}
+      </div>
+
+      <p className="mt-4 text-xs text-muted-foreground">Welcome back, Sarah</p>
       <h1 className="font-display text-2xl font-bold">Jake's hockey journey</h1>
 
       {/* Upcoming bookings */}
