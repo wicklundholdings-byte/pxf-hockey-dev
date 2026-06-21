@@ -2,7 +2,7 @@ import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { submitBooking, previewCoupon } from "@/lib/booking.functions";
-import { Calendar, MapPin, Clock, Users, CheckCircle2, Loader2, Tag, X, PenLine, Type as TypeIcon, FileText } from "lucide-react";
+import { Calendar, MapPin, Clock, Users, CheckCircle2, Loader2, Tag, X, PenLine, Type as TypeIcon, FileText, Plus, Trash2, CalendarClock } from "lucide-react";
 
 
 export const Route = createFileRoute("/book/$slug")({
@@ -25,6 +25,9 @@ type Camp = {
   status: string;
   waiver_required: boolean;
   waiver_text: string | null;
+  sibling_discount: boolean;
+  sibling_discount_percent: number;
+  payment_plan: "none" | "two" | "three";
 };
 type Field = { id: string; label: string; field_type: string; options: string[] | null; required: boolean; sort_order: number };
 
@@ -42,10 +45,16 @@ function BookingPage() {
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [parent, setParent] = useState({ full_name: "", email: "", phone: "" });
-  const [attendee, setAttendee] = useState({ full_name: "", birthday: "", position: "", skill_level: "", handedness: "", jersey_number: "" });
-  const [customs, setCustoms] = useState<Record<string, string>>({});
+  type AthleteForm = { full_name: string; birthday: string; position: string; skill_level: string; handedness: string; jersey_number: string; customs: Record<string, string> };
+  const blankAthlete = (): AthleteForm => ({ full_name: "", birthday: "", position: "", skill_level: "", handedness: "", jersey_number: "", customs: {} });
+  const [athletes, setAthletes] = useState<AthleteForm[]>([blankAthlete()]);
+  const [paymentPlan, setPaymentPlan] = useState<"none" | "two" | "three">("none");
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<{ kind: "registered" | "waitlisted"; amountCents?: number } | null>(null);
+  const [result, setResult] = useState<
+    | { kind: "registered"; amountCents: number; count: number; paymentPlan: "none" | "two" | "three" }
+    | { kind: "waitlisted"; count: number }
+    | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState("");
   const [coupon, setCoupon] = useState<{ baseCents: number; discountCents: number; finalCents: number; label: string } | null>(null);
@@ -101,7 +110,24 @@ function BookingPage() {
     new Date(camp.early_bird_expires_at) > new Date();
   const price = earlyBird ? camp.early_bird_price_cents! : camp.price_cents;
   const spotsLeft = Math.max(0, camp.capacity - paidCount);
-  const isFull = spotsLeft === 0;
+  const isFull = spotsLeft < athletes.length;
+  const siblingPct = camp.sibling_discount ? (camp.sibling_discount_percent ?? 0) : 0;
+
+  // Per-child base after sibling discount (children #2+)
+  const childBases = athletes.map((_, i) =>
+    i === 0 || siblingPct === 0 ? price : Math.max(0, price - Math.round((price * siblingPct) / 100)),
+  );
+  const subtotal = childBases.reduce((a, b) => a + b, 0);
+  const siblingSavings = athletes.length > 1 ? subtotal - price * athletes.length + 0 : 0; // negative number not useful
+  const couponDiscount = coupon
+    ? childBases.reduce((sum, base) => {
+        const off = coupon.baseCents === 0 ? 0 : Math.round((base / coupon.baseCents) * coupon.discountCents);
+        return sum + off;
+      }, 0)
+    : 0;
+  const totalCents = Math.max(0, subtotal - couponDiscount);
+  const installments = paymentPlan === "two" ? 2 : paymentPlan === "three" ? 3 : 1;
+  const installmentAmount = Math.ceil(totalCents / installments);
 
   async function handleSubmit() {
     setSubmitting(true);
@@ -120,9 +146,17 @@ function BookingPage() {
         data: {
           campId: camp!.id,
           parent,
-          attendee,
-          customFieldValues: customs,
+          attendees: athletes.map((a) => ({
+            full_name: a.full_name,
+            birthday: a.birthday,
+            position: a.position,
+            skill_level: a.skill_level,
+            handedness: a.handedness,
+            jersey_number: a.jersey_number,
+            customFieldValues: a.customs,
+          })),
           couponCode: coupon ? couponCode : null,
+          paymentPlan,
           waiver: waiverPayload,
         },
       });
