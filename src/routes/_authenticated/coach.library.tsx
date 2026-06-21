@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Layers } from "lucide-react";
-import { Drills } from "@/routes/drills";
+import { Drills } from "@/components/drills-library";
 
 export const Route = createFileRoute("/_authenticated/coach/library")({
   component: CoachLibrary,
