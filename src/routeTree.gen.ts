@@ -20,6 +20,7 @@ import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ProgramsRouteImport } from './routes/programs'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PaymentsPreviewRouteImport } from './routes/payments-preview'
+import { Route as ParentRouteImport } from './routes/parent'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MembershipRouteImport } from './routes/membership'
@@ -47,6 +48,11 @@ import { Route as PaymentsCouponRouteImport } from './routes/payments.coupon'
 import { Route as PaymentsConnectRouteImport } from './routes/payments.connect'
 import { Route as PaymentsConfirmationRouteImport } from './routes/payments.confirmation'
 import { Route as PaymentsCheckoutRouteImport } from './routes/payments.checkout'
+import { Route as ParentScheduleRouteImport } from './routes/parent.schedule'
+import { Route as ParentProfileRouteImport } from './routes/parent.profile'
+import { Route as ParentInboxRouteImport } from './routes/parent.inbox'
+import { Route as OnboardingParentRouteImport } from './routes/onboarding.parent'
+import { Route as OnboardingCoachRouteImport } from './routes/onboarding.coach'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
 import { Route as CoachesSlugRouteImport } from './routes/coaches.$slug'
 import { Route as CampsBrowseRouteImport } from './routes/camps.browse'
@@ -140,6 +146,11 @@ const PaymentsPreviewRoute = PaymentsPreviewRouteImport.update({
   path: '/payments-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ParentRoute = ParentRouteImport.update({
+  id: '/parent',
+  path: '/parent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -215,9 +226,9 @@ const StoreIndexRoute = StoreIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const ParentIndexRoute = ParentIndexRouteImport.update({
-  id: '/parent/',
-  path: '/parent/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => ParentRoute,
 } as any)
 const StoreCartRoute = StoreCartRouteImport.update({
   id: '/store/cart',
@@ -273,6 +284,31 @@ const PaymentsCheckoutRoute = PaymentsCheckoutRouteImport.update({
   id: '/payments/checkout',
   path: '/payments/checkout',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ParentScheduleRoute = ParentScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
+  getParentRoute: () => ParentRoute,
+} as any)
+const ParentProfileRoute = ParentProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => ParentRoute,
+} as any)
+const ParentInboxRoute = ParentInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => ParentRoute,
+} as any)
+const OnboardingParentRoute = OnboardingParentRouteImport.update({
+  id: '/parent',
+  path: '/parent',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const OnboardingCoachRoute = OnboardingCoachRouteImport.update({
+  id: '/coach',
+  path: '/coach',
+  getParentRoute: () => OnboardingRoute,
 } as any)
 const DrillDetailDrillIdRoute = DrillDetailDrillIdRouteImport.update({
   id: '/drill-detail/$drillId',
@@ -496,7 +532,8 @@ export interface FileRoutesByFullPath {
   '/gameiq': typeof GameiqRoute
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
-  '/onboarding': typeof OnboardingRoute
+  '/onboarding': typeof OnboardingRouteWithChildren
+  '/parent': typeof ParentRouteWithChildren
   '/payments-preview': typeof PaymentsPreviewRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
@@ -515,6 +552,11 @@ export interface FileRoutesByFullPath {
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/onboarding/coach': typeof OnboardingCoachRoute
+  '/onboarding/parent': typeof OnboardingParentRoute
+  '/parent/inbox': typeof ParentInboxRoute
+  '/parent/profile': typeof ParentProfileRoute
+  '/parent/schedule': typeof ParentScheduleRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
@@ -572,7 +614,7 @@ export interface FileRoutesByTo {
   '/gameiq': typeof GameiqRoute
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
-  '/onboarding': typeof OnboardingRoute
+  '/onboarding': typeof OnboardingRouteWithChildren
   '/payments-preview': typeof PaymentsPreviewRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
@@ -589,6 +631,11 @@ export interface FileRoutesByTo {
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/onboarding/coach': typeof OnboardingCoachRoute
+  '/onboarding/parent': typeof OnboardingParentRoute
+  '/parent/inbox': typeof ParentInboxRoute
+  '/parent/profile': typeof ParentProfileRoute
+  '/parent/schedule': typeof ParentScheduleRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
@@ -648,7 +695,8 @@ export interface FileRoutesById {
   '/gameiq': typeof GameiqRoute
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
-  '/onboarding': typeof OnboardingRoute
+  '/onboarding': typeof OnboardingRouteWithChildren
+  '/parent': typeof ParentRouteWithChildren
   '/payments-preview': typeof PaymentsPreviewRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
@@ -667,6 +715,11 @@ export interface FileRoutesById {
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/onboarding/coach': typeof OnboardingCoachRoute
+  '/onboarding/parent': typeof OnboardingParentRoute
+  '/parent/inbox': typeof ParentInboxRoute
+  '/parent/profile': typeof ParentProfileRoute
+  '/parent/schedule': typeof ParentScheduleRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
@@ -727,6 +780,7 @@ export interface FileRouteTypes {
     | '/membership'
     | '/notifications'
     | '/onboarding'
+    | '/parent'
     | '/payments-preview'
     | '/profile'
     | '/programs'
@@ -745,6 +799,11 @@ export interface FileRouteTypes {
     | '/camps/browse'
     | '/coaches/$slug'
     | '/drill-detail/$drillId'
+    | '/onboarding/coach'
+    | '/onboarding/parent'
+    | '/parent/inbox'
+    | '/parent/profile'
+    | '/parent/schedule'
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
@@ -819,6 +878,11 @@ export interface FileRouteTypes {
     | '/camps/browse'
     | '/coaches/$slug'
     | '/drill-detail/$drillId'
+    | '/onboarding/coach'
+    | '/onboarding/parent'
+    | '/parent/inbox'
+    | '/parent/profile'
+    | '/parent/schedule'
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
@@ -878,6 +942,7 @@ export interface FileRouteTypes {
     | '/membership'
     | '/notifications'
     | '/onboarding'
+    | '/parent'
     | '/payments-preview'
     | '/profile'
     | '/programs'
@@ -896,6 +961,11 @@ export interface FileRouteTypes {
     | '/camps/browse'
     | '/coaches/$slug'
     | '/drill-detail/$drillId'
+    | '/onboarding/coach'
+    | '/onboarding/parent'
+    | '/parent/inbox'
+    | '/parent/profile'
+    | '/parent/schedule'
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
@@ -955,7 +1025,8 @@ export interface RootRouteChildren {
   GameiqRoute: typeof GameiqRoute
   MembershipRoute: typeof MembershipRoute
   NotificationsRoute: typeof NotificationsRoute
-  OnboardingRoute: typeof OnboardingRoute
+  OnboardingRoute: typeof OnboardingRouteWithChildren
+  ParentRoute: typeof ParentRouteWithChildren
   PaymentsPreviewRoute: typeof PaymentsPreviewRoute
   ProfileRoute: typeof ProfileRoute
   ProgramsRoute: typeof ProgramsRoute
@@ -981,7 +1052,6 @@ export interface RootRouteChildren {
   SessionDetailSessionIdRoute: typeof SessionDetailSessionIdRoute
   StoreProductIdRoute: typeof StoreProductIdRoute
   StoreCartRoute: typeof StoreCartRoute
-  ParentIndexRoute: typeof ParentIndexRoute
   StoreIndexRoute: typeof StoreIndexRoute
 }
 
@@ -1062,6 +1132,13 @@ declare module '@tanstack/react-router' {
       path: '/payments-preview'
       fullPath: '/payments-preview'
       preLoaderRoute: typeof PaymentsPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/parent': {
+      id: '/parent'
+      path: '/parent'
+      fullPath: '/parent'
+      preLoaderRoute: typeof ParentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -1171,10 +1248,10 @@ declare module '@tanstack/react-router' {
     }
     '/parent/': {
       id: '/parent/'
-      path: '/parent'
+      path: '/'
       fullPath: '/parent/'
       preLoaderRoute: typeof ParentIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ParentRoute
     }
     '/store/cart': {
       id: '/store/cart'
@@ -1252,6 +1329,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/payments/checkout'
       preLoaderRoute: typeof PaymentsCheckoutRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/parent/schedule': {
+      id: '/parent/schedule'
+      path: '/schedule'
+      fullPath: '/parent/schedule'
+      preLoaderRoute: typeof ParentScheduleRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/parent/profile': {
+      id: '/parent/profile'
+      path: '/profile'
+      fullPath: '/parent/profile'
+      preLoaderRoute: typeof ParentProfileRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/parent/inbox': {
+      id: '/parent/inbox'
+      path: '/inbox'
+      fullPath: '/parent/inbox'
+      preLoaderRoute: typeof ParentInboxRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/onboarding/parent': {
+      id: '/onboarding/parent'
+      path: '/parent'
+      fullPath: '/onboarding/parent'
+      preLoaderRoute: typeof OnboardingParentRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/coach': {
+      id: '/onboarding/coach'
+      path: '/coach'
+      fullPath: '/onboarding/coach'
+      preLoaderRoute: typeof OnboardingCoachRouteImport
+      parentRoute: typeof OnboardingRoute
     }
     '/drill-detail/$drillId': {
       id: '/drill-detail/$drillId'
@@ -1685,6 +1797,37 @@ const CampsRouteChildren: CampsRouteChildren = {
 
 const CampsRouteWithChildren = CampsRoute._addFileChildren(CampsRouteChildren)
 
+interface OnboardingRouteChildren {
+  OnboardingCoachRoute: typeof OnboardingCoachRoute
+  OnboardingParentRoute: typeof OnboardingParentRoute
+}
+
+const OnboardingRouteChildren: OnboardingRouteChildren = {
+  OnboardingCoachRoute: OnboardingCoachRoute,
+  OnboardingParentRoute: OnboardingParentRoute,
+}
+
+const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
+  OnboardingRouteChildren,
+)
+
+interface ParentRouteChildren {
+  ParentInboxRoute: typeof ParentInboxRoute
+  ParentProfileRoute: typeof ParentProfileRoute
+  ParentScheduleRoute: typeof ParentScheduleRoute
+  ParentIndexRoute: typeof ParentIndexRoute
+}
+
+const ParentRouteChildren: ParentRouteChildren = {
+  ParentInboxRoute: ParentInboxRoute,
+  ParentProfileRoute: ParentProfileRoute,
+  ParentScheduleRoute: ParentScheduleRoute,
+  ParentIndexRoute: ParentIndexRoute,
+}
+
+const ParentRouteWithChildren =
+  ParentRoute._addFileChildren(ParentRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -1699,7 +1842,8 @@ const rootRouteChildren: RootRouteChildren = {
   GameiqRoute: GameiqRoute,
   MembershipRoute: MembershipRoute,
   NotificationsRoute: NotificationsRoute,
-  OnboardingRoute: OnboardingRoute,
+  OnboardingRoute: OnboardingRouteWithChildren,
+  ParentRoute: ParentRouteWithChildren,
   PaymentsPreviewRoute: PaymentsPreviewRoute,
   ProfileRoute: ProfileRoute,
   ProgramsRoute: ProgramsRoute,
@@ -1725,7 +1869,6 @@ const rootRouteChildren: RootRouteChildren = {
   SessionDetailSessionIdRoute: SessionDetailSessionIdRoute,
   StoreProductIdRoute: StoreProductIdRoute,
   StoreCartRoute: StoreCartRoute,
-  ParentIndexRoute: ParentIndexRoute,
   StoreIndexRoute: StoreIndexRoute,
 }
 export const routeTree = rootRouteImport
