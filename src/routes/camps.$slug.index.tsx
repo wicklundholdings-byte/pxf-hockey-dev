@@ -156,7 +156,6 @@ function CampPublicPage() {
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-teal">Day {i + 1}</p>
                     <p className="text-sm font-semibold">{fmtDate(s.session_date)}</p>
-                    {s.title && <p className="text-[11px] text-muted-foreground">{s.title}</p>}
                   </div>
                   <span className="text-[11px] text-muted-foreground">
                     {s.start_time ? `${fmtTime(s.start_time)} – ${fmtTime(s.end_time)}` : ""}
