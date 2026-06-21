@@ -4,28 +4,45 @@ import { Zap, Dumbbell, Target, Repeat, Activity, Snowflake, Lock, Globe2, MapPi
 
 type StatKey = "speed" | "power" | "shot" | "agility" | "explosiveness" | "skating";
 
+type SubMetric = { label: string; value: string };
 type StatDef = {
   key: StatKey;
   label: string;
   emoji: string;
   icon: typeof Zap;
   source: string;
-  subs: string[];
+  subs: SubMetric[];
 };
 
 const STATS: StatDef[] = [
-  { key: "speed", label: "Speed", emoji: "⚡", icon: Zap, source: "PXF Resistance Trainer", subs: ["First-Step", "Top Speed", "Backward Speed"] },
-  { key: "power", label: "Power", emoji: "💪", icon: Dumbbell, source: "PXF Resistance Trainer", subs: ["Max Force", "Peak Watts", "Strength Index"] },
-  { key: "shot", label: "Shot", emoji: "🏒", icon: Target, source: "PXF Shot Plate + Radar", subs: ["Slap Shot", "Wrist Shot", "Release Time"] },
-  { key: "agility", label: "Agility", emoji: "🔄", icon: Repeat, source: "Speed Gates", subs: ["Lateral", "Change of Direction", "Reaction"] },
-  { key: "explosiveness", label: "Explosiveness", emoji: "🦵", icon: Activity, source: "PXF Force Plate", subs: ["Vertical Jump", "Broad Jump", "RSI"] },
-  { key: "skating", label: "Skating", emoji: "⛸", icon: Snowflake, source: "PXF Resistance Trainer", subs: ["Stride Power", "Edge Work", "Endurance"] },
+  { key: "speed", label: "Speed", emoji: "⚡", icon: Zap, source: "PXF Resistance Trainer",
+    subs: [{ label: "First-Step", value: "0.42s" }, { label: "Top Speed", value: "24.6 mph" }, { label: "Backward", value: "18.1 mph" }] },
+  { key: "power", label: "Power", emoji: "💪", icon: Dumbbell, source: "PXF Resistance Trainer",
+    subs: [{ label: "Peak Force", value: "312 N" }, { label: "Power Output", value: "847 W" }, { label: "Stride Eff.", value: "84%" }] },
+  { key: "shot", label: "Shot", emoji: "🏒", icon: Target, source: "PXF Shot Plate + Radar",
+    subs: [{ label: "Slap Shot", value: "87 mph" }, { label: "Wrist Shot", value: "71 mph" }, { label: "Release", value: "0.31s" }] },
+  { key: "agility", label: "Agility", emoji: "🔄", icon: Repeat, source: "Speed Gates",
+    subs: [{ label: "Lateral", value: "1.8s" }, { label: "COD", value: "2.1s" }, { label: "Reaction", value: "0.24s" }] },
+  { key: "explosiveness", label: "Explosiveness", emoji: "🦵", icon: Activity, source: "PXF Force Plate",
+    subs: [{ label: "Vertical", value: "28.4 in" }, { label: "Peak Force", value: "2,140 N" }, { label: "RFD", value: "8,200 N/s" }] },
+  { key: "skating", label: "Skating", emoji: "⛸", icon: Snowflake, source: "PXF Resistance Trainer",
+    subs: [{ label: "Edge Control", value: "88%" }, { label: "Crossover", value: "22.3 mph" }, { label: "Stop & Start", value: "0.89s" }] },
 ];
 
-// No data yet — all locked. Wire to real percentile data later.
-type Scores = Partial<Record<StatKey, number>>;
-const SCORES: Scores = {};
-const OVERALL: number | null = null;
+// Mock data for "Evan Wicklund" — replace with real combine results when hardware is wired.
+type StatData = { value: number; topPct: number; world: number; province: number };
+type Scores = Partial<Record<StatKey, StatData>>;
+const SCORES: Scores = {
+  speed:         { value: 78, topPct: 18, world: 1247, province: 23 },
+  power:         { value: 71, topPct: 24, world: 2841, province: 67 },
+  shot:          { value: 82, topPct: 11, world: 891,  province: 14 },
+  agility:       { value: 68, topPct: 29, world: 3102, province: 78 },
+  explosiveness: { value: 65, topPct: 33, world: 3847, province: 91 },
+  skating:       { value: 76, topPct: 20, world: 1562, province: 31 },
+};
+const OVERALL: number | null = 74;
+const OVERALL_WORLD = 1247;
+const OVERALL_PROVINCE = 23;
 
 export function PxfCombine() {
   return (
@@ -40,7 +57,7 @@ export function PxfCombine() {
 
       <div className="mt-4 space-y-3">
         {STATS.map((s) => (
-          <StatCard key={s.key} stat={s} value={SCORES[s.key] ?? null} />
+          <StatCard key={s.key} stat={s} data={SCORES[s.key] ?? null} />
         ))}
       </div>
     </section>
@@ -52,19 +69,22 @@ export function PxfCombine() {
 function OverallCard({ rating }: { rating: number | null }) {
   const pct = rating ? Math.min(99, rating) / 99 : 0;
   const animated = useAnimatedNumber(pct);
-  const size = 168;
-  const stroke = 12;
+  const size = 200;
+  const stroke = 14;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
 
   return (
-    <div className="mt-3 rounded-3xl border border-border/60 bg-gradient-to-b from-surface to-surface-2 p-5">
+    <div className="relative mt-3 overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-b from-surface to-surface-2 p-5">
+      <span className="absolute right-3 top-3 rounded-full border border-volt/40 bg-volt/10 px-2 py-0.5 text-[9px] font-bold tracking-widest text-volt">
+        MOCK DATA
+      </span>
       <div className="flex flex-col items-center">
         <div className="relative" style={{ width: size, height: size }}>
           <svg width={size} height={size} className="-rotate-90">
             <defs>
               <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--teal, 174 72% 56%))" />
+                <stop offset="0%" stopColor="#2dd4bf" />
                 <stop offset="100%" stopColor="#84cc16" />
               </linearGradient>
             </defs>
@@ -79,15 +99,18 @@ function OverallCard({ rating }: { rating: number | null }) {
               strokeLinecap="round"
               strokeDasharray={c}
               strokeDashoffset={c * (1 - animated)}
-              style={{ transition: "stroke-dashoffset 900ms ease-out" }}
+              style={{ transition: "stroke-dashoffset 1100ms ease-out" }}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <p className="text-[10px] font-bold tracking-[0.3em] text-muted-foreground">PXF RATING</p>
-            <p className={"font-display text-6xl font-black leading-none " + (rating ? "text-foreground" : "text-muted-foreground/50")}>
+            <p
+              className={"font-display font-black leading-none " + (rating ? "text-foreground" : "text-muted-foreground/50")}
+              style={{ fontSize: 52 }}
+            >
               {rating ?? "—"}
             </p>
-            <p className="text-[10px] font-semibold tracking-wider text-muted-foreground">/ 99</p>
+            <p className="mt-0.5 text-[10px] font-semibold tracking-wider text-muted-foreground">/ 99</p>
           </div>
         </div>
 
@@ -95,12 +118,14 @@ function OverallCard({ rating }: { rating: number | null }) {
           <div className="mt-4 flex flex-col items-center gap-1.5">
             <div className="flex items-center gap-2 rounded-full border border-border/60 bg-surface px-3 py-1.5">
               <Globe2 size={12} className="text-teal" />
-              <span className="text-[11px] font-semibold text-foreground">#— in the World</span>
+              <span className="text-[11px] font-semibold text-foreground">
+                #{OVERALL_WORLD.toLocaleString()} in the World
+              </span>
               <ChevronRight size={12} className="text-muted-foreground" />
             </div>
             <div className="flex items-center gap-2 rounded-full border border-border/60 bg-surface px-3 py-1.5">
               <MapPin size={12} className="text-volt" />
-              <span className="text-[11px] font-semibold text-foreground">#— in Province</span>
+              <span className="text-[11px] font-semibold text-foreground">#{OVERALL_PROVINCE} in Ontario</span>
             </div>
           </div>
         </LeaderboardTrigger>
@@ -112,13 +137,14 @@ function OverallCard({ rating }: { rating: number | null }) {
 /* ------------------- Hex radar ------------------- */
 
 function HexRadar({ scores }: { scores: Scores }) {
-  const size = 240;
+  const size = 260;
   const cx = size / 2;
   const cy = size / 2;
   const radius = 92;
   const labels = STATS.map((s) => s.label);
-  const values = STATS.map((s) => (scores[s.key] ?? 0) / 100);
-  const anim = useAnimatedNumber(1);
+  const values = STATS.map((s) => (scores[s.key]?.value ?? 0) / 99);
+  const hasData = values.some((v) => v > 0);
+  const anim = useAnimatedNumber(hasData ? 1 : 0);
 
   const point = (i: number, t: number) => {
     const angle = (Math.PI * 2 * i) / 6 - Math.PI / 2;
@@ -127,16 +153,35 @@ function HexRadar({ scores }: { scores: Scores }) {
 
   const rings = [0.25, 0.5, 0.75, 1].map((t) => {
     const pts = Array.from({ length: 6 }, (_, i) => point(i, t).join(",")).join(" ");
-    return <polygon key={t} points={pts} fill="none" stroke="hsl(var(--border))" strokeWidth={1} />;
+    return (
+      <polygon
+        key={t}
+        points={pts}
+        fill="none"
+        stroke={hasData ? "hsl(var(--border))" : "hsl(var(--muted-foreground) / 0.25)"}
+        strokeWidth={1}
+        strokeDasharray={hasData ? undefined : "3 3"}
+      />
+    );
   });
 
   const axes = Array.from({ length: 6 }, (_, i) => {
     const [x, y] = point(i, 1);
-    return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="hsl(var(--border))" strokeWidth={1} />;
+    return (
+      <line
+        key={i}
+        x1={cx}
+        y1={cy}
+        x2={x}
+        y2={y}
+        stroke={hasData ? "hsl(var(--border))" : "hsl(var(--muted-foreground) / 0.25)"}
+        strokeWidth={1}
+        strokeDasharray={hasData ? undefined : "3 3"}
+      />
+    );
   });
 
-  const dataPts = values.map((v, i) => point(i, Math.max(v, 0.02) * anim).join(",")).join(" ");
-  const hasData = values.some((v) => v > 0);
+  const dataPts = values.map((v, i) => point(i, v * anim).join(",")).join(" ");
 
   return (
     <div className="mt-3 rounded-3xl border border-border/60 bg-surface p-4">
@@ -148,21 +193,26 @@ function HexRadar({ scores }: { scores: Scores }) {
         <svg width={size} height={size}>
           <defs>
             <linearGradient id="radarFill" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="hsl(var(--teal, 174 72% 56%))" stopOpacity="0.55" />
+              <stop offset="0%" stopColor="#2dd4bf" stopOpacity="0.55" />
               <stop offset="100%" stopColor="#84cc16" stopOpacity="0.55" />
             </linearGradient>
           </defs>
           {rings}
           {axes}
-          <polygon
-            points={dataPts}
-            fill={hasData ? "url(#radarFill)" : "hsl(var(--muted-foreground) / 0.08)"}
-            stroke={hasData ? "#5eead4" : "hsl(var(--border))"}
-            strokeWidth={1.5}
-            style={{ transition: "all 900ms ease-out" }}
-          />
+          {hasData && (
+            <polygon
+              points={dataPts}
+              fill="url(#radarFill)"
+              stroke="#5eead4"
+              strokeWidth={1.5}
+            />
+          )}
+          {hasData && values.map((v, i) => {
+            const [x, y] = point(i, v * anim);
+            return <circle key={i} cx={x} cy={y} r={3} fill="#84cc16" />;
+          })}
           {labels.map((l, i) => {
-            const [x, y] = point(i, 1.22);
+            const [x, y] = point(i, 1.25);
             return (
               <text
                 key={l}
@@ -170,8 +220,7 @@ function HexRadar({ scores }: { scores: Scores }) {
                 y={y}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                className="fill-foreground"
-                style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1 }}
+                style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, fill: "hsl(var(--foreground))" }}
               >
                 {l.toUpperCase()}
               </text>
@@ -185,25 +234,27 @@ function HexRadar({ scores }: { scores: Scores }) {
 
 /* ------------------- Stat cards ------------------- */
 
-function StatCard({ stat, value }: { stat: StatDef; value: number | null }) {
-  const locked = value == null;
-  const pct = value ?? 0;
-  const anim = useAnimatedNumber(pct / 100);
+function StatCard({ stat, data }: { stat: StatDef; data: StatData | null }) {
+  const locked = data == null;
+  const pct = data?.value ?? 0;
+  const anim = useAnimatedNumber(locked ? 0 : pct / 99);
 
-  // Speedometer arc
-  const w = 220;
-  const h = 92;
+  // Speedometer arc — 180deg, bottom-anchored
+  const w = 240;
+  const h = 130;
   const cx = w / 2;
-  const cy = h - 6;
-  const r = 78;
+  const cy = h - 14;
+  const r = 92;
+  const stroke = 10;
   const arc = (t: number) => {
+    const clamped = Math.max(0.001, Math.min(1, t));
     const start = Math.PI;
-    const end = start + Math.PI * t;
+    const end = start + Math.PI * clamped;
     const x1 = cx + r * Math.cos(start);
     const y1 = cy + r * Math.sin(start);
     const x2 = cx + r * Math.cos(end);
     const y2 = cy + r * Math.sin(end);
-    const large = t > 0.5 ? 1 : 0;
+    const large = clamped > 0.5 ? 1 : 0;
     return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
   };
 
@@ -219,59 +270,72 @@ function StatCard({ stat, value }: { stat: StatDef; value: number | null }) {
             <p className="text-[10px] tracking-wider text-muted-foreground">{stat.source}</p>
           </div>
         </div>
-        {locked && <Lock size={14} className="text-muted-foreground" />}
+        {locked ? <Lock size={14} className="text-muted-foreground" /> : (
+          <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[10px] font-bold text-teal">
+            TOP {data!.topPct}%
+          </span>
+        )}
       </div>
 
-      <div className="relative mx-auto mt-2" style={{ width: w, height: h }}>
+      <div className="relative mx-auto mt-3" style={{ width: w, height: h }}>
         <svg width={w} height={h}>
           <defs>
-            <linearGradient id={`arc-${stat.key}`} x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="hsl(var(--teal, 174 72% 56%))" />
+            <linearGradient id={`arc-${stat.key}`} x1="0" y1="0.5" x2="1" y2="0.5">
+              <stop offset="0%" stopColor="#2dd4bf" />
               <stop offset="100%" stopColor="#84cc16" />
             </linearGradient>
           </defs>
-          <path d={arc(1)} stroke="hsl(var(--border))" strokeWidth={10} fill="none" strokeLinecap="round" />
+          {/* Track */}
+          <path d={arc(1)} stroke="hsl(var(--border))" strokeOpacity={locked ? 0.6 : 1} strokeWidth={stroke} fill="none" strokeLinecap="round" />
+          {/* Filled */}
           {!locked && (
             <path
-              d={arc(Math.max(anim, 0.01))}
+              d={arc(anim)}
               stroke={`url(#arc-${stat.key})`}
-              strokeWidth={10}
+              strokeWidth={stroke}
               fill="none"
               strokeLinecap="round"
-              style={{ transition: "d 900ms ease-out" }}
             />
           )}
         </svg>
-        <div className="absolute inset-x-0 bottom-1 flex flex-col items-center">
-          <p className={"font-display text-3xl font-black leading-none " + (locked ? "text-muted-foreground/40" : "text-foreground")}>
+        <div className="absolute inset-x-0 bottom-2 flex flex-col items-center">
+          <p className={"font-display text-4xl font-black leading-none " + (locked ? "text-muted-foreground/40" : "text-foreground")}>
             {locked ? "—" : pct}
           </p>
           <p className="text-[10px] font-semibold tracking-wider text-muted-foreground">
-            {locked ? "PERCENTILE" : `TOP ${Math.max(1, 100 - pct)}%`}
+            {locked ? "PERCENTILE" : "PXF RATING"}
           </p>
         </div>
       </div>
 
       {!locked ? (
         <LeaderboardTrigger>
-          <div className="mt-1 flex items-center justify-center gap-2 rounded-full border border-border/60 bg-surface-2 px-3 py-1.5">
+          <div className="mt-2 flex items-center justify-center gap-2 rounded-full border border-border/60 bg-surface-2 px-3 py-1.5">
             <Globe2 size={11} className="text-teal" />
-            <span className="text-[10px] font-semibold text-foreground">#— worldwide · #— in Ontario</span>
+            <span className="text-[10px] font-semibold text-foreground">
+              #{data!.world.toLocaleString()} worldwide · #{data!.province} in Ontario
+            </span>
             <ChevronRight size={11} className="text-muted-foreground" />
           </div>
         </LeaderboardTrigger>
       ) : (
-        <div className="mt-1 flex items-center justify-center gap-2 rounded-full border border-dashed border-border/60 bg-surface-2 px-3 py-1.5">
+        <div className="mt-2 flex items-center justify-center gap-2 rounded-full border border-dashed border-border/60 bg-surface-2 px-3 py-1.5">
           <Lock size={11} className="text-muted-foreground" />
           <span className="text-[10px] font-semibold text-muted-foreground">Connect device to unlock</span>
         </div>
       )}
 
-      <div className="mt-3 flex flex-wrap gap-1.5">
+      <div className="mt-3 grid grid-cols-3 gap-2">
         {stat.subs.map((s) => (
-          <span key={s} className={"rounded-full px-2 py-0.5 text-[10px] font-medium " + (locked ? "bg-surface-2 text-muted-foreground/60" : "bg-teal/10 text-teal")}>
-            {s}
-          </span>
+          <div
+            key={s.label}
+            className={"rounded-xl border px-2 py-2 text-center " + (locked ? "border-border/40 bg-surface-2/60" : "border-border/60 bg-surface-2")}
+          >
+            <p className={"font-display text-sm font-bold leading-none " + (locked ? "text-muted-foreground/50" : "text-foreground")}>
+              {locked ? "—" : s.value}
+            </p>
+            <p className="mt-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</p>
+          </div>
         ))}
       </div>
     </div>
@@ -308,8 +372,8 @@ function LeaderboardPanel() {
     () =>
       Array.from({ length: 12 }, (_, i) => ({
         rank: i + 1,
-        name: ["A. Bedard", "M. Celebrini", "C. Lindstrom", "L. Misa", "J. Reichel", "T. Stutzle", "K. Geekie", "S. Reinhart", "D. Doan", "N. Hischier", "B. Tkachuk", "Q. Hughes"][i] ?? "Athlete",
-        location: ["Regina, SK", "North Vancouver, BC", "Mora, SWE", "Mississauga, ON", "Berlin, GER", "Cologne, GER", "Strathmore, AB", "West Vancouver, BC", "Halifax, NS", "Bern, SUI", "Calgary, AB", "Burnaby, BC"][i] ?? "—",
+        name: ["A. Bedard", "M. Celebrini", "C. Lindstrom", "L. Misa", "J. Reichel", "T. Stutzle", "K. Geekie", "E. Wicklund", "D. Doan", "N. Hischier", "B. Tkachuk", "Q. Hughes"][i] ?? "Athlete",
+        location: ["Regina, SK", "North Vancouver, BC", "Mora, SWE", "Mississauga, ON", "Berlin, GER", "Cologne, GER", "Strathmore, AB", "Toronto, ON", "Halifax, NS", "Bern, SUI", "Calgary, AB", "Burnaby, BC"][i] ?? "—",
         age: 14 + (i % 4),
         rating: 99 - i * 2,
         you: i === 7,
@@ -344,7 +408,9 @@ function LeaderboardPanel() {
               {r.name.split(" ").map((p) => p[0]).join("")}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-foreground">{r.name} {r.you && <span className="text-[10px] font-bold tracking-widest text-teal">· YOU</span>}</p>
+              <p className="truncate text-sm font-semibold text-foreground">
+                {r.name} {r.you && <span className="text-[10px] font-bold tracking-widest text-teal">· YOU</span>}
+              </p>
               <p className="truncate text-[11px] text-muted-foreground">{r.location} · U{r.age}</p>
             </div>
             <span className="font-display text-base font-black text-foreground">{r.rating}</span>
@@ -389,7 +455,10 @@ function FilterRow({ label, options, value, onChange }: { label: string; options
 function useAnimatedNumber(target: number) {
   const [v, setV] = useState(0);
   useEffect(() => {
-    const id = requestAnimationFrame(() => setV(target));
+    const id = requestAnimationFrame(() => {
+      // delay one more frame so transition kicks in from 0
+      requestAnimationFrame(() => setV(target));
+    });
     return () => cancelAnimationFrame(id);
   }, [target]);
   return v;
