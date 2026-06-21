@@ -63,6 +63,7 @@ import { Route as BookSlugRouteImport } from './routes/book.$slug'
 import { Route as AuthenticatedHomeCoachRouteImport } from './routes/_authenticated/home-coach'
 import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as CampsSlugIndexRouteImport } from './routes/camps.$slug.index'
 import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authenticated/coach.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedHomeCoachSessionsRouteImport } from './routes/_authenticated/home-coach.sessions'
@@ -365,6 +366,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const CampsSlugIndexRoute = CampsSlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CampsSlugRoute,
+} as any)
 const AuthenticatedCoachIndexRoute = AuthenticatedCoachIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -582,7 +588,7 @@ export interface FileRoutesByFullPath {
   '/coach': typeof AuthenticatedCoachRouteWithChildren
   '/home-coach': typeof AuthenticatedHomeCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
-  '/camps/$slug': typeof CampsSlugRoute
+  '/camps/$slug': typeof CampsSlugRouteWithChildren
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
@@ -629,6 +635,7 @@ export interface FileRoutesByFullPath {
   '/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/coach/': typeof AuthenticatedCoachIndexRoute
+  '/camps/$slug/': typeof CampsSlugIndexRoute
   '/coach/attendees/$athleteId': typeof AuthenticatedCoachAttendeesAthleteIdRoute
   '/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
@@ -665,7 +672,6 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/home-coach': typeof AuthenticatedHomeCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
-  '/camps/$slug': typeof CampsSlugRoute
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
@@ -712,6 +718,7 @@ export interface FileRoutesByTo {
   '/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/coach': typeof AuthenticatedCoachIndexRoute
+  '/camps/$slug': typeof CampsSlugIndexRoute
   '/coach/attendees/$athleteId': typeof AuthenticatedCoachAttendeesAthleteIdRoute
   '/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
@@ -754,7 +761,7 @@ export interface FileRoutesById {
   '/_authenticated/coach': typeof AuthenticatedCoachRouteWithChildren
   '/_authenticated/home-coach': typeof AuthenticatedHomeCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
-  '/camps/$slug': typeof CampsSlugRoute
+  '/camps/$slug': typeof CampsSlugRouteWithChildren
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
@@ -801,6 +808,7 @@ export interface FileRoutesById {
   '/_authenticated/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/coach/': typeof AuthenticatedCoachIndexRoute
+  '/camps/$slug/': typeof CampsSlugIndexRoute
   '/_authenticated/coach/attendees/$athleteId': typeof AuthenticatedCoachAttendeesAthleteIdRoute
   '/_authenticated/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/_authenticated/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
@@ -890,6 +898,7 @@ export interface FileRouteTypes {
     | '/home-coach/sessions'
     | '/admin/'
     | '/coach/'
+    | '/camps/$slug/'
     | '/coach/attendees/$athleteId'
     | '/coach/camps/$campId'
     | '/coach/camps/new'
@@ -926,7 +935,6 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/home-coach'
     | '/book/$slug'
-    | '/camps/$slug'
     | '/camps/browse'
     | '/coaches/$slug'
     | '/drill-detail/$drillId'
@@ -973,6 +981,7 @@ export interface FileRouteTypes {
     | '/home-coach/sessions'
     | '/admin'
     | '/coach'
+    | '/camps/$slug'
     | '/coach/attendees/$athleteId'
     | '/coach/camps/$campId'
     | '/coach/camps/new'
@@ -1061,6 +1070,7 @@ export interface FileRouteTypes {
     | '/_authenticated/home-coach/sessions'
     | '/_authenticated/admin/'
     | '/_authenticated/coach/'
+    | '/camps/$slug/'
     | '/_authenticated/coach/attendees/$athleteId'
     | '/_authenticated/coach/camps/$campId'
     | '/_authenticated/coach/camps/new'
@@ -1498,6 +1508,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/camps/$slug/': {
+      id: '/camps/$slug/'
+      path: '/'
+      fullPath: '/camps/$slug/'
+      preLoaderRoute: typeof CampsSlugIndexRouteImport
+      parentRoute: typeof CampsSlugRoute
+    }
     '/_authenticated/coach/': {
       id: '/_authenticated/coach/'
       path: '/'
@@ -1875,13 +1892,25 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface CampsSlugRouteChildren {
+  CampsSlugIndexRoute: typeof CampsSlugIndexRoute
+}
+
+const CampsSlugRouteChildren: CampsSlugRouteChildren = {
+  CampsSlugIndexRoute: CampsSlugIndexRoute,
+}
+
+const CampsSlugRouteWithChildren = CampsSlugRoute._addFileChildren(
+  CampsSlugRouteChildren,
+)
+
 interface CampsRouteChildren {
-  CampsSlugRoute: typeof CampsSlugRoute
+  CampsSlugRoute: typeof CampsSlugRouteWithChildren
   CampsBrowseRoute: typeof CampsBrowseRoute
 }
 
 const CampsRouteChildren: CampsRouteChildren = {
-  CampsSlugRoute: CampsSlugRoute,
+  CampsSlugRoute: CampsSlugRouteWithChildren,
   CampsBrowseRoute: CampsBrowseRoute,
 }
 

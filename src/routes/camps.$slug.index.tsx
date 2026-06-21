@@ -151,7 +151,7 @@ function CampPublicPage() {
         {sessions.length > 0 && (
           <Section title="Daily schedule">
             <ul className="space-y-2">
-              {sessions.map((s, i) => (
+              {sessions.map((s: { id: string; session_date: string; start_time: string | null; end_time: string | null; title: string | null }, i: number) => (
                 <li key={s.id} className="flex items-center justify-between rounded-xl border border-border bg-surface px-3 py-2.5">
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-teal">Day {i + 1}</p>
