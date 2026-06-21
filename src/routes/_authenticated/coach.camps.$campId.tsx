@@ -856,6 +856,46 @@ function OptionsTab({ camp }: { camp: Camp }) {
         setText={setWaiverText}
       />
 
+      <div className="rounded-2xl border border-border bg-card p-3">
+        <h3 className="mb-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-foreground">
+          <Bell size={11} /> Automated reminders
+        </h3>
+        <p className="mb-2 text-[10px] text-muted-foreground">
+          Sent via SMS and email to opted-in parents. Configure your SMS sender in Settings.
+        </p>
+        <div className="space-y-1.5">
+          {([
+            ["Registration confirmation", confirmSms, setConfirmSms, "Immediately after sign-up"],
+            ["7-day reminder", rem7, setRem7, "1 week before camp start"],
+            ["1-day reminder", rem1, setRem1, "Day before each session"],
+            ["Morning-of reminder", remMorning, setRemMorning, "2 hours before start time"],
+            ["Absent alert", absent, setAbsent, "If athlete not checked in"],
+          ] as const).map(([label, val, set, hint]) => (
+            <label key={label} className="flex items-center justify-between rounded-lg bg-surface px-3 py-2 text-xs">
+              <span>
+                <span className="font-semibold">{label}</span>
+                <span className="ml-1 text-[10px] text-muted-foreground">· {hint}</span>
+              </span>
+              <input type="checkbox" checked={val} onChange={(e) => set(e.target.checked)} className="h-3.5 w-3.5 accent-teal" />
+            </label>
+          ))}
+        </div>
+        {absent && (
+          <div className="mt-2 flex items-center gap-2 rounded-lg bg-surface px-3 py-2 text-xs">
+            <span className="text-muted-foreground">Alert parent if not checked in within</span>
+            <input
+              type="number"
+              min={5}
+              max={120}
+              value={absentMin}
+              onChange={(e) => setAbsentMin(e.target.value)}
+              className="w-16 rounded-md border border-border bg-background px-2 py-1 text-sm"
+            />
+            <span className="text-muted-foreground">minutes of start</span>
+          </div>
+        )}
+      </div>
+
       <PromoCodesPanel campId={camp.id} coupons={coupons} setCoupons={setCoupons} />
 
       <CustomFieldsPanel campId={camp.id} fields={fields} setFields={setFields} />
