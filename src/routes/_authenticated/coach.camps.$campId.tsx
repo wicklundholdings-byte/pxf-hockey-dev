@@ -669,7 +669,7 @@ function OptionsTab({ camp }: { camp: Camp }) {
     const updates = {
       price_cents: Math.round(parseFloat(price || "0") * 100),
       capacity: parseInt(capacity || "0", 10),
-      payment_plan: paymentPlan as "none" | "two_split" | "three_split",
+      payment_plan: paymentPlan as "none" | "two" | "three",
       sibling_discount: siblingDiscount,
       waiver_required: waiverRequired,
       waiver_text: waiverText || null,
@@ -710,8 +710,8 @@ function OptionsTab({ camp }: { camp: Camp }) {
         <div className="grid grid-cols-3 gap-1.5">
           {[
             { v: "none", label: "Pay in full" },
-            { v: "two_split", label: "2 installments" },
-            { v: "three_split", label: "3 installments" },
+            { v: "two", label: "2 installments" },
+            { v: "three", label: "3 installments" },
           ].map((opt) => (
             <button
               key={opt.v}
