@@ -69,7 +69,7 @@ export function PlaybookFavorites() {
           {showDrills && drills.length > 0 && (
             <Section title="Drills">
               {drills.map((d) => (
-                <Link key={d.id} to="/drill/$slug" params={{ slug: d.id }} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
+                <Link key={d.id} to="/drill-detail/$drillId" params={{ drillId: d.id }} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface text-teal"><Dumbbell size={16} /></div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-foreground">{d.title}</p>
