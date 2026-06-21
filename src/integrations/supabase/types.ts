@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           id: string
           marked_at: string
+          method: string
           present: boolean
           registration_id: string
           session_id: string
@@ -25,6 +26,7 @@ export type Database = {
         Insert: {
           id?: string
           marked_at?: string
+          method?: string
           present?: boolean
           registration_id: string
           session_id: string
@@ -32,6 +34,7 @@ export type Database = {
         Update: {
           id?: string
           marked_at?: string
+          method?: string
           present?: boolean
           registration_id?: string
           session_id?: string
@@ -1003,6 +1006,69 @@ export type Database = {
           },
         ]
       }
+      sms_logs: {
+        Row: {
+          body: string
+          camp_id: string | null
+          created_at: string
+          id: string
+          kind: string
+          owner_id: string
+          recipient_name: string | null
+          recipient_phone: string | null
+          registration_id: string | null
+          scheduled_for: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          camp_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          owner_id: string
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          registration_id?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          camp_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          owner_id?: string
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          registration_id?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_logs_camp_id_fkey"
+            columns: ["camp_id"]
+            isOneToOne: false
+            referencedRelation: "camps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sms_logs_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -1169,7 +1235,9 @@ export type Database = {
           contact_id: string | null
           created_at: string
           id: string
+          notified_at: string | null
           position: number
+          promoted_at: string | null
           status: Database["public"]["Enums"]["waitlist_status"]
         }
         Insert: {
@@ -1179,7 +1247,9 @@ export type Database = {
           contact_id?: string | null
           created_at?: string
           id?: string
+          notified_at?: string | null
           position?: number
+          promoted_at?: string | null
           status?: Database["public"]["Enums"]["waitlist_status"]
         }
         Update: {
@@ -1189,7 +1259,9 @@ export type Database = {
           contact_id?: string | null
           created_at?: string
           id?: string
+          notified_at?: string | null
           position?: number
+          promoted_at?: string | null
           status?: Database["public"]["Enums"]["waitlist_status"]
         }
         Relationships: [

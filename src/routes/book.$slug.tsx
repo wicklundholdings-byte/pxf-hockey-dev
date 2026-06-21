@@ -2,7 +2,8 @@ import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { submitBooking, previewCoupon } from "@/lib/booking.functions";
-import { Calendar, MapPin, Clock, Users, CheckCircle2, Loader2, Tag, X, PenLine, Type as TypeIcon, FileText, Plus, Trash2, CalendarClock } from "lucide-react";
+import { Calendar, MapPin, Clock, Users, CheckCircle2, Loader2, Tag, X, PenLine, Type as TypeIcon, FileText, Plus, Trash2, CalendarClock, QrCode } from "lucide-react";
+import QRCode from "qrcode";
 
 
 export const Route = createFileRoute("/book/$slug")({
@@ -51,10 +52,11 @@ function BookingPage() {
   const [paymentPlan, setPaymentPlan] = useState<"none" | "two" | "three">("none");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<
-    | { kind: "registered"; amountCents: number; count: number; paymentPlan: "none" | "two" | "three" }
+    | { kind: "registered"; amountCents: number; count: number; paymentPlan: "none" | "two" | "three"; registrationIds: string[] }
     | { kind: "waitlisted"; count: number }
     | null
   >(null);
+  const [qrDataUrls, setQrDataUrls] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState("");
   const [coupon, setCoupon] = useState<{ baseCents: number; discountCents: number; finalCents: number; label: string } | null>(null);
@@ -64,6 +66,14 @@ function BookingPage() {
   const [waiverMode, setWaiverMode] = useState<"drawn" | "typed">("drawn");
   const [waiverTyped, setWaiverTyped] = useState("");
   const [waiverDrawn, setWaiverDrawn] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (result && result.kind === "registered") {
+      Promise.all(
+        result.registrationIds.map((id) => QRCode.toDataURL(id, { width: 280, margin: 1 })),
+      ).then(setQrDataUrls);
+    }
+  }, [result]);
 
   useEffect(() => {
     (async () => {
@@ -214,6 +224,24 @@ function BookingPage() {
                 <p className="mt-1 text-[11px] text-muted-foreground">
                   {result.paymentPlan === "two" ? "2" : "3"} monthly installments scheduled.
                 </p>
+              )}
+              {qrDataUrls.length > 0 && (
+                <div className="mt-6 space-y-3 border-t border-border pt-5">
+                  <p className="flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <QrCode size={11} /> Check-in QR{qrDataUrls.length > 1 ? " codes" : ""}
+                  </p>
+                  <div className="flex flex-wrap items-start justify-center gap-3">
+                    {qrDataUrls.map((url, i) => (
+                      <div key={i} className="rounded-2xl bg-white p-2">
+                        <img src={url} alt={`QR ${i + 1}`} className="h-32 w-32" />
+                        <p className="mt-1 text-center text-[9px] font-semibold text-black">
+                          {athletes[i]?.full_name || `Child ${i + 1}`}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">Show this at the rink — coaches scan to check in.</p>
+                </div>
               )}
             </>
           )}

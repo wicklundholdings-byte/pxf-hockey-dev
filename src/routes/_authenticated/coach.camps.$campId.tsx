@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X, ListChecks, BookOpen, ListPlus, ShieldCheck } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X, ListChecks, BookOpen, ListPlus, ShieldCheck, QrCode, Send } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
+import { QRScannerModal } from "@/components/coach/qr-scanner";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/$campId")({
   component: CampDetailPage,
@@ -374,7 +375,36 @@ function RosterTab({ regs }: { regs: Reg[] }) {
 }
 
 function WaitlistTab({ entries }: { entries: Wait[] }) {
-  if (entries.length === 0) {
+  const [local, setLocal] = useState<Wait[]>(entries);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  async function invite(w: Wait) {
+    setBusyId(w.id);
+    const phone = w.contacts?.phone ?? null;
+    const name = w.contacts?.full_name ?? "there";
+    const childName = w.attendees?.full_name ?? "your child";
+    const { data: u } = await supabase.auth.getUser();
+    const ownerId = u.user?.id;
+    if (ownerId) {
+      await supabase.from("sms_logs").insert({
+        owner_id: ownerId,
+        recipient_phone: phone,
+        recipient_name: name,
+        body: `Hi ${name}, a spot just opened for ${childName}! Reply YES within 24 hours to claim it.`,
+        kind: "waitlist_promo",
+        status: phone ? "queued" : "mock",
+      });
+    }
+    const now = new Date().toISOString();
+    await supabase
+      .from("waitlist_entries")
+      .update({ promoted_at: now, notified_at: now, status: "offered" })
+      .eq("id", w.id);
+    setLocal((prev) => prev.map((e) => (e.id === w.id ? { ...e, status: "offered" } : e)));
+    setBusyId(null);
+  }
+
+  if (local.length === 0) {
     return (
       <p className="rounded-2xl border border-border bg-card p-6 text-center text-xs text-muted-foreground">
         Waitlist is empty.
@@ -383,22 +413,35 @@ function WaitlistTab({ entries }: { entries: Wait[] }) {
   }
   return (
     <ul className="space-y-2">
-      {entries.map((w, i) => (
-        <li key={w.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
-          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-400/15 text-[10px] font-bold text-amber-400">
-            #{w.position ?? i + 1}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-foreground">
-              {w.attendees?.full_name ?? w.contacts?.full_name ?? "Unknown"}
-            </p>
-            <p className="truncate text-[10px] text-muted-foreground">
-              {w.contacts?.email ?? ""} {w.contacts?.phone ? `· ${w.contacts.phone}` : ""}
-            </p>
-          </div>
-          <button className="rounded-full bg-teal px-3 py-1 text-[10px] font-bold text-black">Invite</button>
-        </li>
-      ))}
+      {local.map((w, i) => {
+        const invited = w.status === "offered" || w.status === "claimed";
+        return (
+          <li key={w.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
+            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-400/15 text-[10px] font-bold text-amber-400">
+              #{w.position ?? i + 1}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-foreground">
+                {w.attendees?.full_name ?? w.contacts?.full_name ?? "Unknown"}
+              </p>
+              <p className="truncate text-[10px] text-muted-foreground">
+                {w.contacts?.email ?? ""} {w.contacts?.phone ? `· ${w.contacts.phone}` : ""}
+              </p>
+            </div>
+            {invited ? (
+              <span className="rounded-full bg-emerald-400/15 px-3 py-1 text-[10px] font-bold text-emerald-400">Invited ✓</span>
+            ) : (
+              <button
+                onClick={() => invite(w)}
+                disabled={busyId === w.id}
+                className="rounded-full bg-teal px-3 py-1 text-[10px] font-bold text-black disabled:opacity-50"
+              >
+                {busyId === w.id ? "…" : "Invite"}
+              </button>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -406,6 +449,8 @@ function WaitlistTab({ entries }: { entries: Wait[] }) {
 function SessionsTab({ sessions, regs, campId }: { sessions: Session[]; regs: Reg[]; campId: string }) {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(sessions[0]?.id ?? null);
   const [attendance, setAttendance] = useState<Map<string, boolean>>(new Map());
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scanFlash, setScanFlash] = useState<string | null>(null);
 
   useEffect(() => {
     if (!activeSessionId) return;
@@ -420,16 +465,35 @@ function SessionsTab({ sessions, regs, campId }: { sessions: Session[]; regs: Re
       });
   }, [activeSessionId]);
 
-  async function toggle(regId: string) {
+  async function mark(regId: string, present: boolean, method: "manual" | "qr") {
     if (!activeSessionId) return;
-    const next = !(attendance.get(regId) ?? false);
     const m = new Map(attendance);
-    m.set(regId, next);
+    m.set(regId, present);
     setAttendance(m);
     await supabase.from("attendance").upsert(
-      { registration_id: regId, session_id: activeSessionId, present: next, marked_at: new Date().toISOString() },
+      { registration_id: regId, session_id: activeSessionId, present, marked_at: new Date().toISOString(), method },
       { onConflict: "registration_id,session_id" },
     );
+  }
+
+  async function toggle(regId: string) {
+    await mark(regId, !(attendance.get(regId) ?? false), "manual");
+  }
+
+  function handleScan(text: string) {
+    setScannerOpen(false);
+    // QR encodes registration_id (uuid). Match against paid registrations.
+    const id = text.trim();
+    const reg = regs.find((r) => r.id === id || r.id.startsWith(id) || id.includes(r.id));
+    if (!reg) {
+      setScanFlash("✗ Unknown QR code");
+      setTimeout(() => setScanFlash(null), 2500);
+      return;
+    }
+    mark(reg.id, true, "qr");
+    const name = reg.attendees?.full_name ?? reg.contacts?.full_name ?? "Attendee";
+    setScanFlash(`✓ ${name} checked in`);
+    setTimeout(() => setScanFlash(null), 2500);
   }
 
   if (sessions.length === 0) {
@@ -441,9 +505,31 @@ function SessionsTab({ sessions, regs, campId }: { sessions: Session[]; regs: Re
   }
 
   const paid = regs.filter((r) => r.status === "paid");
+  const presentCount = paid.filter((r) => attendance.get(r.id)).length;
+  const unscannedCount = paid.length - presentCount;
 
   return (
     <div className="space-y-3">
+      <div className="flex items-center gap-2 rounded-2xl border border-border bg-card p-3">
+        <div className="flex-1 grid grid-cols-3 gap-2 text-center">
+          <div><p className="text-[9px] uppercase text-muted-foreground">Present</p><p className="text-sm font-bold text-emerald-400">{presentCount}</p></div>
+          <div><p className="text-[9px] uppercase text-muted-foreground">Absent</p><p className="text-sm font-bold text-amber-400">{unscannedCount}</p></div>
+          <div><p className="text-[9px] uppercase text-muted-foreground">Total</p><p className="text-sm font-bold text-foreground">{paid.length}</p></div>
+        </div>
+        <button
+          onClick={() => setScannerOpen(true)}
+          disabled={!activeSessionId || paid.length === 0}
+          className="flex items-center gap-1.5 rounded-full bg-teal px-3 py-2 text-[11px] font-bold text-black disabled:opacity-40"
+        >
+          <QrCode size={14} /> Scan
+        </button>
+      </div>
+      {scanFlash && (
+        <div className="rounded-xl border border-border bg-surface px-3 py-2 text-center text-xs font-semibold text-foreground">
+          {scanFlash}
+        </div>
+      )}
+
       <div className="-mx-5 overflow-x-auto px-5">
         <div className="flex gap-2">
           {sessions.map((s, i) => {
@@ -493,6 +579,9 @@ function SessionsTab({ sessions, regs, campId }: { sessions: Session[]; regs: Re
         </ul>
       )}
       <p className="text-center text-[10px] text-muted-foreground">Camp ID: {campId.slice(0, 8)}</p>
+      {scannerOpen && (
+        <QRScannerModal onScan={handleScan} onClose={() => setScannerOpen(false)} />
+      )}
     </div>
   );
 }
