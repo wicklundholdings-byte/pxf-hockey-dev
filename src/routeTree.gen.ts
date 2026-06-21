@@ -36,6 +36,8 @@ import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StoreIndexRouteImport } from './routes/store.index'
+import { Route as ParentIndexRouteImport } from './routes/parent.index'
+import { Route as OnboardingIndexRouteImport } from './routes/onboarding.index'
 import { Route as StoreCartRouteImport } from './routes/store.cart'
 import { Route as StoreProductIdRouteImport } from './routes/store.$productId'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
@@ -47,18 +49,29 @@ import { Route as PaymentsCouponRouteImport } from './routes/payments.coupon'
 import { Route as PaymentsConnectRouteImport } from './routes/payments.connect'
 import { Route as PaymentsConfirmationRouteImport } from './routes/payments.confirmation'
 import { Route as PaymentsCheckoutRouteImport } from './routes/payments.checkout'
+import { Route as ParentScheduleRouteImport } from './routes/parent.schedule'
+import { Route as ParentProfileRouteImport } from './routes/parent.profile'
+import { Route as ParentInboxRouteImport } from './routes/parent.inbox'
+import { Route as OnboardingParentRouteImport } from './routes/onboarding.parent'
+import { Route as OnboardingCoachRouteImport } from './routes/onboarding.coach'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
 import { Route as CoachesSlugRouteImport } from './routes/coaches.$slug'
 import { Route as CampsBrowseRouteImport } from './routes/camps.browse'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
+import { Route as AuthenticatedHomeCoachRouteImport } from './routes/_authenticated/home-coach'
 import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authenticated/coach.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedHomeCoachSessionsRouteImport } from './routes/_authenticated/home-coach.sessions'
+import { Route as AuthenticatedHomeCoachProfileRouteImport } from './routes/_authenticated/home-coach.profile'
+import { Route as AuthenticatedHomeCoachInboxRouteImport } from './routes/_authenticated/home-coach.inbox'
 import { Route as AuthenticatedCoachWaiversRouteImport } from './routes/_authenticated/coach.waivers'
 import { Route as AuthenticatedCoachTeamRouteImport } from './routes/_authenticated/coach.team'
 import { Route as AuthenticatedCoachRosterRouteImport } from './routes/_authenticated/coach.roster'
+import { Route as AuthenticatedCoachPlansRouteImport } from './routes/_authenticated/coach.plans'
 import { Route as AuthenticatedCoachMembershipsRouteImport } from './routes/_authenticated/coach.memberships'
+import { Route as AuthenticatedCoachLibraryRouteImport } from './routes/_authenticated/coach.library'
 import { Route as AuthenticatedCoachInboxRouteImport } from './routes/_authenticated/coach.inbox'
 import { Route as AuthenticatedCoachFinancialsRouteImport } from './routes/_authenticated/coach.financials'
 import { Route as AuthenticatedCoachEmailRouteImport } from './routes/_authenticated/coach.email'
@@ -213,6 +226,16 @@ const StoreIndexRoute = StoreIndexRouteImport.update({
   path: '/store/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ParentIndexRoute = ParentIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ParentRoute,
+} as any)
+const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OnboardingRoute,
+} as any)
 const StoreCartRoute = StoreCartRouteImport.update({
   id: '/store/cart',
   path: '/store/cart',
@@ -268,6 +291,31 @@ const PaymentsCheckoutRoute = PaymentsCheckoutRouteImport.update({
   path: '/payments/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ParentScheduleRoute = ParentScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
+  getParentRoute: () => ParentRoute,
+} as any)
+const ParentProfileRoute = ParentProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => ParentRoute,
+} as any)
+const ParentInboxRoute = ParentInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => ParentRoute,
+} as any)
+const OnboardingParentRoute = OnboardingParentRouteImport.update({
+  id: '/parent',
+  path: '/parent',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const OnboardingCoachRoute = OnboardingCoachRouteImport.update({
+  id: '/coach',
+  path: '/coach',
+  getParentRoute: () => OnboardingRoute,
+} as any)
 const DrillDetailDrillIdRoute = DrillDetailDrillIdRouteImport.update({
   id: '/drill-detail/$drillId',
   path: '/drill-detail/$drillId',
@@ -287,6 +335,11 @@ const BookSlugRoute = BookSlugRouteImport.update({
   id: '/book/$slug',
   path: '/book/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedHomeCoachRoute = AuthenticatedHomeCoachRouteImport.update({
+  id: '/home-coach',
+  path: '/home-coach',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCoachRoute = AuthenticatedCoachRouteImport.update({
   id: '/coach',
@@ -308,6 +361,24 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedHomeCoachSessionsRoute =
+  AuthenticatedHomeCoachSessionsRouteImport.update({
+    id: '/sessions',
+    path: '/sessions',
+    getParentRoute: () => AuthenticatedHomeCoachRoute,
+  } as any)
+const AuthenticatedHomeCoachProfileRoute =
+  AuthenticatedHomeCoachProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AuthenticatedHomeCoachRoute,
+  } as any)
+const AuthenticatedHomeCoachInboxRoute =
+  AuthenticatedHomeCoachInboxRouteImport.update({
+    id: '/inbox',
+    path: '/inbox',
+    getParentRoute: () => AuthenticatedHomeCoachRoute,
+  } as any)
 const AuthenticatedCoachWaiversRoute =
   AuthenticatedCoachWaiversRouteImport.update({
     id: '/waivers',
@@ -325,10 +396,21 @@ const AuthenticatedCoachRosterRoute =
     path: '/roster',
     getParentRoute: () => AuthenticatedCoachRoute,
   } as any)
+const AuthenticatedCoachPlansRoute = AuthenticatedCoachPlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => AuthenticatedCoachRoute,
+} as any)
 const AuthenticatedCoachMembershipsRoute =
   AuthenticatedCoachMembershipsRouteImport.update({
     id: '/memberships',
     path: '/memberships',
+    getParentRoute: () => AuthenticatedCoachRoute,
+  } as any)
+const AuthenticatedCoachLibraryRoute =
+  AuthenticatedCoachLibraryRouteImport.update({
+    id: '/library',
+    path: '/library',
     getParentRoute: () => AuthenticatedCoachRoute,
   } as any)
 const AuthenticatedCoachInboxRoute = AuthenticatedCoachInboxRouteImport.update({
@@ -456,8 +538,8 @@ export interface FileRoutesByFullPath {
   '/gameiq': typeof GameiqRoute
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
-  '/onboarding': typeof OnboardingRoute
-  '/parent': typeof ParentRoute
+  '/onboarding': typeof OnboardingRouteWithChildren
+  '/parent': typeof ParentRouteWithChildren
   '/payments-preview': typeof PaymentsPreviewRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
@@ -471,10 +553,16 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof WelcomeRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/coach': typeof AuthenticatedCoachRouteWithChildren
+  '/home-coach': typeof AuthenticatedHomeCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/onboarding/coach': typeof OnboardingCoachRoute
+  '/onboarding/parent': typeof OnboardingParentRoute
+  '/parent/inbox': typeof ParentInboxRoute
+  '/parent/profile': typeof ParentProfileRoute
+  '/parent/schedule': typeof ParentScheduleRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
@@ -486,6 +574,8 @@ export interface FileRoutesByFullPath {
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
+  '/onboarding/': typeof OnboardingIndexRoute
+  '/parent/': typeof ParentIndexRoute
   '/store/': typeof StoreIndexRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
@@ -499,10 +589,15 @@ export interface FileRoutesByFullPath {
   '/coach/email': typeof AuthenticatedCoachEmailRoute
   '/coach/financials': typeof AuthenticatedCoachFinancialsRoute
   '/coach/inbox': typeof AuthenticatedCoachInboxRoute
+  '/coach/library': typeof AuthenticatedCoachLibraryRoute
   '/coach/memberships': typeof AuthenticatedCoachMembershipsRoute
+  '/coach/plans': typeof AuthenticatedCoachPlansRoute
   '/coach/roster': typeof AuthenticatedCoachRosterRoute
   '/coach/team': typeof AuthenticatedCoachTeamRoute
   '/coach/waivers': typeof AuthenticatedCoachWaiversRoute
+  '/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
+  '/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
+  '/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/coach/': typeof AuthenticatedCoachIndexRoute
   '/coach/attendees/$athleteId': typeof AuthenticatedCoachAttendeesAthleteIdRoute
@@ -526,8 +621,6 @@ export interface FileRoutesByTo {
   '/gameiq': typeof GameiqRoute
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
-  '/onboarding': typeof OnboardingRoute
-  '/parent': typeof ParentRoute
   '/payments-preview': typeof PaymentsPreviewRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
@@ -539,10 +632,16 @@ export interface FileRoutesByTo {
   '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
   '/welcome': typeof WelcomeRoute
+  '/home-coach': typeof AuthenticatedHomeCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/onboarding/coach': typeof OnboardingCoachRoute
+  '/onboarding/parent': typeof OnboardingParentRoute
+  '/parent/inbox': typeof ParentInboxRoute
+  '/parent/profile': typeof ParentProfileRoute
+  '/parent/schedule': typeof ParentScheduleRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
@@ -554,6 +653,8 @@ export interface FileRoutesByTo {
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
+  '/onboarding': typeof OnboardingIndexRoute
+  '/parent': typeof ParentIndexRoute
   '/store': typeof StoreIndexRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
@@ -567,10 +668,15 @@ export interface FileRoutesByTo {
   '/coach/email': typeof AuthenticatedCoachEmailRoute
   '/coach/financials': typeof AuthenticatedCoachFinancialsRoute
   '/coach/inbox': typeof AuthenticatedCoachInboxRoute
+  '/coach/library': typeof AuthenticatedCoachLibraryRoute
   '/coach/memberships': typeof AuthenticatedCoachMembershipsRoute
+  '/coach/plans': typeof AuthenticatedCoachPlansRoute
   '/coach/roster': typeof AuthenticatedCoachRosterRoute
   '/coach/team': typeof AuthenticatedCoachTeamRoute
   '/coach/waivers': typeof AuthenticatedCoachWaiversRoute
+  '/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
+  '/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
+  '/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/coach': typeof AuthenticatedCoachIndexRoute
   '/coach/attendees/$athleteId': typeof AuthenticatedCoachAttendeesAthleteIdRoute
@@ -596,8 +702,8 @@ export interface FileRoutesById {
   '/gameiq': typeof GameiqRoute
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
-  '/onboarding': typeof OnboardingRoute
-  '/parent': typeof ParentRoute
+  '/onboarding': typeof OnboardingRouteWithChildren
+  '/parent': typeof ParentRouteWithChildren
   '/payments-preview': typeof PaymentsPreviewRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
@@ -611,10 +717,16 @@ export interface FileRoutesById {
   '/welcome': typeof WelcomeRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/coach': typeof AuthenticatedCoachRouteWithChildren
+  '/_authenticated/home-coach': typeof AuthenticatedHomeCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/onboarding/coach': typeof OnboardingCoachRoute
+  '/onboarding/parent': typeof OnboardingParentRoute
+  '/parent/inbox': typeof ParentInboxRoute
+  '/parent/profile': typeof ParentProfileRoute
+  '/parent/schedule': typeof ParentScheduleRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
@@ -626,6 +738,8 @@ export interface FileRoutesById {
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
+  '/onboarding/': typeof OnboardingIndexRoute
+  '/parent/': typeof ParentIndexRoute
   '/store/': typeof StoreIndexRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/_authenticated/admin/drills': typeof AuthenticatedAdminDrillsRoute
@@ -639,10 +753,15 @@ export interface FileRoutesById {
   '/_authenticated/coach/email': typeof AuthenticatedCoachEmailRoute
   '/_authenticated/coach/financials': typeof AuthenticatedCoachFinancialsRoute
   '/_authenticated/coach/inbox': typeof AuthenticatedCoachInboxRoute
+  '/_authenticated/coach/library': typeof AuthenticatedCoachLibraryRoute
   '/_authenticated/coach/memberships': typeof AuthenticatedCoachMembershipsRoute
+  '/_authenticated/coach/plans': typeof AuthenticatedCoachPlansRoute
   '/_authenticated/coach/roster': typeof AuthenticatedCoachRosterRoute
   '/_authenticated/coach/team': typeof AuthenticatedCoachTeamRoute
   '/_authenticated/coach/waivers': typeof AuthenticatedCoachWaiversRoute
+  '/_authenticated/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
+  '/_authenticated/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
+  '/_authenticated/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/coach/': typeof AuthenticatedCoachIndexRoute
   '/_authenticated/coach/attendees/$athleteId': typeof AuthenticatedCoachAttendeesAthleteIdRoute
@@ -683,10 +802,16 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/admin'
     | '/coach'
+    | '/home-coach'
     | '/book/$slug'
     | '/camps/browse'
     | '/coaches/$slug'
     | '/drill-detail/$drillId'
+    | '/onboarding/coach'
+    | '/onboarding/parent'
+    | '/parent/inbox'
+    | '/parent/profile'
+    | '/parent/schedule'
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
@@ -698,6 +823,8 @@ export interface FileRouteTypes {
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
+    | '/onboarding/'
+    | '/parent/'
     | '/store/'
     | '/admin/categories'
     | '/admin/drills'
@@ -711,10 +838,15 @@ export interface FileRouteTypes {
     | '/coach/email'
     | '/coach/financials'
     | '/coach/inbox'
+    | '/coach/library'
     | '/coach/memberships'
+    | '/coach/plans'
     | '/coach/roster'
     | '/coach/team'
     | '/coach/waivers'
+    | '/home-coach/inbox'
+    | '/home-coach/profile'
+    | '/home-coach/sessions'
     | '/admin/'
     | '/coach/'
     | '/coach/attendees/$athleteId'
@@ -738,8 +870,6 @@ export interface FileRouteTypes {
     | '/gameiq'
     | '/membership'
     | '/notifications'
-    | '/onboarding'
-    | '/parent'
     | '/payments-preview'
     | '/profile'
     | '/programs'
@@ -751,10 +881,16 @@ export interface FileRouteTypes {
     | '/signature'
     | '/team'
     | '/welcome'
+    | '/home-coach'
     | '/book/$slug'
     | '/camps/browse'
     | '/coaches/$slug'
     | '/drill-detail/$drillId'
+    | '/onboarding/coach'
+    | '/onboarding/parent'
+    | '/parent/inbox'
+    | '/parent/profile'
+    | '/parent/schedule'
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
@@ -766,6 +902,8 @@ export interface FileRouteTypes {
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
+    | '/onboarding'
+    | '/parent'
     | '/store'
     | '/admin/categories'
     | '/admin/drills'
@@ -779,10 +917,15 @@ export interface FileRouteTypes {
     | '/coach/email'
     | '/coach/financials'
     | '/coach/inbox'
+    | '/coach/library'
     | '/coach/memberships'
+    | '/coach/plans'
     | '/coach/roster'
     | '/coach/team'
     | '/coach/waivers'
+    | '/home-coach/inbox'
+    | '/home-coach/profile'
+    | '/home-coach/sessions'
     | '/admin'
     | '/coach'
     | '/coach/attendees/$athleteId'
@@ -822,10 +965,16 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/_authenticated/admin'
     | '/_authenticated/coach'
+    | '/_authenticated/home-coach'
     | '/book/$slug'
     | '/camps/browse'
     | '/coaches/$slug'
     | '/drill-detail/$drillId'
+    | '/onboarding/coach'
+    | '/onboarding/parent'
+    | '/parent/inbox'
+    | '/parent/profile'
+    | '/parent/schedule'
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
@@ -837,6 +986,8 @@ export interface FileRouteTypes {
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
+    | '/onboarding/'
+    | '/parent/'
     | '/store/'
     | '/_authenticated/admin/categories'
     | '/_authenticated/admin/drills'
@@ -850,10 +1001,15 @@ export interface FileRouteTypes {
     | '/_authenticated/coach/email'
     | '/_authenticated/coach/financials'
     | '/_authenticated/coach/inbox'
+    | '/_authenticated/coach/library'
     | '/_authenticated/coach/memberships'
+    | '/_authenticated/coach/plans'
     | '/_authenticated/coach/roster'
     | '/_authenticated/coach/team'
     | '/_authenticated/coach/waivers'
+    | '/_authenticated/home-coach/inbox'
+    | '/_authenticated/home-coach/profile'
+    | '/_authenticated/home-coach/sessions'
     | '/_authenticated/admin/'
     | '/_authenticated/coach/'
     | '/_authenticated/coach/attendees/$athleteId'
@@ -879,8 +1035,8 @@ export interface RootRouteChildren {
   GameiqRoute: typeof GameiqRoute
   MembershipRoute: typeof MembershipRoute
   NotificationsRoute: typeof NotificationsRoute
-  OnboardingRoute: typeof OnboardingRoute
-  ParentRoute: typeof ParentRoute
+  OnboardingRoute: typeof OnboardingRouteWithChildren
+  ParentRoute: typeof ParentRouteWithChildren
   PaymentsPreviewRoute: typeof PaymentsPreviewRoute
   ProfileRoute: typeof ProfileRoute
   ProgramsRoute: typeof ProgramsRoute
@@ -1100,6 +1256,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoreIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/parent/': {
+      id: '/parent/'
+      path: '/'
+      fullPath: '/parent/'
+      preLoaderRoute: typeof ParentIndexRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/onboarding/': {
+      id: '/onboarding/'
+      path: '/'
+      fullPath: '/onboarding/'
+      preLoaderRoute: typeof OnboardingIndexRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
     '/store/cart': {
       id: '/store/cart'
       path: '/store/cart'
@@ -1177,6 +1347,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PaymentsCheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/parent/schedule': {
+      id: '/parent/schedule'
+      path: '/schedule'
+      fullPath: '/parent/schedule'
+      preLoaderRoute: typeof ParentScheduleRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/parent/profile': {
+      id: '/parent/profile'
+      path: '/profile'
+      fullPath: '/parent/profile'
+      preLoaderRoute: typeof ParentProfileRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/parent/inbox': {
+      id: '/parent/inbox'
+      path: '/inbox'
+      fullPath: '/parent/inbox'
+      preLoaderRoute: typeof ParentInboxRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/onboarding/parent': {
+      id: '/onboarding/parent'
+      path: '/parent'
+      fullPath: '/onboarding/parent'
+      preLoaderRoute: typeof OnboardingParentRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/coach': {
+      id: '/onboarding/coach'
+      path: '/coach'
+      fullPath: '/onboarding/coach'
+      preLoaderRoute: typeof OnboardingCoachRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
     '/drill-detail/$drillId': {
       id: '/drill-detail/$drillId'
       path: '/drill-detail/$drillId'
@@ -1204,6 +1409,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/book/$slug'
       preLoaderRoute: typeof BookSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/home-coach': {
+      id: '/_authenticated/home-coach'
+      path: '/home-coach'
+      fullPath: '/home-coach'
+      preLoaderRoute: typeof AuthenticatedHomeCoachRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/coach': {
       id: '/_authenticated/coach'
@@ -1233,6 +1445,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/home-coach/sessions': {
+      id: '/_authenticated/home-coach/sessions'
+      path: '/sessions'
+      fullPath: '/home-coach/sessions'
+      preLoaderRoute: typeof AuthenticatedHomeCoachSessionsRouteImport
+      parentRoute: typeof AuthenticatedHomeCoachRoute
+    }
+    '/_authenticated/home-coach/profile': {
+      id: '/_authenticated/home-coach/profile'
+      path: '/profile'
+      fullPath: '/home-coach/profile'
+      preLoaderRoute: typeof AuthenticatedHomeCoachProfileRouteImport
+      parentRoute: typeof AuthenticatedHomeCoachRoute
+    }
+    '/_authenticated/home-coach/inbox': {
+      id: '/_authenticated/home-coach/inbox'
+      path: '/inbox'
+      fullPath: '/home-coach/inbox'
+      preLoaderRoute: typeof AuthenticatedHomeCoachInboxRouteImport
+      parentRoute: typeof AuthenticatedHomeCoachRoute
+    }
     '/_authenticated/coach/waivers': {
       id: '/_authenticated/coach/waivers'
       path: '/waivers'
@@ -1254,11 +1487,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachRosterRouteImport
       parentRoute: typeof AuthenticatedCoachRoute
     }
+    '/_authenticated/coach/plans': {
+      id: '/_authenticated/coach/plans'
+      path: '/plans'
+      fullPath: '/coach/plans'
+      preLoaderRoute: typeof AuthenticatedCoachPlansRouteImport
+      parentRoute: typeof AuthenticatedCoachRoute
+    }
     '/_authenticated/coach/memberships': {
       id: '/_authenticated/coach/memberships'
       path: '/memberships'
       fullPath: '/coach/memberships'
       preLoaderRoute: typeof AuthenticatedCoachMembershipsRouteImport
+      parentRoute: typeof AuthenticatedCoachRoute
+    }
+    '/_authenticated/coach/library': {
+      id: '/_authenticated/coach/library'
+      path: '/library'
+      fullPath: '/coach/library'
+      preLoaderRoute: typeof AuthenticatedCoachLibraryRouteImport
       parentRoute: typeof AuthenticatedCoachRoute
     }
     '/_authenticated/coach/inbox': {
@@ -1492,7 +1739,9 @@ interface AuthenticatedCoachRouteChildren {
   AuthenticatedCoachEmailRoute: typeof AuthenticatedCoachEmailRoute
   AuthenticatedCoachFinancialsRoute: typeof AuthenticatedCoachFinancialsRoute
   AuthenticatedCoachInboxRoute: typeof AuthenticatedCoachInboxRoute
+  AuthenticatedCoachLibraryRoute: typeof AuthenticatedCoachLibraryRoute
   AuthenticatedCoachMembershipsRoute: typeof AuthenticatedCoachMembershipsRoute
+  AuthenticatedCoachPlansRoute: typeof AuthenticatedCoachPlansRoute
   AuthenticatedCoachRosterRoute: typeof AuthenticatedCoachRosterRoute
   AuthenticatedCoachTeamRoute: typeof AuthenticatedCoachTeamRoute
   AuthenticatedCoachWaiversRoute: typeof AuthenticatedCoachWaiversRoute
@@ -1510,7 +1759,9 @@ const AuthenticatedCoachRouteChildren: AuthenticatedCoachRouteChildren = {
   AuthenticatedCoachEmailRoute: AuthenticatedCoachEmailRoute,
   AuthenticatedCoachFinancialsRoute: AuthenticatedCoachFinancialsRoute,
   AuthenticatedCoachInboxRoute: AuthenticatedCoachInboxRoute,
+  AuthenticatedCoachLibraryRoute: AuthenticatedCoachLibraryRoute,
   AuthenticatedCoachMembershipsRoute: AuthenticatedCoachMembershipsRoute,
+  AuthenticatedCoachPlansRoute: AuthenticatedCoachPlansRoute,
   AuthenticatedCoachRosterRoute: AuthenticatedCoachRosterRoute,
   AuthenticatedCoachTeamRoute: AuthenticatedCoachTeamRoute,
   AuthenticatedCoachWaiversRoute: AuthenticatedCoachWaiversRoute,
@@ -1520,14 +1771,34 @@ const AuthenticatedCoachRouteChildren: AuthenticatedCoachRouteChildren = {
 const AuthenticatedCoachRouteWithChildren =
   AuthenticatedCoachRoute._addFileChildren(AuthenticatedCoachRouteChildren)
 
+interface AuthenticatedHomeCoachRouteChildren {
+  AuthenticatedHomeCoachInboxRoute: typeof AuthenticatedHomeCoachInboxRoute
+  AuthenticatedHomeCoachProfileRoute: typeof AuthenticatedHomeCoachProfileRoute
+  AuthenticatedHomeCoachSessionsRoute: typeof AuthenticatedHomeCoachSessionsRoute
+}
+
+const AuthenticatedHomeCoachRouteChildren: AuthenticatedHomeCoachRouteChildren =
+  {
+    AuthenticatedHomeCoachInboxRoute: AuthenticatedHomeCoachInboxRoute,
+    AuthenticatedHomeCoachProfileRoute: AuthenticatedHomeCoachProfileRoute,
+    AuthenticatedHomeCoachSessionsRoute: AuthenticatedHomeCoachSessionsRoute,
+  }
+
+const AuthenticatedHomeCoachRouteWithChildren =
+  AuthenticatedHomeCoachRoute._addFileChildren(
+    AuthenticatedHomeCoachRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedCoachRoute: typeof AuthenticatedCoachRouteWithChildren
+  AuthenticatedHomeCoachRoute: typeof AuthenticatedHomeCoachRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedCoachRoute: AuthenticatedCoachRouteWithChildren,
+  AuthenticatedHomeCoachRoute: AuthenticatedHomeCoachRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -1543,6 +1814,39 @@ const CampsRouteChildren: CampsRouteChildren = {
 
 const CampsRouteWithChildren = CampsRoute._addFileChildren(CampsRouteChildren)
 
+interface OnboardingRouteChildren {
+  OnboardingCoachRoute: typeof OnboardingCoachRoute
+  OnboardingParentRoute: typeof OnboardingParentRoute
+  OnboardingIndexRoute: typeof OnboardingIndexRoute
+}
+
+const OnboardingRouteChildren: OnboardingRouteChildren = {
+  OnboardingCoachRoute: OnboardingCoachRoute,
+  OnboardingParentRoute: OnboardingParentRoute,
+  OnboardingIndexRoute: OnboardingIndexRoute,
+}
+
+const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
+  OnboardingRouteChildren,
+)
+
+interface ParentRouteChildren {
+  ParentInboxRoute: typeof ParentInboxRoute
+  ParentProfileRoute: typeof ParentProfileRoute
+  ParentScheduleRoute: typeof ParentScheduleRoute
+  ParentIndexRoute: typeof ParentIndexRoute
+}
+
+const ParentRouteChildren: ParentRouteChildren = {
+  ParentInboxRoute: ParentInboxRoute,
+  ParentProfileRoute: ParentProfileRoute,
+  ParentScheduleRoute: ParentScheduleRoute,
+  ParentIndexRoute: ParentIndexRoute,
+}
+
+const ParentRouteWithChildren =
+  ParentRoute._addFileChildren(ParentRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -1557,8 +1861,8 @@ const rootRouteChildren: RootRouteChildren = {
   GameiqRoute: GameiqRoute,
   MembershipRoute: MembershipRoute,
   NotificationsRoute: NotificationsRoute,
-  OnboardingRoute: OnboardingRoute,
-  ParentRoute: ParentRoute,
+  OnboardingRoute: OnboardingRouteWithChildren,
+  ParentRoute: ParentRouteWithChildren,
   PaymentsPreviewRoute: PaymentsPreviewRoute,
   ProfileRoute: ProfileRoute,
   ProgramsRoute: ProgramsRoute,

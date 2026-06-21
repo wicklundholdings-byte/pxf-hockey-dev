@@ -1,75 +1,75 @@
-## Phase 1 scope
 
-Three new screens under `/coach/*`, plus the full backend schema so later phases (camp detail, financials, contacts, attendees, team, inbox, email, waitlist, public booking) can land without another migration round.
+# PXF Hockey Platform Redesign — 4 User Experiences
 
-All new routes live under `src/routes/_authenticated/coach.*` and require an `admin` or new `coach` role. Existing `/admin`, `/drills`, etc. are untouched.
+This is a large architectural change. Before I build, I want to confirm scope so we don't waste cycles.
 
-## Database (one migration, all tables for the full brief)
+## Scope
 
-Created so Phase 2+ has no schema churn. Every public table gets GRANTs + RLS.
+Restructure the whole app around 4 roles with distinct bottom navs, plus trial + paywall gating for coaches. All visual mockups in the existing dark theme — no new business logic, no Stripe wiring, no DB migrations in this pass.
 
-- `coach_role` enum extension: add `coach` to existing `app_role`.
-- `camps` — format (camp/session), name, slug, description, hero_image, tags[], featured, venue/online/tba, address, start/end dates, timezone, price_cents, capacity, show_remaining, early_bird_price_cents, early_bird_expires_at, sibling_discount, payment_plan (none/2/3), waiver_url, status (draft/live/ended), owner_id, gross_sales_cents (derived), net_sales_cents (derived).
-- `camp_custom_fields` — camp_id, label, type (position/skill_level/jersey/handedness/equipment/text/select), options[], required, sort_order.
-- `camp_sessions` — camp_id, session_date, start_time, end_time (for attendance grid).
-- `contacts` — owner_id, full_name, email, phone, subscribed, joined_at.
-- `attendees` — owner_id, contact_id (parent), full_name, gender, birthday, position, skill_level, jersey_number, handedness, equipment_size.
-- `registrations` — camp_id, contact_id, attendee_id, status (paid/abandoned/waitlisted/refunded), amount_cents, order_number, created_at, custom_field_values jsonb.
-- `orders` — registration_id, stripe_payment_intent, total_cents, status, coupon_id, payment_plan_installments.
-- `coupons` — owner_id, code, percent_off, amount_off_cents, expires_at, usage_limit, used_count.
-- `payouts` — owner_id, amount_cents, status, period_start, period_end, paid_at.
-- `team_members` — owner_id (coach), member_user_id, title, status (active/invited), email, phone.
-- `attendance` — registration_id, session_id, present bool.
-- `evaluations` — registration_id, skating, puck_control, passing, shooting, hockey_sense, compete_level (1-5), notes, sent_to_parent_at.
-- `camp_media` — camp_id, storage_path, uploaded_by, created_at.
-- `conversations` — type (camp_group/dm), camp_id nullable, created_by.
-- `conversation_members` — conversation_id, user_id.
-- `messages` — conversation_id, sender_id, body, image_path, pinned, created_at, read_by jsonb.
-- `email_campaigns` — owner_id, name, audience_filter jsonb, template, subject, body, status (draft/scheduled/sent), scheduled_for, sent_count, open_count, click_count.
-- `waitlist_entries` — camp_id, contact_id, attendee_id, position, claim_expires_at, status.
+## Roles & Routes
 
-RLS: owner-scoped (`auth.uid() = owner_id`) for coach-owned rows; admins bypass via `has_role`. Public booking page reads `camps` via narrow `TO anon` SELECT policy where `status = 'live'`.
+```text
+Elite/Platinum Coach   →  /coach            (5 tabs: Dashboard, Events, Library, Inbox, Contacts)
+Home Coach             →  /home-coach       (4 tabs: Library, Sessions, Inbox, Profile)
+Camp Parent            →  /parent           (4 tabs: Camps, Schedule, Inbox, Profile)
+Athlete (existing)     →  /                 (unchanged training home)
+```
 
-Storage bucket `camp-media` (private, signed URLs) and `camp-images` (public hero images).
+Role detection lives in a single hook (`useUserRole`) reading `user_roles` + `subscriptions`. App shell routes to the correct shell based on role. No route swaps for `/` and `/parent` — gated in code as previously agreed.
 
-## Screens (Phase 1)
+## New / Updated Screens
 
-### 1. `/coach` — Coach Dashboard
-- Header: today's date, notification bell (dropdown stub), "Broadcast" button.
-- Stats grid: Gross sales, Net sales, Total registrations, Monthly revenue (mock numbers from real aggregations where available).
-- Registrations chart: line/area, date-range selector (7d/30d/90d/custom).
-- Active camps list with capacity progress bars.
-- Recent activity feed (registrations, payments, messages — pulled from real tables, empty-state friendly).
-- Quick stats: total contacts, upcoming camps.
+**Coach shell (`/coach`)**
+- Replace 4-tab nav with 5-tab nav: Dashboard, Events, Library, Inbox, Contacts
+- Add `/coach/library` (drill library + session builder, coach-edit mode)
+- Event detail (`/coach/camps/$campId`) gets sub-tabs: Overview · Roster · Session Plans · Financials · Broadcast
+- Platinum-only header chips: Branding, Analytics, Partner Channels
+- Quick-create FAB on Dashboard
 
-### 2. `/coach/camps` — Events / Camps
-- Top bar: search, status filter chips, calendar/list toggle, "Create Camp" button.
-- Card rows: date block, hero image, name, location, status badge, spots-sold progress, net sales.
-- Calendar toggle renders a month grid with camp pills.
+**Home Coach shell (`/home-coach`)** — NEW
+- `/home-coach` (Library), `/home-coach/sessions`, `/home-coach/inbox`, `/home-coach/profile`
+- Reuses existing drill/session components
 
-### 3. `/coach/camps/new` — Create Camp wizard
-- 5 steps with a step indicator, Back/Next, validation per step (zod):
-  1. Format (Camp vs Training Session)
-  2. Details (image upload to `camp-images`, name, tags, featured toggle, rich text via `textarea` + markdown preview to keep deps minimal)
-  3. Location & Time (venue/online/TBA, date range, timezone)
-  4. Registration (price, spots, show-remaining, early bird, sibling discount, payment plan, waiver upload, custom fields builder)
-  5. Review (full summary + Save Draft / Publish)
-- On submit: insert `camps` + `camp_custom_fields`, route to `/coach/camps`.
+**Camp Parent shell (`/parent`)** — refactor existing
+- 4-tab nav: Camps, Schedule, Inbox, Profile
+- `/parent/camps`, `/parent/schedule`, `/parent/inbox`, `/parent/profile`
 
-## Design system
+**Trial + Paywall**
+- `/coach/plans` — plan selection (Elite, Platinum, Home Coach) with "Start Free Trial"
+- Trial countdown banner component injected at top of every coach screen
+- Paywall overlay component (blurs content, shows plan cards) — visual only, triggered by a mock `trialExpired` flag
 
-Add the brief's tokens to `src/styles.css` under a scoped `.coach-shell` so it doesn't disturb existing screens:
-- `--coach-bg #0D1117`, `--coach-card #161B22`, `--coach-border #21262D`, `--coach-text #FFFFFF`, `--coach-muted #8B949E`, `--coach-accent #00C4B4` (teal), `--coach-success #3DFF8F`, `--coach-danger`, `--coach-warning`.
-- Status badges (Paid, Abandoned, Live, Draft, Waitlisted) as a shared `<StatusBadge />`.
-- Shared `CoachShell` layout with sidebar nav (Dashboard, Camps — others greyed "Coming in Phase 2").
+**Onboarding**
+- `/onboarding/coach` — 3 steps (plan → profile → first event/library)
+- `/onboarding/parent` — 2 steps (account → find camp by coach/join code)
+
+## Design tokens
+
+Add to `src/styles.css`:
+- `--bg: #0D1117`, `--surface: #161B22`, `--teal: #00C4B4`, `--volt: #3DFF8F`, `--muted: #8B949E`, `--border: #21262D`
+- Nav active state: teal icon + label + 2px underline
+
+## Out of scope (this pass)
+
+- Real Stripe subscription enforcement
+- DB schema changes (plan tiers, trial timestamps)
+- Real role-aware routing redirects at the router level (will use a mock role switcher for preview)
+- Email broadcast send logic
+- Session plan assignment persistence
 
 ## Technical notes
 
-- Server fns under `src/lib/coach/*.functions.ts` using `requireSupabaseAuth`; no admin client for app reads.
-- TanStack Query + `ensureQueryData` in loaders, `useSuspenseQuery` in components.
-- Role gate: new pathless `_authenticated/_coach.tsx` layout that `redirect`s if `!has_role('coach' or 'admin')`.
-- Migration includes seed: 3 sample camps (1 live, 1 draft, 1 ended), ~10 sample registrations so the dashboard isn't empty.
+- Each shell is a layout route with `<Outlet />` and a fixed bottom nav component
+- Extract `<BottomNav items={...} />` so all 3 shells share styling
+- Trial banner + paywall are wrappers around the coach `<Outlet />`
+- A dev-only role switcher (top-right gear menu) lets you preview each shell without real subscription data
 
-## Out of scope for Phase 1
+## Questions before I build
 
-Camp detail tabs, financials, contacts, attendees, team, inbox, email marketing, waitlist UI, public booking page, Stripe integration. All tables exist so Phase 2 is pure UI.
+1. **Role switcher for preview** — OK to add a small dev-mode role picker so you can flip between Elite/Platinum/Home/Parent without changing DB rows?
+2. **Existing `/coach/*` sub-routes** (financials, memberships, analytics, bookings, attendees, roster, team, email, broadcast) — keep them all reachable from the new Dashboard quick-grid, or retire any?
+3. **Athlete experience at `/`** — leave completely untouched, correct?
+4. **Trial state** — mock with a local flag (`trialDaysLeft = 12`) for now, no backend?
+
+Confirm answers and I'll execute.
