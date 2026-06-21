@@ -37,7 +37,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     pathname.startsWith("/home-coach/") ||
     pathname === "/parent" ||
     pathname.startsWith("/parent/") ||
-    pathname.startsWith("/onboarding");
+    pathname.startsWith("/onboarding") ||
+    (hasAccess && pathname === "/settings");
   if (isChromeless) {
     return <div className="min-h-screen bg-background text-foreground">{children}</div>;
   }

@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare } from "lucide-react";
+import { LayoutDashboard, CalendarDays, BookOpen, MessageSquare as InboxIcon, Users } from "lucide-react";
+import { BottomNav } from "@/components/bottom-nav";
+import { useAuth, useHasCoachAccess } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings — PXF Hockey" }] }),
@@ -35,6 +38,15 @@ function Field({ label, ...props }: { label: string } & React.InputHTMLAttribute
 
 function SettingsScreen() {
   const [prefs, setPrefs] = useState<Record<string, boolean>>({ reg: true, msg: true, remind: true, wait: false, pay: true });
+  const { user } = useAuth();
+  const { hasAccess } = useHasCoachAccess(user?.id);
+  const coachNav = [
+    { to: "/coach", label: "Dashboard", icon: LayoutDashboard, exact: true, match: ["/coach"] },
+    { to: "/coach/camps", label: "Events", icon: CalendarDays, match: ["/coach/camps", "/coach/bookings"] },
+    { to: "/coach/playbook", label: "Playbook", icon: BookOpen, match: ["/coach/playbook"] },
+    { to: "/coach/inbox", label: "Inbox", icon: InboxIcon, match: ["/coach/inbox", "/coach/broadcast"] },
+    { to: "/coach/contacts", label: "Contacts", icon: Users, match: ["/coach/contacts", "/coach/attendees"] },
+  ];
 
   return (
     <div className="min-h-screen bg-background px-5 pt-4 pb-24 text-foreground">
@@ -177,6 +189,7 @@ function SettingsScreen() {
           </div>
         </Section>
       </div>
+      {hasAccess && <BottomNav items={coachNav} />}
     </div>
   );
 }
