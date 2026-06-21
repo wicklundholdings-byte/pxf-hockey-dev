@@ -28,7 +28,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useAuth();
   const { hasAccess } = useHasCoachAccess(user?.id);
-  const isChromeless = pathname.startsWith("/book/") || pathname === "/auth";
+  const isChromeless = pathname.startsWith("/book/") || pathname === "/auth" || pathname === "/coach" || pathname.startsWith("/coach/");
   if (isChromeless) {
     return <div className="min-h-screen bg-background text-foreground">{children}</div>;
   }

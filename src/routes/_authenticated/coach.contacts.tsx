@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Users, X, Mail, Phone, Tag, Plus, Calendar, DollarSign, Trash2 } from "lucide-react";
@@ -83,9 +83,17 @@ function ContactsPage() {
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">CRM</p>
           <h2 className="font-display text-lg font-bold text-foreground">Contacts</h2>
         </div>
-        <span className="rounded-full bg-surface px-2.5 py-1 text-[11px] font-bold text-foreground">
-          {contacts.length}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-surface px-2.5 py-1 text-[11px] font-bold text-foreground">
+            {contacts.length}
+          </span>
+          <Link
+            to="/coach/email"
+            className="flex items-center gap-1 rounded-full bg-teal px-3 py-1.5 text-[11px] font-bold text-black"
+          >
+            <Mail size={12} /> Broadcast Email
+          </Link>
+        </div>
       </div>
 
       <div className="relative">
@@ -142,28 +150,40 @@ function ContactsPage() {
             const initials = (c.full_name ?? "?").split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
             return (
               <li key={c.id}>
-                <button
-                  onClick={() => setSelectedId(c.id)}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3 text-left"
-                >
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-teal/15 text-[11px] font-bold text-teal">
-                    {initials}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-foreground">{c.full_name ?? "Unnamed"}</p>
-                    <p className="truncate text-[10px] text-muted-foreground">
-                      {c.email ?? c.phone ?? "—"}
-                      {kids.length > 0 && <span> · {kids.length} athlete{kids.length > 1 ? "s" : ""}</span>}
-                    </p>
-                    {(c.tags?.length ?? 0) > 0 && (
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {c.tags.slice(0, 3).map((t) => (
-                          <span key={t} className="rounded-full bg-surface px-1.5 py-0.5 text-[9px] text-muted-foreground">#{t}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </button>
+                <div className="flex items-center gap-2 rounded-2xl border border-border bg-card p-3">
+                  <button
+                    onClick={() => setSelectedId(c.id)}
+                    className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                  >
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-teal/15 text-[11px] font-bold text-teal">
+                      {initials}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-foreground">{c.full_name ?? "Unnamed"}</p>
+                      <p className="truncate text-[10px] text-muted-foreground">
+                        {c.email ?? c.phone ?? "—"}
+                        {kids.length > 0 && <span> · {kids.length} athlete{kids.length > 1 ? "s" : ""}</span>}
+                      </p>
+                      {(c.tags?.length ?? 0) > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {c.tags.slice(0, 3).map((t) => (
+                            <span key={t} className="rounded-full bg-surface px-1.5 py-0.5 text-[9px] text-muted-foreground">#{t}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                  {c.email && (
+                    <a
+                      href={`mailto:${c.email}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border bg-surface text-teal"
+                      aria-label={`Email ${c.full_name ?? "contact"}`}
+                    >
+                      <Mail size={14} />
+                    </a>
+                  )}
+                </div>
               </li>
             );
           })}

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { DollarSign, TrendingUp, Users, CalendarDays, Activity } from "lucide-react";
+import { DollarSign, TrendingUp, Users, CalendarDays, Activity, Wallet, Repeat, BarChart3, ChevronRight, UserSquare2, ClipboardCheck, UserCog } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip, CartesianGrid } from "recharts";
 import { StatusBadge } from "@/components/coach/status-badge";
 
@@ -93,6 +93,30 @@ function CoachDashboard() {
             </div>
             <div className={"mt-1 font-display text-xl font-bold " + s.accent}>{s.value}</div>
           </div>
+        ))}
+      </div>
+
+      {/* Quick access */}
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { to: "/coach/financials", label: "Financials", icon: Wallet, accent: "text-teal" },
+          { to: "/coach/memberships", label: "Memberships", icon: Repeat, accent: "text-volt" },
+          { to: "/coach/analytics", label: "Analytics", icon: BarChart3, accent: "text-emerald-400" },
+          { to: "/coach/attendees", label: "Attendees", icon: UserSquare2, accent: "text-foreground" },
+          { to: "/coach/roster", label: "Roster", icon: ClipboardCheck, accent: "text-foreground" },
+          { to: "/coach/team", label: "Team", icon: UserCog, accent: "text-foreground" },
+        ].map((q) => (
+          <Link
+            key={q.to}
+            to={q.to}
+            className="flex items-center justify-between rounded-2xl border border-border bg-card px-3 py-2.5"
+          >
+            <div className="flex items-center gap-2">
+              <q.icon size={14} className={q.accent} />
+              <span className="text-xs font-semibold text-foreground">{q.label}</span>
+            </div>
+            <ChevronRight size={14} className="text-muted-foreground" />
+          </Link>
         ))}
       </div>
 
