@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Plus, Search, List, Calendar as CalendarIcon, MapPin } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 
-export const Route = createFileRoute("/_authenticated/coach/camps")({
+export const Route = createFileRoute("/_authenticated/coach/camps/")({
   component: CampsPage,
 });
 
