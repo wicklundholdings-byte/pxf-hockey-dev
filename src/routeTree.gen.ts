@@ -37,6 +37,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StoreIndexRouteImport } from './routes/store.index'
 import { Route as ParentIndexRouteImport } from './routes/parent.index'
+import { Route as OnboardingIndexRouteImport } from './routes/onboarding.index'
 import { Route as StoreCartRouteImport } from './routes/store.cart'
 import { Route as StoreProductIdRouteImport } from './routes/store.$productId'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
@@ -229,6 +230,11 @@ const ParentIndexRoute = ParentIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ParentRoute,
+} as any)
+const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OnboardingRoute,
 } as any)
 const StoreCartRoute = StoreCartRouteImport.update({
   id: '/store/cart',
@@ -568,6 +574,7 @@ export interface FileRoutesByFullPath {
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
+  '/onboarding/': typeof OnboardingIndexRoute
   '/parent/': typeof ParentIndexRoute
   '/store/': typeof StoreIndexRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -614,7 +621,6 @@ export interface FileRoutesByTo {
   '/gameiq': typeof GameiqRoute
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
-  '/onboarding': typeof OnboardingRouteWithChildren
   '/payments-preview': typeof PaymentsPreviewRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
@@ -647,6 +653,7 @@ export interface FileRoutesByTo {
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
+  '/onboarding': typeof OnboardingIndexRoute
   '/parent': typeof ParentIndexRoute
   '/store': typeof StoreIndexRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -731,6 +738,7 @@ export interface FileRoutesById {
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
+  '/onboarding/': typeof OnboardingIndexRoute
   '/parent/': typeof ParentIndexRoute
   '/store/': typeof StoreIndexRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
@@ -815,6 +823,7 @@ export interface FileRouteTypes {
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
+    | '/onboarding/'
     | '/parent/'
     | '/store/'
     | '/admin/categories'
@@ -861,7 +870,6 @@ export interface FileRouteTypes {
     | '/gameiq'
     | '/membership'
     | '/notifications'
-    | '/onboarding'
     | '/payments-preview'
     | '/profile'
     | '/programs'
@@ -894,6 +902,7 @@ export interface FileRouteTypes {
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
+    | '/onboarding'
     | '/parent'
     | '/store'
     | '/admin/categories'
@@ -977,6 +986,7 @@ export interface FileRouteTypes {
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
+    | '/onboarding/'
     | '/parent/'
     | '/store/'
     | '/_authenticated/admin/categories'
@@ -1252,6 +1262,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/parent/'
       preLoaderRoute: typeof ParentIndexRouteImport
       parentRoute: typeof ParentRoute
+    }
+    '/onboarding/': {
+      id: '/onboarding/'
+      path: '/'
+      fullPath: '/onboarding/'
+      preLoaderRoute: typeof OnboardingIndexRouteImport
+      parentRoute: typeof OnboardingRoute
     }
     '/store/cart': {
       id: '/store/cart'
@@ -1800,11 +1817,13 @@ const CampsRouteWithChildren = CampsRoute._addFileChildren(CampsRouteChildren)
 interface OnboardingRouteChildren {
   OnboardingCoachRoute: typeof OnboardingCoachRoute
   OnboardingParentRoute: typeof OnboardingParentRoute
+  OnboardingIndexRoute: typeof OnboardingIndexRoute
 }
 
 const OnboardingRouteChildren: OnboardingRouteChildren = {
   OnboardingCoachRoute: OnboardingCoachRoute,
   OnboardingParentRoute: OnboardingParentRoute,
+  OnboardingIndexRoute: OnboardingIndexRoute,
 }
 
 const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
