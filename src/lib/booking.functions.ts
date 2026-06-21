@@ -18,6 +18,15 @@ const submitSchema = z.object({
   }),
   customFieldValues: z.record(z.string(), z.unknown()).optional(),
   couponCode: z.string().trim().max(40).optional().nullable(),
+  waiver: z
+    .object({
+      signer_name: z.string().min(1).max(120),
+      signature_method: z.enum(["drawn", "typed"]),
+      signature_data: z.string().min(1).max(500_000),
+      waiver_text_snapshot: z.string().min(1).max(50_000),
+    })
+    .optional()
+    .nullable(),
 });
 
 const previewCouponSchema = z.object({
@@ -72,11 +81,16 @@ export const submitBooking = createServerFn({ method: "POST" })
     // Load camp
     const { data: camp, error: campErr } = await supabaseAdmin
       .from("camps")
-      .select("id, owner_id, capacity, price_cents, early_bird_price_cents, early_bird_expires_at, status")
+      .select(
+        "id, owner_id, capacity, price_cents, early_bird_price_cents, early_bird_expires_at, status, waiver_required",
+      )
       .eq("id", data.campId)
       .maybeSingle();
     if (campErr) throw new Error(campErr.message);
     if (!camp || camp.status !== "live") throw new Error("This camp is not accepting registrations.");
+    if (camp.waiver_required && !data.waiver) {
+      throw new Error("A signed waiver is required to register for this camp.");
+    }
 
     // Count paid registrations to check capacity
     const { count: paidCount } = await supabaseAdmin
@@ -193,6 +207,19 @@ export const submitBooking = createServerFn({ method: "POST" })
         .from("coupons")
         .update({ used_count: (cRow?.used_count ?? 0) + 1 })
         .eq("id", couponId);
+    }
+
+    if (data.waiver) {
+      const { error: wErr } = await supabaseAdmin.from("waiver_signatures").insert({
+        registration_id: reg.id,
+        attendee_id: attendee.id,
+        camp_id: camp.id,
+        signer_name: data.waiver.signer_name,
+        signature_method: data.waiver.signature_method,
+        signature_data: data.waiver.signature_data,
+        waiver_text_snapshot: data.waiver.waiver_text_snapshot,
+      });
+      if (wErr) throw new Error(wErr.message);
     }
 
     return { kind: "registered" as const, registrationId: reg.id, amountCents: amount };
