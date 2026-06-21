@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X, ListChecks, BookOpen, ListPlus, ShieldCheck, QrCode, Send, Bell } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 import { QRScannerModal } from "@/components/coach/qr-scanner";
+import { ApplyCampTemplate } from "@/components/coach/apply-camp-template";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/$campId")({
   component: CampDetailPage,
