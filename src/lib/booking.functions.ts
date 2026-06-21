@@ -1,6 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+const attendeeSchema = z.object({
+  full_name: z.string().min(1).max(120),
+  birthday: z.string().optional().nullable(),
+  position: z.string().max(40).optional().nullable(),
+  skill_level: z.string().max(40).optional().nullable(),
+  handedness: z.string().max(20).optional().nullable(),
+  jersey_number: z.string().max(10).optional().nullable(),
+  customFieldValues: z.record(z.string(), z.unknown()).optional(),
+});
+
 const submitSchema = z.object({
   campId: z.string().uuid(),
   parent: z.object({
@@ -8,16 +18,9 @@ const submitSchema = z.object({
     email: z.string().email(),
     phone: z.string().max(40).optional().nullable(),
   }),
-  attendee: z.object({
-    full_name: z.string().min(1).max(120),
-    birthday: z.string().optional().nullable(),
-    position: z.string().max(40).optional().nullable(),
-    skill_level: z.string().max(40).optional().nullable(),
-    handedness: z.string().max(20).optional().nullable(),
-    jersey_number: z.string().max(10).optional().nullable(),
-  }),
-  customFieldValues: z.record(z.string(), z.unknown()).optional(),
+  attendees: z.array(attendeeSchema).min(1).max(6),
   couponCode: z.string().trim().max(40).optional().nullable(),
+  paymentPlan: z.enum(["none", "two", "three"]).optional().default("none"),
   waiver: z
     .object({
       signer_name: z.string().min(1).max(120),
@@ -82,7 +85,7 @@ export const submitBooking = createServerFn({ method: "POST" })
     const { data: camp, error: campErr } = await supabaseAdmin
       .from("camps")
       .select(
-        "id, owner_id, capacity, price_cents, early_bird_price_cents, early_bird_expires_at, status, waiver_required",
+        "id, owner_id, capacity, price_cents, early_bird_price_cents, early_bird_expires_at, status, waiver_required, sibling_discount, sibling_discount_percent, payment_plan, start_date",
       )
       .eq("id", data.campId)
       .maybeSingle();
@@ -98,7 +101,10 @@ export const submitBooking = createServerFn({ method: "POST" })
       .select("id", { count: "exact", head: true })
       .eq("camp_id", camp.id)
       .eq("status", "paid");
-    const isFull = (paidCount ?? 0) >= camp.capacity;
+    const remaining = Math.max(0, camp.capacity - (paidCount ?? 0));
+    const numAttendees = data.attendees.length;
+    // If we can't fit everyone, treat the whole booking as waitlist (keeps siblings together)
+    const isFull = remaining < numAttendees;
 
     // Upsert contact by (owner_id,email)
     const { data: existing } = await supabaseAdmin
@@ -125,102 +131,162 @@ export const submitBooking = createServerFn({ method: "POST" })
       contactId = newContact.id;
     }
 
-    // Insert attendee
-    const { data: attendee, error: aErr } = await supabaseAdmin
-      .from("attendees")
-      .insert({
-        owner_id: camp.owner_id,
-        contact_id: contactId,
-        full_name: data.attendee.full_name,
-        birthday: data.attendee.birthday || null,
-        position: data.attendee.position || null,
-        skill_level: data.attendee.skill_level || null,
-        handedness: data.attendee.handedness || null,
-        jersey_number: data.attendee.jersey_number || null,
-      })
-      .select("id")
-      .single();
-    if (aErr) throw new Error(aErr.message);
+    // Insert all attendees
+    const attendeeRows: { id: string }[] = [];
+    for (const a of data.attendees) {
+      const { data: row, error: aErr } = await supabaseAdmin
+        .from("attendees")
+        .insert({
+          owner_id: camp.owner_id,
+          contact_id: contactId,
+          full_name: a.full_name,
+          birthday: a.birthday || null,
+          position: a.position || null,
+          skill_level: a.skill_level || null,
+          handedness: a.handedness || null,
+          jersey_number: a.jersey_number || null,
+        })
+        .select("id")
+        .single();
+      if (aErr) throw new Error(aErr.message);
+      attendeeRows.push(row);
+    }
 
     if (isFull) {
       const { count: waitCount } = await supabaseAdmin
         .from("waitlist_entries")
         .select("id", { count: "exact", head: true })
         .eq("camp_id", camp.id);
-      const { error: wErr } = await supabaseAdmin.from("waitlist_entries").insert({
-        camp_id: camp.id,
-        contact_id: contactId,
-        attendee_id: attendee.id,
-        position: (waitCount ?? 0) + 1,
-        status: "waiting",
-      });
-      if (wErr) throw new Error(wErr.message);
-      return { kind: "waitlisted" as const };
+      let pos = (waitCount ?? 0);
+      for (const att of attendeeRows) {
+        pos += 1;
+        const { error: wErr } = await supabaseAdmin.from("waitlist_entries").insert({
+          camp_id: camp.id,
+          contact_id: contactId,
+          attendee_id: att.id,
+          position: pos,
+          status: "waiting",
+        });
+        if (wErr) throw new Error(wErr.message);
+      }
+      return { kind: "waitlisted" as const, count: attendeeRows.length };
     }
 
     const earlyBirdActive =
       camp.early_bird_price_cents != null &&
       camp.early_bird_expires_at != null &&
       new Date(camp.early_bird_expires_at) > new Date();
-    const baseAmount = earlyBirdActive ? camp.early_bird_price_cents! : camp.price_cents;
+    const perPersonBase = earlyBirdActive ? camp.early_bird_price_cents! : camp.price_cents;
 
-    // Apply coupon if provided & valid
-    let amount = baseAmount;
-    let couponId: string | null = null;
+    // Resolve coupon once (applied per-child to base)
+    let coupon: { id: string; percent_off: number | null; amount_off_cents: number | null } | null = null;
     if (data.couponCode && data.couponCode.trim()) {
-      const { data: coupon } = await supabaseAdmin
+      const { data: c } = await supabaseAdmin
         .from("coupons")
         .select("id, percent_off, amount_off_cents, expires_at, usage_limit, used_count")
         .eq("owner_id", camp.owner_id)
         .ilike("code", data.couponCode.trim())
         .maybeSingle();
       const valid =
-        coupon &&
-        (!coupon.expires_at || new Date(coupon.expires_at) >= new Date()) &&
-        (coupon.usage_limit == null || (coupon.used_count ?? 0) < coupon.usage_limit);
-      if (valid) {
-        const discount = coupon.percent_off
-          ? Math.round((baseAmount * coupon.percent_off) / 100)
+        c &&
+        (!c.expires_at || new Date(c.expires_at) >= new Date()) &&
+        (c.usage_limit == null || (c.used_count ?? 0) < c.usage_limit);
+      if (valid) coupon = { id: c.id, percent_off: c.percent_off, amount_off_cents: c.amount_off_cents };
+    }
+
+    const siblingPct = camp.sibling_discount ? (camp.sibling_discount_percent ?? 0) : 0;
+    const bookingGroupId =
+      attendeeRows.length > 1
+        ? (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`)
+        : null;
+
+    const registrationIds: string[] = [];
+    let totalAmount = 0;
+
+    for (let i = 0; i < attendeeRows.length; i++) {
+      const att = attendeeRows[i];
+      const a = data.attendees[i];
+      let base = perPersonBase;
+      let siblingOff = 0;
+      if (i > 0 && siblingPct > 0) {
+        siblingOff = Math.round((base * siblingPct) / 100);
+        base = base - siblingOff;
+      }
+      let couponOff = 0;
+      if (coupon) {
+        couponOff = coupon.percent_off
+          ? Math.round((base * coupon.percent_off) / 100)
           : coupon.amount_off_cents ?? 0;
-        amount = Math.max(0, baseAmount - discount);
-        couponId = coupon.id;
+      }
+      const amount = Math.max(0, base - couponOff);
+      totalAmount += amount;
+
+      const { data: reg, error: rErr } = await supabaseAdmin
+        .from("registrations")
+        .insert({
+          camp_id: camp.id,
+          contact_id: contactId,
+          attendee_id: att.id,
+          status: "pending",
+          amount_cents: amount,
+          custom_field_values: (a.customFieldValues ?? {}) as never,
+          booking_group_id: bookingGroupId,
+          sibling_discount_cents: siblingOff,
+        })
+        .select("id")
+        .single();
+      if (rErr) throw new Error(rErr.message);
+      registrationIds.push(reg.id);
+
+      // Installment schedule (deposit today, remaining at monthly intervals)
+      if (data.paymentPlan && data.paymentPlan !== "none") {
+        const installments = data.paymentPlan === "two" ? 2 : 3;
+        const per = Math.floor(amount / installments);
+        const remainder = amount - per * installments;
+        const today = new Date();
+        const rows = Array.from({ length: installments }).map((_, idx) => {
+          const due = new Date(today);
+          due.setMonth(due.getMonth() + idx);
+          return {
+            registration_id: reg.id,
+            owner_id: camp.owner_id,
+            sequence: idx + 1,
+            amount_cents: idx === 0 ? per + remainder : per,
+            due_date: due.toISOString().slice(0, 10),
+            status: "scheduled",
+          };
+        });
+        const { error: instErr } = await supabaseAdmin.from("payment_installments").insert(rows);
+        if (instErr) throw new Error(instErr.message);
+      }
+
+      if (data.waiver) {
+        const { error: wErr } = await supabaseAdmin.from("waiver_signatures").insert({
+          registration_id: reg.id,
+          attendee_id: att.id,
+          camp_id: camp.id,
+          signer_name: data.waiver.signer_name,
+          signature_method: data.waiver.signature_method,
+          signature_data: data.waiver.signature_data,
+          waiver_text_snapshot: data.waiver.waiver_text_snapshot,
+        });
+        if (wErr) throw new Error(wErr.message);
       }
     }
 
-    const { data: reg, error: rErr } = await supabaseAdmin
-      .from("registrations")
-      .insert({
-        camp_id: camp.id,
-        contact_id: contactId,
-        attendee_id: attendee.id,
-        status: "pending",
-        amount_cents: amount,
-        custom_field_values: (data.customFieldValues ?? {}) as never,
-      })
-      .select("id")
-      .single();
-    if (rErr) throw new Error(rErr.message);
-
-    if (couponId) {
-      const { data: cRow } = await supabaseAdmin.from("coupons").select("used_count").eq("id", couponId).maybeSingle();
+    if (coupon) {
+      const { data: cRow } = await supabaseAdmin.from("coupons").select("used_count").eq("id", coupon.id).maybeSingle();
       await supabaseAdmin
         .from("coupons")
-        .update({ used_count: (cRow?.used_count ?? 0) + 1 })
-        .eq("id", couponId);
+        .update({ used_count: (cRow?.used_count ?? 0) + attendeeRows.length })
+        .eq("id", coupon.id);
     }
 
-    if (data.waiver) {
-      const { error: wErr } = await supabaseAdmin.from("waiver_signatures").insert({
-        registration_id: reg.id,
-        attendee_id: attendee.id,
-        camp_id: camp.id,
-        signer_name: data.waiver.signer_name,
-        signature_method: data.waiver.signature_method,
-        signature_data: data.waiver.signature_data,
-        waiver_text_snapshot: data.waiver.waiver_text_snapshot,
-      });
-      if (wErr) throw new Error(wErr.message);
-    }
-
-    return { kind: "registered" as const, registrationId: reg.id, amountCents: amount };
+    return {
+      kind: "registered" as const,
+      registrationIds,
+      amountCents: totalAmount,
+      count: attendeeRows.length,
+      paymentPlan: data.paymentPlan ?? "none",
+    };
   });

@@ -17,7 +17,7 @@ type Camp = {
   location_type: string; description: string | null; format: string;
   early_bird_price_cents: number | null; early_bird_expires_at: string | null;
   waiver_required: boolean; waiver_text: string | null;
-  payment_plan: string; sibling_discount: boolean;
+  payment_plan: string; sibling_discount: boolean; sibling_discount_percent: number;
 };
 type Reg = {
   id: string; camp_id: string; attendee_id: string | null; contact_id: string | null;
@@ -643,6 +643,7 @@ function OptionsTab({ camp }: { camp: Camp }) {
   // Payment plan
   const [paymentPlan, setPaymentPlan] = useState<string>(camp.payment_plan ?? "none");
   const [siblingDiscount, setSiblingDiscount] = useState<boolean>(camp.sibling_discount);
+  const [siblingPercent, setSiblingPercent] = useState<string>(String(camp.sibling_discount_percent ?? 10));
   // Waiver
   const [waiverRequired, setWaiverRequired] = useState<boolean>(camp.waiver_required);
   const [waiverText, setWaiverText] = useState<string>(camp.waiver_text ?? "");
@@ -671,6 +672,7 @@ function OptionsTab({ camp }: { camp: Camp }) {
       capacity: parseInt(capacity || "0", 10),
       payment_plan: paymentPlan as "none" | "two" | "three",
       sibling_discount: siblingDiscount,
+      sibling_discount_percent: Math.max(0, Math.min(100, parseInt(siblingPercent || "0", 10) || 0)),
       waiver_required: waiverRequired,
       waiver_text: waiverText || null,
       early_bird_price_cents: eb > 0 ? Math.round(eb * 100) : null,
@@ -727,6 +729,20 @@ function OptionsTab({ camp }: { camp: Camp }) {
           <input type="checkbox" checked={siblingDiscount} onChange={(e) => setSiblingDiscount(e.target.checked)} className="h-3.5 w-3.5" />
           Offer sibling discount on additional children
         </label>
+        {siblingDiscount && (
+          <div className="mt-2 flex items-center gap-2 rounded-lg bg-surface px-3 py-2 text-xs text-foreground">
+            <span className="text-muted-foreground">Discount %</span>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              value={siblingPercent}
+              onChange={(e) => setSiblingPercent(e.target.value)}
+              className="w-16 rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground"
+            />
+            <span className="text-muted-foreground">off each additional child</span>
+          </div>
+        )}
       </div>
 
       <WaiverEditor
