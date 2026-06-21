@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X, ListChecks, BookOpen, ListPlus, ShieldCheck, QrCode, Send, Bell } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 import { QRScannerModal } from "@/components/coach/qr-scanner";
+import { ApplyCampTemplate } from "@/components/coach/apply-camp-template";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/$campId")({
   component: CampDetailPage,
@@ -1196,9 +1197,20 @@ function PlansTab({ sessions, campId }: { sessions: Session[]; campId: string })
         </p>
       </div>
 
+      <ApplyCampTemplate
+        campSessions={sessions.map((s) => ({ id: s.id }))}
+        planKey={planKey}
+        onApplied={() => {
+          try {
+            const raw = window.localStorage.getItem(planKey);
+            if (raw) setAssignments(JSON.parse(raw));
+            setLibrary(readSavedSessions());
+          } catch { /* ignore */ }
+        }}
+      />
       <div className="flex gap-2">
-        <Link to="/coach/library" className="flex flex-1 items-center justify-center gap-1 rounded-full border border-border bg-card py-2 text-[11px] font-semibold text-foreground">
-          <BookOpen size={12} /> Open Library
+        <Link to="/coach/playbook" className="flex flex-1 items-center justify-center gap-1 rounded-full border border-border bg-card py-2 text-[11px] font-semibold text-foreground">
+          <BookOpen size={12} /> Open Playbook
         </Link>
         <Link to="/drill-builder" className="flex flex-1 items-center justify-center gap-1 rounded-full bg-teal py-2 text-[11px] font-bold text-black">
           <Plus size={12} /> Build new session
