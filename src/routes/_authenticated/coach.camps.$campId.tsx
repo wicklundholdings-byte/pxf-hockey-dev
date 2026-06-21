@@ -19,6 +19,8 @@ type Camp = {
   early_bird_price_cents: number | null; early_bird_expires_at: string | null;
   waiver_required: boolean; waiver_text: string | null;
   payment_plan: string; sibling_discount: boolean; sibling_discount_percent: number;
+  reminder_7day?: boolean; reminder_1day?: boolean; reminder_morning?: boolean;
+  absent_alert?: boolean; absent_alert_minutes?: number; confirmation_sms?: boolean;
 };
 type Reg = {
   id: string; camp_id: string; attendee_id: string | null; contact_id: string | null;
