@@ -132,13 +132,16 @@ function PaymentScreen() {
             : null,
         },
       });
-      const params = new URLSearchParams({
-        kind: res.kind,
-        amount: String("amountCents" in res ? res.amountCents : 0),
-        plan: draft.paymentPlan,
-      });
       clear();
-      navigate({ to: `/camps/${slug}/confirmed?${params.toString()}` as "/" });
+      navigate({
+        to: "/camps/$slug/confirmed",
+        params: { slug },
+        search: {
+          kind: res.kind,
+          amount: String("amountCents" in res ? res.amountCents : 0),
+          plan: draft.paymentPlan,
+        },
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Payment failed");
     } finally {
