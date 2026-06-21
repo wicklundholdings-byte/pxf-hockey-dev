@@ -179,14 +179,20 @@ function CoachDashboard() {
               const filled = regsByCamp.get(c.id) ?? 0;
               const pct = c.capacity ? Math.min(100, (filled / c.capacity) * 100) : 0;
               return (
-                <li key={c.id} className="space-y-1.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-semibold text-foreground">{c.name}</span>
-                    <span className="text-[11px] text-muted-foreground">{filled}/{c.capacity}</span>
-                  </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-surface">
-                    <div className="h-full rounded-full bg-teal" style={{ width: pct + "%" }} />
-                  </div>
+                <li key={c.id}>
+                  <Link
+                    to="/coach/camps/$campId"
+                    params={{ campId: c.id }}
+                    className="block space-y-1.5 rounded-lg p-1.5 -m-1.5 transition-colors hover:bg-surface"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate text-sm font-semibold text-foreground">{c.name}</span>
+                      <span className="text-[11px] text-muted-foreground">{filled}/{c.capacity}</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-surface">
+                      <div className="h-full rounded-full bg-teal" style={{ width: pct + "%" }} />
+                    </div>
+                  </Link>
                 </li>
               );
             })}
@@ -205,12 +211,18 @@ function CoachDashboard() {
           ) : (
             <ul className="space-y-2.5">
               {recent.map((r) => (
-                <li key={r.id} className="flex items-center justify-between gap-2 text-xs">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-foreground">New registration · {campName(r.camp_id)}</p>
-                    <p className="text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleString()}</p>
-                  </div>
-                  <StatusBadge status={r.status} />
+                <li key={r.id}>
+                  <Link
+                    to="/coach/camps/$campId"
+                    params={{ campId: r.camp_id }}
+                    className="flex items-center justify-between gap-2 rounded-lg p-1.5 -m-1.5 text-xs transition-colors hover:bg-surface"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-foreground">New registration · {campName(r.camp_id)}</p>
+                      <p className="text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleString()}</p>
+                    </div>
+                    <StatusBadge status={r.status} />
+                  </Link>
                 </li>
               ))}
             </ul>
