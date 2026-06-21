@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DollarSign, TrendingUp, Users, CalendarDays, Activity, Wallet, Repeat, BarChart3, ChevronRight, UserSquare2, ClipboardCheck, UserCog } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip, CartesianGrid } from "recharts";
 import { StatusBadge } from "@/components/coach/status-badge";
+import { TodaysAttendanceCard } from "@/components/coach/todays-attendance-card";
 
 export const Route = createFileRoute("/_authenticated/coach/")({
   component: CoachDashboard,
@@ -83,6 +84,7 @@ function CoachDashboard() {
 
   return (
     <div className="space-y-5">
+      <TodaysAttendanceCard />
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {statCards.map((s) => (
