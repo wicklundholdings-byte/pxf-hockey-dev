@@ -230,12 +230,20 @@ function CampDetailPage() {
 
           <div className="mt-3 flex gap-2">
             <a
-              href={`/book/${camp.slug}`}
+              href={`/camps/${camp.slug}`}
               target="_blank"
               rel="noreferrer"
               className="flex flex-1 items-center justify-center gap-1 rounded-full bg-gradient-brand py-2 text-[11px] font-bold text-primary-foreground"
             >
               <Share2 size={12} /> Booking page
+            </a>
+            <a
+              href={`/camps/${camp.slug}`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-1 rounded-full border border-teal/40 bg-teal/10 px-3 py-2 text-[11px] font-semibold text-teal"
+            >
+              Preview as parent
             </a>
             <button className="flex items-center justify-center gap-1 rounded-full border border-border bg-surface px-3 py-2 text-[11px] font-semibold text-foreground">
               <Pencil size={12} /> Edit
