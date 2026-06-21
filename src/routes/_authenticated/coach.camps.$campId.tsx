@@ -665,17 +665,17 @@ function OptionsTab({ camp }: { camp: Camp }) {
 
   async function saveCamp() {
     setSaving(true);
-    const updates: Record<string, unknown> = {
+    const eb = parseFloat(ebPrice || "0");
+    const updates = {
       price_cents: Math.round(parseFloat(price || "0") * 100),
       capacity: parseInt(capacity || "0", 10),
-      payment_plan: paymentPlan,
+      payment_plan: paymentPlan as "none" | "two_split" | "three_split",
       sibling_discount: siblingDiscount,
       waiver_required: waiverRequired,
       waiver_text: waiverText || null,
+      early_bird_price_cents: eb > 0 ? Math.round(eb * 100) : null,
+      early_bird_expires_at: ebDate ? new Date(ebDate).toISOString() : null,
     };
-    const eb = parseFloat(ebPrice || "0");
-    updates.early_bird_price_cents = eb > 0 ? Math.round(eb * 100) : null;
-    updates.early_bird_expires_at = ebDate ? new Date(ebDate).toISOString() : null;
     await supabase.from("camps").update(updates).eq("id", camp.id);
     setSaving(false);
     setSavedTick(true);
