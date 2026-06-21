@@ -3,6 +3,7 @@ import { Settings, Shield, Bell, HelpCircle, LogOut, LogIn, ChevronRight, Award,
 import { useAuth, useIsAdmin } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { PxfCombine } from "@/components/pxf-combine";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -69,6 +70,8 @@ function Profile() {
           <Stat label="ATHLETES" value="24" />
         </div>
       </div>
+
+      <PxfCombine />
 
       <h2 className="mt-7 text-xs font-bold tracking-[0.25em] text-foreground/90">ACHIEVEMENTS</h2>
       <div className="mt-3 -mx-5 overflow-x-auto px-5 pb-1">
