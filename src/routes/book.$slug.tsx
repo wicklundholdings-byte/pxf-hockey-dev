@@ -2,7 +2,8 @@ import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { submitBooking, previewCoupon } from "@/lib/booking.functions";
-import { Calendar, MapPin, Clock, Users, CheckCircle2, Loader2, Tag, X, PenLine, Type as TypeIcon, FileText, Plus, Trash2, CalendarClock } from "lucide-react";
+import { Calendar, MapPin, Clock, Users, CheckCircle2, Loader2, Tag, X, PenLine, Type as TypeIcon, FileText, Plus, Trash2, CalendarClock, QrCode } from "lucide-react";
+import QRCode from "qrcode";
 
 
 export const Route = createFileRoute("/book/$slug")({
