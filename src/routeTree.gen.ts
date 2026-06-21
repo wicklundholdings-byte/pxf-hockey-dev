@@ -58,6 +58,7 @@ import { Route as OnboardingCoachRouteImport } from './routes/onboarding.coach'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
 import { Route as CoachesSlugRouteImport } from './routes/coaches.$slug'
 import { Route as CampsBrowseRouteImport } from './routes/camps.browse'
+import { Route as CampsSlugRouteImport } from './routes/camps.$slug'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
 import { Route as AuthenticatedHomeCoachRouteImport } from './routes/_authenticated/home-coach'
 import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
@@ -339,6 +340,11 @@ const CampsBrowseRoute = CampsBrowseRouteImport.update({
   path: '/browse',
   getParentRoute: () => CampsRoute,
 } as any)
+const CampsSlugRoute = CampsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => CampsRoute,
+} as any)
 const BookSlugRoute = BookSlugRouteImport.update({
   id: '/book/$slug',
   path: '/book/$slug',
@@ -576,6 +582,7 @@ export interface FileRoutesByFullPath {
   '/coach': typeof AuthenticatedCoachRouteWithChildren
   '/home-coach': typeof AuthenticatedHomeCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
+  '/camps/$slug': typeof CampsSlugRoute
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
@@ -658,6 +665,7 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/home-coach': typeof AuthenticatedHomeCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
+  '/camps/$slug': typeof CampsSlugRoute
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
@@ -746,6 +754,7 @@ export interface FileRoutesById {
   '/_authenticated/coach': typeof AuthenticatedCoachRouteWithChildren
   '/_authenticated/home-coach': typeof AuthenticatedHomeCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
+  '/camps/$slug': typeof CampsSlugRoute
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
@@ -834,6 +843,7 @@ export interface FileRouteTypes {
     | '/coach'
     | '/home-coach'
     | '/book/$slug'
+    | '/camps/$slug'
     | '/camps/browse'
     | '/coaches/$slug'
     | '/drill-detail/$drillId'
@@ -916,6 +926,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/home-coach'
     | '/book/$slug'
+    | '/camps/$slug'
     | '/camps/browse'
     | '/coaches/$slug'
     | '/drill-detail/$drillId'
@@ -1003,6 +1014,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach'
     | '/_authenticated/home-coach'
     | '/book/$slug'
+    | '/camps/$slug'
     | '/camps/browse'
     | '/coaches/$slug'
     | '/drill-detail/$drillId'
@@ -1451,6 +1463,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CampsBrowseRouteImport
       parentRoute: typeof CampsRoute
     }
+    '/camps/$slug': {
+      id: '/camps/$slug'
+      path: '/$slug'
+      fullPath: '/camps/$slug'
+      preLoaderRoute: typeof CampsSlugRouteImport
+      parentRoute: typeof CampsRoute
+    }
     '/book/$slug': {
       id: '/book/$slug'
       path: '/book/$slug'
@@ -1857,10 +1876,12 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface CampsRouteChildren {
+  CampsSlugRoute: typeof CampsSlugRoute
   CampsBrowseRoute: typeof CampsBrowseRoute
 }
 
 const CampsRouteChildren: CampsRouteChildren = {
+  CampsSlugRoute: CampsSlugRoute,
   CampsBrowseRoute: CampsBrowseRoute,
 }
 
