@@ -1,11 +1,10 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X, ListChecks, BookOpen, ListPlus, ShieldCheck, QrCode, Send, Bell } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X, ListChecks, BookOpen, ListPlus, ShieldCheck, QrCode, Bell, ChevronDown, ChevronRight, ClipboardList, MessageSquare, Camera, Hourglass, Star, Wallet } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 import { QRScannerModal } from "@/components/coach/qr-scanner";
 import { ApplyCampTemplate } from "@/components/coach/apply-camp-template";
-import { DailyAttendance } from "@/components/coach/daily-attendance";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/$campId")({
   component: CampDetailPage,
@@ -41,8 +40,6 @@ type Wait = {
 };
 type Media = { id: string; storage_path: string; created_at: string };
 
-type Tab = "overview" | "description" | "options" | "roster" | "rsvp" | "waitlist" | "plans" | "sessions" | "evaluations" | "media";
-
 function fmt(d: string | null) {
   if (!d) return "TBA";
   return new Date(d + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
@@ -55,8 +52,11 @@ function CampDetailPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [wait, setWait] = useState<Wait[]>([]);
   const [media, setMedia] = useState<Media[]>([]);
-  const [tab, setTab] = useState<Tab>("overview");
   const [loading, setLoading] = useState(true);
+  const [more, setMore] = useState<null | "waitlist" | "media" | "evaluations" | "financials">(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scanFlash, setScanFlash] = useState<string | null>(null);
+  const [todayAttendance, setTodayAttendance] = useState<Map<string, boolean>>(new Map());
 
   useEffect(() => {
     (async () => {
@@ -91,6 +91,24 @@ function CampDetailPage() {
     return { paid: paid.length, revenue, pending: regs.filter((r) => r.status === "pending").length };
   }, [regs]);
 
+  const todaySession = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return sessions.find((s) => s.session_date === today) ?? null;
+  }, [sessions]);
+
+  useEffect(() => {
+    if (!todaySession) return;
+    supabase
+      .from("attendance")
+      .select("registration_id,present")
+      .eq("session_id", todaySession.id)
+      .then(({ data }) => {
+        const m = new Map<string, boolean>();
+        (data ?? []).forEach((r: { registration_id: string; present: boolean }) => m.set(r.registration_id, r.present));
+        setTodayAttendance(m);
+      });
+  }, [todaySession]);
+
   if (loading) return <p className="py-10 text-center text-xs text-muted-foreground">Loading…</p>;
   if (!camp) return (
     <div className="py-10 text-center">
@@ -102,18 +120,33 @@ function CampDetailPage() {
   );
 
   const pct = camp.capacity ? Math.min(100, (stats.paid / camp.capacity) * 100) : 0;
-  const tabs: { id: Tab; label: string; count?: number }[] = [
-    { id: "overview", label: "Overview" },
-    { id: "description", label: "Description" },
-    { id: "options", label: "Order Options" },
-    { id: "roster", label: "Roster", count: regs.length },
-    { id: "rsvp", label: "Daily RSVP", count: sessions.length },
-    { id: "waitlist", label: "Waitlist", count: wait.length },
-    { id: "plans", label: "Session Plans", count: sessions.length },
-    { id: "sessions", label: "Attendance", count: sessions.length },
-    { id: "evaluations", label: "Evaluations", count: regs.length },
-    { id: "media", label: "Media", count: media.length },
-  ];
+  const today = new Date().toISOString().slice(0, 10);
+  const isLive = !!(camp.start_date && camp.end_date && camp.start_date <= today && today <= camp.end_date);
+  const paidRegs = regs.filter((r) => r.status === "paid");
+  const todayAttending = paidRegs.filter((r) => todayAttendance.get(r.id) === true).length;
+  const todayNotAttending = paidRegs.filter((r) => todayAttendance.get(r.id) === false).length;
+  const todayNoResponse = paidRegs.length - todayAttending - todayNotAttending;
+
+  function handleScan(text: string) {
+    setScannerOpen(false);
+    const id = text.trim();
+    const reg = regs.find((r) => r.id === id || r.id.startsWith(id) || id.includes(r.id));
+    if (!reg || !todaySession) {
+      setScanFlash("✗ Unknown QR code");
+      setTimeout(() => setScanFlash(null), 2500);
+      return;
+    }
+    const m = new Map(todayAttendance);
+    m.set(reg.id, true);
+    setTodayAttendance(m);
+    supabase.from("attendance").upsert(
+      { registration_id: reg.id, session_id: todaySession.id, present: true, marked_at: new Date().toISOString(), method: "qr" },
+      { onConflict: "registration_id,session_id" },
+    );
+    const name = reg.attendees?.full_name ?? reg.contacts?.full_name ?? "Attendee";
+    setScanFlash(`✓ ${name} checked in`);
+    setTimeout(() => setScanFlash(null), 2500);
+  }
 
   return (
     <div className="space-y-4">
@@ -134,7 +167,14 @@ function CampDetailPage() {
         <div className="p-4">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <h1 className="font-display text-xl font-bold text-foreground">{camp.name}</h1>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="font-display text-xl font-bold text-foreground">{camp.name}</h1>
+                {isLive && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-400">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" /> Live
+                  </span>
+                )}
+              </div>
               <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
                 <MapPin size={11} /> {camp.venue_name ?? (camp.location_type === "online" ? "Online" : "TBA")}
                 {camp.address ? <span className="text-muted-foreground/70"> · {camp.address}</span> : null}
@@ -180,44 +220,376 @@ function CampDetailPage() {
         <Stat label="Revenue" value={`$${(stats.revenue / 100).toLocaleString()}`} tone="teal" />
       </div>
 
-      {/* Tabs */}
-      <nav className="-mx-5 overflow-x-auto px-5">
+      {/* Primary actions */}
+      <div className="grid grid-cols-2 gap-2">
+        <a
+          href="#session-plans"
+          className="flex items-center justify-center gap-2 rounded-2xl bg-teal py-4 text-sm font-bold text-black"
+        >
+          <ClipboardList size={16} /> Session Plans
+        </a>
+        <Link
+          to="/coach/broadcast"
+          search={{ campId } as never}
+          className="flex items-center justify-center gap-2 rounded-2xl bg-teal py-4 text-sm font-bold text-black"
+        >
+          <MessageSquare size={16} /> Message Group
+        </Link>
+      </div>
+
+      {/* Visual camp schedule */}
+      <section id="session-plans" className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h2 className="text-[10px] font-bold uppercase tracking-wider text-foreground">Camp schedule</h2>
+          <span className="text-[10px] text-muted-foreground">{sessions.length} {sessions.length === 1 ? "day" : "days"}</span>
+        </div>
+        <CampSchedule sessions={sessions} campId={campId} />
+      </section>
+
+      {/* Roster + Today's RSVP */}
+      <div className="grid grid-cols-2 gap-2">
+        <RosterCard regs={regs} />
+        <TodayRsvpCard
+          attending={todayAttending}
+          notAttending={todayNotAttending}
+          noResponse={todayNoResponse}
+          hasSession={!!todaySession}
+          campId={campId}
+        />
+      </div>
+
+      {/* QR check-in */}
+      <button
+        onClick={() => setScannerOpen(true)}
+        disabled={!todaySession || paidRegs.length === 0}
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-card py-3 text-sm font-bold text-teal disabled:opacity-40"
+      >
+        <Camera size={16} /> Start Check-in
+      </button>
+      {scanFlash && (
+        <div className="rounded-xl border border-border bg-surface px-3 py-2 text-center text-xs font-semibold text-foreground">
+          {scanFlash}
+        </div>
+      )}
+
+      {/* More section */}
+      <section className="space-y-2 pt-2">
+        <h2 className="text-[10px] font-bold uppercase tracking-wider text-foreground">More</h2>
+        <div className="overflow-hidden rounded-2xl border border-border bg-card">
+          <MoreRow icon={Hourglass} label="Waitlist" count={wait.length} open={more === "waitlist"} onClick={() => setMore(more === "waitlist" ? null : "waitlist")} />
+          {more === "waitlist" && <div className="border-t border-border p-3"><WaitlistTab entries={wait} /></div>}
+          <MoreRow icon={ImageIcon} label="Media" count={media.length} open={more === "media"} onClick={() => setMore(more === "media" ? null : "media")} />
+          {more === "media" && <div className="border-t border-border p-3"><MediaTab media={media} /></div>}
+          <MoreRow icon={Star} label="Evaluations" count={regs.length} open={more === "evaluations"} onClick={() => setMore(more === "evaluations" ? null : "evaluations")} />
+          {more === "evaluations" && <div className="border-t border-border p-3"><EvaluationsTab regs={regs} campId={campId} /></div>}
+          <MoreRow icon={Wallet} label="Financials" count={stats.paid} open={more === "financials"} onClick={() => setMore(more === "financials" ? null : "financials")} last />
+          {more === "financials" && <div className="border-t border-border p-3"><FinancialsPanel regs={regs} /></div>}
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 pt-2">
+          <details className="overflow-hidden rounded-2xl border border-border bg-card">
+            <summary className="cursor-pointer list-none px-3 py-3 text-[11px] font-semibold text-foreground">Description & details</summary>
+            <div className="border-t border-border p-3"><OverviewTab camp={camp} /></div>
+          </details>
+          <details className="overflow-hidden rounded-2xl border border-border bg-card">
+            <summary className="cursor-pointer list-none px-3 py-3 text-[11px] font-semibold text-foreground">Settings & pricing</summary>
+            <div className="border-t border-border p-3"><OptionsTab camp={camp} /></div>
+          </details>
+        </div>
+      </section>
+
+      {scannerOpen && (
+        <QRScannerModal onScan={handleScan} onClose={() => setScannerOpen(false)} />
+      )}
+    </div>
+  );
+}
+
+function MoreRow({ icon: Icon, label, count, open, onClick, last }: { icon: typeof Calendar; label: string; count?: number; open: boolean; onClick: () => void; last?: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      className={"flex w-full items-center gap-3 px-3 py-3 text-left " + (last ? "" : "border-b border-border")}
+    >
+      <Icon size={16} className="text-muted-foreground" />
+      <span className="flex-1 text-sm font-semibold text-foreground">{label}</span>
+      {typeof count === "number" && (
+        <span className="rounded-full bg-surface px-2 py-0.5 text-[10px] font-bold text-muted-foreground">{count}</span>
+      )}
+      {open ? <ChevronDown size={14} className="text-muted-foreground" /> : <ChevronRight size={14} className="text-muted-foreground" />}
+    </button>
+  );
+}
+
+function CampSchedule({ sessions, campId }: { sessions: Session[]; campId: string }) {
+  const planKey = `pxf:camp-plans:${campId}`;
+  const [library, setLibrary] = useState<SavedSession[]>([]);
+  const [assignments, setAssignments] = useState<Record<string, string>>({});
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [pickerFor, setPickerFor] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLibrary(readSavedSessions());
+    try {
+      const raw = window.localStorage.getItem(planKey);
+      if (raw) setAssignments(JSON.parse(raw));
+    } catch { /* ignore */ }
+  }, [planKey]);
+
+  function assign(sessionId: string, savedId: string | null) {
+    const next = { ...assignments };
+    if (savedId) next[sessionId] = savedId;
+    else delete next[sessionId];
+    setAssignments(next);
+    window.localStorage.setItem(planKey, JSON.stringify(next));
+    setPickerFor(null);
+  }
+
+  if (sessions.length === 0) {
+    return (
+      <p className="rounded-2xl border border-border bg-card p-6 text-center text-xs text-muted-foreground">
+        No camp days scheduled yet.
+      </p>
+    );
+  }
+
+  const expandedSession = sessions.find((s) => s.id === expanded);
+  const expandedAssigned = expandedSession ? library.find((l) => l.id === assignments[expandedSession.id]) : null;
+
+  return (
+    <div className="space-y-2">
+      <div className="-mx-5 overflow-x-auto px-5">
         <div className="flex gap-2">
-          {tabs.map((t) => {
-            const active = tab === t.id;
+          {sessions.map((s, i) => {
+            const assignedId = assignments[s.id];
+            const assigned = library.find((l) => l.id === assignedId);
+            const isOpen = expanded === s.id;
+            const date = new Date(s.session_date + "T00:00:00");
             return (
               <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
+                key={s.id}
+                onClick={() => setExpanded(isOpen ? null : s.id)}
                 className={
-                  "flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-[11px] font-semibold " +
-                  (active
-                    ? "border-teal bg-teal/10 text-teal"
-                    : "border-border bg-card text-muted-foreground")
+                  "flex w-32 shrink-0 flex-col gap-1 rounded-2xl border p-3 text-left transition-colors " +
+                  (isOpen ? "border-teal bg-teal/10" : "border-border bg-card")
                 }
               >
-                {t.label}
-                {typeof t.count === "number" && (
-                  <span className={"rounded-full px-1.5 text-[9px] " + (active ? "bg-teal/20" : "bg-surface")}>
-                    {t.count}
-                  </span>
-                )}
+                <p className={"text-[10px] font-bold uppercase tracking-wider " + (isOpen ? "text-teal" : "text-muted-foreground")}>
+                  {date.toLocaleDateString("en-US", { weekday: "short" })}
+                </p>
+                <p className="font-display text-2xl font-bold text-foreground leading-none">
+                  {date.getDate()}
+                </p>
+                <p className="text-[10px] text-muted-foreground">Day {i + 1}</p>
+                <p className={"mt-1 truncate text-[11px] font-semibold " + (assigned ? "text-foreground" : "text-muted-foreground/70")}>
+                  {assigned ? assigned.name : "No session yet"}
+                </p>
               </button>
             );
           })}
         </div>
-      </nav>
+      </div>
 
-      {tab === "overview" && <OverviewTab camp={camp} />}
-      {tab === "description" && <DescriptionTab camp={camp} />}
-      {tab === "options" && <OptionsTab camp={camp} />}
-      {tab === "roster" && <RosterTab regs={regs} />}
-      {tab === "rsvp" && <DailyAttendance campId={campId} sessions={sessions} regs={regs} />}
-      {tab === "waitlist" && <WaitlistTab entries={wait} />}
-      {tab === "plans" && <PlansTab sessions={sessions} campId={campId} />}
-      {tab === "sessions" && <SessionsTab sessions={sessions} regs={regs} campId={campId} />}
-      {tab === "evaluations" && <EvaluationsTab regs={regs} campId={campId} />}
-      {tab === "media" && <MediaTab media={media} />}
+      {expandedSession && (
+        <div className="rounded-2xl border border-border bg-card p-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                {new Date(expandedSession.session_date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
+              </p>
+              <p className="text-sm font-semibold text-foreground">{expandedAssigned?.name ?? "No session assigned"}</p>
+            </div>
+            <button
+              onClick={() => setPickerFor(expandedSession.id)}
+              className="rounded-full border border-border bg-surface px-2.5 py-1 text-[10px] font-semibold text-foreground"
+            >
+              {expandedAssigned ? "Change" : "Assign"}
+            </button>
+          </div>
+
+          {expandedAssigned ? (
+            <div className="mt-3 space-y-1.5">
+              <p className="text-[10px] text-muted-foreground">
+                {expandedAssigned.blocks?.length ?? 0} drills · {expandedAssigned.totalMins ?? 0} min
+              </p>
+              {expandedAssigned.blocks && expandedAssigned.blocks.length > 0 ? (
+                <ul className="space-y-1">
+                  {(expandedAssigned.blocks as Array<{ name?: string; title?: string; minutes?: number }>).map((b, idx) => (
+                    <li key={idx} className="flex items-center justify-between rounded-lg bg-surface px-3 py-2 text-xs">
+                      <span className="font-semibold text-foreground">{b.name ?? b.title ?? `Drill ${idx + 1}`}</span>
+                      {typeof b.minutes === "number" && (
+                        <span className="text-[10px] text-muted-foreground">{b.minutes} min</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="rounded-lg border border-dashed border-border bg-surface p-3 text-center text-[10px] text-muted-foreground">
+                  Session has no drills yet.
+                </p>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => setPickerFor(expandedSession.id)}
+              className="mt-3 flex w-full items-center justify-center gap-1 rounded-xl border border-dashed border-border bg-surface py-2.5 text-[11px] font-semibold text-muted-foreground hover:border-teal/40 hover:text-teal"
+            >
+              <Plus size={12} /> Assign from Library
+            </button>
+          )}
+        </div>
+      )}
+
+      <ApplyCampTemplate
+        campSessions={sessions.map((s) => ({ id: s.id }))}
+        planKey={planKey}
+        onApplied={() => {
+          try {
+            const raw = window.localStorage.getItem(planKey);
+            if (raw) setAssignments(JSON.parse(raw));
+            setLibrary(readSavedSessions());
+          } catch { /* ignore */ }
+        }}
+      />
+
+      {pickerFor && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4" onClick={() => setPickerFor(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-2xl border border-border bg-card p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-foreground">Pick a saved session</h3>
+              <button onClick={() => setPickerFor(null)} className="text-muted-foreground"><X size={14} /></button>
+            </div>
+            {library.length === 0 ? (
+              <div className="space-y-2 py-4 text-center">
+                <p className="text-xs text-muted-foreground">No saved sessions yet.</p>
+                <Link to="/drill-builder" className="inline-flex items-center gap-1 rounded-full bg-teal px-4 py-1.5 text-[11px] font-bold text-black">
+                  <Plus size={12} /> Build one now
+                </Link>
+              </div>
+            ) : (
+              <ul className="max-h-80 space-y-1.5 overflow-y-auto">
+                {library.map((l) => (
+                  <li key={l.id}>
+                    <button
+                      onClick={() => assign(pickerFor, l.id)}
+                      className="flex w-full items-center justify-between rounded-xl border border-border bg-surface p-3 text-left hover:border-teal/40"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{l.name}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {l.blocks?.length ?? 0} drills · {l.totalMins ?? 0} min
+                        </p>
+                      </div>
+                      <Plus size={14} className="text-teal" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RosterCard({ regs }: { regs: Reg[] }) {
+  const visible = regs.slice(0, 5);
+  return (
+    <div className="rounded-2xl border border-border bg-card p-3">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Roster</p>
+        <Users size={12} className="text-muted-foreground" />
+      </div>
+      <p className="mt-1 font-display text-xl font-bold text-foreground">{regs.length}</p>
+      <p className="text-[10px] text-muted-foreground">registered</p>
+      {visible.length > 0 && (
+        <div className="mt-2 flex -space-x-2">
+          {visible.map((r) => {
+            const name = r.attendees?.full_name ?? r.contacts?.full_name ?? "?";
+            const initials = name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+            return (
+              <div key={r.id} className="grid h-7 w-7 place-items-center rounded-full border-2 border-card bg-teal/15 text-[10px] font-bold text-teal">
+                {initials}
+              </div>
+            );
+          })}
+          {regs.length > visible.length && (
+            <div className="grid h-7 w-7 place-items-center rounded-full border-2 border-card bg-surface text-[9px] font-bold text-muted-foreground">
+              +{regs.length - visible.length}
+            </div>
+          )}
+        </div>
+      )}
+      <details className="mt-2">
+        <summary className="cursor-pointer list-none text-[11px] font-semibold text-teal">View All</summary>
+        <div className="mt-2"><RosterTab regs={regs} /></div>
+      </details>
+    </div>
+  );
+}
+
+function TodayRsvpCard({ attending, notAttending, noResponse, hasSession, campId: _campId }: { attending: number; notAttending: number; noResponse: number; hasSession: boolean; campId: string }) {
+  const [sent, setSent] = useState(false);
+  return (
+    <div className="rounded-2xl border border-border bg-card p-3">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Today's RSVP</p>
+        <Bell size={12} className="text-muted-foreground" />
+      </div>
+      {hasSession ? (
+        <div className="mt-2 space-y-1">
+          <RsvpRow color="bg-emerald-400" label="Attending" value={attending} />
+          <RsvpRow color="bg-red-400" label="Not Attending" value={notAttending} />
+          <RsvpRow color="bg-muted-foreground" label="No Response" value={noResponse} />
+        </div>
+      ) : (
+        <p className="mt-2 text-[11px] text-muted-foreground">No session today.</p>
+      )}
+      <button
+        onClick={() => setSent(true)}
+        disabled={!hasSession || noResponse === 0}
+        className={"mt-3 w-full rounded-full px-3 py-1.5 text-[10px] font-bold disabled:opacity-40 " + (sent ? "bg-emerald-400/15 text-emerald-400" : "bg-teal text-black")}
+      >
+        {sent ? "Sent ✓" : "Send Reminder"}
+      </button>
+    </div>
+  );
+}
+
+function RsvpRow({ color, label, value }: { color: string; label: string; value: number }) {
+  return (
+    <div className="flex items-center gap-2 text-[11px]">
+      <span className={"h-2 w-2 rounded-full " + color} />
+      <span className="flex-1 text-muted-foreground">{label}</span>
+      <span className="font-bold text-foreground">{value}</span>
+    </div>
+  );
+}
+
+function FinancialsPanel({ regs }: { regs: Reg[] }) {
+  const paid = regs.filter((r) => r.status === "paid");
+  const pending = regs.filter((r) => r.status === "pending");
+  const refunded = regs.filter((r) => r.status === "refunded");
+  const revenue = paid.reduce((sum, r) => sum + (r.amount_cents ?? 0), 0);
+  const outstanding = pending.reduce((sum, r) => sum + (r.amount_cents ?? 0), 0);
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-xl bg-surface p-3">
+          <p className="text-[10px] uppercase text-muted-foreground">Collected</p>
+          <p className="font-display text-lg font-bold text-emerald-400">${(revenue / 100).toLocaleString()}</p>
+        </div>
+        <div className="rounded-xl bg-surface p-3">
+          <p className="text-[10px] uppercase text-muted-foreground">Outstanding</p>
+          <p className="font-display text-lg font-bold text-amber-400">${(outstanding / 100).toLocaleString()}</p>
+        </div>
+      </div>
+      <div className="rounded-xl bg-surface p-3 text-xs">
+        <Row k="Paid registrations" v={String(paid.length)} />
+        <Row k="Pending" v={String(pending.length)} />
+        <Row k="Refunded" v={String(refunded.length)} />
+      </div>
     </div>
   );
 }
