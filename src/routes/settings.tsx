@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon } from "lucide-react";
+import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare } from "lucide-react";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings — PXF Hockey" }] }),
@@ -110,6 +110,25 @@ function SettingsScreen() {
               <input type="checkbox" checked={prefs[n.id]} onChange={(e) => setPrefs({ ...prefs, [n.id]: e.target.checked })} className="accent-teal" />
             </label>
           ))}
+        </Section>
+
+        <Section icon={MessageSquare} title="SMS Sender">
+          <p className="text-[11px] text-muted-foreground">
+            Your verified business number for automated reminders and broadcasts. We'll wire this up to your SMS provider in a later step — for now save your sender details so they appear correctly in previews.
+          </p>
+          <Field label="Sender name (max 11 chars)" defaultValue="PXF Hockey" maxLength={11} />
+          <Field label="Sender phone (E.164)" placeholder="+19055550188" type="tel" />
+          <label className="block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Signature appended to every SMS</span>
+            <textarea
+              defaultValue="— Coach Reilly, PXF Hockey. Reply STOP to opt out."
+              maxLength={160}
+              className="mt-1 h-16 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+            />
+          </label>
+          <div className="rounded-lg bg-surface/50 px-3 py-2 text-[10px] text-muted-foreground">
+            Provider: <span className="font-semibold text-foreground">Not configured</span>. Connect Twilio or another SMS provider to start sending live messages.
+          </div>
         </Section>
 
         <Section icon={Lock} title="Privacy & Security">
