@@ -203,11 +203,20 @@ function BookingPage() {
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {result.kind === "registered"
-              ? `We've reserved a spot for ${attendee.full_name}. Check ${parent.email} for payment instructions.`
+              ? result.count > 1
+                ? `We've reserved ${result.count} spots. Check ${parent.email} for payment instructions.`
+                : `We've reserved a spot for ${athletes[0].full_name}. Check ${parent.email} for payment instructions.`
               : `${camp.name} is full. We'll email ${parent.email} the moment a spot opens up.`}
           </p>
-          {result.kind === "registered" && result.amountCents != null && (
-            <p className="mt-4 text-3xl font-bold text-teal">${(result.amountCents / 100).toFixed(0)}</p>
+          {result.kind === "registered" && (
+            <>
+              <p className="mt-4 text-3xl font-bold text-teal">${(result.amountCents / 100).toFixed(0)}</p>
+              {result.paymentPlan !== "none" && (
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {result.paymentPlan === "two" ? "2" : "3"} monthly installments scheduled.
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>
