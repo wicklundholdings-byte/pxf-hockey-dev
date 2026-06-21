@@ -1196,9 +1196,20 @@ function PlansTab({ sessions, campId }: { sessions: Session[]; campId: string })
         </p>
       </div>
 
+      <ApplyCampTemplate
+        campSessions={sessions.map((s) => ({ id: s.id }))}
+        planKey={planKey}
+        onApplied={() => {
+          try {
+            const raw = window.localStorage.getItem(planKey);
+            if (raw) setAssignments(JSON.parse(raw));
+            setLibrary(readSavedSessions());
+          } catch { /* ignore */ }
+        }}
+      />
       <div className="flex gap-2">
-        <Link to="/coach/library" className="flex flex-1 items-center justify-center gap-1 rounded-full border border-border bg-card py-2 text-[11px] font-semibold text-foreground">
-          <BookOpen size={12} /> Open Library
+        <Link to="/coach/playbook" className="flex flex-1 items-center justify-center gap-1 rounded-full border border-border bg-card py-2 text-[11px] font-semibold text-foreground">
+          <BookOpen size={12} /> Open Playbook
         </Link>
         <Link to="/drill-builder" className="flex flex-1 items-center justify-center gap-1 rounded-full bg-teal py-2 text-[11px] font-bold text-black">
           <Plus size={12} /> Build new session
