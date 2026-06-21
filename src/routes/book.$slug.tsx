@@ -304,6 +304,17 @@ function BookingPage() {
               <Input label="Full name" value={parent.full_name} onChange={(v) => setParent({ ...parent, full_name: v })} />
               <Input label="Email" type="email" value={parent.email} onChange={(v) => setParent({ ...parent, email: v })} />
               <Input label="Phone (optional)" type="tel" value={parent.phone} onChange={(v) => setParent({ ...parent, phone: v })} />
+              <div className="space-y-2 rounded-xl border border-border bg-surface/40 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Notification preferences</p>
+                <label className="flex items-start gap-2 text-xs">
+                  <input type="checkbox" defaultChecked className="mt-0.5 h-3.5 w-3.5 accent-teal" id="opt-email" />
+                  <span>Email me confirmations, reminders, and program updates.</span>
+                </label>
+                <label className="flex items-start gap-2 text-xs">
+                  <input type="checkbox" className="mt-0.5 h-3.5 w-3.5 accent-teal" id="opt-sms" />
+                  <span>Text me reminders &amp; urgent updates. Msg &amp; data rates may apply. Reply STOP to opt out.</span>
+                </label>
+              </div>
               <button
                 disabled={!parent.full_name || !parent.email}
                 onClick={() => setStep(2)}
