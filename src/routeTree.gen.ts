@@ -28,7 +28,6 @@ import { Route as GameiqRouteImport } from './routes/gameiq'
 import { Route as FavouritesRouteImport } from './routes/favourites'
 import { Route as DrillsRouteImport } from './routes/drills'
 import { Route as DrillBuilderRouteImport } from './routes/drill-builder'
-import { Route as CampsRouteImport } from './routes/camps'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as BookingsRouteImport } from './routes/bookings'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -38,6 +37,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as StoreIndexRouteImport } from './routes/store.index'
 import { Route as ParentIndexRouteImport } from './routes/parent.index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding.index'
+import { Route as CampsIndexRouteImport } from './routes/camps.index'
 import { Route as StoreCartRouteImport } from './routes/store.cart'
 import { Route as StoreProductIdRouteImport } from './routes/store.$productId'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
@@ -197,11 +197,6 @@ const DrillBuilderRoute = DrillBuilderRouteImport.update({
   path: '/drill-builder',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CampsRoute = CampsRouteImport.update({
-  id: '/camps',
-  path: '/camps',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CalendarRoute = CalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -245,6 +240,11 @@ const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => OnboardingRoute,
+} as any)
+const CampsIndexRoute = CampsIndexRouteImport.update({
+  id: '/camps/',
+  path: '/camps/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const StoreCartRoute = StoreCartRouteImport.update({
   id: '/store/cart',
@@ -342,14 +342,14 @@ const CoachesSlugRoute = CoachesSlugRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const CampsBrowseRoute = CampsBrowseRouteImport.update({
-  id: '/browse',
-  path: '/browse',
-  getParentRoute: () => CampsRoute,
+  id: '/camps/browse',
+  path: '/camps/browse',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CampsSlugRoute = CampsSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => CampsRoute,
+  id: '/camps/$slug',
+  path: '/camps/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const BookSlugRoute = BookSlugRouteImport.update({
   id: '/book/$slug',
@@ -594,7 +594,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/bookings': typeof BookingsRoute
   '/calendar': typeof CalendarRoute
-  '/camps': typeof CampsRouteWithChildren
   '/drill-builder': typeof DrillBuilderRoute
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
@@ -639,6 +638,7 @@ export interface FileRoutesByFullPath {
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
+  '/camps/': typeof CampsIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
   '/parent/': typeof ParentIndexRoute
   '/store/': typeof StoreIndexRoute
@@ -687,7 +687,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/bookings': typeof BookingsRoute
   '/calendar': typeof CalendarRoute
-  '/camps': typeof CampsRouteWithChildren
   '/drill-builder': typeof DrillBuilderRoute
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
@@ -727,6 +726,7 @@ export interface FileRoutesByTo {
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
+  '/camps': typeof CampsIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
   '/parent': typeof ParentIndexRoute
   '/store': typeof StoreIndexRoute
@@ -777,7 +777,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/bookings': typeof BookingsRoute
   '/calendar': typeof CalendarRoute
-  '/camps': typeof CampsRouteWithChildren
   '/drill-builder': typeof DrillBuilderRoute
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
@@ -822,6 +821,7 @@ export interface FileRoutesById {
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
+  '/camps/': typeof CampsIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
   '/parent/': typeof ParentIndexRoute
   '/store/': typeof StoreIndexRoute
@@ -872,7 +872,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/bookings'
     | '/calendar'
-    | '/camps'
     | '/drill-builder'
     | '/drills'
     | '/favourites'
@@ -917,6 +916,7 @@ export interface FileRouteTypes {
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
+    | '/camps/'
     | '/onboarding/'
     | '/parent/'
     | '/store/'
@@ -965,7 +965,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/bookings'
     | '/calendar'
-    | '/camps'
     | '/drill-builder'
     | '/drills'
     | '/favourites'
@@ -1005,6 +1004,7 @@ export interface FileRouteTypes {
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
+    | '/camps'
     | '/onboarding'
     | '/parent'
     | '/store'
@@ -1054,7 +1054,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/bookings'
     | '/calendar'
-    | '/camps'
     | '/drill-builder'
     | '/drills'
     | '/favourites'
@@ -1099,6 +1098,7 @@ export interface FileRouteTypes {
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
+    | '/camps/'
     | '/onboarding/'
     | '/parent/'
     | '/store/'
@@ -1149,7 +1149,6 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BookingsRoute: typeof BookingsRoute
   CalendarRoute: typeof CalendarRoute
-  CampsRoute: typeof CampsRouteWithChildren
   DrillBuilderRoute: typeof DrillBuilderRoute
   DrillsRoute: typeof DrillsRoute
   FavouritesRoute: typeof FavouritesRoute
@@ -1170,6 +1169,8 @@ export interface RootRouteChildren {
   TeamRoute: typeof TeamRoute
   WelcomeRoute: typeof WelcomeRoute
   BookSlugRoute: typeof BookSlugRoute
+  CampsSlugRoute: typeof CampsSlugRouteWithChildren
+  CampsBrowseRoute: typeof CampsBrowseRoute
   CoachesSlugRoute: typeof CoachesSlugRoute
   DrillDetailDrillIdRoute: typeof DrillDetailDrillIdRoute
   PaymentsCheckoutRoute: typeof PaymentsCheckoutRoute
@@ -1184,6 +1185,7 @@ export interface RootRouteChildren {
   SessionDetailSessionIdRoute: typeof SessionDetailSessionIdRoute
   StoreProductIdRoute: typeof StoreProductIdRoute
   StoreCartRoute: typeof StoreCartRoute
+  CampsIndexRoute: typeof CampsIndexRoute
   StoreIndexRoute: typeof StoreIndexRoute
   ApiPublicHooksRsvpRemindersRoute: typeof ApiPublicHooksRsvpRemindersRoute
 }
@@ -1323,13 +1325,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DrillBuilderRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/camps': {
-      id: '/camps'
-      path: '/camps'
-      fullPath: '/camps'
-      preLoaderRoute: typeof CampsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/calendar': {
       id: '/calendar'
       path: '/calendar'
@@ -1392,6 +1387,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/onboarding/'
       preLoaderRoute: typeof OnboardingIndexRouteImport
       parentRoute: typeof OnboardingRoute
+    }
+    '/camps/': {
+      id: '/camps/'
+      path: '/camps'
+      fullPath: '/camps/'
+      preLoaderRoute: typeof CampsIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/store/cart': {
       id: '/store/cart'
@@ -1528,17 +1530,17 @@ declare module '@tanstack/react-router' {
     }
     '/camps/browse': {
       id: '/camps/browse'
-      path: '/browse'
+      path: '/camps/browse'
       fullPath: '/camps/browse'
       preLoaderRoute: typeof CampsBrowseRouteImport
-      parentRoute: typeof CampsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/camps/$slug': {
       id: '/camps/$slug'
-      path: '/$slug'
+      path: '/camps/$slug'
       fullPath: '/camps/$slug'
       preLoaderRoute: typeof CampsSlugRouteImport
-      parentRoute: typeof CampsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/book/$slug': {
       id: '/book/$slug'
@@ -1987,38 +1989,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface CampsSlugRouteChildren {
-  CampsSlugConfirmedRoute: typeof CampsSlugConfirmedRoute
-  CampsSlugPaymentRoute: typeof CampsSlugPaymentRoute
-  CampsSlugRegisterRoute: typeof CampsSlugRegisterRoute
-  CampsSlugWaiverRoute: typeof CampsSlugWaiverRoute
-  CampsSlugIndexRoute: typeof CampsSlugIndexRoute
-}
-
-const CampsSlugRouteChildren: CampsSlugRouteChildren = {
-  CampsSlugConfirmedRoute: CampsSlugConfirmedRoute,
-  CampsSlugPaymentRoute: CampsSlugPaymentRoute,
-  CampsSlugRegisterRoute: CampsSlugRegisterRoute,
-  CampsSlugWaiverRoute: CampsSlugWaiverRoute,
-  CampsSlugIndexRoute: CampsSlugIndexRoute,
-}
-
-const CampsSlugRouteWithChildren = CampsSlugRoute._addFileChildren(
-  CampsSlugRouteChildren,
-)
-
-interface CampsRouteChildren {
-  CampsSlugRoute: typeof CampsSlugRouteWithChildren
-  CampsBrowseRoute: typeof CampsBrowseRoute
-}
-
-const CampsRouteChildren: CampsRouteChildren = {
-  CampsSlugRoute: CampsSlugRouteWithChildren,
-  CampsBrowseRoute: CampsBrowseRoute,
-}
-
-const CampsRouteWithChildren = CampsRoute._addFileChildren(CampsRouteChildren)
-
 interface OnboardingRouteChildren {
   OnboardingCoachRoute: typeof OnboardingCoachRoute
   OnboardingParentRoute: typeof OnboardingParentRoute
@@ -2054,6 +2024,26 @@ const ParentRouteChildren: ParentRouteChildren = {
 const ParentRouteWithChildren =
   ParentRoute._addFileChildren(ParentRouteChildren)
 
+interface CampsSlugRouteChildren {
+  CampsSlugConfirmedRoute: typeof CampsSlugConfirmedRoute
+  CampsSlugPaymentRoute: typeof CampsSlugPaymentRoute
+  CampsSlugRegisterRoute: typeof CampsSlugRegisterRoute
+  CampsSlugWaiverRoute: typeof CampsSlugWaiverRoute
+  CampsSlugIndexRoute: typeof CampsSlugIndexRoute
+}
+
+const CampsSlugRouteChildren: CampsSlugRouteChildren = {
+  CampsSlugConfirmedRoute: CampsSlugConfirmedRoute,
+  CampsSlugPaymentRoute: CampsSlugPaymentRoute,
+  CampsSlugRegisterRoute: CampsSlugRegisterRoute,
+  CampsSlugWaiverRoute: CampsSlugWaiverRoute,
+  CampsSlugIndexRoute: CampsSlugIndexRoute,
+}
+
+const CampsSlugRouteWithChildren = CampsSlugRoute._addFileChildren(
+  CampsSlugRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -2061,7 +2051,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BookingsRoute: BookingsRoute,
   CalendarRoute: CalendarRoute,
-  CampsRoute: CampsRouteWithChildren,
   DrillBuilderRoute: DrillBuilderRoute,
   DrillsRoute: DrillsRoute,
   FavouritesRoute: FavouritesRoute,
@@ -2082,6 +2071,8 @@ const rootRouteChildren: RootRouteChildren = {
   TeamRoute: TeamRoute,
   WelcomeRoute: WelcomeRoute,
   BookSlugRoute: BookSlugRoute,
+  CampsSlugRoute: CampsSlugRouteWithChildren,
+  CampsBrowseRoute: CampsBrowseRoute,
   CoachesSlugRoute: CoachesSlugRoute,
   DrillDetailDrillIdRoute: DrillDetailDrillIdRoute,
   PaymentsCheckoutRoute: PaymentsCheckoutRoute,
@@ -2096,6 +2087,7 @@ const rootRouteChildren: RootRouteChildren = {
   SessionDetailSessionIdRoute: SessionDetailSessionIdRoute,
   StoreProductIdRoute: StoreProductIdRoute,
   StoreCartRoute: StoreCartRoute,
+  CampsIndexRoute: CampsIndexRoute,
   StoreIndexRoute: StoreIndexRoute,
   ApiPublicHooksRsvpRemindersRoute: ApiPublicHooksRsvpRemindersRoute,
 }
