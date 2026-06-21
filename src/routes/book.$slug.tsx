@@ -2,7 +2,8 @@ import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { submitBooking, previewCoupon } from "@/lib/booking.functions";
-import { Calendar, MapPin, Clock, Users, CheckCircle2, Loader2, Tag, X } from "lucide-react";
+import { Calendar, MapPin, Clock, Users, CheckCircle2, Loader2, Tag, X, PenLine, Type as TypeIcon, FileText } from "lucide-react";
+import { useRef } from "react";
 
 export const Route = createFileRoute("/book/$slug")({
   component: BookingPage,
@@ -22,6 +23,8 @@ type Camp = {
   price_cents: number; early_bird_price_cents: number | null;
   early_bird_expires_at: string | null; capacity: number; show_remaining: boolean;
   status: string;
+  waiver_required: boolean;
+  waiver_text: string | null;
 };
 type Field = { id: string; label: string; field_type: string; options: string[] | null; required: boolean; sort_order: number };
 
@@ -37,7 +40,7 @@ function BookingPage() {
   const [paidCount, setPaidCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [parent, setParent] = useState({ full_name: "", email: "", phone: "" });
   const [attendee, setAttendee] = useState({ full_name: "", birthday: "", position: "", skill_level: "", handedness: "", jersey_number: "" });
   const [customs, setCustoms] = useState<Record<string, string>>({});
@@ -48,6 +51,10 @@ function BookingPage() {
   const [coupon, setCoupon] = useState<{ baseCents: number; discountCents: number; finalCents: number; label: string } | null>(null);
   const [couponErr, setCouponErr] = useState<string | null>(null);
   const [checkingCoupon, setCheckingCoupon] = useState(false);
+  const [waiverAgree, setWaiverAgree] = useState(false);
+  const [waiverMode, setWaiverMode] = useState<"drawn" | "typed">("drawn");
+  const [waiverTyped, setWaiverTyped] = useState("");
+  const [waiverDrawn, setWaiverDrawn] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -100,6 +107,15 @@ function BookingPage() {
     setSubmitting(true);
     setError(null);
     try {
+      const waiverPayload =
+        camp!.waiver_required && camp!.waiver_text
+          ? {
+              signer_name: parent.full_name,
+              signature_method: waiverMode,
+              signature_data: waiverMode === "typed" ? waiverTyped.trim() : (waiverDrawn ?? ""),
+              waiver_text_snapshot: camp!.waiver_text,
+            }
+          : null;
       const res = await submitBooking({
         data: {
           campId: camp!.id,
@@ -107,6 +123,7 @@ function BookingPage() {
           attendee,
           customFieldValues: customs,
           couponCode: coupon ? couponCode : null,
+          waiver: waiverPayload,
         },
       });
       setResult(res);
@@ -205,7 +222,7 @@ function BookingPage() {
 
         {/* Stepper */}
         <div className="mt-6 flex justify-center gap-2">
-          {[1, 2, 3].map((s) => (
+          {(camp.waiver_required ? [1, 2, 3, 4] : [1, 2, 3]).map((s) => (
             <div key={s} className={"h-1.5 w-12 rounded-full " + (s <= step ? "bg-teal" : "bg-surface")} />
           ))}
         </div>
