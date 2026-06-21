@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X, ListChecks, BookOpen } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X, ListChecks, BookOpen, ListPlus, ShieldCheck } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/$campId")({
@@ -16,6 +16,8 @@ type Camp = {
   hero_image: string | null; venue_name: string | null; address: string | null;
   location_type: string; description: string | null; format: string;
   early_bird_price_cents: number | null; early_bird_expires_at: string | null;
+  waiver_required: boolean; waiver_text: string | null;
+  payment_plan: string; sibling_discount: boolean;
 };
 type Reg = {
   id: string; camp_id: string; attendee_id: string | null; contact_id: string | null;
