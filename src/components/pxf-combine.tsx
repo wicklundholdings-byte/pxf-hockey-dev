@@ -240,11 +240,11 @@ function StatCard({ stat, data }: { stat: StatDef; data: StatData | null }) {
   const anim = useAnimatedNumber(locked ? 0 : pct / 99);
 
   // Speedometer arc — 180deg, bottom-anchored
-  const w = 240;
-  const h = 130;
+  const w = 220;
+  const h = 118;
   const cx = w / 2;
-  const cy = h - 14;
-  const r = 92;
+  const cy = h - 10;
+  const r = 88;
   const stroke = 10;
   const arc = (t: number) => {
     const clamped = Math.max(0.001, Math.min(1, t));
@@ -254,7 +254,7 @@ function StatCard({ stat, data }: { stat: StatDef; data: StatData | null }) {
     const y1 = cy + r * Math.sin(start);
     const x2 = cx + r * Math.cos(end);
     const y2 = cy + r * Math.sin(end);
-    const large = clamped > 0.5 ? 1 : 0;
+    const large = 0;
     return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
   };
 
@@ -266,7 +266,7 @@ function StatCard({ stat, data }: { stat: StatDef; data: StatData | null }) {
             <stat.icon size={16} />
           </div>
           <div>
-            <p className="text-sm font-bold text-foreground">{stat.emoji} {stat.label}</p>
+            <p className="text-sm font-bold text-foreground">{stat.label}</p>
             <p className="text-[10px] tracking-wider text-muted-foreground">{stat.source}</p>
           </div>
         </div>
