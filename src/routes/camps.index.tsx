@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { listLiveCamps } from "@/lib/camps-public.functions";
 import { Calendar, MapPin, ArrowRight, CalendarDays } from "lucide-react";
 
-export const Route = createFileRoute("/camps")({
+export const Route = createFileRoute("/camps/")({
   head: () => ({
     meta: [
       { title: "Upcoming Hockey Camps — PXF Hockey" },
