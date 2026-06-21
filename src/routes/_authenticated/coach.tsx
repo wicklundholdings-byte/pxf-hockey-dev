@@ -7,14 +7,15 @@ import { TrialBanner } from "@/components/trial-banner";
 export const Route = createFileRoute("/_authenticated/coach")({
   ssr: false,
   beforeLoad: async () => {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) throw redirect({ to: "/auth", search: { mode: "login", redirect: "/coach" } });
+    const { data: s } = await supabase.auth.getSession();
+    const user = s.session?.user;
+    if (!user) throw redirect({ to: "/auth", search: { mode: "login", redirect: "/coach" } });
     const [{ data: role }, { data: subs }] = await Promise.all([
-      supabase.from("user_roles").select("role").eq("user_id", u.user.id).eq("role", "admin").maybeSingle(),
+      supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle(),
       supabase
         .from("subscriptions")
         .select("plan_name,status,current_period_end")
-        .eq("user_id", u.user.id)
+        .eq("user_id", user.id)
         .eq("status", "active"),
     ]);
     const subActive = (subs ?? []).some((s) => {
