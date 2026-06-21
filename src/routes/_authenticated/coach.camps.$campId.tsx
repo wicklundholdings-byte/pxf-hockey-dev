@@ -402,6 +402,11 @@ function WaitlistTab({ entries }: { entries: Wait[] }) {
 }
 
 function SessionsTab({ sessions, regs, campId }: { sessions: Session[]; regs: Reg[]; campId: string }) {
+  void 0;
+  return _SessionsTabImpl({ sessions, regs, campId });
+}
+
+function _SessionsTabImpl({ sessions, regs, campId }: { sessions: Session[]; regs: Reg[]; campId: string }) {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(sessions[0]?.id ?? null);
   const [attendance, setAttendance] = useState<Map<string, boolean>>(new Map());
 
