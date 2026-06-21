@@ -357,14 +357,45 @@ function BookingPage() {
                   Back
                 </button>
                 <button
-                  onClick={handleSubmit}
+                  onClick={() => {
+                    if (camp.waiver_required && !isFull) {
+                      setStep(4);
+                    } else {
+                      handleSubmit();
+                    }
+                  }}
                   disabled={submitting}
                   className="flex-1 rounded-full bg-teal py-3 text-sm font-bold text-black disabled:opacity-40"
                 >
-                  {submitting ? "Submitting…" : isFull ? "Join waitlist" : "Confirm"}
+                  {submitting
+                    ? "Submitting…"
+                    : isFull
+                      ? "Join waitlist"
+                      : camp.waiver_required
+                        ? "Continue to waiver"
+                        : "Confirm"}
                 </button>
               </div>
             </div>
+          )}
+
+          {step === 4 && camp.waiver_required && (
+            <WaiverStep
+              waiverText={camp.waiver_text ?? ""}
+              signerName={parent.full_name}
+              agree={waiverAgree}
+              setAgree={setWaiverAgree}
+              mode={waiverMode}
+              setMode={setWaiverMode}
+              typed={waiverTyped}
+              setTyped={setWaiverTyped}
+              drawn={waiverDrawn}
+              setDrawn={setWaiverDrawn}
+              onBack={() => setStep(3)}
+              onSubmit={handleSubmit}
+              submitting={submitting}
+              error={error}
+            />
           )}
         </div>
 
