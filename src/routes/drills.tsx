@@ -104,7 +104,7 @@ function makeBlock(drill: Drill): SessionBlock {
   return { uid: `b-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, drillId: drill.id, mins: drill.durationMin };
 }
 
-function Drills() {
+export function Drills() {
   const [drills, setDrills] = useState<Drill[]>([]);
   const [categories, setCategories] = useState<CategoryMeta[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, redirect, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, CalendarDays, Users, MessageSquare, ArrowLeft, Bell, Megaphone, Settings, BookOpen } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, MessageSquare, Bell, Megaphone, Settings, BookOpen } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { TrialBanner } from "@/components/trial-banner";
 
@@ -44,10 +44,7 @@ function CoachLayout() {
     <div className="min-h-screen bg-background">
       <div className="px-5 pt-4 pb-28">
         {!hideChrome && <TrialBanner daysLeft={12} plan="Elite" />}
-        <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-1 text-xs text-muted-foreground">
-            <ArrowLeft size={14} /> Back to app
-          </Link>
+        <div className="flex items-center justify-end">
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[10px] font-bold tracking-wider text-teal">COACH</span>
             <button className="rounded-full border border-border bg-surface p-1.5 text-muted-foreground hover:text-foreground">
