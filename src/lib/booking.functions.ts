@@ -232,7 +232,6 @@ export const submitBooking = createServerFn({ method: "POST" })
           custom_field_values: (a.customFieldValues ?? {}) as never,
           booking_group_id: bookingGroupId,
           sibling_discount_cents: siblingOff,
-          payment_plan_installments: data.paymentPlan === "two" ? 2 : data.paymentPlan === "three" ? 3 : 1,
         })
         .select("id")
         .single();
