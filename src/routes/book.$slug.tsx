@@ -118,7 +118,6 @@ function BookingPage() {
     i === 0 || siblingPct === 0 ? price : Math.max(0, price - Math.round((price * siblingPct) / 100)),
   );
   const subtotal = childBases.reduce((a, b) => a + b, 0);
-  const siblingSavings = athletes.length > 1 ? subtotal - price * athletes.length + 0 : 0; // negative number not useful
   const couponDiscount = coupon
     ? childBases.reduce((sum, base) => {
         const off = coupon.baseCents === 0 ? 0 : Math.round((base / coupon.baseCents) * coupon.discountCents);
