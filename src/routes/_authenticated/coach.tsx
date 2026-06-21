@@ -66,8 +66,8 @@ function CoachLayout() {
           <span className="text-[11px] text-muted-foreground">{today}</span>
         </div>
 
-        <nav className="mt-4 -mx-5 overflow-x-auto px-5">
-          <div className="flex gap-2">
+        <nav className="mt-4">
+          <div className="flex flex-wrap gap-2">
             {tabs.map((t, i) => {
               const active = !t.soon && (t.exact ? pathname === t.to : pathname.startsWith(t.to));
               const cls =
