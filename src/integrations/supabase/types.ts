@@ -112,6 +112,60 @@ export type Database = {
           },
         ]
       }
+      broadcasts: {
+        Row: {
+          audience_id: string | null
+          audience_type: string
+          body: string
+          channel_email: boolean
+          channel_push: boolean
+          channel_sms: boolean
+          created_at: string
+          id: string
+          owner_id: string
+          reach: number
+          scheduled_for: string | null
+          sent_at: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience_id?: string | null
+          audience_type?: string
+          body: string
+          channel_email?: boolean
+          channel_push?: boolean
+          channel_sms?: boolean
+          created_at?: string
+          id?: string
+          owner_id: string
+          reach?: number
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience_id?: string | null
+          audience_type?: string
+          body?: string
+          channel_email?: boolean
+          channel_push?: boolean
+          channel_sms?: boolean
+          created_at?: string
+          id?: string
+          owner_id?: string
+          reach?: number
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       camp_custom_fields: {
         Row: {
           camp_id: string
@@ -225,8 +279,11 @@ export type Database = {
       }
       camps: {
         Row: {
+          absent_alert: boolean
+          absent_alert_minutes: number
           address: string | null
           capacity: number
+          confirmation_sms: boolean
           created_at: string
           description: string | null
           early_bird_expires_at: string | null
@@ -242,6 +299,9 @@ export type Database = {
           owner_id: string
           payment_plan: Database["public"]["Enums"]["payment_plan"]
           price_cents: number
+          reminder_1day: boolean
+          reminder_7day: boolean
+          reminder_morning: boolean
           show_remaining: boolean
           sibling_discount: boolean
           sibling_discount_percent: number
@@ -258,8 +318,11 @@ export type Database = {
           waiver_url: string | null
         }
         Insert: {
+          absent_alert?: boolean
+          absent_alert_minutes?: number
           address?: string | null
           capacity?: number
+          confirmation_sms?: boolean
           created_at?: string
           description?: string | null
           early_bird_expires_at?: string | null
@@ -275,6 +338,9 @@ export type Database = {
           owner_id: string
           payment_plan?: Database["public"]["Enums"]["payment_plan"]
           price_cents?: number
+          reminder_1day?: boolean
+          reminder_7day?: boolean
+          reminder_morning?: boolean
           show_remaining?: boolean
           sibling_discount?: boolean
           sibling_discount_percent?: number
@@ -291,8 +357,11 @@ export type Database = {
           waiver_url?: string | null
         }
         Update: {
+          absent_alert?: boolean
+          absent_alert_minutes?: number
           address?: string | null
           capacity?: number
+          confirmation_sms?: boolean
           created_at?: string
           description?: string | null
           early_bird_expires_at?: string | null
@@ -308,6 +377,9 @@ export type Database = {
           owner_id?: string
           payment_plan?: Database["public"]["Enums"]["payment_plan"]
           price_cents?: number
+          reminder_1day?: boolean
+          reminder_7day?: boolean
+          reminder_morning?: boolean
           show_remaining?: boolean
           sibling_discount?: boolean
           sibling_discount_percent?: number
@@ -329,12 +401,14 @@ export type Database = {
         Row: {
           created_at: string
           email: string | null
+          email_opt_in: boolean
           full_name: string
           id: string
           joined_at: string
           notes: string | null
           owner_id: string
           phone: string | null
+          sms_opt_in: boolean
           subscribed: boolean
           tags: string[]
           updated_at: string
@@ -342,12 +416,14 @@ export type Database = {
         Insert: {
           created_at?: string
           email?: string | null
+          email_opt_in?: boolean
           full_name: string
           id?: string
           joined_at?: string
           notes?: string | null
           owner_id: string
           phone?: string | null
+          sms_opt_in?: boolean
           subscribed?: boolean
           tags?: string[]
           updated_at?: string
@@ -355,12 +431,14 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string | null
+          email_opt_in?: boolean
           full_name?: string
           id?: string
           joined_at?: string
           notes?: string | null
           owner_id?: string
           phone?: string | null
+          sms_opt_in?: boolean
           subscribed?: boolean
           tags?: string[]
           updated_at?: string
@@ -873,6 +951,10 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          sms_provider: string
+          sms_sender_name: string | null
+          sms_sender_phone: string | null
+          sms_signature: string | null
           subscription_status: Database["public"]["Enums"]["subscription_status_enum"]
           updated_at: string
         }
@@ -881,6 +963,10 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          sms_provider?: string
+          sms_sender_name?: string | null
+          sms_sender_phone?: string | null
+          sms_signature?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status_enum"]
           updated_at?: string
         }
@@ -889,6 +975,10 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          sms_provider?: string
+          sms_sender_name?: string | null
+          sms_sender_phone?: string | null
+          sms_signature?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status_enum"]
           updated_at?: string
         }
@@ -1002,6 +1092,79 @@ export type Database = {
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduled_messages: {
+        Row: {
+          body: string
+          camp_id: string | null
+          channel: string
+          contact_id: string | null
+          created_at: string
+          error: string | null
+          id: string
+          kind: string
+          owner_id: string
+          registration_id: string | null
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          subject: string | null
+        }
+        Insert: {
+          body: string
+          camp_id?: string | null
+          channel: string
+          contact_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind: string
+          owner_id: string
+          registration_id?: string | null
+          scheduled_for: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+        }
+        Update: {
+          body?: string
+          camp_id?: string | null
+          channel?: string
+          contact_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind?: string
+          owner_id?: string
+          registration_id?: string | null
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_messages_camp_id_fkey"
+            columns: ["camp_id"]
+            isOneToOne: false
+            referencedRelation: "camps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_messages_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_messages_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "registrations"
             referencedColumns: ["id"]
           },
         ]
