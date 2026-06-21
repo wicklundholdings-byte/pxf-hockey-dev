@@ -60,8 +60,8 @@ function CoachOnboarding() {
               <p className="font-semibold">Create your first event</p>
               <p className="text-[11px] text-muted-foreground">Set up a camp and open registrations.</p>
             </Link>
-            <Link to="/coach/library" className="block rounded-2xl border border-border bg-card p-4">
-              <p className="font-semibold">Explore the Library</p>
+            <Link to="/coach/playbook" className="block rounded-2xl border border-border bg-card p-4">
+              <p className="font-semibold">Explore the Playbook</p>
               <p className="text-[11px] text-muted-foreground">Build drills and sessions first.</p>
             </Link>
           </div>
