@@ -64,6 +64,7 @@ import { Route as AuthenticatedCoachEmailRouteImport } from './routes/_authentic
 import { Route as AuthenticatedCoachContactsRouteImport } from './routes/_authenticated/coach.contacts'
 import { Route as AuthenticatedCoachCampsRouteImport } from './routes/_authenticated/coach.camps'
 import { Route as AuthenticatedCoachBroadcastRouteImport } from './routes/_authenticated/coach.broadcast'
+import { Route as AuthenticatedCoachBookingsRouteImport } from './routes/_authenticated/coach.bookings'
 import { Route as AuthenticatedCoachAttendeesRouteImport } from './routes/_authenticated/coach.attendees'
 import { Route as AuthenticatedAdminProgramsRouteImport } from './routes/_authenticated/admin.programs'
 import { Route as AuthenticatedAdminDrillsRouteImport } from './routes/_authenticated/admin.drills'
@@ -355,6 +356,12 @@ const AuthenticatedCoachBroadcastRoute =
     path: '/broadcast',
     getParentRoute: () => AuthenticatedCoachRoute,
   } as any)
+const AuthenticatedCoachBookingsRoute =
+  AuthenticatedCoachBookingsRouteImport.update({
+    id: '/bookings',
+    path: '/bookings',
+    getParentRoute: () => AuthenticatedCoachRoute,
+  } as any)
 const AuthenticatedCoachAttendeesRoute =
   AuthenticatedCoachAttendeesRouteImport.update({
     id: '/attendees',
@@ -470,6 +477,7 @@ export interface FileRoutesByFullPath {
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/admin/programs': typeof AuthenticatedAdminProgramsRoute
   '/coach/attendees': typeof AuthenticatedCoachAttendeesRouteWithChildren
+  '/coach/bookings': typeof AuthenticatedCoachBookingsRoute
   '/coach/broadcast': typeof AuthenticatedCoachBroadcastRoute
   '/coach/camps': typeof AuthenticatedCoachCampsRouteWithChildren
   '/coach/contacts': typeof AuthenticatedCoachContactsRouteWithChildren
@@ -535,6 +543,7 @@ export interface FileRoutesByTo {
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/admin/programs': typeof AuthenticatedAdminProgramsRoute
   '/coach/attendees': typeof AuthenticatedCoachAttendeesRouteWithChildren
+  '/coach/bookings': typeof AuthenticatedCoachBookingsRoute
   '/coach/broadcast': typeof AuthenticatedCoachBroadcastRoute
   '/coach/camps': typeof AuthenticatedCoachCampsRouteWithChildren
   '/coach/contacts': typeof AuthenticatedCoachContactsRouteWithChildren
@@ -604,6 +613,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/_authenticated/admin/programs': typeof AuthenticatedAdminProgramsRoute
   '/_authenticated/coach/attendees': typeof AuthenticatedCoachAttendeesRouteWithChildren
+  '/_authenticated/coach/bookings': typeof AuthenticatedCoachBookingsRoute
   '/_authenticated/coach/broadcast': typeof AuthenticatedCoachBroadcastRoute
   '/_authenticated/coach/camps': typeof AuthenticatedCoachCampsRouteWithChildren
   '/_authenticated/coach/contacts': typeof AuthenticatedCoachContactsRouteWithChildren
@@ -673,6 +683,7 @@ export interface FileRouteTypes {
     | '/admin/drills'
     | '/admin/programs'
     | '/coach/attendees'
+    | '/coach/bookings'
     | '/coach/broadcast'
     | '/coach/camps'
     | '/coach/contacts'
@@ -738,6 +749,7 @@ export interface FileRouteTypes {
     | '/admin/drills'
     | '/admin/programs'
     | '/coach/attendees'
+    | '/coach/bookings'
     | '/coach/broadcast'
     | '/coach/camps'
     | '/coach/contacts'
@@ -806,6 +818,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/drills'
     | '/_authenticated/admin/programs'
     | '/_authenticated/coach/attendees'
+    | '/_authenticated/coach/bookings'
     | '/_authenticated/coach/broadcast'
     | '/_authenticated/coach/camps'
     | '/_authenticated/coach/contacts'
@@ -1257,6 +1270,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachBroadcastRouteImport
       parentRoute: typeof AuthenticatedCoachRoute
     }
+    '/_authenticated/coach/bookings': {
+      id: '/_authenticated/coach/bookings'
+      path: '/bookings'
+      fullPath: '/coach/bookings'
+      preLoaderRoute: typeof AuthenticatedCoachBookingsRouteImport
+      parentRoute: typeof AuthenticatedCoachRoute
+    }
     '/_authenticated/coach/attendees': {
       id: '/_authenticated/coach/attendees'
       path: '/attendees'
@@ -1424,6 +1444,7 @@ const AuthenticatedCoachContactsRouteWithChildren =
 
 interface AuthenticatedCoachRouteChildren {
   AuthenticatedCoachAttendeesRoute: typeof AuthenticatedCoachAttendeesRouteWithChildren
+  AuthenticatedCoachBookingsRoute: typeof AuthenticatedCoachBookingsRoute
   AuthenticatedCoachBroadcastRoute: typeof AuthenticatedCoachBroadcastRoute
   AuthenticatedCoachCampsRoute: typeof AuthenticatedCoachCampsRouteWithChildren
   AuthenticatedCoachContactsRoute: typeof AuthenticatedCoachContactsRouteWithChildren
@@ -1439,6 +1460,7 @@ interface AuthenticatedCoachRouteChildren {
 const AuthenticatedCoachRouteChildren: AuthenticatedCoachRouteChildren = {
   AuthenticatedCoachAttendeesRoute:
     AuthenticatedCoachAttendeesRouteWithChildren,
+  AuthenticatedCoachBookingsRoute: AuthenticatedCoachBookingsRoute,
   AuthenticatedCoachBroadcastRoute: AuthenticatedCoachBroadcastRoute,
   AuthenticatedCoachCampsRoute: AuthenticatedCoachCampsRouteWithChildren,
   AuthenticatedCoachContactsRoute: AuthenticatedCoachContactsRouteWithChildren,
