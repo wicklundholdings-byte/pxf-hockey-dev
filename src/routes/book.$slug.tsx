@@ -225,6 +225,24 @@ function BookingPage() {
                   {result.paymentPlan === "two" ? "2" : "3"} monthly installments scheduled.
                 </p>
               )}
+              {qrDataUrls.length > 0 && (
+                <div className="mt-6 space-y-3 border-t border-border pt-5">
+                  <p className="flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <QrCode size={11} /> Check-in QR{qrDataUrls.length > 1 ? " codes" : ""}
+                  </p>
+                  <div className="flex flex-wrap items-start justify-center gap-3">
+                    {qrDataUrls.map((url, i) => (
+                      <div key={i} className="rounded-2xl bg-white p-2">
+                        <img src={url} alt={`QR ${i + 1}`} className="h-32 w-32" />
+                        <p className="mt-1 text-center text-[9px] font-semibold text-black">
+                          {athletes[i]?.full_name || `Child ${i + 1}`}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">Show this at the rink — coaches scan to check in.</p>
+                </div>
+              )}
             </>
           )}
         </div>
