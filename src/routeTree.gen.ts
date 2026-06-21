@@ -41,6 +41,7 @@ import { Route as OnboardingIndexRouteImport } from './routes/onboarding.index'
 import { Route as StoreCartRouteImport } from './routes/store.cart'
 import { Route as StoreProductIdRouteImport } from './routes/store.$productId'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
+import { Route as RsvpTokenRouteImport } from './routes/rsvp.$token'
 import { Route as PaymentsSubscribeRouteImport } from './routes/payments.subscribe'
 import { Route as PaymentsRefundsRouteImport } from './routes/payments.refunds'
 import { Route as PaymentsPlanRouteImport } from './routes/payments.plan'
@@ -85,6 +86,7 @@ import { Route as AuthenticatedCoachAnalyticsRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminProgramsRouteImport } from './routes/_authenticated/admin.programs'
 import { Route as AuthenticatedAdminDrillsRouteImport } from './routes/_authenticated/admin.drills'
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
+import { Route as ApiPublicHooksRsvpRemindersRouteImport } from './routes/api/public/hooks/rsvp-reminders'
 import { Route as AuthenticatedCoachContactsContactIdRouteImport } from './routes/_authenticated/coach.contacts.$contactId'
 import { Route as AuthenticatedCoachCampsNewRouteImport } from './routes/_authenticated/coach.camps.new'
 import { Route as AuthenticatedCoachCampsCampIdRouteImport } from './routes/_authenticated/coach.camps.$campId'
@@ -250,6 +252,11 @@ const StoreProductIdRoute = StoreProductIdRouteImport.update({
 const SessionDetailSessionIdRoute = SessionDetailSessionIdRouteImport.update({
   id: '/session-detail/$sessionId',
   path: '/session-detail/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RsvpTokenRoute = RsvpTokenRouteImport.update({
+  id: '/rsvp/$token',
+  path: '/rsvp/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PaymentsSubscribeRoute = PaymentsSubscribeRouteImport.update({
@@ -489,6 +496,12 @@ const AuthenticatedAdminCategoriesRoute =
     path: '/categories',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const ApiPublicHooksRsvpRemindersRoute =
+  ApiPublicHooksRsvpRemindersRouteImport.update({
+    id: '/api/public/hooks/rsvp-reminders',
+    path: '/api/public/hooks/rsvp-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedCoachContactsContactIdRoute =
   AuthenticatedCoachContactsContactIdRouteImport.update({
     id: '/$contactId',
@@ -578,6 +591,7 @@ export interface FileRoutesByFullPath {
   '/payments/plan': typeof PaymentsPlanRoute
   '/payments/refunds': typeof PaymentsRefundsRoute
   '/payments/subscribe': typeof PaymentsSubscribeRoute
+  '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
@@ -612,6 +626,7 @@ export interface FileRoutesByFullPath {
   '/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
   '/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
+  '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/coach/camps/$campId/feedback': typeof AuthenticatedCoachCampsCampIdFeedbackRoute
   '/coach/camps/$campId/reviews': typeof AuthenticatedCoachCampsCampIdReviewsRoute
   '/coach/camps/$campId/evaluations/$athleteId': typeof AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute
@@ -658,6 +673,7 @@ export interface FileRoutesByTo {
   '/payments/plan': typeof PaymentsPlanRoute
   '/payments/refunds': typeof PaymentsRefundsRoute
   '/payments/subscribe': typeof PaymentsSubscribeRoute
+  '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
@@ -692,6 +708,7 @@ export interface FileRoutesByTo {
   '/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
   '/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
+  '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/coach/camps/$campId/feedback': typeof AuthenticatedCoachCampsCampIdFeedbackRoute
   '/coach/camps/$campId/reviews': typeof AuthenticatedCoachCampsCampIdReviewsRoute
   '/coach/camps/$campId/evaluations/$athleteId': typeof AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute
@@ -744,6 +761,7 @@ export interface FileRoutesById {
   '/payments/plan': typeof PaymentsPlanRoute
   '/payments/refunds': typeof PaymentsRefundsRoute
   '/payments/subscribe': typeof PaymentsSubscribeRoute
+  '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
@@ -778,6 +796,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/_authenticated/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
   '/_authenticated/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
+  '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/_authenticated/coach/camps/$campId/feedback': typeof AuthenticatedCoachCampsCampIdFeedbackRoute
   '/_authenticated/coach/camps/$campId/reviews': typeof AuthenticatedCoachCampsCampIdReviewsRoute
   '/_authenticated/coach/camps/$campId/evaluations/$athleteId': typeof AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute
@@ -830,6 +849,7 @@ export interface FileRouteTypes {
     | '/payments/plan'
     | '/payments/refunds'
     | '/payments/subscribe'
+    | '/rsvp/$token'
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
@@ -864,6 +884,7 @@ export interface FileRouteTypes {
     | '/coach/camps/$campId'
     | '/coach/camps/new'
     | '/coach/contacts/$contactId'
+    | '/api/public/hooks/rsvp-reminders'
     | '/coach/camps/$campId/feedback'
     | '/coach/camps/$campId/reviews'
     | '/coach/camps/$campId/evaluations/$athleteId'
@@ -910,6 +931,7 @@ export interface FileRouteTypes {
     | '/payments/plan'
     | '/payments/refunds'
     | '/payments/subscribe'
+    | '/rsvp/$token'
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
@@ -944,6 +966,7 @@ export interface FileRouteTypes {
     | '/coach/camps/$campId'
     | '/coach/camps/new'
     | '/coach/contacts/$contactId'
+    | '/api/public/hooks/rsvp-reminders'
     | '/coach/camps/$campId/feedback'
     | '/coach/camps/$campId/reviews'
     | '/coach/camps/$campId/evaluations/$athleteId'
@@ -995,6 +1018,7 @@ export interface FileRouteTypes {
     | '/payments/plan'
     | '/payments/refunds'
     | '/payments/subscribe'
+    | '/rsvp/$token'
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
@@ -1029,6 +1053,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach/camps/$campId'
     | '/_authenticated/coach/camps/new'
     | '/_authenticated/coach/contacts/$contactId'
+    | '/api/public/hooks/rsvp-reminders'
     | '/_authenticated/coach/camps/$campId/feedback'
     | '/_authenticated/coach/camps/$campId/reviews'
     | '/_authenticated/coach/camps/$campId/evaluations/$athleteId'
@@ -1072,10 +1097,12 @@ export interface RootRouteChildren {
   PaymentsPlanRoute: typeof PaymentsPlanRoute
   PaymentsRefundsRoute: typeof PaymentsRefundsRoute
   PaymentsSubscribeRoute: typeof PaymentsSubscribeRoute
+  RsvpTokenRoute: typeof RsvpTokenRoute
   SessionDetailSessionIdRoute: typeof SessionDetailSessionIdRoute
   StoreProductIdRoute: typeof StoreProductIdRoute
   StoreCartRoute: typeof StoreCartRoute
   StoreIndexRoute: typeof StoreIndexRoute
+  ApiPublicHooksRsvpRemindersRoute: typeof ApiPublicHooksRsvpRemindersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1302,6 +1329,13 @@ declare module '@tanstack/react-router' {
       path: '/session-detail/$sessionId'
       fullPath: '/session-detail/$sessionId'
       preLoaderRoute: typeof SessionDetailSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rsvp/$token': {
+      id: '/rsvp/$token'
+      path: '/rsvp/$token'
+      fullPath: '/rsvp/$token'
+      preLoaderRoute: typeof RsvpTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/payments/subscribe': {
@@ -1612,6 +1646,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCategoriesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/api/public/hooks/rsvp-reminders': {
+      id: '/api/public/hooks/rsvp-reminders'
+      path: '/api/public/hooks/rsvp-reminders'
+      fullPath: '/api/public/hooks/rsvp-reminders'
+      preLoaderRoute: typeof ApiPublicHooksRsvpRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/coach/contacts/$contactId': {
       id: '/_authenticated/coach/contacts/$contactId'
       path: '/$contactId'
@@ -1907,10 +1948,12 @@ const rootRouteChildren: RootRouteChildren = {
   PaymentsPlanRoute: PaymentsPlanRoute,
   PaymentsRefundsRoute: PaymentsRefundsRoute,
   PaymentsSubscribeRoute: PaymentsSubscribeRoute,
+  RsvpTokenRoute: RsvpTokenRoute,
   SessionDetailSessionIdRoute: SessionDetailSessionIdRoute,
   StoreProductIdRoute: StoreProductIdRoute,
   StoreCartRoute: StoreCartRoute,
   StoreIndexRoute: StoreIndexRoute,
+  ApiPublicHooksRsvpRemindersRoute: ApiPublicHooksRsvpRemindersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
