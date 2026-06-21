@@ -436,3 +436,130 @@ function Row({ k, v, highlight }: { k: string; v: string; highlight?: boolean })
     </div>
   );
 }
+
+function WaiverStep({
+  waiverText, signerName, agree, setAgree, mode, setMode, typed, setTyped, drawn, setDrawn,
+  onBack, onSubmit, submitting, error,
+}: {
+  waiverText: string; signerName: string;
+  agree: boolean; setAgree: (v: boolean) => void;
+  mode: "drawn" | "typed"; setMode: (m: "drawn" | "typed") => void;
+  typed: string; setTyped: (v: string) => void;
+  drawn: string | null; setDrawn: (v: string | null) => void;
+  onBack: () => void; onSubmit: () => void; submitting: boolean; error: string | null;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawing = useRef(false);
+
+  const pos = (e: React.PointerEvent) => {
+    const r = canvasRef.current!.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  };
+
+  function clearCanvas() {
+    const c = canvasRef.current; if (!c) return;
+    const ctx = c.getContext("2d"); if (!ctx) return;
+    ctx.clearRect(0, 0, c.width, c.height);
+    setDrawn(null);
+  }
+
+  const hasSignature = mode === "typed" ? typed.trim().length > 0 : !!drawn;
+  const canSubmit = agree && hasSignature && !submitting;
+
+  return (
+    <div className="space-y-3">
+      <h2 className="flex items-center gap-2 font-display text-lg font-bold text-foreground">
+        <FileText size={16} className="text-teal" /> Liability waiver
+      </h2>
+      <div className="max-h-44 overflow-y-auto rounded-2xl border border-border bg-surface p-3 text-xs leading-relaxed text-foreground/90 whitespace-pre-wrap">
+        {waiverText || "No waiver text provided."}
+      </div>
+
+      <label className="flex items-start gap-2 text-xs text-foreground">
+        <input
+          type="checkbox"
+          checked={agree}
+          onChange={(e) => setAgree(e.target.checked)}
+          className="mt-0.5 h-4 w-4"
+        />
+        <span>I have read and agree to the terms of this waiver on behalf of {signerName || "the athlete"}.</span>
+      </label>
+
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setMode("drawn")}
+          className={"flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-bold " +
+            (mode === "drawn" ? "bg-teal text-background" : "border border-border text-muted-foreground")}
+        >
+          <PenLine size={14} /> Draw
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("typed")}
+          className={"flex flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-bold " +
+            (mode === "typed" ? "bg-teal text-background" : "border border-border text-muted-foreground")}
+        >
+          <TypeIcon size={14} /> Type
+        </button>
+      </div>
+
+      {mode === "drawn" ? (
+        <div className="space-y-1">
+          <canvas
+            ref={canvasRef}
+            width={600}
+            height={160}
+            className="w-full rounded-2xl border border-border bg-surface touch-none"
+            onPointerDown={(e) => {
+              drawing.current = true;
+              const ctx = canvasRef.current!.getContext("2d")!;
+              ctx.strokeStyle = "#ffffff";
+              ctx.lineWidth = 2;
+              ctx.lineCap = "round";
+              const { x, y } = pos(e);
+              ctx.beginPath();
+              ctx.moveTo(x, y);
+            }}
+            onPointerMove={(e) => {
+              if (!drawing.current) return;
+              const ctx = canvasRef.current!.getContext("2d")!;
+              const { x, y } = pos(e);
+              ctx.lineTo(x, y);
+              ctx.stroke();
+            }}
+            onPointerUp={() => {
+              drawing.current = false;
+              const c = canvasRef.current;
+              if (c) setDrawn(c.toDataURL("image/png"));
+            }}
+            onPointerLeave={() => { drawing.current = false; }}
+          />
+          <button onClick={clearCanvas} className="text-[10px] font-semibold text-muted-foreground">Clear</button>
+        </div>
+      ) : (
+        <input
+          value={typed}
+          onChange={(e) => setTyped(e.target.value)}
+          placeholder="Type your full legal name"
+          className="w-full rounded-2xl border border-border bg-surface px-4 py-5 text-center font-display text-xl italic text-foreground"
+        />
+      )}
+
+      {error && <p className="text-xs text-red-400">{error}</p>}
+
+      <div className="mt-4 flex gap-2">
+        <button onClick={onBack} className="flex-1 rounded-full border border-border bg-surface py-3 text-sm font-semibold text-foreground">
+          Back
+        </button>
+        <button
+          onClick={onSubmit}
+          disabled={!canSubmit}
+          className="flex-1 rounded-full bg-teal py-3 text-sm font-bold text-black disabled:opacity-40"
+        >
+          {submitting ? "Submitting…" : "Sign & confirm"}
+        </button>
+      </div>
+    </div>
+  );
+}
