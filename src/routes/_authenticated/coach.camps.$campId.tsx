@@ -728,3 +728,148 @@ function Field({ label, value, onChange, type = "text" }: { label: string; value
     </div>
   );
 }
+
+type SavedSession = { id: string; name: string; totalMins?: number; blocks?: unknown[] };
+
+function readSavedSessions(): SavedSession[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem("pxf:sessions:v2");
+    return raw ? (JSON.parse(raw) as SavedSession[]) : [];
+  } catch { return []; }
+}
+
+function PlansTab({ sessions, campId }: { sessions: Session[]; campId: string }) {
+  const planKey = `pxf:camp-plans:${campId}`;
+  const [library, setLibrary] = useState<SavedSession[]>([]);
+  const [assignments, setAssignments] = useState<Record<string, string>>({});
+  const [pickerFor, setPickerFor] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLibrary(readSavedSessions());
+    try {
+      const raw = window.localStorage.getItem(planKey);
+      if (raw) setAssignments(JSON.parse(raw));
+    } catch { /* ignore */ }
+  }, [planKey]);
+
+  function assign(sessionId: string, savedId: string | null) {
+    const next = { ...assignments };
+    if (savedId) next[sessionId] = savedId;
+    else delete next[sessionId];
+    setAssignments(next);
+    window.localStorage.setItem(planKey, JSON.stringify(next));
+    setPickerFor(null);
+  }
+
+  if (sessions.length === 0) {
+    return (
+      <p className="rounded-2xl border border-border bg-card p-6 text-center text-xs text-muted-foreground">
+        No camp days scheduled yet. Add days from the camp edit screen to assign session plans.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-start gap-2 rounded-xl border border-teal/30 bg-teal/5 p-2.5">
+        <ListChecks size={12} className="mt-0.5 shrink-0 text-teal" />
+        <p className="text-[10px] leading-relaxed text-foreground/80">
+          Pull a session from your Library and assign it to a camp day — or build a new one inline. New sessions save back to your Library automatically.
+        </p>
+      </div>
+
+      <div className="flex gap-2">
+        <Link to="/coach/library" className="flex flex-1 items-center justify-center gap-1 rounded-full border border-border bg-card py-2 text-[11px] font-semibold text-foreground">
+          <BookOpen size={12} /> Open Library
+        </Link>
+        <Link to="/drill-builder" className="flex flex-1 items-center justify-center gap-1 rounded-full bg-teal py-2 text-[11px] font-bold text-black">
+          <Plus size={12} /> Build new session
+        </Link>
+      </div>
+
+      <ul className="space-y-2">
+        {sessions.map((s, i) => {
+          const assignedId = assignments[s.id];
+          const assigned = library.find((l) => l.id === assignedId);
+          return (
+            <li key={s.id} className="rounded-2xl border border-border bg-card p-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Day {i + 1}</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {new Date(s.session_date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                  </p>
+                </div>
+                {assigned ? (
+                  <button onClick={() => assign(s.id, null)} className="text-[10px] font-semibold text-muted-foreground hover:text-red-400">
+                    Remove
+                  </button>
+                ) : null}
+              </div>
+
+              {assigned ? (
+                <div className="mt-2 flex items-center justify-between rounded-xl border border-teal/30 bg-teal/5 p-2.5">
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-bold text-teal">{assigned.name}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {assigned.blocks?.length ?? 0} drills · {assigned.totalMins ?? 0} min
+                    </p>
+                  </div>
+                  <button onClick={() => setPickerFor(s.id)} className="rounded-full border border-border bg-surface px-2.5 py-1 text-[10px] font-semibold text-foreground">
+                    Change
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setPickerFor(s.id)}
+                  className="mt-2 flex w-full items-center justify-center gap-1 rounded-xl border border-dashed border-border bg-surface py-2.5 text-[11px] font-semibold text-muted-foreground hover:border-teal/40 hover:text-teal"
+                >
+                  <Plus size={12} /> Assign from Library
+                </button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+
+      {pickerFor && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4" onClick={() => setPickerFor(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-2xl border border-border bg-card p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-foreground">Pick a saved session</h3>
+              <button onClick={() => setPickerFor(null)} className="text-muted-foreground"><X size={14} /></button>
+            </div>
+            {library.length === 0 ? (
+              <div className="space-y-2 py-4 text-center">
+                <p className="text-xs text-muted-foreground">No saved sessions yet.</p>
+                <Link to="/drill-builder" className="inline-flex items-center gap-1 rounded-full bg-teal px-4 py-1.5 text-[11px] font-bold text-black">
+                  <Plus size={12} /> Build one now
+                </Link>
+              </div>
+            ) : (
+              <ul className="max-h-80 space-y-1.5 overflow-y-auto">
+                {library.map((l) => (
+                  <li key={l.id}>
+                    <button
+                      onClick={() => assign(pickerFor, l.id)}
+                      className="flex w-full items-center justify-between rounded-xl border border-border bg-surface p-3 text-left hover:border-teal/40"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{l.name}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {l.blocks?.length ?? 0} drills · {l.totalMins ?? 0} min
+                        </p>
+                      </div>
+                      <Plus size={14} className="text-teal" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
