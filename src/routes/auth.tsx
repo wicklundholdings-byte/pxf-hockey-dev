@@ -47,7 +47,31 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-      navigate({ to: redirect as "/" });
+      // After auth, route coach/admin users to the coach console regardless
+      // of the original `redirect` param so elite-tier users land on /coach.
+      const { data: sess } = await supabase.auth.getSession();
+      const uid = sess.session?.user?.id;
+      let dest: string = redirect || "/";
+      if (uid) {
+        const [{ data: role }, { data: subs }] = await Promise.all([
+          supabase.from("user_roles").select("role").eq("user_id", uid).eq("role", "admin").maybeSingle(),
+          supabase
+            .from("subscriptions")
+            .select("plan_name,status,current_period_end")
+            .eq("user_id", uid)
+            .eq("status", "active"),
+        ]);
+        const subActive = (subs ?? []).some((s) => {
+          const notExpired = !s.current_period_end || new Date(s.current_period_end) > new Date();
+          const plan = (s.plan_name ?? "").toLowerCase();
+          return notExpired && (plan.includes("coach") || plan.includes("platinum") || plan.includes("elite"));
+        });
+        if (role || subActive) {
+          // Only override when the redirect target isn't already a coach route.
+          if (!dest.startsWith("/coach")) dest = "/coach";
+        }
+      }
+      navigate({ to: dest as "/" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
