@@ -241,6 +241,7 @@ export type Database = {
           price_cents: number
           show_remaining: boolean
           sibling_discount: boolean
+          sibling_discount_percent: number
           slug: string
           start_date: string | null
           start_time: string | null
@@ -273,6 +274,7 @@ export type Database = {
           price_cents?: number
           show_remaining?: boolean
           sibling_discount?: boolean
+          sibling_discount_percent?: number
           slug: string
           start_date?: string | null
           start_time?: string | null
@@ -305,6 +307,7 @@ export type Database = {
           price_cents?: number
           show_remaining?: boolean
           sibling_discount?: boolean
+          sibling_discount_percent?: number
           slug?: string
           start_date?: string | null
           start_time?: string | null
@@ -781,6 +784,53 @@ export type Database = {
           },
         ]
       }
+      payment_installments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          due_date: string
+          id: string
+          owner_id: string
+          paid_at: string | null
+          registration_id: string
+          sequence: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          due_date: string
+          id?: string
+          owner_id: string
+          paid_at?: string | null
+          registration_id: string
+          sequence: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          owner_id?: string
+          paid_at?: string | null
+          registration_id?: string
+          sequence?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_installments_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payouts: {
         Row: {
           amount_cents: number
@@ -890,36 +940,42 @@ export type Database = {
         Row: {
           amount_cents: number
           attendee_id: string | null
+          booking_group_id: string | null
           camp_id: string
           contact_id: string | null
           created_at: string
           custom_field_values: Json
           id: string
           order_number: string
+          sibling_discount_cents: number
           status: Database["public"]["Enums"]["registration_status"]
           updated_at: string
         }
         Insert: {
           amount_cents?: number
           attendee_id?: string | null
+          booking_group_id?: string | null
           camp_id: string
           contact_id?: string | null
           created_at?: string
           custom_field_values?: Json
           id?: string
           order_number?: string
+          sibling_discount_cents?: number
           status?: Database["public"]["Enums"]["registration_status"]
           updated_at?: string
         }
         Update: {
           amount_cents?: number
           attendee_id?: string | null
+          booking_group_id?: string | null
           camp_id?: string
           contact_id?: string | null
           created_at?: string
           custom_field_values?: Json
           id?: string
           order_number?: string
+          sibling_discount_cents?: number
           status?: Database["public"]["Enums"]["registration_status"]
           updated_at?: string
         }
