@@ -154,7 +154,7 @@ function NewCampWizard() {
               <div
                 className={
                   "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold " +
-                  (done ? "bg-teal text-black" : active ? "border border-teal text-teal" : "border border-border text-muted-foreground")
+                  (done ? "bg-gradient-brand text-primary-foreground" : active ? "border border-teal text-teal" : "border border-border text-muted-foreground")
                 }
               >
                 {done ? <Check size={10} /> : n}
@@ -401,7 +401,7 @@ function NewCampWizard() {
               <button
                 disabled={busy}
                 onClick={() => submit("live")}
-                className="flex-1 rounded-full bg-teal py-2.5 text-xs font-bold text-black hover:opacity-90 disabled:opacity-50"
+                className="flex-1 rounded-full bg-gradient-brand py-2.5 text-xs font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50"
               >
                 {busy ? "Publishing…" : "Publish"}
               </button>
@@ -422,7 +422,7 @@ function NewCampWizard() {
           <button
             disabled={!canNext}
             onClick={() => setStep(step + 1)}
-            className="flex flex-1 items-center justify-center gap-1 rounded-full bg-teal py-2.5 text-xs font-bold text-black disabled:opacity-40"
+            className="flex flex-1 items-center justify-center gap-1 rounded-full bg-gradient-brand py-2.5 text-xs font-bold text-primary-foreground disabled:opacity-40"
           >
             Next <ArrowRight size={12} />
           </button>

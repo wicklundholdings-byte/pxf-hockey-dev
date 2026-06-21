@@ -75,7 +75,7 @@ function PlansPage() {
                 </li>
               ))}
             </ul>
-            <button className={"mt-4 w-full rounded-full py-2.5 text-xs font-bold " + (p.highlight ? "bg-teal text-black" : "border border-border bg-surface text-foreground")}>
+            <button className={"mt-4 w-full rounded-full py-2.5 text-xs font-bold " + (p.highlight ? "bg-gradient-brand text-primary-foreground" : "border border-border bg-surface text-foreground")}>
               Start {p.trial}
             </button>
           </div>

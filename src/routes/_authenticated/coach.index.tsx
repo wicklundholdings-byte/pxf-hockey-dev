@@ -136,7 +136,7 @@ function CoachDashboard() {
                 onClick={() => setRange(r)}
                 className={
                   "rounded-full px-2.5 py-1 text-[10px] font-bold " +
-                  (range === r ? "bg-teal text-black" : "bg-surface text-muted-foreground")
+                  (range === r ? "bg-gradient-brand text-primary-foreground" : "bg-surface text-muted-foreground")
                 }
               >
                 {r}d

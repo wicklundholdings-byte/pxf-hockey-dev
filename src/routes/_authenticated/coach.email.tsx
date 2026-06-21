@@ -68,7 +68,7 @@ function EmailPage() {
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Outbound</p>
           <h2 className="font-display text-lg font-bold text-foreground">Email campaigns</h2>
         </div>
-        <button onClick={() => setCreating(true)} className="flex items-center gap-1 rounded-full bg-teal px-3 py-1.5 text-[11px] font-bold text-black">
+        <button onClick={() => setCreating(true)} className="flex items-center gap-1 rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-primary-foreground">
           <Plus size={12} /> New
         </button>
       </div>
@@ -86,7 +86,7 @@ function EmailPage() {
         <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
           <Mail size={28} className="mx-auto text-muted-foreground" />
           <p className="mt-2 text-xs text-muted-foreground">No campaigns yet.</p>
-          <button onClick={() => setCreating(true)} className="mt-3 rounded-full bg-teal px-4 py-1.5 text-[11px] font-bold text-black">
+          <button onClick={() => setCreating(true)} className="mt-3 rounded-full bg-gradient-brand px-4 py-1.5 text-[11px] font-bold text-primary-foreground">
             Compose first campaign
           </button>
         </div>
@@ -347,7 +347,7 @@ function CampaignEditor({ campaign, onClose }: { campaign: Campaign | null; onCl
         <button
           onClick={() => save("sent")}
           disabled={saving || !canSend}
-          className="flex items-center justify-center gap-1 rounded-full bg-teal py-2.5 text-[11px] font-bold text-black disabled:opacity-40"
+          className="flex items-center justify-center gap-1 rounded-full bg-gradient-brand py-2.5 text-[11px] font-bold text-primary-foreground disabled:opacity-40"
         >
           <Send size={12} /> Send now
         </button>
