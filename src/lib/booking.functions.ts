@@ -1,6 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+const attendeeSchema = z.object({
+  full_name: z.string().min(1).max(120),
+  birthday: z.string().optional().nullable(),
+  position: z.string().max(40).optional().nullable(),
+  skill_level: z.string().max(40).optional().nullable(),
+  handedness: z.string().max(20).optional().nullable(),
+  jersey_number: z.string().max(10).optional().nullable(),
+  customFieldValues: z.record(z.string(), z.unknown()).optional(),
+});
+
 const submitSchema = z.object({
   campId: z.string().uuid(),
   parent: z.object({
@@ -8,16 +18,9 @@ const submitSchema = z.object({
     email: z.string().email(),
     phone: z.string().max(40).optional().nullable(),
   }),
-  attendee: z.object({
-    full_name: z.string().min(1).max(120),
-    birthday: z.string().optional().nullable(),
-    position: z.string().max(40).optional().nullable(),
-    skill_level: z.string().max(40).optional().nullable(),
-    handedness: z.string().max(20).optional().nullable(),
-    jersey_number: z.string().max(10).optional().nullable(),
-  }),
-  customFieldValues: z.record(z.string(), z.unknown()).optional(),
+  attendees: z.array(attendeeSchema).min(1).max(6),
   couponCode: z.string().trim().max(40).optional().nullable(),
+  paymentPlan: z.enum(["none", "two", "three"]).optional().default("none"),
   waiver: z
     .object({
       signer_name: z.string().min(1).max(120),
