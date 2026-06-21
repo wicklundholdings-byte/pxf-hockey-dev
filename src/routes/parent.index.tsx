@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { CalendarDays, MapPin, Star, MessageCircle, ShoppingBag, User, Search, BookOpen, ChevronDown, Check } from "lucide-react";
 
-export const Route = createFileRoute("/parent")({
+export const Route = createFileRoute("/parent/")({
   head: () => ({ meta: [{ title: "Home — PXF Hockey" }] }),
   component: ParentHome,
 });
