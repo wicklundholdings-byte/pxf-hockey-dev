@@ -361,12 +361,49 @@ function MoreRow({ icon: Icon, label, count, open, onClick, last }: { icon: type
   );
 }
 
-function CampSchedule({ sessions, campId }: { sessions: Session[]; campId: string }) {
+function CampProgress({ sessions, completions }: { sessions: Session[]; completions: Record<string, SessionRunRecord> }) {
+  if (sessions.length === 0) return null;
+  const completedCount = sessions.filter((s) => completions[s.id]).length;
+  const pct = (completedCount / sessions.length) * 100;
+  return (
+    <div className="rounded-2xl border border-border bg-card p-3">
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] font-semibold text-foreground">
+          Day {completedCount} of {sessions.length} complete
+        </p>
+        <p className="text-[10px] text-muted-foreground">{Math.round(pct)}%</p>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface">
+        <div className="h-full rounded-full bg-teal transition-all" style={{ width: pct + "%" }} />
+      </div>
+    </div>
+  );
+}
+
+function formatDur(seconds: number) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function CampSchedule({
+  sessions,
+  campId,
+  completions,
+  onCompleted,
+}: {
+  sessions: Session[];
+  campId: string;
+  completions: Record<string, SessionRunRecord>;
+  onCompleted: (sessionId: string, rec: SessionRunRecord) => void;
+}) {
   const planKey = `pxf:camp-plans:${campId}`;
   const [library, setLibrary] = useState<SavedSession[]>([]);
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
   const [pickerFor, setPickerFor] = useState<string | null>(null);
+  const [runningSessionId, setRunningSessionId] = useState<string | null>(null);
+  const [summary, setSummary] = useState<{ sessionId: string; rec: SessionRunRecord } | null>(null);
 
   useEffect(() => {
     setLibrary(readSavedSessions());
@@ -393,8 +430,25 @@ function CampSchedule({ sessions, campId }: { sessions: Session[]; campId: strin
     );
   }
 
-  const expandedSession = sessions.find((s) => s.id === expanded);
+  const today = new Date().toISOString().slice(0, 10);
+  // Active = earliest non-completed session whose date <= today.
+  const activeSessionId = sessions.find(
+    (s) => !completions[s.id] && s.session_date <= today,
+  )?.id ?? null;
+
+  function stateFor(s: Session): "completed" | "active" | "upcoming" {
+    if (completions[s.id]) return "completed";
+    if (s.id === activeSessionId) return "active";
+    return "upcoming";
+  }
+
+  // Default expanded = active session.
+  const effectiveExpanded = expanded ?? activeSessionId ?? sessions[0]?.id ?? null;
+  const expandedSession = sessions.find((s) => s.id === effectiveExpanded) ?? null;
   const expandedAssigned = expandedSession ? library.find((l) => l.id === assignments[expandedSession.id]) : null;
+  const expandedState = expandedSession ? stateFor(expandedSession) : null;
+  const expandedCompletion = expandedSession ? completions[expandedSession.id] : null;
+  const expandedBlocks = ((expandedAssigned?.blocks ?? []) as RunnerBlock[]).filter((b) => b && b.drillId);
 
   return (
     <div className="space-y-2">
@@ -403,20 +457,33 @@ function CampSchedule({ sessions, campId }: { sessions: Session[]; campId: strin
           {sessions.map((s, i) => {
             const assignedId = assignments[s.id];
             const assigned = library.find((l) => l.id === assignedId);
-            const isOpen = expanded === s.id;
+            const state = stateFor(s);
+            const isOpen = effectiveExpanded === s.id;
             const date = new Date(s.session_date + "T00:00:00");
+            const baseBorder =
+              state === "completed"
+                ? "border-emerald-400/50 bg-emerald-400/10"
+                : state === "active"
+                ? "border-teal bg-teal/10"
+                : "border-border bg-card opacity-60";
+            const ringIfOpen = isOpen ? " ring-2 ring-teal/60" : "";
             return (
               <button
                 key={s.id}
                 onClick={() => setExpanded(isOpen ? null : s.id)}
                 className={
-                  "flex w-32 shrink-0 flex-col gap-1 rounded-2xl border p-3 text-left transition-colors " +
-                  (isOpen ? "border-teal bg-teal/10" : "border-border bg-card")
+                  "relative flex w-32 shrink-0 flex-col gap-1 rounded-2xl border p-3 text-left transition-colors " +
+                  baseBorder + ringIfOpen
                 }
               >
-                <p className={"text-[10px] font-bold uppercase tracking-wider " + (isOpen ? "text-teal" : "text-muted-foreground")}>
-                  {date.toLocaleDateString("en-US", { weekday: "short" })}
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className={"text-[10px] font-bold uppercase tracking-wider " + (state === "completed" ? "text-emerald-400" : state === "active" ? "text-teal" : "text-muted-foreground")}>
+                    {date.toLocaleDateString("en-US", { weekday: "short" })}
+                  </p>
+                  {state === "completed" && <Check size={12} className="text-emerald-400" />}
+                  {state === "active" && <PlayCircle size={12} className="text-teal" />}
+                  {state === "upcoming" && <Lock size={11} className="text-muted-foreground" />}
+                </div>
                 <p className="font-display text-2xl font-bold text-foreground leading-none">
                   {date.getDate()}
                 </p>
@@ -439,15 +506,51 @@ function CampSchedule({ sessions, campId }: { sessions: Session[]; campId: strin
               </p>
               <p className="text-sm font-semibold text-foreground">{expandedAssigned?.name ?? "No session assigned"}</p>
             </div>
-            <button
-              onClick={() => setPickerFor(expandedSession.id)}
-              className="rounded-full border border-border bg-surface px-2.5 py-1 text-[10px] font-semibold text-foreground"
-            >
-              {expandedAssigned ? "Change" : "Assign"}
-            </button>
+            {expandedState !== "completed" && (
+              <button
+                onClick={() => setPickerFor(expandedSession.id)}
+                className="rounded-full border border-border bg-surface px-2.5 py-1 text-[10px] font-semibold text-foreground"
+              >
+                {expandedAssigned ? "Change" : "Assign"}
+              </button>
+            )}
           </div>
 
-          {expandedAssigned ? (
+          {expandedState === "completed" && expandedCompletion ? (
+            <div className="mt-3 space-y-2">
+              <div className="flex items-center gap-2 rounded-xl border border-emerald-400/40 bg-emerald-400/10 p-3">
+                <CheckCircle2 size={16} className="text-emerald-400" />
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-emerald-400">Session complete</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {new Date(expandedCompletion.completedAt).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-xl bg-surface p-3 text-center">
+                  <p className="font-display text-lg font-bold text-foreground">{formatDur(expandedCompletion.totalSeconds)}</p>
+                  <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Total time</p>
+                </div>
+                <div className="rounded-xl bg-surface p-3 text-center">
+                  <p className="font-display text-lg font-bold text-foreground">
+                    {expandedCompletion.drillsCompleted}/{expandedCompletion.totalDrills}
+                  </p>
+                  <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Drills run</p>
+                </div>
+              </div>
+              {expandedAssigned && expandedBlocks.length > 0 && (
+                <ul className="space-y-1">
+                  {expandedBlocks.map((b, idx) => (
+                    <li key={b.uid ?? idx} className="flex items-center justify-between rounded-lg bg-surface px-3 py-2 text-xs">
+                      <span className="font-semibold text-foreground">Drill {idx + 1}</span>
+                      <span className="text-[10px] text-muted-foreground">{b.mins} min</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : expandedAssigned ? (
             <div className="mt-3 space-y-1.5">
               <p className="text-[10px] text-muted-foreground">
                 {expandedAssigned.blocks?.length ?? 0} drills · {expandedAssigned.totalMins ?? 0} min
@@ -467,6 +570,19 @@ function CampSchedule({ sessions, campId }: { sessions: Session[]; campId: strin
                 <p className="rounded-lg border border-dashed border-border bg-surface p-3 text-center text-[10px] text-muted-foreground">
                   Session has no drills yet.
                 </p>
+              )}
+              {expandedState === "active" && expandedBlocks.length > 0 && (
+                <button
+                  onClick={() => setRunningSessionId(expandedSession.id)}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-brand py-4 text-sm font-bold text-primary-foreground shadow-glow-teal"
+                >
+                  <PlayCircle size={18} /> Start Session
+                </button>
+              )}
+              {expandedState === "upcoming" && (
+                <div className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-surface py-3 text-[11px] text-muted-foreground">
+                  <Lock size={12} /> Available on {new Date(expandedSession.session_date + "T00:00:00").toLocaleDateString("en-US", { weekday: "long" })}
+                </div>
               )}
             </div>
           ) : (
@@ -529,6 +645,42 @@ function CampSchedule({ sessions, campId }: { sessions: Session[]; campId: strin
           </div>
         </div>
       )}
+
+      {runningSessionId && (() => {
+        const s = sessions.find((x) => x.id === runningSessionId);
+        const assigned = s ? library.find((l) => l.id === assignments[s.id]) : null;
+        const blocks = ((assigned?.blocks ?? []) as RunnerBlock[]).filter((b) => b && b.drillId);
+        if (!s || !assigned) return null;
+        return (
+          <SessionRunner
+            title={assigned.name}
+            blocks={blocks}
+            onClose={() => setRunningSessionId(null)}
+            onComplete={(rec: RunnerSummary) => {
+              setSummary({ sessionId: s.id, rec });
+              setRunningSessionId(null);
+            }}
+          />
+        );
+      })()}
+
+      {summary && (() => {
+        const s = sessions.find((x) => x.id === summary.sessionId);
+        const assigned = s ? library.find((l) => l.id === assignments[s.id]) : null;
+        return (
+          <SessionSummary
+            title={assigned?.name ?? "Session"}
+            summary={summary.rec}
+            onDone={() => {
+              onCompleted(summary.sessionId, summary.rec);
+              const idx = sessions.findIndex((x) => x.id === summary.sessionId);
+              const next = sessions[idx + 1];
+              setExpanded(next ? next.id : null);
+              setSummary(null);
+            }}
+          />
+        );
+      })()}
     </div>
   );
 }
