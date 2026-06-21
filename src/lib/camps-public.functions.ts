@@ -39,7 +39,7 @@ export const getPublicCamp = createServerFn({ method: "GET" })
     const [{ data: sessions }, { count }] = await Promise.all([
       supabase
         .from("camp_sessions")
-        .select("id, session_date, start_time, end_time, title")
+        .select("id, session_date, start_time, end_time")
         .eq("camp_id", camp.id)
         .order("session_date", { ascending: true }),
       supabase

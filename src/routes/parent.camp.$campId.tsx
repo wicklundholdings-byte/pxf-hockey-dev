@@ -44,7 +44,7 @@ function ParentCampDetail() {
         .maybeSingle();
       setCamp(c ?? null);
       const [{ data: s }, { count }] = await Promise.all([
-        supabase.from("camp_sessions").select("id, session_date, start_time, end_time, title").eq("camp_id", campId).order("session_date"),
+        supabase.from("camp_sessions").select("id, session_date, start_time, end_time").eq("camp_id", campId).order("session_date"),
         supabase.from("registrations").select("id", { count: "exact", head: true }).eq("camp_id", campId).eq("status", "paid"),
       ]);
       setSessions(s ?? []);
@@ -96,7 +96,7 @@ function ParentCampDetail() {
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-teal">Day {i + 1}</p>
                     <p className="text-sm font-semibold">{fmtDate(s.session_date)}</p>
-                    {s.title && <p className="text-[11px] text-muted-foreground">{s.title}</p>}
+                    </p>}
                   </div>
                   <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                     <Clock size={11} /> {s.start_time ? `${fmtTime(s.start_time)} – ${fmtTime(s.end_time)}` : "TBA"}
@@ -144,7 +144,7 @@ function ParentCampDetail() {
   );
 }
 
-function InfoRow({ icon: Icon, title, body, sub }: { icon: typeof MapPin; title: string; body: string; sub?: string }) {
+function InfoRow({ icon: Icon, body, sub }: { icon: typeof MapPin; title: string; body: string; sub?: string }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-4">
       <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider"><Icon size={12} className="text-teal" /> {title}</h3>
