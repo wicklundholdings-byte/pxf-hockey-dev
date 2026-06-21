@@ -68,6 +68,7 @@ import { Route as AuthenticatedHomeCoachProfileRouteImport } from './routes/_aut
 import { Route as AuthenticatedHomeCoachInboxRouteImport } from './routes/_authenticated/home-coach.inbox'
 import { Route as AuthenticatedCoachWaiversRouteImport } from './routes/_authenticated/coach.waivers'
 import { Route as AuthenticatedCoachTeamRouteImport } from './routes/_authenticated/coach.team'
+import { Route as AuthenticatedCoachSequencesRouteImport } from './routes/_authenticated/coach.sequences'
 import { Route as AuthenticatedCoachRosterRouteImport } from './routes/_authenticated/coach.roster'
 import { Route as AuthenticatedCoachPlansRouteImport } from './routes/_authenticated/coach.plans'
 import { Route as AuthenticatedCoachMembershipsRouteImport } from './routes/_authenticated/coach.memberships'
@@ -390,6 +391,12 @@ const AuthenticatedCoachTeamRoute = AuthenticatedCoachTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => AuthenticatedCoachRoute,
 } as any)
+const AuthenticatedCoachSequencesRoute =
+  AuthenticatedCoachSequencesRouteImport.update({
+    id: '/sequences',
+    path: '/sequences',
+    getParentRoute: () => AuthenticatedCoachRoute,
+  } as any)
 const AuthenticatedCoachRosterRoute =
   AuthenticatedCoachRosterRouteImport.update({
     id: '/roster',
@@ -593,6 +600,7 @@ export interface FileRoutesByFullPath {
   '/coach/memberships': typeof AuthenticatedCoachMembershipsRoute
   '/coach/plans': typeof AuthenticatedCoachPlansRoute
   '/coach/roster': typeof AuthenticatedCoachRosterRoute
+  '/coach/sequences': typeof AuthenticatedCoachSequencesRoute
   '/coach/team': typeof AuthenticatedCoachTeamRoute
   '/coach/waivers': typeof AuthenticatedCoachWaiversRoute
   '/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
@@ -672,6 +680,7 @@ export interface FileRoutesByTo {
   '/coach/memberships': typeof AuthenticatedCoachMembershipsRoute
   '/coach/plans': typeof AuthenticatedCoachPlansRoute
   '/coach/roster': typeof AuthenticatedCoachRosterRoute
+  '/coach/sequences': typeof AuthenticatedCoachSequencesRoute
   '/coach/team': typeof AuthenticatedCoachTeamRoute
   '/coach/waivers': typeof AuthenticatedCoachWaiversRoute
   '/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
@@ -757,6 +766,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/memberships': typeof AuthenticatedCoachMembershipsRoute
   '/_authenticated/coach/plans': typeof AuthenticatedCoachPlansRoute
   '/_authenticated/coach/roster': typeof AuthenticatedCoachRosterRoute
+  '/_authenticated/coach/sequences': typeof AuthenticatedCoachSequencesRoute
   '/_authenticated/coach/team': typeof AuthenticatedCoachTeamRoute
   '/_authenticated/coach/waivers': typeof AuthenticatedCoachWaiversRoute
   '/_authenticated/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
@@ -842,6 +852,7 @@ export interface FileRouteTypes {
     | '/coach/memberships'
     | '/coach/plans'
     | '/coach/roster'
+    | '/coach/sequences'
     | '/coach/team'
     | '/coach/waivers'
     | '/home-coach/inbox'
@@ -921,6 +932,7 @@ export interface FileRouteTypes {
     | '/coach/memberships'
     | '/coach/plans'
     | '/coach/roster'
+    | '/coach/sequences'
     | '/coach/team'
     | '/coach/waivers'
     | '/home-coach/inbox'
@@ -1005,6 +1017,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach/memberships'
     | '/_authenticated/coach/plans'
     | '/_authenticated/coach/roster'
+    | '/_authenticated/coach/sequences'
     | '/_authenticated/coach/team'
     | '/_authenticated/coach/waivers'
     | '/_authenticated/home-coach/inbox'
@@ -1480,6 +1493,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachTeamRouteImport
       parentRoute: typeof AuthenticatedCoachRoute
     }
+    '/_authenticated/coach/sequences': {
+      id: '/_authenticated/coach/sequences'
+      path: '/sequences'
+      fullPath: '/coach/sequences'
+      preLoaderRoute: typeof AuthenticatedCoachSequencesRouteImport
+      parentRoute: typeof AuthenticatedCoachRoute
+    }
     '/_authenticated/coach/roster': {
       id: '/_authenticated/coach/roster'
       path: '/roster'
@@ -1743,6 +1763,7 @@ interface AuthenticatedCoachRouteChildren {
   AuthenticatedCoachMembershipsRoute: typeof AuthenticatedCoachMembershipsRoute
   AuthenticatedCoachPlansRoute: typeof AuthenticatedCoachPlansRoute
   AuthenticatedCoachRosterRoute: typeof AuthenticatedCoachRosterRoute
+  AuthenticatedCoachSequencesRoute: typeof AuthenticatedCoachSequencesRoute
   AuthenticatedCoachTeamRoute: typeof AuthenticatedCoachTeamRoute
   AuthenticatedCoachWaiversRoute: typeof AuthenticatedCoachWaiversRoute
   AuthenticatedCoachIndexRoute: typeof AuthenticatedCoachIndexRoute
@@ -1763,6 +1784,7 @@ const AuthenticatedCoachRouteChildren: AuthenticatedCoachRouteChildren = {
   AuthenticatedCoachMembershipsRoute: AuthenticatedCoachMembershipsRoute,
   AuthenticatedCoachPlansRoute: AuthenticatedCoachPlansRoute,
   AuthenticatedCoachRosterRoute: AuthenticatedCoachRosterRoute,
+  AuthenticatedCoachSequencesRoute: AuthenticatedCoachSequencesRoute,
   AuthenticatedCoachTeamRoute: AuthenticatedCoachTeamRoute,
   AuthenticatedCoachWaiversRoute: AuthenticatedCoachWaiversRoute,
   AuthenticatedCoachIndexRoute: AuthenticatedCoachIndexRoute,
