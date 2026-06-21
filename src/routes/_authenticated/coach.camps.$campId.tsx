@@ -58,6 +58,11 @@ function CampDetailPage() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanFlash, setScanFlash] = useState<string | null>(null);
   const [todayAttendance, setTodayAttendance] = useState<Map<string, boolean>>(new Map());
+  const [completions, setCompletions] = useState<Record<string, SessionRunRecord>>({});
+
+  useEffect(() => {
+    setCompletions(readCampCompletions(campId));
+  }, [campId]);
 
   useEffect(() => {
     (async () => {
@@ -269,7 +274,16 @@ function CampDetailPage() {
           <h2 className="text-[10px] font-bold uppercase tracking-wider text-foreground">Camp schedule</h2>
           <span className="text-[10px] text-muted-foreground">{sessions.length} {sessions.length === 1 ? "day" : "days"}</span>
         </div>
-        <CampSchedule sessions={sessions} campId={campId} />
+        <CampProgress sessions={sessions} completions={completions} />
+        <CampSchedule
+          sessions={sessions}
+          campId={campId}
+          completions={completions}
+          onCompleted={(sessionId, rec) => {
+            writeCampCompletion(campId, sessionId, rec);
+            setCompletions((prev) => ({ ...prev, [sessionId]: rec }));
+          }}
+        />
       </section>
 
       {/* Roster + Today's RSVP */}
