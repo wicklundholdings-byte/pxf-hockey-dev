@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X, ListChecks, BookOpen } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/$campId")({
@@ -34,7 +34,7 @@ type Wait = {
 };
 type Media = { id: string; storage_path: string; created_at: string };
 
-type Tab = "overview" | "description" | "options" | "roster" | "waitlist" | "sessions" | "evaluations" | "media";
+type Tab = "overview" | "description" | "options" | "roster" | "waitlist" | "plans" | "sessions" | "evaluations" | "media";
 
 function fmt(d: string | null) {
   if (!d) return "TBA";
@@ -101,6 +101,7 @@ function CampDetailPage() {
     { id: "options", label: "Order Options" },
     { id: "roster", label: "Roster", count: regs.length },
     { id: "waitlist", label: "Waitlist", count: wait.length },
+    { id: "plans", label: "Session Plans", count: sessions.length },
     { id: "sessions", label: "Attendance", count: sessions.length },
     { id: "evaluations", label: "Evaluations", count: regs.length },
     { id: "media", label: "Media", count: media.length },
@@ -204,6 +205,7 @@ function CampDetailPage() {
       {tab === "options" && <OptionsTab camp={camp} />}
       {tab === "roster" && <RosterTab regs={regs} />}
       {tab === "waitlist" && <WaitlistTab entries={wait} />}
+      {tab === "plans" && <PlansTab sessions={sessions} campId={campId} />}
       {tab === "sessions" && <SessionsTab sessions={sessions} regs={regs} campId={campId} />}
       {tab === "evaluations" && <EvaluationsTab regs={regs} campId={campId} />}
       {tab === "media" && <MediaTab media={media} />}
