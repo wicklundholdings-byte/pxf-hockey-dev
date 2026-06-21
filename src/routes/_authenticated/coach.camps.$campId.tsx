@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X, ListChecks, BookOpen, ListPlus, ShieldCheck, QrCode, Send } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X, ListChecks, BookOpen, ListPlus, ShieldCheck, QrCode, Send, Bell } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 import { QRScannerModal } from "@/components/coach/qr-scanner";
 
@@ -738,6 +738,13 @@ function OptionsTab({ camp }: { camp: Camp }) {
   // Waiver
   const [waiverRequired, setWaiverRequired] = useState<boolean>(camp.waiver_required);
   const [waiverText, setWaiverText] = useState<string>(camp.waiver_text ?? "");
+  // Reminders
+  const [confirmSms, setConfirmSms] = useState<boolean>(camp.confirmation_sms ?? true);
+  const [rem7, setRem7] = useState<boolean>(camp.reminder_7day ?? true);
+  const [rem1, setRem1] = useState<boolean>(camp.reminder_1day ?? true);
+  const [remMorning, setRemMorning] = useState<boolean>(camp.reminder_morning ?? true);
+  const [absent, setAbsent] = useState<boolean>(camp.absent_alert ?? true);
+  const [absentMin, setAbsentMin] = useState<string>(String(camp.absent_alert_minutes ?? 15));
   // Persisted records
   const [coupons, setCoupons] = useState<CouponRow[]>([]);
   const [fields, setFields] = useState<FieldRow[]>([]);
@@ -768,8 +775,14 @@ function OptionsTab({ camp }: { camp: Camp }) {
       waiver_text: waiverText || null,
       early_bird_price_cents: eb > 0 ? Math.round(eb * 100) : null,
       early_bird_expires_at: ebDate ? new Date(ebDate).toISOString() : null,
+      confirmation_sms: confirmSms,
+      reminder_7day: rem7,
+      reminder_1day: rem1,
+      reminder_morning: remMorning,
+      absent_alert: absent,
+      absent_alert_minutes: Math.max(0, Math.min(120, parseInt(absentMin || "0", 10) || 0)),
     };
-    await supabase.from("camps").update(updates).eq("id", camp.id);
+    await supabase.from("camps").update(updates as never).eq("id", camp.id);
     setSaving(false);
     setSavedTick(true);
     setTimeout(() => setSavedTick(false), 1500);
