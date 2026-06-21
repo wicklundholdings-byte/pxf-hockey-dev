@@ -398,9 +398,9 @@ function WaitlistTab({ entries }: { entries: Wait[] }) {
     const now = new Date().toISOString();
     await supabase
       .from("waitlist_entries")
-      .update({ promoted_at: now, notified_at: now, status: "invited" })
+      .update({ promoted_at: now, notified_at: now, status: "offered" })
       .eq("id", w.id);
-    setLocal((prev) => prev.map((e) => (e.id === w.id ? { ...e, status: "invited" } : e)));
+    setLocal((prev) => prev.map((e) => (e.id === w.id ? { ...e, status: "offered" } : e)));
     setBusyId(null);
   }
 
@@ -414,7 +414,7 @@ function WaitlistTab({ entries }: { entries: Wait[] }) {
   return (
     <ul className="space-y-2">
       {local.map((w, i) => {
-        const invited = w.status === "invited";
+        const invited = w.status === "offered" || w.status === "claimed";
         return (
           <li key={w.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
             <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-amber-400/15 text-[10px] font-bold text-amber-400">
