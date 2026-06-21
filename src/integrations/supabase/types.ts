@@ -249,6 +249,8 @@ export type Database = {
           timezone: string
           updated_at: string
           venue_name: string | null
+          waiver_required: boolean
+          waiver_text: string | null
           waiver_url: string | null
         }
         Insert: {
@@ -279,6 +281,8 @@ export type Database = {
           timezone?: string
           updated_at?: string
           venue_name?: string | null
+          waiver_required?: boolean
+          waiver_text?: string | null
           waiver_url?: string | null
         }
         Update: {
@@ -309,6 +313,8 @@ export type Database = {
           timezone?: string
           updated_at?: string
           venue_name?: string | null
+          waiver_required?: boolean
+          waiver_text?: string | null
           waiver_url?: string | null
         }
         Relationships: []
@@ -416,6 +422,7 @@ export type Database = {
       coupons: {
         Row: {
           amount_off_cents: number | null
+          camp_id: string | null
           code: string
           created_at: string
           expires_at: string | null
@@ -427,6 +434,7 @@ export type Database = {
         }
         Insert: {
           amount_off_cents?: number | null
+          camp_id?: string | null
           code: string
           created_at?: string
           expires_at?: string | null
@@ -438,6 +446,7 @@ export type Database = {
         }
         Update: {
           amount_off_cents?: number | null
+          camp_id?: string | null
           code?: string
           created_at?: string
           expires_at?: string | null
@@ -447,7 +456,15 @@ export type Database = {
           usage_limit?: number | null
           used_count?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "coupons_camp_id_fkey"
+            columns: ["camp_id"]
+            isOneToOne: false
+            referencedRelation: "camps"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       drill_categories: {
         Row: {
@@ -1139,6 +1156,70 @@ export type Database = {
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      waiver_signatures: {
+        Row: {
+          attendee_id: string
+          camp_id: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          registration_id: string
+          signature_data: string
+          signature_method: string
+          signed_at: string
+          signer_name: string
+          waiver_text_snapshot: string
+        }
+        Insert: {
+          attendee_id: string
+          camp_id: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          registration_id: string
+          signature_data: string
+          signature_method: string
+          signed_at?: string
+          signer_name: string
+          waiver_text_snapshot: string
+        }
+        Update: {
+          attendee_id?: string
+          camp_id?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          registration_id?: string
+          signature_data?: string
+          signature_method?: string
+          signed_at?: string
+          signer_name?: string
+          waiver_text_snapshot?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waiver_signatures_attendee_id_fkey"
+            columns: ["attendee_id"]
+            isOneToOne: false
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waiver_signatures_camp_id_fkey"
+            columns: ["camp_id"]
+            isOneToOne: false
+            referencedRelation: "camps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waiver_signatures_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "registrations"
             referencedColumns: ["id"]
           },
         ]
