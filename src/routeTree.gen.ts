@@ -100,6 +100,7 @@ import { Route as AuthenticatedCoachCampsCampIdRouteImport } from './routes/_aut
 import { Route as AuthenticatedCoachAttendeesAthleteIdRouteImport } from './routes/_authenticated/coach.attendees.$athleteId'
 import { Route as AuthenticatedCoachCampsCampIdSessionPlansRouteImport } from './routes/_authenticated/coach.camps.$campId.session-plans'
 import { Route as AuthenticatedCoachCampsCampIdReviewsRouteImport } from './routes/_authenticated/coach.camps.$campId.reviews'
+import { Route as AuthenticatedCoachCampsCampIdPhotosRouteImport } from './routes/_authenticated/coach.camps.$campId.photos'
 import { Route as AuthenticatedCoachCampsCampIdFeedbackRouteImport } from './routes/_authenticated/coach.camps.$campId.feedback'
 import { Route as AuthenticatedCoachCampsCampIdCheckinRouteImport } from './routes/_authenticated/coach.camps.$campId.checkin'
 import { Route as AuthenticatedCoachCampsCampIdAttendanceRouteImport } from './routes/_authenticated/coach.camps.$campId.attendance'
@@ -584,6 +585,12 @@ const AuthenticatedCoachCampsCampIdReviewsRoute =
     path: '/reviews',
     getParentRoute: () => AuthenticatedCoachCampsCampIdRoute,
   } as any)
+const AuthenticatedCoachCampsCampIdPhotosRoute =
+  AuthenticatedCoachCampsCampIdPhotosRouteImport.update({
+    id: '/photos',
+    path: '/photos',
+    getParentRoute: () => AuthenticatedCoachCampsCampIdRoute,
+  } as any)
 const AuthenticatedCoachCampsCampIdFeedbackRoute =
   AuthenticatedCoachCampsCampIdFeedbackRouteImport.update({
     id: '/feedback',
@@ -701,6 +708,7 @@ export interface FileRoutesByFullPath {
   '/coach/camps/$campId/attendance': typeof AuthenticatedCoachCampsCampIdAttendanceRoute
   '/coach/camps/$campId/checkin': typeof AuthenticatedCoachCampsCampIdCheckinRoute
   '/coach/camps/$campId/feedback': typeof AuthenticatedCoachCampsCampIdFeedbackRoute
+  '/coach/camps/$campId/photos': typeof AuthenticatedCoachCampsCampIdPhotosRoute
   '/coach/camps/$campId/reviews': typeof AuthenticatedCoachCampsCampIdReviewsRoute
   '/coach/camps/$campId/session-plans': typeof AuthenticatedCoachCampsCampIdSessionPlansRoute
   '/coach/camps/$campId/evaluations/$athleteId': typeof AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute
@@ -792,6 +800,7 @@ export interface FileRoutesByTo {
   '/coach/camps/$campId/attendance': typeof AuthenticatedCoachCampsCampIdAttendanceRoute
   '/coach/camps/$campId/checkin': typeof AuthenticatedCoachCampsCampIdCheckinRoute
   '/coach/camps/$campId/feedback': typeof AuthenticatedCoachCampsCampIdFeedbackRoute
+  '/coach/camps/$campId/photos': typeof AuthenticatedCoachCampsCampIdPhotosRoute
   '/coach/camps/$campId/reviews': typeof AuthenticatedCoachCampsCampIdReviewsRoute
   '/coach/camps/$campId/session-plans': typeof AuthenticatedCoachCampsCampIdSessionPlansRoute
   '/coach/camps/$campId/evaluations/$athleteId': typeof AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute
@@ -890,6 +899,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/camps/$campId/attendance': typeof AuthenticatedCoachCampsCampIdAttendanceRoute
   '/_authenticated/coach/camps/$campId/checkin': typeof AuthenticatedCoachCampsCampIdCheckinRoute
   '/_authenticated/coach/camps/$campId/feedback': typeof AuthenticatedCoachCampsCampIdFeedbackRoute
+  '/_authenticated/coach/camps/$campId/photos': typeof AuthenticatedCoachCampsCampIdPhotosRoute
   '/_authenticated/coach/camps/$campId/reviews': typeof AuthenticatedCoachCampsCampIdReviewsRoute
   '/_authenticated/coach/camps/$campId/session-plans': typeof AuthenticatedCoachCampsCampIdSessionPlansRoute
   '/_authenticated/coach/camps/$campId/evaluations/$athleteId': typeof AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute
@@ -988,6 +998,7 @@ export interface FileRouteTypes {
     | '/coach/camps/$campId/attendance'
     | '/coach/camps/$campId/checkin'
     | '/coach/camps/$campId/feedback'
+    | '/coach/camps/$campId/photos'
     | '/coach/camps/$campId/reviews'
     | '/coach/camps/$campId/session-plans'
     | '/coach/camps/$campId/evaluations/$athleteId'
@@ -1079,6 +1090,7 @@ export interface FileRouteTypes {
     | '/coach/camps/$campId/attendance'
     | '/coach/camps/$campId/checkin'
     | '/coach/camps/$campId/feedback'
+    | '/coach/camps/$campId/photos'
     | '/coach/camps/$campId/reviews'
     | '/coach/camps/$campId/session-plans'
     | '/coach/camps/$campId/evaluations/$athleteId'
@@ -1176,6 +1188,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach/camps/$campId/attendance'
     | '/_authenticated/coach/camps/$campId/checkin'
     | '/_authenticated/coach/camps/$campId/feedback'
+    | '/_authenticated/coach/camps/$campId/photos'
     | '/_authenticated/coach/camps/$campId/reviews'
     | '/_authenticated/coach/camps/$campId/session-plans'
     | '/_authenticated/coach/camps/$campId/evaluations/$athleteId'
@@ -1868,6 +1881,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachCampsCampIdReviewsRouteImport
       parentRoute: typeof AuthenticatedCoachCampsCampIdRoute
     }
+    '/_authenticated/coach/camps/$campId/photos': {
+      id: '/_authenticated/coach/camps/$campId/photos'
+      path: '/photos'
+      fullPath: '/coach/camps/$campId/photos'
+      preLoaderRoute: typeof AuthenticatedCoachCampsCampIdPhotosRouteImport
+      parentRoute: typeof AuthenticatedCoachCampsCampIdRoute
+    }
     '/_authenticated/coach/camps/$campId/feedback': {
       id: '/_authenticated/coach/camps/$campId/feedback'
       path: '/feedback'
@@ -1950,6 +1970,7 @@ interface AuthenticatedCoachCampsCampIdRouteChildren {
   AuthenticatedCoachCampsCampIdAttendanceRoute: typeof AuthenticatedCoachCampsCampIdAttendanceRoute
   AuthenticatedCoachCampsCampIdCheckinRoute: typeof AuthenticatedCoachCampsCampIdCheckinRoute
   AuthenticatedCoachCampsCampIdFeedbackRoute: typeof AuthenticatedCoachCampsCampIdFeedbackRoute
+  AuthenticatedCoachCampsCampIdPhotosRoute: typeof AuthenticatedCoachCampsCampIdPhotosRoute
   AuthenticatedCoachCampsCampIdReviewsRoute: typeof AuthenticatedCoachCampsCampIdReviewsRoute
   AuthenticatedCoachCampsCampIdSessionPlansRoute: typeof AuthenticatedCoachCampsCampIdSessionPlansRoute
   AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute: typeof AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute
@@ -1963,6 +1984,8 @@ const AuthenticatedCoachCampsCampIdRouteChildren: AuthenticatedCoachCampsCampIdR
       AuthenticatedCoachCampsCampIdCheckinRoute,
     AuthenticatedCoachCampsCampIdFeedbackRoute:
       AuthenticatedCoachCampsCampIdFeedbackRoute,
+    AuthenticatedCoachCampsCampIdPhotosRoute:
+      AuthenticatedCoachCampsCampIdPhotosRoute,
     AuthenticatedCoachCampsCampIdReviewsRoute:
       AuthenticatedCoachCampsCampIdReviewsRoute,
     AuthenticatedCoachCampsCampIdSessionPlansRoute:

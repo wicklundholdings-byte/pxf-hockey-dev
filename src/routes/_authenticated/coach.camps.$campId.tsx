@@ -261,18 +261,44 @@ function CampDetailPage() {
 
       {/* Primary actions */}
       <div className="grid grid-cols-2 gap-2">
-        <a
-          href="#session-plans"
+        <Link
+          to="/coach/camps/$campId/session-plans"
+          params={{ campId }}
           className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-brand py-4 text-sm font-bold text-primary-foreground"
         >
           <ClipboardList size={16} /> Session Plans
-        </a>
+        </Link>
         <Link
           to="/coach/broadcast"
           search={{ campId } as never}
           className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-brand py-4 text-sm font-bold text-primary-foreground"
         >
           <MessageSquare size={16} /> Message Group
+        </Link>
+      </div>
+
+      {/* Quick links to dedicated sub-routes */}
+      <div className="grid grid-cols-3 gap-2">
+        <Link
+          to="/coach/camps/$campId/checkin"
+          params={{ campId }}
+          className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-card py-3 text-[11px] font-semibold text-foreground hover:border-teal/40"
+        >
+          <QrCode size={16} className="text-teal" /> Check-in
+        </Link>
+        <Link
+          to="/coach/camps/$campId/attendance"
+          params={{ campId }}
+          className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-card py-3 text-[11px] font-semibold text-foreground hover:border-teal/40"
+        >
+          <ClipboardList size={16} className="text-teal" /> Attendance
+        </Link>
+        <Link
+          to="/coach/camps/$campId/photos"
+          params={{ campId }}
+          className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-card py-3 text-[11px] font-semibold text-foreground hover:border-teal/40"
+        >
+          <Camera size={16} className="text-teal" /> Photos
         </Link>
       </div>
 
