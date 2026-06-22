@@ -166,11 +166,21 @@ function ParentCampDetail() {
       <div className="px-5 pt-4">
         <h1 className="font-display text-2xl font-bold">{camp?.name ?? "Loading…"}</h1>
         <p className="mt-1 text-xs text-muted-foreground">{fmtDate(camp?.start_date ?? null)}{camp?.end_date && camp.end_date !== camp.start_date ? ` – ${fmtDate(camp.end_date)}` : ""}</p>
-        {countdown != null && (
-          <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-teal/40 bg-teal/10 px-3 py-1.5 text-xs font-bold text-teal">
-            <CalendarDays size={12} /> {countdown === 0 ? "Camp starts today!" : `${countdown} day${countdown === 1 ? "" : "s"} until camp`}
-          </div>
-        )}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {countdown != null && (
+            <div className="inline-flex items-center gap-2 rounded-full border border-teal/40 bg-teal/10 px-3 py-1.5 text-xs font-bold text-teal">
+              <CalendarDays size={12} /> {countdown === 0 ? "Camp starts today!" : `${countdown} day${countdown === 1 ? "" : "s"} until camp`}
+            </div>
+          )}
+          <button
+            onClick={openCoachDm}
+            disabled={openingDm || !camp?.owner_id}
+            className="inline-flex items-center gap-1.5 rounded-full bg-gradient-brand px-3 py-1.5 text-xs font-bold text-primary-foreground disabled:opacity-40"
+          >
+            <MessageCircle size={12} />
+            {openingDm ? "Opening…" : "Message Coach"}
+          </button>
+        </div>
 
         {/* Sub-tabs */}
         <div className="mt-5 flex gap-1 rounded-2xl border border-border bg-card p-1">
