@@ -2,11 +2,26 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { listLiveCamps } from "@/lib/camps-public.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, MapPin, CalendarDays, Map as MapIcon, List, ArrowRight } from "lucide-react";
+import { Search, MapPin, CalendarDays, Map as MapIcon, List, ArrowRight, X } from "lucide-react";
 import { VerifiedBadge } from "@/components/verified-badge";
 
 export const Route = createFileRoute("/camps/browse")({
-  head: () => ({ meta: [{ title: "Find Camps — PXF Hockey" }] }),
+  head: () => ({
+    meta: [
+      { title: "Find Hockey Camps Near You — PXF Marketplace" },
+      {
+        name: "description",
+        content:
+          "Browse verified hockey camps from elite coaches. Filter by city, age group (U8–Senior), skill level and sport. Book directly with the coach.",
+      },
+      { property: "og:title", content: "Find Hockey Camps Near You — PXF" },
+      {
+        property: "og:description",
+        content: "The PXF marketplace for verified hockey coaches and their camps.",
+      },
+    ],
+    links: [{ rel: "canonical", href: "https://pxf-hockey-dev.lovable.app/camps/browse" }],
+  }),
   component: BrowseCamps,
 });
 
@@ -22,7 +37,16 @@ type Camp = {
   end_date: string | null;
   price_cents: number;
   capacity: number;
+  age_group: string | null;
+  skill_level: string | null;
+  sport_type: string | null;
+  city: string | null;
+  postal_code: string | null;
 };
+
+const AGE_GROUPS = ["U8", "U10", "U12", "U14", "U16", "U18", "Junior", "Senior"];
+const SKILL_LEVELS = ["Beginner", "Intermediate", "Advanced", "Elite"];
+const SPORT_TYPES = ["Hockey", "Skating", "Goalie", "Off-Ice"];
 
 function fmtDate(d: string | null) {
   if (!d) return "TBA";
@@ -38,59 +62,122 @@ function fmtRange(start: string | null, end: string | null) {
 function BrowseCamps() {
   const [view, setView] = useState<"list" | "map">("list");
   const [camps, setCamps] = useState<Camp[]>([]);
+  const [coachNames, setCoachNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [location, setLocation] = useState("");
+  const [ageGroup, setAgeGroup] = useState<string>("");
+  const [skillLevel, setSkillLevel] = useState<string>("");
+  const [sportType, setSportType] = useState<string>("");
   const [verifiedOwners, setVerifiedOwners] = useState<Set<string>>(new Set());
+  const [paidCounts, setPaidCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    (async () => {
+    let cancelled = false;
+    setLoading(true);
+    const t = setTimeout(async () => {
       try {
-        const res = await listLiveCamps();
+        const res = await listLiveCamps({
+          data: {
+            q: q || undefined,
+            location: location || undefined,
+            ageGroup: ageGroup || undefined,
+            skillLevel: skillLevel || undefined,
+            sportType: sportType || undefined,
+          },
+        });
+        if (cancelled) return;
         const list = (res.camps ?? []) as Camp[];
         setCamps(list);
+        setCoachNames(res.coaches ?? {});
         const ownerIds = Array.from(new Set(list.map((c) => c.owner_id).filter(Boolean)));
         if (ownerIds.length) {
-          const { data: v } = await supabase
-            .from("coach_verifications")
-            .select("user_id, expires_at")
-            .eq("status", "approved")
-            .in("user_id", ownerIds);
+          const [{ data: v }, { data: regs }] = await Promise.all([
+            supabase
+              .from("coach_verifications")
+              .select("user_id, expires_at")
+              .eq("status", "approved")
+              .in("user_id", ownerIds),
+            supabase
+              .from("registrations")
+              .select("camp_id")
+              .in("camp_id", list.map((c) => c.id))
+              .eq("status", "paid"),
+          ]);
+          if (cancelled) return;
           const now = Date.now();
-          setVerifiedOwners(new Set((v ?? []).filter((r) => !r.expires_at || new Date(r.expires_at).getTime() > now).map((r) => r.user_id)));
+          setVerifiedOwners(
+            new Set(
+              (v ?? [])
+                .filter((r) => !r.expires_at || new Date(r.expires_at).getTime() > now)
+                .map((r) => r.user_id),
+            ),
+          );
+          const counts: Record<string, number> = {};
+          for (const r of regs ?? []) counts[r.camp_id] = (counts[r.camp_id] ?? 0) + 1;
+          setPaidCounts(counts);
         }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    })();
-  }, []);
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [q, location, ageGroup, skillLevel, sportType]);
 
-  const filtered = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    if (!needle) return camps;
-    return camps.filter((c) =>
-      [c.name, c.venue_name ?? "", c.location_type].some((v) => v.toLowerCase().includes(needle)),
-    );
-  }, [camps, q]);
+  const filtered = useMemo(() => camps, [camps]);
+  const activeFilters = [ageGroup, skillLevel, sportType, location].filter(Boolean).length;
 
   return (
     <div className="min-h-screen bg-background px-5 pt-4 pb-24 text-foreground">
       <h1 className="font-display text-2xl font-bold">Find Camps</h1>
+      <p className="text-[11px] text-muted-foreground">Verified coaches in the PXF marketplace.</p>
 
       <div className="mt-3 flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
         <Search size={14} className="text-muted-foreground" />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search camps…"
+          placeholder="Search camp name…"
           className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
-        {["Location", "Age group", "Skill level", "Date range", "Price range"].map((f) => (
-          <button key={f} className="rounded-full border border-border bg-card px-3 py-1 text-muted-foreground">{f}</button>
-        ))}
+      <div className="mt-2 flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
+        <MapPin size={14} className="text-muted-foreground" />
+        <input
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          placeholder="City or postal/zip code…"
+          className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+        />
+        {location && (
+          <button onClick={() => setLocation("")} aria-label="Clear location">
+            <X size={14} className="text-muted-foreground" />
+          </button>
+        )}
       </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-2 text-[11px]">
+        <FilterSelect label="Age" value={ageGroup} onChange={setAgeGroup} options={AGE_GROUPS} />
+        <FilterSelect label="Skill" value={skillLevel} onChange={setSkillLevel} options={SKILL_LEVELS} />
+        <FilterSelect label="Sport" value={sportType} onChange={setSportType} options={SPORT_TYPES} />
+      </div>
+      {activeFilters > 0 && (
+        <button
+          onClick={() => {
+            setAgeGroup("");
+            setSkillLevel("");
+            setSportType("");
+            setLocation("");
+          }}
+          className="mt-2 text-[11px] text-teal underline"
+        >
+          Clear {activeFilters} filter{activeFilters > 1 ? "s" : ""}
+        </button>
+      )}
 
       <div className="mt-3 inline-flex rounded-lg border border-border bg-card p-1 text-[11px]">
         <button onClick={() => setView("list")} className={`flex items-center gap-1 rounded-md px-3 py-1 font-bold ${view === "list" ? "bg-teal text-background" : "text-muted-foreground"}`}>
@@ -123,18 +210,26 @@ function BrowseCamps() {
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <p className="font-semibold text-foreground">{c.name}</p>
+                      <p className="font-semibold text-foreground">{c.name}</p>
+                      <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                        <span>By {coachNames[c.owner_id] ?? "PXF Coach"}</span>
                         {verifiedOwners.has(c.owner_id) && <VerifiedBadge size="xs" label={false} />}
-                      </div>
-                      <p className="mt-0.5 text-xs text-muted-foreground">Hosted by PXF Hockey</p>
+                      </p>
                     </div>
-                    <span className="shrink-0 rounded-full bg-volt/15 px-2 py-0.5 text-[10px] font-bold text-volt">{c.capacity} spots</span>
+                    <span className="shrink-0 rounded-full bg-volt/15 px-2 py-0.5 text-[10px] font-bold text-volt">
+                      {Math.max(0, c.capacity - (paidCounts[c.id] ?? 0))} left
+                    </span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1"><MapPin size={11} />{c.venue_name ?? (c.location_type === "online" ? "Online" : "TBA")}</span>
+                    <span className="flex items-center gap-1"><MapPin size={11} />{[c.venue_name, c.city].filter(Boolean).join(", ") || (c.location_type === "online" ? "Online" : "TBA")}</span>
                     <span className="flex items-center gap-1"><CalendarDays size={11} />{fmtRange(c.start_date, c.end_date)}</span>
                   </div>
+                  {(c.age_group || c.skill_level) && (
+                    <div className="mt-2 flex flex-wrap gap-1 text-[10px]">
+                      {c.age_group && <span className="rounded-full bg-background border border-border px-2 py-0.5">{c.age_group}</span>}
+                      {c.skill_level && <span className="rounded-full bg-background border border-border px-2 py-0.5">{c.skill_level}</span>}
+                    </div>
+                  )}
                   <div className="mt-3 flex items-center justify-between">
                     <p className="font-display text-lg font-bold text-foreground">${(c.price_cents / 100).toFixed(0)}</p>
                     <span className="inline-flex items-center gap-1 rounded-lg bg-teal px-4 py-2 text-xs font-bold text-background">
