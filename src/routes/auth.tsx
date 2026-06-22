@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link, useSearch } from "@tanstack/react-r
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PxfLogo } from "@/components/app-shell";
+import { Users, Whistle } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -23,6 +24,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [role, setRole] = useState<"parent" | "coach">("parent");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -39,10 +41,24 @@ function AuthPage() {
           password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { full_name: fullName },
+            data: { full_name: fullName, signup_role: role },
           },
         });
         if (error) throw error;
+        // If they signed up as a coach, immediately grant the admin role and
+        // send them straight to the coach console.
+        if (role === "coach") {
+          const { data: sess } = await supabase.auth.getSession();
+          const uid = sess.session?.user?.id;
+          if (uid) {
+            await supabase.from("user_roles").insert({ user_id: uid, role: "admin" }).then(() => {}, () => {});
+          }
+          navigate({ to: "/coach" });
+          return;
+        }
+        // Parent / athlete signup → onboarding flow that captures children.
+        navigate({ to: "/onboarding/parent" });
+        return;
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -91,6 +107,27 @@ function AuthPage() {
 
       <form onSubmit={submit} className="mt-8 space-y-3">
         {isSignup && (
+          <div>
+            <span className="text-[11px] font-semibold tracking-wider text-muted-foreground">I AM A</span>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <RoleCard
+                active={role === "parent"}
+                onClick={() => setRole("parent")}
+                icon={<Users size={16} />}
+                title="Parent / Athlete"
+                sub="Register kids, book camps, track progress"
+              />
+              <RoleCard
+                active={role === "coach"}
+                onClick={() => setRole("coach")}
+                icon={<span className="font-display text-base font-bold">C</span>}
+                title="Coach"
+                sub="Run camps, build sessions, manage rosters"
+              />
+            </div>
+          </div>
+        )}
+        {isSignup && (
           <Field label="Full name" value={fullName} onChange={setFullName} type="text" required />
         )}
         <Field label="Email" value={email} onChange={setEmail} type="email" required />
@@ -120,6 +157,25 @@ function AuthPage() {
         </Link>
       </p>
     </div>
+  );
+}
+
+function RoleCard({ active, onClick, icon, title, sub }: { active: boolean; onClick: () => void; icon: React.ReactNode; title: string; sub: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        "flex flex-col items-start gap-1.5 rounded-2xl border p-3 text-left transition " +
+        (active ? "border-teal bg-teal/10" : "border-border/60 bg-surface")
+      }
+    >
+      <span className={"grid h-7 w-7 place-items-center rounded-full " + (active ? "bg-teal text-black" : "bg-surface-2 text-muted-foreground")}>
+        {icon}
+      </span>
+      <span className="text-sm font-bold leading-tight">{title}</span>
+      <span className="text-[10px] leading-tight text-muted-foreground">{sub}</span>
+    </button>
   );
 }
 
