@@ -1,6 +1,6 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { Home, Dumbbell, CalendarDays, User, Bell, Shield } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useAuth, useHasCoachAccess } from "@/hooks/use-auth";
 
 type NavItem = { to: string; label: string; icon: typeof Home; exact?: boolean };
@@ -26,6 +26,7 @@ export function PxfLogo({ className = "" }: { className?: string }) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { hasAccess } = useHasCoachAccess(user?.id);
   const isChromeless =
@@ -39,12 +40,22 @@ export function AppShell({ children }: { children: ReactNode }) {
     pathname.startsWith("/parent/") ||
     pathname.startsWith("/onboarding") ||
     (hasAccess && pathname === "/settings");
+  // Coaches should never see the athlete bottom nav. If a signed-in coach
+  // lands on an athlete-shell route, send them to the coach console.
+  const athleteRoots = ["/", "/drills", "/sessions", "/profile"];
+  const onAthleteRoute = athleteRoots.includes(pathname);
+  useEffect(() => {
+    if (hasAccess && onAthleteRoute) {
+      navigate({ to: "/coach", replace: true });
+    }
+  }, [hasAccess, onAthleteRoute, navigate]);
+  if (hasAccess && onAthleteRoute) {
+    return <div className="min-h-screen bg-background text-foreground" />;
+  }
   if (isChromeless) {
     return <div className="min-h-screen bg-background text-foreground">{children}</div>;
   }
-  const nav: NavItem[] = hasAccess
-    ? [...baseNav, { to: "/coach", label: "Coach", icon: Shield }]
-    : baseNav;
+  const nav: NavItem[] = baseNav;
 
   return (
     <div className="relative mx-auto flex min-h-screen w-full max-w-[480px] flex-col bg-background text-foreground">
