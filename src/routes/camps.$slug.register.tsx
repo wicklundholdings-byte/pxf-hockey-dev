@@ -187,6 +187,56 @@ function RegisterScreen() {
           </FormSection>
         )}
 
+        {draft.children.length > 0 && (
+          <FormSection title="Additional info">
+            <p className="-mt-1 text-[11px] text-muted-foreground">
+              Set position and skill level for each athlete.
+            </p>
+            <div className="space-y-4">
+              {draft.children.map((c, idx) => (
+                <div key={c.id ?? idx} className="space-y-3 rounded-2xl border border-border bg-surface p-3">
+                  <p className="text-xs font-semibold text-foreground">{c.full_name}</p>
+                  <SelectField
+                    label="Position"
+                    value={c.position}
+                    onChange={(v) => {
+                      const next = [...draft.children];
+                      next[idx] = { ...next[idx], position: v };
+                      update({ children: next });
+                    }}
+                    options={positions}
+                  />
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Skill level *</label>
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                      {levels.map((l) => {
+                        const active = c.skill_level === l.id;
+                        return (
+                          <button
+                            type="button"
+                            key={l.id}
+                            onClick={() => {
+                              const next = [...draft.children];
+                              next[idx] = { ...next[idx], skill_level: l.id };
+                              update({ children: next });
+                            }}
+                            className={
+                              "rounded-xl border px-3 py-2.5 text-xs font-semibold transition-colors " +
+                              (active ? "border-teal bg-teal/10 text-teal" : "border-border bg-background text-muted-foreground")
+                            }
+                          >
+                            {l.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </FormSection>
+        )}
+
         {(saved.length === 0 || showManual) && (
         <FormSection title={saved.length === 0 ? "Athlete info" : "New athlete"}>
           <Field label="Child's full name" required value={draft.child.full_name} onChange={(v) => update({ child: { ...draft.child, full_name: v } })} />
