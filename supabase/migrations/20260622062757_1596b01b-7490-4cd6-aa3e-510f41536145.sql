@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Parents view their registrations" ON public.registrations;
