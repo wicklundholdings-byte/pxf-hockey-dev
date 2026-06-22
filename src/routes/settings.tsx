@@ -118,7 +118,7 @@ function ParentSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["u
   );
 }
 
-function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["user"]; signOut: () => Promise<void> }) {
+function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["user"]; signOut: () => Promise<{ error: import("@supabase/supabase-js").AuthError | null }> }) {
   const [prefs, setPrefs] = useState<Record<string, boolean>>({ reg: true, msg: true, remind: true, wait: false, pay: true });
   const { hasAccess } = useHasCoachAccess(user?.id);
   const navigate = useNavigate();
