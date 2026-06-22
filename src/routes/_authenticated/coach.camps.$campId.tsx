@@ -324,6 +324,8 @@ function CampDetailPage() {
         />
       </section>
 
+      <CampStaffSection campId={campId} />
+
       {/* Roster + Today's RSVP */}
       <div className="grid grid-cols-2 gap-2">
         <RosterCard regs={regs} />
