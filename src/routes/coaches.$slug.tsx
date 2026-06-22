@@ -69,11 +69,6 @@ function CoachPublicProfile() {
     reviewCount: 0,
   };
   const reviews: Array<{ name: string; stars: number; text: string }> = [];
-  const reviews = [
-    { name: "Sarah W.", stars: 5, text: "Best camp my son has ever attended. Coach Marcus genuinely cares." },
-    { name: "Linda C.", stars: 5, text: "Mason came home talking about it every night. Worth every penny." },
-    { name: "Mike T.", stars: 4, text: "Great energy, very organized. Highly recommend." },
-  ];
 
   return (
     <div className="min-h-screen bg-background px-5 pt-4 pb-32">
@@ -85,7 +80,7 @@ function CoachPublicProfile() {
         <div className="h-24 w-full bg-gradient-to-br from-teal/30 via-green-400/10 to-transparent" />
         <div className="-mt-10 px-4 pb-4">
           <div className="flex items-end gap-3">
-            <div className="grid h-20 w-20 place-items-center rounded-2xl border-4 border-card bg-teal/20 text-2xl font-bold text-teal">{coach.name.split(" ").map((p) => p[0]).join("").slice(0,2).toUpperCase()}</div>
+            <div className="grid h-20 w-20 place-items-center rounded-2xl border-4 border-card bg-teal/20 text-2xl font-bold text-teal">{coach.name.split(" ").map((p: string) => p[0]).join("").slice(0,2).toUpperCase()}</div>
             <div className="flex-1 pb-1">
               <div className="flex items-center gap-1.5">
                 <h1 className="font-display text-xl font-bold text-foreground">{coach.name}</h1>
@@ -133,7 +128,7 @@ function CoachPublicProfile() {
           <p className="text-[11px] text-muted-foreground">No live camps right now. Check back soon.</p>
         ) : (
           <ul className="space-y-2">
-            {camps.map((c) => (
+            {camps.map((c: typeof camps[number]) => (
               <li key={c.id} className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-foreground">{c.name}</p>
