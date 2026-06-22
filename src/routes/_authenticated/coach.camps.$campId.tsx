@@ -315,6 +315,8 @@ function CampDetailPage() {
           sessions={sessions}
           campId={campId}
           completions={completions}
+          registeredCount={regs.filter((r) => r.status === "paid").length}
+          onSessionsChange={(next) => setSessions(next)}
           onCompleted={(sessionId, rec) => {
             writeCampCompletion(campId, sessionId, rec);
             setCompletions((prev) => ({ ...prev, [sessionId]: rec }));
