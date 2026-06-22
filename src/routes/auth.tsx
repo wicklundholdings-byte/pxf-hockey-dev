@@ -83,8 +83,11 @@ function AuthPage() {
           return notExpired && (plan.includes("coach") || plan.includes("platinum") || plan.includes("elite"));
         });
         if (role || subActive) {
-          // Only override when the redirect target isn't already a coach route.
-          if (!dest.startsWith("/coach")) dest = "/coach";
+          // Coaches always land in the coach console.
+          dest = "/coach";
+        } else {
+          // Parents/athletes land in the parent app unless an explicit non-root redirect was provided.
+          if (!redirect || redirect === "/") dest = "/parent";
         }
       }
       navigate({ to: dest as "/" });

@@ -57,7 +57,7 @@ function Profile() {
             {initials}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold tracking-[0.3em] text-volt">{isAdmin ? "ADMIN" : "ATHLETE"}</p>
+            <p className="text-[10px] font-bold tracking-[0.3em] text-volt">{isAdmin ? "COACH" : "PARENT"}</p>
             <h1 className="mt-0.5 text-xl font-bold text-foreground">{fullName || user.email}</h1>
             <p className="text-xs text-muted-foreground">{user.email}</p>
           </div>
