@@ -1,7 +1,7 @@
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { CalendarDays, MapPin, Users, MessageCircle, Info, ChevronLeft, Clock } from "lucide-react";
+import { CalendarDays, MapPin, Users, MessageCircle, Info, ChevronLeft, Clock, Check, X } from "lucide-react";
 
 export const Route = createFileRoute("/parent/camp/$campId")({
   head: () => ({ meta: [{ title: "Camp — PXF Hockey" }] }),
@@ -34,6 +34,8 @@ function ParentCampDetail() {
   const [sessions, setSessions] = useState<Array<{ id: string; session_date: string; start_time: string | null; end_time: string | null }>>([]);
   const [rosterCount, setRosterCount] = useState(0);
   const [tab, setTab] = useState<Tab>("schedule");
+  const [rsvps, setRsvps] = useState<Array<{ id: string; camp_session_id: string; status: string; registration_id: string; athlete_name: string }>>([]);
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -49,10 +51,40 @@ function ParentCampDetail() {
       ]);
       setSessions(s ?? []);
       setRosterCount(count ?? 0);
+
+      // Load this parent's RSVPs for this camp (across all their children)
+      const { data: rsvpRows } = await supabase
+        .from("daily_rsvps")
+        .select("id, camp_session_id, status, registration_id, registrations(attendees(full_name))")
+        .eq("camp_id", campId);
+      setRsvps(
+        (rsvpRows ?? []).map((r: any) => ({
+          id: r.id,
+          camp_session_id: r.camp_session_id,
+          status: r.status,
+          registration_id: r.registration_id,
+          athlete_name: r.registrations?.attendees?.full_name ?? "Athlete",
+        })),
+      );
     })();
   }, [campId]);
 
   const countdown = daysUntil(camp?.start_date ?? null);
+
+  async function setRsvpStatus(rsvpId: string, status: "attending" | "not_attending") {
+    setSavingId(rsvpId);
+    setRsvps((prev) => prev.map((r) => (r.id === rsvpId ? { ...r, status } : r)));
+    const { error } = await supabase
+      .from("daily_rsvps")
+      .update({ status, responded_at: new Date().toISOString() })
+      .eq("id", rsvpId);
+    if (error) {
+      // revert on failure
+      const { data: fresh } = await supabase.from("daily_rsvps").select("status").eq("id", rsvpId).maybeSingle();
+      setRsvps((prev) => prev.map((r) => (r.id === rsvpId ? { ...r, status: fresh?.status ?? "no_response" } : r)));
+    }
+    setSavingId(null);
+  }
 
   return (
     <div className="min-h-screen bg-background pb-24 text-foreground">
@@ -91,17 +123,57 @@ function ParentCampDetail() {
           {tab === "schedule" && (
             <ul className="space-y-2">
               {sessions.length === 0 && <p className="text-xs text-muted-foreground">No sessions scheduled yet.</p>}
-              {sessions.map((s, i) => (
-                <li key={s.id} className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-teal">Day {i + 1}</p>
-                    <p className="text-sm font-semibold">{fmtDate(s.session_date)}</p>
-                  </div>
-                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                    <Clock size={11} /> {s.start_time ? `${fmtTime(s.start_time)} – ${fmtTime(s.end_time)}` : "TBA"}
-                  </span>
-                </li>
-              ))}
+              {sessions.map((s, i) => {
+                const sessionRsvps = rsvps.filter((r) => r.camp_session_id === s.id);
+                return (
+                  <li key={s.id} className="rounded-2xl border border-border bg-card px-4 py-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-teal">Day {i + 1}</p>
+                        <p className="text-sm font-semibold">{fmtDate(s.session_date)}</p>
+                      </div>
+                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <Clock size={11} /> {s.start_time ? `${fmtTime(s.start_time)} – ${fmtTime(s.end_time)}` : "TBA"}
+                      </span>
+                    </div>
+                    {sessionRsvps.length > 0 && (
+                      <div className="mt-3 space-y-2 border-t border-border pt-3">
+                        {sessionRsvps.map((r) => (
+                          <div key={r.id} className="flex items-center justify-between gap-2">
+                            <p className="truncate text-xs font-semibold text-foreground">{r.athlete_name}</p>
+                            <div className="flex gap-1">
+                              <button
+                                disabled={savingId === r.id}
+                                onClick={() => setRsvpStatus(r.id, "attending")}
+                                className={
+                                  "flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold transition " +
+                                  (r.status === "attending"
+                                    ? "bg-teal text-black"
+                                    : "border border-border bg-surface text-muted-foreground")
+                                }
+                              >
+                                <Check size={10} /> Going
+                              </button>
+                              <button
+                                disabled={savingId === r.id}
+                                onClick={() => setRsvpStatus(r.id, "not_attending")}
+                                className={
+                                  "flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold transition " +
+                                  (r.status === "not_attending"
+                                    ? "bg-red-500/20 text-red-400 border border-red-500/40"
+                                    : "border border-border bg-surface text-muted-foreground")
+                                }
+                              >
+                                <X size={10} /> Not
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
 
