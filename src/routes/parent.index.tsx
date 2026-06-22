@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, MapPin, Star, MessageCircle, ChevronRight, ChevronDown, Cpu } from "lucide-react";
+import { Bell, MapPin, Star, MessageCircle, ChevronRight, ChevronDown, Cpu, Calendar, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -28,6 +28,16 @@ type Evaluation = {
   hockey_sense: number | null;
 };
 type RsvpPrompt = { id: string; child_name: string; camp_name: string; session_date: string };
+type NextSession = {
+  camp_id: string;
+  child_name: string;
+  camp_name: string;
+  session_title: string | null;
+  session_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  venue_name: string | null;
+};
 
 function ageFrom(b: string | null) {
   if (!b) return null;
@@ -60,6 +70,13 @@ function fmtDates(s: string | null, e: string | null) {
   const f = (d: string) => new Date(d + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" });
   return e && e !== s ? `${f(s)} – ${f(e)}` : f(s);
 }
+function fmtTime(t: string | null) {
+  if (!t) return null;
+  const [h, m] = t.split(":");
+  const d = new Date();
+  d.setHours(Number(h), Number(m), 0, 0);
+  return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
 
 function ParentDashboard() {
   const { user } = useAuth();
@@ -69,7 +86,7 @@ function ParentDashboard() {
   const [regCamps, setRegCamps] = useState<RegCamp[]>([]);
   const [threads, setThreads] = useState<Thread[]>([]);
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
-  const [rsvp, setRsvp] = useState<RsvpPrompt | null>(null);
+  const [rsvps, setRsvps] = useState<RsvpPrompt[]>([]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -110,7 +127,7 @@ function ParentDashboard() {
           }));
         setRegCamps(built);
 
-        // tomorrow's RSVP
+        // tomorrow's RSVPs (one per child per camp day)
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         const ymd = tomorrow.toISOString().slice(0, 10);
@@ -121,16 +138,22 @@ function ParentDashboard() {
             .select("id, registration_id, status, camp_sessions(session_date), camps(name)")
             .in("registration_id", regIds)
             .limit(20);
-          const pending = (rsvps ?? []).find((r: any) => r.camp_sessions?.session_date === ymd && r.status !== "attending" && r.status !== "not_attending");
-          if (pending) {
-            const reg = regRows.find((r) => r.id === (pending as any).registration_id);
-            setRsvp({
-              id: (pending as any).id,
+          const pending = (rsvps ?? []).filter(
+            (r: any) =>
+              r.camp_sessions?.session_date === ymd &&
+              r.status !== "attending" &&
+              r.status !== "not_attending",
+          );
+          const built: RsvpPrompt[] = pending.map((p: any) => {
+            const reg = regRows.find((r) => r.id === p.registration_id);
+            return {
+              id: p.id,
               child_name: reg ? kidMap.get(reg.attendee_id) ?? "Athlete" : "Athlete",
-              camp_name: (pending as any).camps?.name ?? "Camp",
+              camp_name: p.camps?.name ?? "Camp",
               session_date: ymd,
-            });
-          }
+            };
+          });
+          setRsvps(built);
         }
 
         // latest evaluation
@@ -204,10 +227,9 @@ function ParentDashboard() {
     })();
   }, [user?.id]);
 
-  async function respondRsvp(status: "attending" | "not_attending") {
-    if (!rsvp) return;
-    await supabase.from("daily_rsvps").update({ status, responded_at: new Date().toISOString() }).eq("id", rsvp.id);
-    setRsvp(null);
+  async function respondRsvp(id: string, status: "attending" | "not_attending") {
+    await supabase.from("daily_rsvps").update({ status, responded_at: new Date().toISOString() }).eq("id", id);
+    setRsvps((prev) => prev.filter((r) => r.id !== id));
   }
 
   const sortedCamps = useMemo(
@@ -258,12 +280,55 @@ function ParentDashboard() {
     skating: 4, puck_control: 4, shooting: 3, hockey_sense: 4,
   };
 
-  const displayRsvp: RsvpPrompt = rsvp ?? {
-    id: "mock-r1",
-    child_name: displayKids[1]?.full_name ?? displayKids[0].full_name,
-    camp_name: "Skating Power Clinic",
-    session_date: addDays(1),
-  };
+  const displayRsvps: RsvpPrompt[] = rsvps.length > 0 ? rsvps : [
+    {
+      id: "mock-r1",
+      child_name: displayKids[0].full_name,
+      camp_name: "Summer Elite Skating Camp",
+      session_date: addDays(1),
+    },
+    {
+      id: "mock-r2",
+      child_name: displayKids[1]?.full_name ?? displayKids[0].full_name,
+      camp_name: "Skating Power Clinic",
+      session_date: addDays(1),
+    },
+  ];
+
+  // Next session across all registered children — earliest upcoming camp day.
+  const nextSession: NextSession = (() => {
+    const todayYmd = ymd(today);
+    const upcoming = displayCamps
+      .filter((c) => c.camp.start_date && c.camp.start_date >= todayYmd)
+      .sort((a, b) => (a.camp.start_date ?? "").localeCompare(b.camp.start_date ?? ""))[0];
+    if (upcoming) {
+      return {
+        camp_id: upcoming.camp.id,
+        child_name: upcoming.child_name,
+        camp_name: upcoming.camp.name,
+        session_title: null,
+        session_date: upcoming.camp.start_date!,
+        start_time: "16:30",
+        end_time: "18:00",
+        venue_name: upcoming.camp.venue_name,
+      };
+    }
+    // fallback to live camp
+    const live = displayCamps.find((c) => isLive(c.camp.start_date, c.camp.end_date));
+    return {
+      camp_id: live?.camp.id ?? displayCamps[0].camp.id,
+      child_name: live?.child_name ?? displayCamps[0].child_name,
+      camp_name: live?.camp.name ?? displayCamps[0].camp.name,
+      session_title: "Edge Work & Power Skating",
+      session_date: ymd(today),
+      start_time: "16:30",
+      end_time: "18:00",
+      venue_name: live?.camp.venue_name ?? displayCamps[0].camp.venue_name,
+    };
+  })();
+  const nextSessionDays = daysUntil(nextSession.session_date);
+  const nextSessionLabel =
+    nextSessionDays === 0 ? "TODAY" : nextSessionDays === 1 ? "TOMORROW" : new Date(nextSession.session_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 
   return (
     <div className="min-h-screen bg-background px-5 pt-5 pb-24 text-foreground">
@@ -349,15 +414,62 @@ function ParentDashboard() {
       </section>
 
       {/* RSVP prompt */}
-      {displayRsvp && (
-        <section className="mt-6">
-          <div className="rounded-2xl border border-teal/40 bg-teal/10 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-[2px] text-teal">Tomorrow's RSVP</p>
-            <p className="mt-1 text-sm font-semibold">Is {displayRsvp.child_name} attending {displayRsvp.camp_name} tomorrow?</p>
-            <div className="mt-3 flex gap-2">
-              <button onClick={() => respondRsvp("attending")} className="flex-1 rounded-full bg-teal py-2 text-xs font-bold text-background">Attending</button>
-              <button onClick={() => respondRsvp("not_attending")} className="flex-1 rounded-full border border-border py-2 text-xs font-bold text-foreground">Not Attending</button>
+      {/* Next Session */}
+      <section className="mt-6">
+        <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Next Session</h2>
+        <Link
+          to="/parent/camp/$campId"
+          params={{ campId: nextSession.camp_id }}
+          className="mt-2 block rounded-2xl border border-border bg-card p-4"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-[2px] text-teal">{nextSession.child_name}</p>
+              <p className="mt-0.5 truncate text-sm font-semibold">{nextSession.camp_name}</p>
+              {nextSession.session_title && (
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">{nextSession.session_title}</p>
+              )}
             </div>
+            <span className={"whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold " + (nextSessionDays != null && nextSessionDays <= 1 ? "bg-teal/15 text-teal" : "bg-surface text-foreground border border-border")}>
+              {nextSessionLabel}
+            </span>
+          </div>
+          <div className="mt-3 grid grid-cols-1 gap-1.5 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <Calendar size={11} />
+              {new Date(nextSession.session_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
+            </span>
+            {(nextSession.start_time || nextSession.end_time) && (
+              <span className="flex items-center gap-1.5">
+                <Clock size={11} />
+                {[fmtTime(nextSession.start_time), fmtTime(nextSession.end_time)].filter(Boolean).join(" – ")}
+              </span>
+            )}
+            {nextSession.venue_name && (
+              <span className="flex items-center gap-1.5">
+                <MapPin size={11} />
+                {nextSession.venue_name}
+              </span>
+            )}
+          </div>
+        </Link>
+      </section>
+
+      {/* Tomorrow's RSVPs — one card per child per camp day */}
+      {displayRsvps.length > 0 && (
+        <section className="mt-6">
+          <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Tomorrow's RSVP</h2>
+          <div className="mt-2 space-y-2">
+            {displayRsvps.map((r) => (
+              <div key={r.id} className="rounded-2xl border border-teal/40 bg-teal/10 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[2px] text-teal">{r.child_name}</p>
+                <p className="mt-1 text-sm font-semibold">Is {r.child_name} attending {r.camp_name} tomorrow?</p>
+                <div className="mt-3 flex gap-2">
+                  <button onClick={() => respondRsvp(r.id, "attending")} className="flex-1 rounded-full bg-teal py-2 text-xs font-bold text-background">Attending</button>
+                  <button onClick={() => respondRsvp(r.id, "not_attending")} className="flex-1 rounded-full border border-border py-2 text-xs font-bold text-foreground">Not Attending</button>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
       )}
