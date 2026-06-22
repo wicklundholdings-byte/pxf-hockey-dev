@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Settings, LogOut, CreditCard, BookOpen, Pencil, Plus, ChevronRight, ShieldCheck } from "lucide-react";
 import { ChildrenManager } from "@/components/children-manager";
@@ -23,6 +23,7 @@ function initials(name: string) {
 
 function ParentProfile() {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [kids, setKids] = useState<Kid[]>([]);
   const [showManager, setShowManager] = useState(false);
 
@@ -125,7 +126,8 @@ function ParentProfile() {
       </section>
 
       <button
-        onClick={() => signOut()}
+        type="button"
+        onClick={async () => { await signOut(); navigate({ to: "/auth", search: { mode: "login" } }); }}
         className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm font-bold text-destructive"
       >
         <LogOut size={16} /> Sign Out
