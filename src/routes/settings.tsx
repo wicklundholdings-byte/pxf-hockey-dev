@@ -46,20 +46,20 @@ function Field({ label, ...props }: { label: string } & React.InputHTMLAttribute
   );
 }
 
-function ParentSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["user"]; signOut: () => Promise<void> }) {
+function ParentSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["user"]; signOut: () => Promise<{ error: import("@supabase/supabase-js").AuthError | null }> }) {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<{ full_name: string | null; phone: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ full_name: string | null } | null>(null);
   const [prefs, setPrefs] = useState<Record<string, boolean>>({ remind: true, msg: true, eval: true, rsvp: true });
 
   useEffect(() => {
     if (!user?.id) return;
-    supabase.from("profiles").select("full_name,phone").eq("id", user.id).maybeSingle().then(({ data }) => {
+    supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle().then(({ data }) => {
       setProfile(data ?? null);
     });
   }, [user?.id]);
 
   const name = profile?.full_name ?? user?.user_metadata?.full_name ?? user?.email?.split("@")[0] ?? "Parent";
-  const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
+  const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join("");
 
   const parentNav = [
     { to: "/parent", label: "Dashboard", icon: LayoutDashboard, exact: true },
