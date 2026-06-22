@@ -32,7 +32,6 @@ export function useCoachVerified(userId: string | null | undefined) {
     if (!userId) { setVerified(false); return; }
     let cancelled = false;
     supabase
-      // @ts-expect-error - table types regenerate after migration
       .from("coach_verifications")
       .select("status, expires_at")
       .eq("user_id", userId)
