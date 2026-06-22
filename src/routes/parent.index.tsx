@@ -94,6 +94,8 @@ function ParentDashboard() {
       const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
       setParentName(prof?.full_name ?? user.email?.split("@")[0] ?? "Parent");
 
+      const parentEmail = user.email ?? "";
+
       const { data: kidsRows } = await supabase
         .from("attendees")
         .select("id, full_name, birthday, position, skill_level")
@@ -101,28 +103,40 @@ function ParentDashboard() {
         .order("created_at");
       const kidList = (kidsRows ?? []) as Kid[];
       setKids(kidList);
-      const kidIds = kidList.map((k) => k.id);
 
-      if (kidIds.length) {
+      // Look up registrations made via the public booking flow: those
+      // attach to coach-side contact/attendee rows keyed by the parent's
+      // email, NOT the parent's own attendee ids.
+      const { data: contactRows } = await supabase
+        .from("contacts")
+        .select("id")
+        .eq("email", parentEmail);
+      const contactIds = (contactRows ?? []).map((c) => c.id);
+
+      if (contactIds.length) {
         const { data: regs } = await supabase
           .from("registrations")
-          .select("id, attendee_id, status, camps(id, name, start_date, end_date, venue_name, owner_id)")
-          .in("attendee_id", kidIds)
+          .select("id, attendee_id, status, camps(id, name, start_date, end_date, venue_name, owner_id), attendees(full_name)")
+          .in("contact_id", contactIds)
           .in("status", ["paid", "pending"]);
-        const regRows = (regs ?? []) as unknown as Array<{ id: string; attendee_id: string; camps: RegCamp["camp"] | null }>;
+        const regRows = (regs ?? []) as unknown as Array<{
+          id: string;
+          attendee_id: string;
+          camps: RegCamp["camp"] | null;
+          attendees: { full_name: string } | null;
+        }>;
         const coachIds = Array.from(new Set(regRows.map((r) => r.camps?.owner_id).filter(Boolean) as string[]));
         const coachMap = new Map<string, string>();
         if (coachIds.length) {
           const { data: coaches } = await supabase.from("profiles").select("id, full_name").in("id", coachIds);
           (coaches ?? []).forEach((c) => coachMap.set(c.id, c.full_name ?? "Coach"));
         }
-        const kidMap = new Map(kidList.map((k) => [k.id, k.full_name]));
         const built: RegCamp[] = regRows
           .filter((r) => r.camps)
           .map((r) => ({
             reg_id: r.id,
             camp: r.camps!,
-            child_name: kidMap.get(r.attendee_id) ?? "Athlete",
+            child_name: r.attendees?.full_name ?? "Athlete",
             coach_name: r.camps?.owner_id ? coachMap.get(r.camps.owner_id) ?? null : null,
           }));
         setRegCamps(built);
@@ -148,7 +162,7 @@ function ParentDashboard() {
             const reg = regRows.find((r) => r.id === p.registration_id);
             return {
               id: p.id,
-              child_name: reg ? kidMap.get(reg.attendee_id) ?? "Athlete" : "Athlete",
+              child_name: reg?.attendees?.full_name ?? "Athlete",
               camp_name: p.camps?.name ?? "Camp",
               session_date: ymd,
             };
@@ -159,16 +173,15 @@ function ParentDashboard() {
         // latest evaluation
         const { data: evals } = await supabase
           .from("evaluations")
-          .select("id, skating, puck_control, shooting, hockey_sense, created_at, registrations!inner(attendee_id, camps(name, owner_id))")
-          .in("registrations.attendee_id", kidIds)
+          .select("id, skating, puck_control, shooting, hockey_sense, created_at, registrations!inner(attendee_id, attendees(full_name), camps(name, owner_id))")
+          .in("registrations.contact_id", contactIds)
           .order("created_at", { ascending: false })
           .limit(1);
         const ev: any = (evals ?? [])[0];
         if (ev) {
-          const reg = regRows.find((r) => r.attendee_id === ev.registrations?.attendee_id);
           setEvaluation({
             id: ev.id,
-            child_name: reg ? kidMap.get(reg.attendee_id) ?? "Athlete" : "Athlete",
+            child_name: ev.registrations?.attendees?.full_name ?? "Athlete",
             camp_name: ev.registrations?.camps?.name ?? null,
             coach_name: ev.registrations?.camps?.owner_id ? coachMap.get(ev.registrations.camps.owner_id) ?? null : null,
             skating: ev.skating,
