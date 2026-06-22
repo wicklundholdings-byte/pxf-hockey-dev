@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, MapPin, Award, Star, Calendar, MessageCircle, BadgeCheck } from "lucide-react";
+import { ArrowLeft, MapPin, Award, Star, Calendar, MessageCircle } from "lucide-react";
+import { VerifiedBadge } from "@/components/verified-badge";
 
 export const Route = createFileRoute("/coaches/$slug")({
   head: () => ({
@@ -46,7 +47,7 @@ function CoachPublicProfile() {
             <div className="flex-1 pb-1">
               <div className="flex items-center gap-1.5">
                 <h1 className="font-display text-xl font-bold text-foreground">{coach.name}</h1>
-                <BadgeCheck size={16} className="text-teal" />
+                <VerifiedBadge size="xs" />
               </div>
               <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
                 <MapPin size={11}/> {coach.location} · @{slug}
