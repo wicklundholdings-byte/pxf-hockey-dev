@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link, useSearch } from "@tanstack/react-r
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PxfLogo } from "@/components/app-shell";
-import { Users, Whistle } from "lucide-react";
+import { Users } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({
