@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { Home, Dumbbell, CalendarDays, User, Bell, Shield } from "lucide-react";
+import { Home, Dumbbell, CalendarDays, User, Bell } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 import { useAuth, useHasCoachAccess } from "@/hooks/use-auth";
 
