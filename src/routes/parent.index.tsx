@@ -33,21 +33,27 @@ function ParentHome() {
   const [myCamps, setMyCamps] = useState<Array<{ id: string; name: string; start_date: string | null; end_date: string | null; venue_name: string | null }>>([]);
 
   useEffect(() => {
-    if (!user?.email) return;
+    if (!user?.id) return;
     (async () => {
+      const { data: kids } = await supabase
+        .from("attendees")
+        .select("id")
+        .eq("owner_id", user.id);
+      const ids = (kids ?? []).map((k) => k.id);
+      if (ids.length === 0) return setMyCamps([]);
       const { data: regs } = await supabase
         .from("registrations")
-        .select("camp_id, camps(id, name, start_date, end_date, venue_name)")
-        .eq("status", "paid");
+        .select("camp_id, status, camps(id, name, start_date, end_date, venue_name)")
+        .in("attendee_id", ids)
+        .in("status", ["paid", "pending"]);
       const camps = (regs ?? [])
         .map((r) => (r as unknown as { camps: { id: string; name: string; start_date: string | null; end_date: string | null; venue_name: string | null } }).camps)
         .filter(Boolean);
-      // Deduplicate
       const seen = new Set<string>();
       const unique = camps.filter((c) => (c && !seen.has(c.id) ? (seen.add(c.id), true) : false));
       setMyCamps(unique);
     })();
-  }, [user?.email]);
+  }, [user?.id]);
 
   function daysUntil(d: string | null) {
     if (!d) return null;
