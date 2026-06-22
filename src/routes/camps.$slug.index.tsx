@@ -2,6 +2,7 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getPublicCamp } from "@/lib/camps-public.functions";
 import { CalendarDays, MapPin, Clock, Users, Share2, ChevronRight, Loader2, Shield } from "lucide-react";
+import { VerifiedBadge, useCoachVerified } from "@/components/verified-badge";
 
 export const Route = createFileRoute("/camps/$slug/")({
   loader: ({ params }) => getPublicCamp({ data: { slug: params.slug } }),
@@ -50,6 +51,7 @@ function CampPublicPage() {
   const { slug } = useParams({ from: "/camps/$slug/" });
   const { camp, sessions, paidCount } = Route.useLoaderData();
   const [shared, setShared] = useState(false);
+  const coachVerified = useCoachVerified((camp as { owner_id?: string } | null)?.owner_id ?? null);
 
   if (!camp) {
     return (
@@ -105,7 +107,10 @@ function CampPublicPage() {
               <Shield size={10} /> LIVE
             </span>
             <h1 className="mt-2 font-display text-3xl font-bold leading-tight text-white drop-shadow">{camp.name}</h1>
-            <p className="mt-1 text-xs text-white/85">Hosted by your coach</p>
+            <div className="mt-1 flex items-center gap-2 text-xs text-white/85">
+              <span>Hosted by your coach</span>
+              {coachVerified && <VerifiedBadge size="xs" />}
+            </div>
           </div>
         </div>
       </section>
