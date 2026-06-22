@@ -290,20 +290,21 @@ function Section({ title, count, children }: { title: string; count: number; chi
 
 function Row({
   m,
-  assignmentsCount,
+  assignedCamps,
   onActivate,
   onRemove,
   onPermission,
   onAssign,
 }: {
   m: Member;
-  assignmentsCount: number;
+  assignedCamps: Camp[];
   onActivate?: () => void;
   onRemove: () => void;
   onPermission: (id: string, level: "coach" | "assistant") => void;
   onAssign: () => void;
 }) {
   const initials = m.email.slice(0, 2).toUpperCase();
+  const campsLabel = assignedCamps.length > 0 ? assignedCamps.map((c) => c.name).join(", ") : "No camps assigned";
   return (
     <div className="space-y-2 rounded-2xl border border-border/60 bg-surface p-3">
       <div className="flex items-center gap-3">
@@ -362,8 +363,11 @@ function Row({
             </button>
           ))}
         </div>
-        <button onClick={onAssign} className="ml-auto flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-[10px] font-bold text-foreground">
-          <CalendarDays size={10} /> {assignmentsCount} {assignmentsCount === 1 ? "camp" : "camps"}
+        <p className="min-w-0 flex-1 truncate text-[10px] text-muted-foreground" title={campsLabel}>
+          {campsLabel}
+        </p>
+        <button onClick={onAssign} className="flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-[10px] font-bold text-foreground">
+          <CalendarDays size={10} /> Assign to Camp
         </button>
       </div>
     </div>
