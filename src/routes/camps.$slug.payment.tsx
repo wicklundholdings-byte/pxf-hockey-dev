@@ -45,6 +45,7 @@ function PaymentScreen() {
   const [checkingCoupon, setCheckingCoupon] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -62,10 +63,11 @@ function PaymentScreen() {
   // Guard: must have draft data
   useEffect(() => {
     if (!hydrated) return;
+    if (submitted) return;
     if (!draft.child.full_name || !draft.parent.email) {
       navigate({ to: "/camps/$slug/register", params: { slug }, replace: true });
     }
-  }, [hydrated, draft.child.full_name, draft.parent.email, navigate, slug]);
+  }, [hydrated, submitted, draft.child.full_name, draft.parent.email, navigate, slug]);
 
   if (loading || !camp || !hydrated) {
     return (
@@ -132,7 +134,7 @@ function PaymentScreen() {
             : null,
         },
       });
-      clear();
+      setSubmitted(true);
       navigate({
         to: "/camps/$slug/confirmed",
         params: { slug },
@@ -142,6 +144,7 @@ function PaymentScreen() {
           plan: draft.paymentPlan,
         },
       });
+      clear();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Payment failed");
     } finally {
