@@ -48,12 +48,8 @@ function AuthPage() {
         if (error) throw error;
         // If they signed up as a coach, immediately grant the admin role and
         // send them straight to the coach console.
-        if (role === "coach") {
-          const { data: sess } = await supabase.auth.getSession();
-          const uid = sess.session?.user?.id;
-          if (uid) {
-            await supabase.from("user_roles").insert({ user_id: uid, role: "admin" }).then(() => {}, () => {});
-          }
+          if (role === "coach") {
+            await supabase.rpc("claim_coach_role").then(() => {}, () => {});
           navigate({ to: "/coach" });
           return;
         }

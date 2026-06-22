@@ -27,10 +27,12 @@ export const listLiveCamps = createServerFn({ method: "GET" })
     const supabase = publicClient();
     // Only show camps from coaches who opted into the public marketplace.
     const { data: visibleCoaches } = await supabase
-      .from("profiles")
+      .from("public_marketplace_profiles")
       .select("id, full_name")
       .eq("marketplace_visible", true);
-    const visibleIds = (visibleCoaches ?? []).map((p) => p.id);
+    const visibleIds = (visibleCoaches ?? [])
+      .map((p) => p.id)
+      .filter((id): id is string => !!id);
     if (visibleIds.length === 0) {
       return { camps: [], coaches: {} as Record<string, string>, error: null as string | null };
     }
@@ -57,7 +59,9 @@ export const listLiveCamps = createServerFn({ method: "GET" })
     const { data: camps, error } = await query;
     if (error) return { camps: [], coaches: {}, error: "Unavailable" };
     const coachMap: Record<string, string> = {};
-    for (const c of visibleCoaches ?? []) coachMap[c.id] = c.full_name ?? "PXF Coach";
+    for (const c of visibleCoaches ?? []) {
+      if (c.id) coachMap[c.id] = c.full_name ?? "PXF Coach";
+    }
     return { camps: camps ?? [], coaches: coachMap, error: null as string | null };
   });
 
@@ -66,27 +70,23 @@ export const getPublicCoachProfile = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const supabase = publicClient();
     const { data: profile } = await supabase
-      .from("profiles")
+      .from("public_marketplace_profiles")
       .select("id, full_name, bio, city, slug, marketplace_visible")
       .or(`slug.eq.${data.slug},id.eq.${data.slug}`)
       .eq("marketplace_visible", true)
       .maybeSingle();
-    if (!profile) return { profile: null, camps: [], verified: false };
-    const [{ data: camps }, { data: verif }] = await Promise.all([
+    if (!profile || !profile.id) return { profile: null, camps: [], verified: false };
+    const profileId = profile.id;
+    const [{ data: camps }, { data: verifiedFlag }] = await Promise.all([
       supabase
         .from("camps")
         .select("id, name, slug, start_date, end_date, price_cents, capacity, venue_name, city")
-        .eq("owner_id", profile.id)
+        .eq("owner_id", profileId)
         .eq("status", "live")
         .order("start_date", { ascending: true }),
-      supabase
-        .from("coach_verifications")
-        .select("status, expires_at")
-        .eq("user_id", profile.id)
-        .eq("status", "approved")
-        .maybeSingle(),
+      supabase.rpc("is_coach_verified", { _user_id: profileId }),
     ]);
-    const verified = !!verif && (!verif.expires_at || new Date(verif.expires_at) > new Date());
+    const verified = verifiedFlag === true;
     return { profile, camps: camps ?? [], verified };
   });
 
