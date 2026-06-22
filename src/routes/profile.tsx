@@ -135,11 +135,9 @@ function Profile() {
           onClick={async () => {
             if (!user) return;
             setPromoting(true);
-            const { error } = await supabase
-              .from("user_roles")
-              .insert({ user_id: user.id, role: "admin" });
+            const { error } = await supabase.rpc("claim_coach_role");
             setPromoting(false);
-            if (error && !String(error.message).includes("duplicate")) {
+            if (error) {
               alert("Failed: " + error.message);
               return;
             }
