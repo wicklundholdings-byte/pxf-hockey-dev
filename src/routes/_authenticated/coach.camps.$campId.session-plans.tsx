@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, PlayCircle, Plus, X, Check, Lock, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ApplyCampTemplate } from "@/components/coach/apply-camp-template";
+import { ApplySessionSeries } from "@/components/coach/apply-session-series";
+import { readAppliedSeries, writeAppliedSeries, sigOf, type AppliedSeries } from "@/lib/session-series";
 import {
   SessionRunner,
   SessionSummary,
@@ -53,6 +55,9 @@ function SessionPlansPage() {
   const [pickerFor, setPickerFor] = useState<string | null>(null);
   const [runningSessionId, setRunningSessionId] = useState<string | null>(null);
   const [summary, setSummary] = useState<{ sessionId: string; rec: SessionRunRecord } | null>(null);
+  const [dragMode, setDragMode] = useState(false);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [syncPrompt, setSyncPrompt] = useState<{ applied: AppliedSeries; changed: { campSessionId: string; sourceSessionId: string; dayIndex: number }[] } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -70,6 +75,67 @@ function SessionPlansPage() {
       if (raw) setAssignments(JSON.parse(raw));
     } catch { /* ignore */ }
   }, [campId, planKey]);
+
+  // Detect series source-session edits since apply, and prompt to re-sync.
+  useEffect(() => {
+    const applied = readAppliedSeries(campId);
+    if (!applied) return;
+    const lib = readSavedSessions();
+    const changed: { campSessionId: string; sourceSessionId: string; dayIndex: number }[] = [];
+    applied.mapping.forEach((m, i) => {
+      const src = lib.find((l) => l.id === m.sourceSessionId);
+      if (!src) return;
+      if (sigOf(src) !== m.sourceSig) changed.push({ campSessionId: m.campSessionId, sourceSessionId: m.sourceSessionId, dayIndex: i });
+    });
+    if (changed.length > 0) setSyncPrompt({ applied, changed });
+  }, [campId, library.length]);
+
+  function applySyncUpdates() {
+    if (!syncPrompt) return;
+    const lib = readSavedSessions();
+    const libById = new Map(lib.map((s) => [s.id, s]));
+    const nextAssignments = { ...assignments };
+    const nextMapping = [...syncPrompt.applied.mapping];
+    syncPrompt.changed.forEach((c) => {
+      const src = libById.get(c.sourceSessionId);
+      if (!src) return;
+      const newId = `s-${Date.now()}-${Math.random().toString(36).slice(2, 6)}-r${c.dayIndex}`;
+      libById.set(newId, { ...src, id: newId });
+      nextAssignments[c.campSessionId] = newId;
+      nextMapping[c.dayIndex] = { ...nextMapping[c.dayIndex], snapshotSessionId: newId, sourceSig: sigOf(src) };
+    });
+    window.localStorage.setItem("pxf:sessions:v2", JSON.stringify(Array.from(libById.values())));
+    window.dispatchEvent(new CustomEvent("pxf:sessions-changed"));
+    window.localStorage.setItem(planKey, JSON.stringify(nextAssignments));
+    writeAppliedSeries(campId, { ...syncPrompt.applied, mapping: nextMapping });
+    setAssignments(nextAssignments);
+    setLibrary(Array.from(libById.values()));
+    setSyncPrompt(null);
+  }
+
+  function dismissSync() {
+    if (!syncPrompt) return;
+    // Acknowledge current sigs so we don't re-prompt for the same change.
+    const lib = readSavedSessions();
+    const nextMapping = syncPrompt.applied.mapping.map((m) => {
+      const src = lib.find((l) => l.id === m.sourceSessionId);
+      return src ? { ...m, sourceSig: sigOf(src) } : m;
+    });
+    writeAppliedSeries(campId, { ...syncPrompt.applied, mapping: nextMapping });
+    setSyncPrompt(null);
+  }
+
+  function reorder(fromCampId: string, toCampId: string) {
+    if (fromCampId === toCampId) return;
+    const fromAssign = assignments[fromCampId] ?? null;
+    const toAssign = assignments[toCampId] ?? null;
+    const next = { ...assignments };
+    if (fromAssign) next[toCampId] = fromAssign; else delete next[toCampId];
+    if (toAssign) next[fromCampId] = toAssign; else delete next[fromCampId];
+    setAssignments(next);
+    window.localStorage.setItem(planKey, JSON.stringify(next));
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(10);
+  }
 
   function assign(sessionId: string, savedId: string | null) {
     const next = { ...assignments };
@@ -128,6 +194,33 @@ function SessionPlansPage() {
             }}
           />
 
+          <ApplySessionSeries
+            campId={campId}
+            campSessions={sessions.map((s) => ({ id: s.id }))}
+            planKey={planKey}
+            onApplied={() => {
+              try {
+                const raw = window.localStorage.getItem(planKey);
+                if (raw) setAssignments(JSON.parse(raw));
+                setLibrary(readSavedSessions());
+              } catch { /* ignore */ }
+            }}
+          />
+
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Day Strip</p>
+            <button
+              onClick={() => {
+                const next = !dragMode;
+                setDragMode(next);
+                if (next && typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(15);
+              }}
+              className={"rounded-full border px-2.5 py-1 text-[10px] font-bold " + (dragMode ? "border-teal bg-teal text-background" : "border-border bg-surface text-muted-foreground")}
+            >
+              {dragMode ? "Done reordering" : "Reorder"}
+            </button>
+          </div>
+
           <div className="-mx-5 overflow-x-auto px-5">
             <div className="flex gap-2">
               {sessions.map((s, i) => {
@@ -143,11 +236,18 @@ function SessionPlansPage() {
                     ? "border-teal bg-teal/10"
                     : "border-border bg-card opacity-60";
                 const ringIfOpen = isOpen ? " ring-2 ring-teal/60" : "";
+                const dragRing = dragMode ? " ring-1 ring-dashed ring-teal/40 animate-pulse" : "";
+                const beingDragged = draggingId === s.id ? " opacity-50" : "";
                 return (
                   <button
                     key={s.id}
-                    onClick={() => setExpanded(isOpen ? null : s.id)}
-                    className={"relative flex w-32 shrink-0 flex-col gap-1 rounded-2xl border p-3 text-left transition-colors " + baseBorder + ringIfOpen}
+                    onClick={() => { if (!dragMode) setExpanded(isOpen ? null : s.id); }}
+                    draggable={dragMode}
+                    onDragStart={() => { if (dragMode) setDraggingId(s.id); }}
+                    onDragEnd={() => setDraggingId(null)}
+                    onDragOver={(e) => { if (dragMode && draggingId && draggingId !== s.id) e.preventDefault(); }}
+                    onDrop={(e) => { e.preventDefault(); if (dragMode && draggingId) { reorder(draggingId, s.id); setDraggingId(null); } }}
+                    className={"relative flex w-32 shrink-0 flex-col gap-1 rounded-2xl border p-3 text-left transition-colors " + baseBorder + ringIfOpen + dragRing + beingDragged}
                   >
                     <div className="flex items-center justify-between">
                       <p className={"text-[10px] font-bold uppercase tracking-wider " + (state === "completed" ? "text-emerald-400" : state === "active" ? "text-teal" : "text-muted-foreground")}>
@@ -329,6 +429,25 @@ function SessionPlansPage() {
           />
         );
       })()}
+
+      {syncPrompt && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4" onClick={dismissSync}>
+          <div className="w-full max-w-md rounded-2xl border border-teal/40 bg-card p-4" onClick={(e) => e.stopPropagation()}>
+            <p className="text-[10px] font-bold tracking-[0.3em] text-teal">SERIES UPDATED</p>
+            <h3 className="mt-1 text-sm font-bold text-foreground">"{syncPrompt.applied.seriesName}" has changes</h3>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {syncPrompt.changed.length === 1
+                ? `Session ${syncPrompt.changed[0].dayIndex + 1} in your series was updated.`
+                : `${syncPrompt.changed.length} sessions in your series were updated.`}
+              {" "}Apply changes to this camp?
+            </p>
+            <div className="mt-3 flex gap-2">
+              <button onClick={dismissSync} className="flex-1 rounded-xl border border-border bg-surface py-2.5 text-[12px] font-bold text-foreground">Keep current</button>
+              <button onClick={applySyncUpdates} className="flex-[1.4] rounded-xl bg-gradient-brand py-2.5 text-[12px] font-bold text-primary-foreground shadow-glow-teal">Apply updates</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
