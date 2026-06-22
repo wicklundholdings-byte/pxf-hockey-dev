@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare } from "lucide-react";
+import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare, LogOut } from "lucide-react";
 import { LayoutDashboard, CalendarDays, BookOpen, MessageSquare as InboxIcon, Users } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { useAuth, useHasCoachAccess } from "@/hooks/use-auth";
+import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings — PXF Hockey" }] }),
@@ -40,6 +41,8 @@ function SettingsScreen() {
   const [prefs, setPrefs] = useState<Record<string, boolean>>({ reg: true, msg: true, remind: true, wait: false, pay: true });
   const { user } = useAuth();
   const { hasAccess } = useHasCoachAccess(user?.id);
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
   const coachNav = [
     { to: "/coach", label: "Dashboard", icon: LayoutDashboard, exact: true, match: ["/coach"] },
     { to: "/coach/camps", label: "Events", icon: CalendarDays, match: ["/coach/camps", "/coach/bookings"] },
@@ -188,6 +191,13 @@ function SettingsScreen() {
             <button className="mt-3 rounded-lg border border-destructive bg-destructive/10 px-4 py-2 text-xs font-bold text-destructive">Delete Account</button>
           </div>
         </Section>
+
+        <button
+          onClick={async () => { await signOut(); navigate({ to: "/auth", search: { mode: "login" } }); }}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card p-3 text-sm font-semibold text-destructive"
+        >
+          <LogOut size={14} /> Sign out
+        </button>
       </div>
       {hasAccess && <BottomNav items={coachNav} />}
     </div>
