@@ -70,7 +70,7 @@ export function PlaybookSessions() {
         <button onClick={() => setShowFolders(true)} className="rounded-full border border-border bg-surface p-2 text-muted-foreground" aria-label="Manage folders">
           <FolderIcon size={14} />
         </button>
-        <Link to="/drill-builder" className="flex items-center gap-1 rounded-full bg-teal px-3 py-1.5 text-[11px] font-bold text-black">
+        <Link to="/sessions" className="flex items-center gap-1 rounded-full bg-teal px-3 py-1.5 text-[11px] font-bold text-black">
           <Plus size={12} /> New
         </Link>
       </div>
@@ -79,7 +79,7 @@ export function PlaybookSessions() {
         <div className="mt-6 rounded-2xl border border-dashed border-border bg-surface/40 p-6 text-center">
           <p className="text-sm font-semibold text-foreground">No sessions yet</p>
           <p className="mt-1 text-xs text-muted-foreground">Build a session to add it here.</p>
-          <Link to="/drill-builder" className="mt-3 inline-flex items-center gap-1 rounded-full bg-teal px-4 py-1.5 text-[11px] font-bold text-black">
+          <Link to="/sessions" className="mt-3 inline-flex items-center gap-1 rounded-full bg-teal px-4 py-1.5 text-[11px] font-bold text-black">
             <Plus size={12} /> Build session
           </Link>
         </div>
