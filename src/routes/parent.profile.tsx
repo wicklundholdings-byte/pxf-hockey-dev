@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Settings, LogOut, CreditCard, BookOpen, Pencil, Plus, ChevronRight, ShieldCheck } from "lucide-react";
 import { ChildrenManager } from "@/components/children-manager";
