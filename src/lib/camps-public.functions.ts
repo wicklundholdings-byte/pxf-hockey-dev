@@ -15,7 +15,7 @@ export const listLiveCamps = createServerFn({ method: "GET" }).handler(async () 
   const supabase = publicClient();
   const { data, error } = await supabase
     .from("camps")
-    .select("id, name, slug, hero_image, venue_name, location_type, start_date, end_date, price_cents, capacity")
+    .select("id, name, slug, owner_id, hero_image, venue_name, location_type, start_date, end_date, price_cents, capacity")
     .eq("status", "live")
     .order("start_date", { ascending: true })
     .limit(60);
@@ -30,7 +30,7 @@ export const getPublicCamp = createServerFn({ method: "GET" })
     const { data: camp } = await supabase
       .from("camps")
       .select(
-        "id, name, slug, description, hero_image, venue_name, address, location_type, start_date, end_date, start_time, end_time, price_cents, early_bird_price_cents, early_bird_expires_at, capacity, show_remaining, waiver_required, waiver_text, payment_plan, sibling_discount, sibling_discount_percent",
+        "id, name, slug, owner_id, description, hero_image, venue_name, address, location_type, start_date, end_date, start_time, end_time, price_cents, early_bird_price_cents, early_bird_expires_at, capacity, show_remaining, waiver_required, waiver_text, payment_plan, sibling_discount, sibling_discount_percent",
       )
       .eq("slug", data.slug)
       .eq("status", "live")
