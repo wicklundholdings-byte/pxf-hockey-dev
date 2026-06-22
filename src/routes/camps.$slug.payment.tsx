@@ -83,8 +83,11 @@ function PaymentScreen() {
     camp.early_bird_price_cents != null &&
     camp.early_bird_expires_at != null &&
     new Date(camp.early_bird_expires_at) > new Date();
-  const priceCents = earlyBird ? camp.early_bird_price_cents! : camp.price_cents;
-  const totalCents = coupon?.finalCents ?? priceCents;
+  const attendeeCount = Math.max(1, draft.children.length);
+  const perAthlete = earlyBird ? camp.early_bird_price_cents! : camp.price_cents;
+  const priceCents = perAthlete * attendeeCount;
+  const couponFinal = coupon != null ? coupon.finalCents * attendeeCount : null;
+  const totalCents = couponFinal ?? priceCents;
   const depositCents = camp.payment_plan === "two" ? Math.round(totalCents * 0.25) : Math.round(totalCents / 3);
 
   async function applyCoupon() {
