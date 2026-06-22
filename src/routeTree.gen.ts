@@ -40,6 +40,7 @@ import { Route as OnboardingIndexRouteImport } from './routes/onboarding.index'
 import { Route as CampsIndexRouteImport } from './routes/camps.index'
 import { Route as StoreCartRouteImport } from './routes/store.cart'
 import { Route as StoreProductIdRouteImport } from './routes/store.$productId'
+import { Route as SettingsVerificationRouteImport } from './routes/settings.verification'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
 import { Route as RsvpTokenRouteImport } from './routes/rsvp.$token'
 import { Route as PaymentsSubscribeRouteImport } from './routes/payments.subscribe'
@@ -262,6 +263,11 @@ const StoreProductIdRoute = StoreProductIdRouteImport.update({
   id: '/store/$productId',
   path: '/store/$productId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsVerificationRoute = SettingsVerificationRouteImport.update({
+  id: '/verification',
+  path: '/verification',
+  getParentRoute: () => SettingsRoute,
 } as any)
 const SessionDetailSessionIdRoute = SessionDetailSessionIdRouteImport.update({
   id: '/session-detail/$sessionId',
@@ -657,7 +663,7 @@ export interface FileRoutesByFullPath {
   '/saved-sessions': typeof SavedSessionsRoute
   '/search': typeof SearchRoute
   '/sessions': typeof SessionsRoute
-  '/settings': typeof SettingsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
   '/welcome': typeof WelcomeRoute
@@ -685,6 +691,7 @@ export interface FileRoutesByFullPath {
   '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
+  '/settings/verification': typeof SettingsVerificationRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
   '/camps/': typeof CampsIndexRoute
@@ -755,7 +762,7 @@ export interface FileRoutesByTo {
   '/saved-sessions': typeof SavedSessionsRoute
   '/search': typeof SearchRoute
   '/sessions': typeof SessionsRoute
-  '/settings': typeof SettingsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
   '/welcome': typeof WelcomeRoute
@@ -780,6 +787,7 @@ export interface FileRoutesByTo {
   '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
+  '/settings/verification': typeof SettingsVerificationRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
   '/camps': typeof CampsIndexRoute
@@ -854,7 +862,7 @@ export interface FileRoutesById {
   '/saved-sessions': typeof SavedSessionsRoute
   '/search': typeof SearchRoute
   '/sessions': typeof SessionsRoute
-  '/settings': typeof SettingsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
   '/welcome': typeof WelcomeRoute
@@ -882,6 +890,7 @@ export interface FileRoutesById {
   '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
+  '/settings/verification': typeof SettingsVerificationRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
   '/camps/': typeof CampsIndexRoute
@@ -984,6 +993,7 @@ export interface FileRouteTypes {
     | '/payments/subscribe'
     | '/rsvp/$token'
     | '/session-detail/$sessionId'
+    | '/settings/verification'
     | '/store/$productId'
     | '/store/cart'
     | '/camps/'
@@ -1079,6 +1089,7 @@ export interface FileRouteTypes {
     | '/payments/subscribe'
     | '/rsvp/$token'
     | '/session-detail/$sessionId'
+    | '/settings/verification'
     | '/store/$productId'
     | '/store/cart'
     | '/camps'
@@ -1180,6 +1191,7 @@ export interface FileRouteTypes {
     | '/payments/subscribe'
     | '/rsvp/$token'
     | '/session-detail/$sessionId'
+    | '/settings/verification'
     | '/store/$productId'
     | '/store/cart'
     | '/camps/'
@@ -1254,7 +1266,7 @@ export interface RootRouteChildren {
   SavedSessionsRoute: typeof SavedSessionsRoute
   SearchRoute: typeof SearchRoute
   SessionsRoute: typeof SessionsRoute
-  SettingsRoute: typeof SettingsRoute
+  SettingsRoute: typeof SettingsRouteWithChildren
   SignatureRoute: typeof SignatureRoute
   TeamRoute: typeof TeamRoute
   WelcomeRoute: typeof WelcomeRoute
@@ -1498,6 +1510,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/store/$productId'
       preLoaderRoute: typeof StoreProductIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/settings/verification': {
+      id: '/settings/verification'
+      path: '/verification'
+      fullPath: '/settings/verification'
+      preLoaderRoute: typeof SettingsVerificationRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/session-detail/$sessionId': {
       id: '/session-detail/$sessionId'
@@ -2181,6 +2200,18 @@ const ParentRouteChildren: ParentRouteChildren = {
 const ParentRouteWithChildren =
   ParentRoute._addFileChildren(ParentRouteChildren)
 
+interface SettingsRouteChildren {
+  SettingsVerificationRoute: typeof SettingsVerificationRoute
+}
+
+const SettingsRouteChildren: SettingsRouteChildren = {
+  SettingsVerificationRoute: SettingsVerificationRoute,
+}
+
+const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
+  SettingsRouteChildren,
+)
+
 interface CampsSlugRouteChildren {
   CampsSlugConfirmedRoute: typeof CampsSlugConfirmedRoute
   CampsSlugPaymentRoute: typeof CampsSlugPaymentRoute
@@ -2223,7 +2254,7 @@ const rootRouteChildren: RootRouteChildren = {
   SavedSessionsRoute: SavedSessionsRoute,
   SearchRoute: SearchRoute,
   SessionsRoute: SessionsRoute,
-  SettingsRoute: SettingsRoute,
+  SettingsRoute: SettingsRouteWithChildren,
   SignatureRoute: SignatureRoute,
   TeamRoute: TeamRoute,
   WelcomeRoute: WelcomeRoute,
