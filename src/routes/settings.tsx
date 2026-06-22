@@ -83,7 +83,6 @@ function ParentSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["u
           </div>
           <Field label="Name" defaultValue={name} />
           <Field label="Email" type="email" defaultValue={user?.email ?? ""} readOnly />
-          <Field label="Phone" defaultValue={profile?.phone ?? ""} />
         </Section>
 
         <Section icon={Bell} title="Notifications">
