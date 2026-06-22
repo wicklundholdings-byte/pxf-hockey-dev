@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LayoutDashboard, CalendarDays, Users, MessageSquare, Bell, Megaphone, Settings, BookOpen, Heart } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { TrialBanner } from "@/components/trial-banner";
+import { getUserAppRole } from "@/lib/user-role";
 
 export const Route = createFileRoute("/_authenticated/coach")({
   ssr: false,
@@ -10,20 +11,8 @@ export const Route = createFileRoute("/_authenticated/coach")({
     const { data: s } = await supabase.auth.getSession();
     const user = s.session?.user;
     if (!user) throw redirect({ to: "/auth", search: { mode: "login", redirect: "/coach" } });
-    const [{ data: role }, { data: subs }] = await Promise.all([
-      supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle(),
-      supabase
-        .from("subscriptions")
-        .select("plan_name,status,current_period_end")
-        .eq("user_id", user.id)
-        .eq("status", "active"),
-    ]);
-    const subActive = (subs ?? []).some((s) => {
-      const notExpired = !s.current_period_end || new Date(s.current_period_end) > new Date();
-      const plan = (s.plan_name ?? "").toLowerCase();
-      return notExpired && (plan.includes("coach") || plan.includes("platinum"));
-    });
-    if (!role && !subActive) throw redirect({ to: "/" });
+    const role = await getUserAppRole(user.id);
+    if (role !== "coach") throw redirect({ to: "/parent" });
   },
   component: CoachLayout,
 });

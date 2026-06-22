@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { CalendarDays, MapPin, Star, MessageCircle, ShoppingBag, User, Search, BookOpen, ChevronDown, Check, ChevronRight } from "lucide-react";
+import { MapPin, Star, MessageCircle, Search, ChevronDown, Check, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -19,12 +19,6 @@ const evals = [
   { skill: "Puck Control", score: 5 },
   { skill: "Shooting", score: 3 },
   { skill: "Hockey IQ", score: 4 },
-];
-
-const drills = [
-  { name: "Edge Work Builder", level: "U12", duration: "12 min" },
-  { name: "Quick Release Shot", level: "U12", duration: "8 min" },
-  { name: "Tight Turns Flow", level: "U12", duration: "10 min" },
 ];
 
 const messages = [
@@ -107,7 +101,12 @@ function ParentHome() {
 
       {/* Upcoming bookings */}
       <section className="mt-5">
-        <h2 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Upcoming Camps</h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Registered Camps</h2>
+          <Link to="/camps/browse" className="flex items-center gap-1 rounded-full bg-teal px-3 py-1.5 text-[10px] font-bold text-background">
+            <Search size={11} /> Browse
+          </Link>
+        </div>
         <div className="mt-2 space-y-2">
           {(myCamps.length > 0 ? myCamps : bookings.map((b, i) => ({ id: `demo-${i}`, name: b.name, start_date: null, end_date: null, venue_name: b.location }))).map((c) => {
             const isReal = !c.id.startsWith("demo-");
@@ -157,19 +156,6 @@ function ParentHome() {
         </div>
       </section>
 
-      {/* Recommended drills */}
-      <section className="mt-6">
-        <h2 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Recommended for Jake (U12)</h2>
-        <div className="mt-2 grid gap-2 sm:grid-cols-3">
-          {drills.map((d) => (
-            <div key={d.name} className="rounded-xl border border-border bg-card p-3">
-              <p className="text-sm font-semibold">{d.name}</p>
-              <p className="mt-1 text-[10px] text-muted-foreground">{d.level} · {d.duration}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Messages */}
       <section className="mt-6">
         <h2 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">From your coaches</h2>
@@ -189,20 +175,9 @@ function ParentHome() {
         </div>
       </section>
 
-      {/* Quick links */}
-      <section className="mt-6 grid grid-cols-4 gap-2">
-        {[
-          { label: "Bookings", to: "/bookings", icon: BookOpen },
-          { label: "Find Camps", to: "/camps/browse", icon: Search },
-          { label: "Athlete", to: "/profile", icon: User },
-          { label: "Store", to: "/store", icon: ShoppingBag },
-        ].map((q) => (
-          <Link key={q.label} to={q.to as "/bookings"} className="flex flex-col items-center gap-1 rounded-xl border border-border bg-card p-3">
-            <q.icon size={18} className="text-teal" />
-            <span className="text-[10px] font-semibold">{q.label}</span>
-          </Link>
-        ))}
-      </section>
+      <Link to="/camps/browse" className="mt-6 flex items-center justify-center gap-2 rounded-2xl border border-border bg-card p-4 text-xs font-bold text-teal">
+        <Search size={14} /> Browse and register for camps
+      </Link>
     </div>
   );
 }

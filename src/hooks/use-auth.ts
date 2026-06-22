@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { getUserAppRole, type AppRole } from "@/lib/user-role";
 
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
@@ -45,6 +46,31 @@ export function useIsAdmin(userId: string | undefined) {
       });
   }, [userId]);
   return { isAdmin, loading };
+}
+
+export function useUserAppRole(userId: string | undefined) {
+  const [role, setRole] = useState<AppRole | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!userId) {
+      setRole(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    getUserAppRole(userId).then((nextRole) => {
+      if (cancelled) return;
+      setRole(nextRole);
+      setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  return { role, loading };
 }
 
 export function useHasCoachAccess(userId: string | undefined) {
