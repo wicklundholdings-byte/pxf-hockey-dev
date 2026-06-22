@@ -215,51 +215,96 @@ function ParentDashboard() {
     [regCamps],
   );
 
+  // Mock fallbacks so the dashboard is information-rich even before live data lands.
+  const today = new Date();
+  const ymd = (d: Date) => d.toISOString().slice(0, 10);
+  const addDays = (n: number) => { const d = new Date(today); d.setDate(d.getDate() + n); return ymd(d); };
+
+  const displayKids: Kid[] = kids.length > 0 ? kids : [
+    { id: "mock-1", full_name: "Braxton Wicklund", birthday: "2014-04-12", position: "Forward", skill_level: "Advanced" },
+    { id: "mock-2", full_name: "Everest Wicklund", birthday: "2016-09-03", position: "Defense", skill_level: "Intermediate" },
+  ];
+
+  const displayCamps: RegCamp[] = sortedCamps.length > 0 ? sortedCamps : [
+    {
+      reg_id: "mock-c1",
+      camp: { id: "mock-camp-1", name: "Summer Elite Skating Camp", start_date: addDays(22), end_date: addDays(26), venue_name: "Iceland Arena", owner_id: null },
+      child_name: displayKids[0].full_name,
+      coach_name: "Power Edge Pro",
+    },
+    {
+      reg_id: "mock-c2",
+      camp: { id: "mock-camp-2", name: "Skating Power Clinic", start_date: addDays(-1), end_date: addDays(1), venue_name: "Coach Park Arena", owner_id: null },
+      child_name: displayKids[1]?.full_name ?? displayKids[0].full_name,
+      coach_name: "Coach Park Hockey",
+    },
+  ];
+
+  const displayThreads: Thread[] = threads.length > 0 ? threads : [
+    {
+      conv_id: "mock-t1",
+      coach_name: "Coach Reilly",
+      preview: "Great session today! Braxton showed real improvement on his edges...",
+      time: "2h",
+      camp_name: "Summer Elite Camp",
+    },
+  ];
+
+  const displayEvaluation: Evaluation = evaluation ?? {
+    id: "mock-e1",
+    child_name: displayKids[0].full_name,
+    camp_name: "Summer Elite Camp",
+    coach_name: "Coach Reilly",
+    skating: 4, puck_control: 4, shooting: 3, hockey_sense: 4,
+  };
+
+  const displayRsvp: RsvpPrompt = rsvp ?? {
+    id: "mock-r1",
+    child_name: displayKids[1]?.full_name ?? displayKids[0].full_name,
+    camp_name: "Skating Power Clinic",
+    session_date: addDays(1),
+  };
+
   return (
     <div className="min-h-screen bg-background px-5 pt-5 pb-24 text-foreground">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs text-muted-foreground">Welcome back,</p>
-          <h1 className="font-display text-2xl font-bold">{parentName}</h1>
+          <h1 className="font-display text-2xl font-bold">{parentName || "Parent"}</h1>
         </div>
         <Link to="/notifications" aria-label="Notifications" className="relative grid h-10 w-10 place-items-center rounded-full border border-border bg-card text-foreground">
           <Bell size={18} />
-          {threads.length > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-teal" />}
+          {displayThreads.length > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-teal" />}
         </Link>
       </div>
 
       {/* My Athletes */}
       <section className="mt-6">
         <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">My Athletes</h2>
-        {kids.length === 0 ? (
-          <Link to="/parent/profile" className="mt-2 block rounded-2xl border border-dashed border-border bg-card p-4 text-center text-xs text-muted-foreground">
-            Add your first athlete in Profile →
-          </Link>
-        ) : (
-          <div className={"mt-2 " + (kids.length > 1 ? "flex gap-3 overflow-x-auto pb-1 -mx-5 px-5 snap-x" : "")}>
-            {kids.map((k) => {
+        {(
+          <div className={"mt-2 " + (displayKids.length > 1 ? "grid grid-cols-2 gap-3" : "")}>
+            {displayKids.map((k) => {
               const open = expanded === k.id;
+              const age = ageFrom(k.birthday);
               return (
                 <div
                   key={k.id}
-                  className={"rounded-2xl border border-border bg-card p-4 " + (kids.length > 1 ? "min-w-[260px] snap-start" : "")}
+                  className="rounded-2xl border border-border bg-card p-4"
                 >
-                  <button onClick={() => setExpanded(open ? null : k.id)} className="flex w-full items-center gap-3 text-left">
-                    <div className="grid h-12 w-12 place-items-center rounded-full bg-teal/15 font-display text-sm font-bold text-teal">
+                  <button onClick={() => setExpanded(open ? null : k.id)} className="flex w-full flex-col items-center gap-2 text-center">
+                    <div className="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-teal/30 to-volt/20 font-display text-lg font-bold text-teal ring-2 ring-teal/40">
                       {initials(k.full_name)}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold">{k.full_name}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {[ageFrom(k.birthday) != null ? `Age ${ageFrom(k.birthday)}` : null, k.position].filter(Boolean).join(" · ") || "Profile"}
-                      </p>
-                    </div>
+                    <p className="w-full break-words text-sm font-semibold leading-tight">{k.full_name}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {[age != null ? `Age ${age}` : null, k.position].filter(Boolean).join(" · ") || "Profile"}
+                    </p>
                     {k.skill_level && (
                       <span className="rounded-full bg-volt/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-volt">
                         {k.skill_level}
                       </span>
                     )}
-                    <ChevronDown size={16} className={"text-muted-foreground transition-transform " + (open ? "rotate-180" : "")} />
+                    <ChevronDown size={14} className={"mt-1 text-muted-foreground transition-transform " + (open ? "rotate-180" : "")} />
                   </button>
                   {open && (
                     <div className="mt-3 space-y-3 border-t border-border pt-3">
@@ -267,10 +312,10 @@ function ParentDashboard() {
                         <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">
                           <Cpu size={11} /> PXF Combine Stats
                         </p>
-                        <div className="mt-2 grid grid-cols-3 gap-2 opacity-40">
+                        <div className="mt-2 grid grid-cols-3 gap-1.5 opacity-40">
                           {["Skating", "Shot", "Edges"].map((s) => (
-                            <div key={s} className="rounded-xl border border-border bg-surface p-2 text-center">
-                              <p className="font-display text-lg font-bold">--</p>
+                            <div key={s} className="rounded-lg border border-border bg-surface p-1.5 text-center">
+                              <p className="font-display text-sm font-bold">--</p>
                               <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{s}</p>
                             </div>
                           ))}
@@ -280,15 +325,15 @@ function ParentDashboard() {
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Camp History</p>
                         <div className="mt-2 space-y-1">
-                          {regCamps.filter((r) => r.child_name === k.full_name).length === 0 ? (
+                          {displayCamps.filter((r) => r.child_name === k.full_name).length === 0 ? (
                             <p className="text-xs text-muted-foreground">No camps yet</p>
                           ) : (
-                            regCamps
+                            displayCamps
                               .filter((r) => r.child_name === k.full_name)
                               .map((r) => (
-                                <div key={r.reg_id} className="flex items-center justify-between text-xs">
+                                <div key={r.reg_id} className="flex items-center justify-between gap-2 text-xs">
                                   <span className="truncate">{r.camp.name}</span>
-                                  <span className="text-muted-foreground">{fmtDates(r.camp.start_date, r.camp.end_date)}</span>
+                                  <span className="whitespace-nowrap text-muted-foreground">{fmtDates(r.camp.start_date, r.camp.end_date)}</span>
                                 </div>
                               ))
                           )}
@@ -304,11 +349,11 @@ function ParentDashboard() {
       </section>
 
       {/* RSVP prompt */}
-      {rsvp && (
+      {displayRsvp && (
         <section className="mt-6">
           <div className="rounded-2xl border border-teal/40 bg-teal/10 p-4">
             <p className="text-[10px] font-bold uppercase tracking-[2px] text-teal">Tomorrow's RSVP</p>
-            <p className="mt-1 text-sm font-semibold">Is {rsvp.child_name} attending {rsvp.camp_name} tomorrow?</p>
+            <p className="mt-1 text-sm font-semibold">Is {displayRsvp.child_name} attending {displayRsvp.camp_name} tomorrow?</p>
             <div className="mt-3 flex gap-2">
               <button onClick={() => respondRsvp("attending")} className="flex-1 rounded-full bg-teal py-2 text-xs font-bold text-background">Attending</button>
               <button onClick={() => respondRsvp("not_attending")} className="flex-1 rounded-full border border-border py-2 text-xs font-bold text-foreground">Not Attending</button>
@@ -321,12 +366,7 @@ function ParentDashboard() {
       <section className="mt-6">
         <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Registered Camps</h2>
         <div className="mt-2 space-y-2">
-          {sortedCamps.length === 0 ? (
-            <Link to="/parent/camps" className="block rounded-2xl border border-dashed border-border bg-card p-4 text-center text-xs text-muted-foreground">
-              Browse available camps →
-            </Link>
-          ) : (
-            sortedCamps.map((r) => {
+          {displayCamps.map((r) => {
               const live = isLive(r.camp.start_date, r.camp.end_date);
               const d = daysUntil(r.camp.start_date);
               return (
@@ -353,17 +393,16 @@ function ParentDashboard() {
                   </div>
                 </Link>
               );
-            })
-          )}
+            })}
         </div>
       </section>
 
       {/* Unread Messages */}
-      {threads.length > 0 && (
+      {displayThreads.length > 0 && (
         <section className="mt-6">
           <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Unread Messages</h2>
           <div className="mt-2 space-y-2">
-            {threads.map((t) => (
+            {displayThreads.map((t) => (
               <Link key={t.conv_id} to="/parent/inbox" className="flex items-start gap-3 rounded-2xl border border-border bg-card p-3">
                 <div className="grid h-9 w-9 place-items-center rounded-full bg-teal/15 text-[11px] font-bold text-teal">
                   {initials(t.coach_name)}
@@ -384,23 +423,23 @@ function ParentDashboard() {
       )}
 
       {/* Latest Evaluation */}
-      {evaluation && (
+      {displayEvaluation && (
         <section className="mt-6">
           <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Latest Evaluation</h2>
-          <Link to="/parent/camp/$campId" params={{ campId: regCamps[0]?.camp.id ?? "" }} className="mt-2 block rounded-2xl border border-border bg-card p-4">
+          <Link to="/parent/camp/$campId" params={{ campId: displayCamps[0]?.camp.id ?? "" }} className="mt-2 block rounded-2xl border border-border bg-card p-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold">{evaluation.child_name}</p>
+              <p className="text-sm font-semibold">{displayEvaluation.child_name}</p>
               <ChevronRight size={14} className="text-teal" />
             </div>
             <p className="text-[11px] text-muted-foreground">
-              {[evaluation.coach_name, evaluation.camp_name].filter(Boolean).join(" · ") || "Coach evaluation"}
+              {[displayEvaluation.coach_name, displayEvaluation.camp_name].filter(Boolean).join(" · ") || "Coach evaluation"}
             </p>
             <div className="mt-3 space-y-1.5">
               {[
-                { label: "Skating", v: evaluation.skating },
-                { label: "Puck Control", v: evaluation.puck_control },
-                { label: "Shooting", v: evaluation.shooting },
-                { label: "Hockey IQ", v: evaluation.hockey_sense },
+                { label: "Skating", v: displayEvaluation.skating },
+                { label: "Puck Control", v: displayEvaluation.puck_control },
+                { label: "Shooting", v: displayEvaluation.shooting },
+                { label: "Hockey IQ", v: displayEvaluation.hockey_sense },
               ].filter((r) => r.v != null).map((r) => (
                 <div key={r.label} className="flex items-center gap-3">
                   <span className="w-24 text-xs">{r.label}</span>
@@ -412,6 +451,7 @@ function ParentDashboard() {
                 </div>
               ))}
             </div>
+            <p className="mt-2 text-[11px] italic text-muted-foreground">"Strong edge control, needs to work on backward crossovers"</p>
           </Link>
         </section>
       )}
