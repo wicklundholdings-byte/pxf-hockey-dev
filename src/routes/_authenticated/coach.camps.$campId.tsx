@@ -558,6 +558,15 @@ function CampSchedule({
 
   return (
     <div className="space-y-2">
+      <div className="flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => { setEditMode((v) => !v); setEditingDay(null); }}
+          className={"inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold transition " + (editMode ? "border-teal bg-teal/15 text-teal" : "border-border bg-surface text-muted-foreground")}
+        >
+          <Pencil size={10} /> {editMode ? "Done" : "Edit days"}
+        </button>
+      </div>
       <div className="-mx-5 overflow-x-auto px-5">
         <div className="flex gap-2">
           {sessions.map((s, i) => {
@@ -573,6 +582,64 @@ function CampSchedule({
                 ? "border-teal bg-teal/10"
                 : "border-border bg-card opacity-60";
             const ringIfOpen = isOpen ? " ring-2 ring-teal/60" : "";
+            if (editMode) {
+              const isEditing = editingDay === s.id;
+              return (
+                <div key={s.id} className={"relative flex w-40 shrink-0 flex-col gap-1.5 rounded-2xl border border-teal/40 bg-card p-3 text-left"}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-teal">Day {i + 1}</p>
+                    <button
+                      onClick={() => setConfirmDelete(s)}
+                      className="rounded-full bg-red-500/15 p-1 text-red-400"
+                      aria-label="Delete day"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                  {isEditing ? (
+                    <div className="space-y-1.5">
+                      <input
+                        type="date"
+                        value={s.session_date}
+                        onChange={(e) => updateDay(s, { session_date: e.target.value })}
+                        className="w-full rounded-lg border border-border bg-surface px-2 py-1 text-[11px] text-foreground"
+                      />
+                      <div className="flex gap-1">
+                        <input
+                          type="time"
+                          value={(s.start_time ?? "09:00:00").slice(0, 5)}
+                          onChange={(e) => updateDay(s, { start_time: e.target.value + ":00" })}
+                          className="w-full rounded-lg border border-border bg-surface px-1.5 py-1 text-[10px] text-foreground"
+                        />
+                        <input
+                          type="time"
+                          value={(s.end_time ?? "10:00:00").slice(0, 5)}
+                          onChange={(e) => updateDay(s, { end_time: e.target.value + ":00" })}
+                          className="w-full rounded-lg border border-border bg-surface px-1.5 py-1 text-[10px] text-foreground"
+                        />
+                      </div>
+                      <button onClick={() => setEditingDay(null)} className="w-full rounded-lg bg-gradient-brand py-1 text-[10px] font-bold text-primary-foreground">Done</button>
+                    </div>
+                  ) : (
+                    <button onClick={() => setEditingDay(s.id)} className="text-left">
+                      <p className="font-display text-xl font-bold text-foreground leading-none">{date.getDate()}</p>
+                      <p className="text-[10px] text-muted-foreground">{date.toLocaleDateString("en-US", { weekday: "short", month: "short" })}</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        {(s.start_time ?? "09:00").slice(0, 5)} – {(s.end_time ?? "10:00").slice(0, 5)}
+                      </p>
+                    </button>
+                  )}
+                  <div className="mt-1 flex items-center justify-between border-t border-border pt-1.5">
+                    <button disabled={i === 0} onClick={() => swapDays(i, i - 1)} className="rounded-full p-1 text-muted-foreground disabled:opacity-30">
+                      <ArrowUp size={12} />
+                    </button>
+                    <button disabled={i === sessions.length - 1} onClick={() => swapDays(i, i + 1)} className="rounded-full p-1 text-muted-foreground disabled:opacity-30">
+                      <ArrowDown size={12} />
+                    </button>
+                  </div>
+                </div>
+              );
+            }
             return (
               <button
                 key={s.id}
@@ -600,6 +667,15 @@ function CampSchedule({
               </button>
             );
           })}
+          {editMode && (
+            <button
+              onClick={addDay}
+              className="flex w-32 shrink-0 flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-teal/50 bg-teal/5 p-3 text-teal"
+            >
+              <Plus size={20} />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Add day</span>
+            </button>
+          )}
         </div>
       </div>
 
