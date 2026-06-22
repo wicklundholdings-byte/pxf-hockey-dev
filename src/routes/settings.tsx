@@ -61,7 +61,7 @@ function SettingsScreen() {
       <div className="mt-5 space-y-4">
         {hasAccess && (
           <Link
-            to="/settings/verification"
+            to="/get-verified"
             className={
               "block rounded-2xl border p-5 " +
               (verified
