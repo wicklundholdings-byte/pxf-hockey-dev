@@ -200,7 +200,11 @@ function PaymentScreen() {
           <div className="mt-3 space-y-2 text-sm">
             <SummaryRow label={camp.name} value={dollars(priceCents)} />
             <SummaryRow label={`Dates`} value={`${fmtDate(camp.start_date)}${camp.end_date && camp.end_date !== camp.start_date ? ` – ${fmtDate(camp.end_date)}` : ""}`} muted />
-            <SummaryRow label="Athlete" value={draft.child.full_name} muted />
+            <SummaryRow
+              label={draft.children.length > 1 ? "Athletes" : "Athlete"}
+              value={draft.children.length > 0 ? draft.children.map((c) => c.full_name).join(", ") : draft.child.full_name}
+              muted
+            />
             {coupon && (
               <SummaryRow label={`Promo ${coupon.label}`} value={`–${dollars(coupon.discountCents)}`} accent />
             )}
