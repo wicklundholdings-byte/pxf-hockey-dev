@@ -26,21 +26,32 @@ function ParentCamps() {
   useEffect(() => {
     if (!user?.id) return;
     (async () => {
-      const { data: kidsRows } = await supabase.from("attendees").select("id, full_name").eq("owner_id", user.id);
-      const kids = kidsRows ?? [];
-      const kidIds = kids.map((k) => k.id);
-      const kidMap = new Map(kids.map((k) => [k.id, k.full_name as string]));
+      const parentEmail = user.email ?? "";
+
+      // Registrations from the public booking flow are keyed off the
+      // coach-side contact row, not the parent's own attendee ids.
+      const { data: contactRows } = await supabase
+        .from("contacts")
+        .select("id")
+        .eq("email", parentEmail);
+      const contactIds = (contactRows ?? []).map((c) => c.id);
       let coachIds: string[] = [];
       let regCampIds: string[] = [];
-      if (kidIds.length) {
+      if (contactIds.length) {
         const { data: regs } = await supabase
           .from("registrations")
-          .select("id, status, attendee_id, camps(id, name, start_date, end_date, venue_name, owner_id)")
-          .in("attendee_id", kidIds);
-        const rows = (regs ?? []) as unknown as Array<{ id: string; status: string | null; attendee_id: string; camps: CampRow | null }>;
+          .select("id, status, attendee_id, attendees(full_name), camps(id, name, start_date, end_date, venue_name, owner_id)")
+          .in("contact_id", contactIds);
+        const rows = (regs ?? []) as unknown as Array<{
+          id: string;
+          status: string | null;
+          attendee_id: string;
+          attendees: { full_name: string } | null;
+          camps: CampRow | null;
+        }>;
         const items: RegItem[] = rows
           .filter((r) => r.camps)
-          .map((r) => ({ reg_id: r.id, status: r.status, child_name: kidMap.get(r.attendee_id) ?? "Athlete", camp: r.camps! }))
+          .map((r) => ({ reg_id: r.id, status: r.status, child_name: r.attendees?.full_name ?? "Athlete", camp: r.camps! }))
           .sort((a, b) => (a.camp.start_date ?? "").localeCompare(b.camp.start_date ?? ""));
         setRegistered(items);
         coachIds = Array.from(new Set(items.map((i) => i.camp.owner_id).filter(Boolean) as string[]));
