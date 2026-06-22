@@ -863,6 +863,27 @@ function CampSchedule({
           />
         );
       })()}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-5" onClick={() => setConfirmDelete(null)}>
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-display text-base font-bold text-foreground">Delete this day?</h3>
+            {assignments[confirmDelete.id] && (
+              <p className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-[11px] text-amber-300">
+                ⚠️ This day has a session plan attached. Deleting it will remove the session assignment.
+              </p>
+            )}
+            {registeredCount > 0 && (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                {registeredCount} registered {registeredCount === 1 ? "parent" : "parents"} will be notified by push + SMS.
+              </p>
+            )}
+            <div className="mt-4 flex gap-2">
+              <button onClick={() => setConfirmDelete(null)} className="flex-1 rounded-xl border border-border bg-surface py-2 text-xs font-semibold text-foreground">Cancel</button>
+              <button onClick={() => deleteDay(confirmDelete)} className="flex-1 rounded-xl bg-red-500 py-2 text-xs font-bold text-white">Delete day</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
