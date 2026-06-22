@@ -308,40 +308,29 @@ function ParentDashboard() {
     },
   ];
 
-  // Next session across all registered children — earliest upcoming camp day.
-  const nextSession: NextSession = (() => {
+  // Next session per child — earliest upcoming (or currently-live) camp for each registered athlete.
+  const nextSessions: NextSession[] = (() => {
     const todayYmd = ymd(today);
-    const upcoming = displayCamps
-      .filter((c) => c.camp.start_date && c.camp.start_date >= todayYmd)
-      .sort((a, b) => (a.camp.start_date ?? "").localeCompare(b.camp.start_date ?? ""))[0];
-    if (upcoming) {
-      return {
-        camp_id: upcoming.camp.id,
-        child_name: upcoming.child_name,
-        camp_name: upcoming.camp.name,
-        session_title: null,
-        session_date: upcoming.camp.start_date!,
+    const byChild = new Map<string, NextSession>();
+    const sorted = [...displayCamps].sort((a, b) => (a.camp.start_date ?? "").localeCompare(b.camp.start_date ?? ""));
+    for (const c of sorted) {
+      if (byChild.has(c.child_name)) continue;
+      const isUpcoming = c.camp.start_date && c.camp.start_date >= todayYmd;
+      const live = isLive(c.camp.start_date, c.camp.end_date);
+      if (!isUpcoming && !live) continue;
+      byChild.set(c.child_name, {
+        camp_id: c.camp.id,
+        child_name: c.child_name,
+        camp_name: c.camp.name,
+        session_title: live ? "Edge Work & Power Skating" : null,
+        session_date: live ? ymd(today) : c.camp.start_date!,
         start_time: "16:30",
         end_time: "18:00",
-        venue_name: upcoming.camp.venue_name,
-      };
+        venue_name: c.camp.venue_name,
+      });
     }
-    // fallback to live camp
-    const live = displayCamps.find((c) => isLive(c.camp.start_date, c.camp.end_date));
-    return {
-      camp_id: live?.camp.id ?? displayCamps[0].camp.id,
-      child_name: live?.child_name ?? displayCamps[0].child_name,
-      camp_name: live?.camp.name ?? displayCamps[0].camp.name,
-      session_title: "Edge Work & Power Skating",
-      session_date: ymd(today),
-      start_time: "16:30",
-      end_time: "18:00",
-      venue_name: live?.camp.venue_name ?? displayCamps[0].camp.venue_name,
-    };
+    return Array.from(byChild.values()).sort((a, b) => a.session_date.localeCompare(b.session_date));
   })();
-  const nextSessionDays = daysUntil(nextSession.session_date);
-  const nextSessionLabel =
-    nextSessionDays === 0 ? "TODAY" : nextSessionDays === 1 ? "TOMORROW" : new Date(nextSession.session_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 
   return (
     <div className="min-h-screen bg-background px-5 pt-5 pb-24 text-foreground">
@@ -430,42 +419,51 @@ function ParentDashboard() {
       {/* Next Session */}
       <section className="mt-6">
         <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Next Session</h2>
-        <Link
-          to="/parent/camp/$campId"
-          params={{ campId: nextSession.camp_id }}
-          className="mt-2 block rounded-2xl border border-border bg-card p-4"
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-[2px] text-teal">{nextSession.child_name}</p>
-              <p className="mt-0.5 truncate text-sm font-semibold">{nextSession.camp_name}</p>
-              {nextSession.session_title && (
-                <p className="mt-0.5 truncate text-xs text-muted-foreground">{nextSession.session_title}</p>
-              )}
-            </div>
-            <span className={"whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold " + (nextSessionDays != null && nextSessionDays <= 1 ? "bg-teal/15 text-teal" : "bg-surface text-foreground border border-border")}>
-              {nextSessionLabel}
-            </span>
-          </div>
-          <div className="mt-3 grid grid-cols-1 gap-1.5 text-[11px] text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <Calendar size={11} />
-              {new Date(nextSession.session_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
-            </span>
-            {(nextSession.start_time || nextSession.end_time) && (
-              <span className="flex items-center gap-1.5">
-                <Clock size={11} />
-                {[fmtTime(nextSession.start_time), fmtTime(nextSession.end_time)].filter(Boolean).join(" – ")}
-              </span>
-            )}
-            {nextSession.venue_name && (
-              <span className="flex items-center gap-1.5">
-                <MapPin size={11} />
-                {nextSession.venue_name}
-              </span>
-            )}
-          </div>
-        </Link>
+        <div className="mt-2 space-y-2">
+          {nextSessions.map((ns) => {
+            const days = daysUntil(ns.session_date);
+            const label = days === 0 ? "TODAY" : days === 1 ? "TOMORROW" : new Date(ns.session_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+            return (
+              <Link
+                key={ns.child_name + ns.camp_id}
+                to="/parent/camp/$campId"
+                params={{ campId: ns.camp_id }}
+                className="block rounded-2xl border border-border bg-card p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold uppercase tracking-[2px] text-teal">{ns.child_name}</p>
+                    <p className="mt-0.5 truncate text-sm font-semibold">{ns.camp_name}</p>
+                    {ns.session_title && (
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">{ns.session_title}</p>
+                    )}
+                  </div>
+                  <span className={"whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold " + (days != null && days <= 1 ? "bg-teal/15 text-teal" : "bg-surface text-foreground border border-border")}>
+                    {label}
+                  </span>
+                </div>
+                <div className="mt-3 grid grid-cols-1 gap-1.5 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar size={11} />
+                    {new Date(ns.session_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
+                  </span>
+                  {(ns.start_time || ns.end_time) && (
+                    <span className="flex items-center gap-1.5">
+                      <Clock size={11} />
+                      {[fmtTime(ns.start_time), fmtTime(ns.end_time)].filter(Boolean).join(" – ")}
+                    </span>
+                  )}
+                  {ns.venue_name && (
+                    <span className="flex items-center gap-1.5">
+                      <MapPin size={11} />
+                      {ns.venue_name}
+                    </span>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       </section>
 
       {/* Tomorrow's RSVPs — one card per child per camp day */}
