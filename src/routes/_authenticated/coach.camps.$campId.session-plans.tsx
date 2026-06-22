@@ -429,6 +429,25 @@ function SessionPlansPage() {
           />
         );
       })()}
+
+      {syncPrompt && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4" onClick={dismissSync}>
+          <div className="w-full max-w-md rounded-2xl border border-teal/40 bg-card p-4" onClick={(e) => e.stopPropagation()}>
+            <p className="text-[10px] font-bold tracking-[0.3em] text-teal">SERIES UPDATED</p>
+            <h3 className="mt-1 text-sm font-bold text-foreground">"{syncPrompt.applied.seriesName}" has changes</h3>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {syncPrompt.changed.length === 1
+                ? `Session ${syncPrompt.changed[0].dayIndex + 1} in your series was updated.`
+                : `${syncPrompt.changed.length} sessions in your series were updated.`}
+              {" "}Apply changes to this camp?
+            </p>
+            <div className="mt-3 flex gap-2">
+              <button onClick={dismissSync} className="flex-1 rounded-xl border border-border bg-surface py-2.5 text-[12px] font-bold text-foreground">Keep current</button>
+              <button onClick={applySyncUpdates} className="flex-[1.4] rounded-xl bg-gradient-brand py-2.5 text-[12px] font-bold text-primary-foreground shadow-glow-teal">Apply updates</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
