@@ -429,11 +429,15 @@ function CampSchedule({
   campId,
   completions,
   onCompleted,
+  registeredCount,
+  onSessionsChange,
 }: {
   sessions: Session[];
   campId: string;
   completions: Record<string, SessionRunRecord>;
   onCompleted: (sessionId: string, rec: SessionRunRecord) => void;
+  registeredCount: number;
+  onSessionsChange: (next: Session[]) => void;
 }) {
   const planKey = `pxf:camp-plans:${campId}`;
   const [library, setLibrary] = useState<SavedSession[]>([]);
@@ -442,6 +446,9 @@ function CampSchedule({
   const [pickerFor, setPickerFor] = useState<string | null>(null);
   const [runningSessionId, setRunningSessionId] = useState<string | null>(null);
   const [summary, setSummary] = useState<{ sessionId: string; rec: SessionRunRecord } | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editingDay, setEditingDay] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Session | null>(null);
 
   useEffect(() => {
     setLibrary(readSavedSessions());
@@ -460,11 +467,72 @@ function CampSchedule({
     setPickerFor(null);
   }
 
+  function notifyParents(message: string) {
+    if (registeredCount > 0) {
+      toast.success(`Schedule updated — push + SMS sent to ${registeredCount} registered ${registeredCount === 1 ? "parent" : "parents"}.`, { description: message });
+    } else {
+      toast.success("Schedule updated.", { description: message });
+    }
+  }
+
+  async function updateDay(s: Session, patch: Partial<Session>) {
+    const next = sessions.map((x) => (x.id === s.id ? { ...x, ...patch } : x)).sort((a, b) => a.session_date.localeCompare(b.session_date));
+    onSessionsChange(next);
+    const { error } = await supabase.from("camp_sessions").update(patch).eq("id", s.id);
+    if (error) { toast.error("Couldn't save day change"); return; }
+    notifyParents(`${new Date((patch.session_date ?? s.session_date) + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}`);
+  }
+
+  async function deleteDay(s: Session) {
+    const next = sessions.filter((x) => x.id !== s.id);
+    onSessionsChange(next);
+    setConfirmDelete(null);
+    const { error } = await supabase.from("camp_sessions").delete().eq("id", s.id);
+    if (error) { toast.error("Couldn't delete day"); return; }
+    if (assignments[s.id]) assign(s.id, null);
+    notifyParents(`Day removed: ${new Date(s.session_date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}`);
+  }
+
+  async function addDay() {
+    const last = sessions[sessions.length - 1];
+    const baseDate = last ? new Date(last.session_date + "T00:00:00") : new Date();
+    baseDate.setDate(baseDate.getDate() + 1);
+    const newDate = baseDate.toISOString().slice(0, 10);
+    const payload = {
+      camp_id: campId,
+      session_date: newDate,
+      start_time: last?.start_time ?? "09:00:00",
+      end_time: last?.end_time ?? "10:00:00",
+      sort_order: sessions.length,
+    };
+    const { data, error } = await supabase.from("camp_sessions").insert(payload).select("id, session_date, start_time, end_time").maybeSingle();
+    if (error || !data) { toast.error("Couldn't add day"); return; }
+    onSessionsChange([...sessions, data as Session]);
+    notifyParents(`New day added: ${new Date(newDate + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}`);
+  }
+
+  async function swapDays(i: number, j: number) {
+    if (i < 0 || j < 0 || i >= sessions.length || j >= sessions.length) return;
+    const a = sessions[i]; const b = sessions[j];
+    // Swap dates so order changes.
+    const aDate = a.session_date; const bDate = b.session_date;
+    const next = sessions.map((x) => x.id === a.id ? { ...x, session_date: bDate } : x.id === b.id ? { ...x, session_date: aDate } : x).sort((x, y) => x.session_date.localeCompare(y.session_date));
+    onSessionsChange(next);
+    await Promise.all([
+      supabase.from("camp_sessions").update({ session_date: bDate }).eq("id", a.id),
+      supabase.from("camp_sessions").update({ session_date: aDate }).eq("id", b.id),
+    ]);
+    notifyParents("Camp days reordered.");
+  }
+
   if (sessions.length === 0) {
     return (
-      <p className="rounded-2xl border border-border bg-card p-6 text-center text-xs text-muted-foreground">
-        No camp days scheduled yet.
-      </p>
+      <div className="rounded-2xl border border-border bg-card p-6 text-center text-xs text-muted-foreground">
+        <p>No camp days scheduled yet.</p>
+        <button onClick={addDay} className="mt-3 inline-flex items-center gap-1 rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-primary-foreground">
+          <Plus size={12} /> Add first day
+        </button>
+      </div>
     );
   }
 
