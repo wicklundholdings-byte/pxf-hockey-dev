@@ -19,7 +19,7 @@ type Member = {
   permission_level: "owner" | "coach" | "assistant";
 };
 
-type Camp = { id: string; name: string; start_date: string | null };
+type Camp = { id: string; name: string; start_date: string | null; status: "draft" | "live" | "ended" };
 type Assignment = { id: string; camp_id: string; team_member_id: string };
 
 function TeamPage() {
@@ -47,8 +47,9 @@ function TeamPage() {
         .order("created_at", { ascending: false }),
       supabase
         .from("camps")
-        .select("id, name, start_date")
+        .select("id, name, start_date, status")
         .eq("owner_id", u.user.id)
+        .neq("status", "ended")
         .order("start_date", { ascending: false }),
       (supabase as any).from("camp_staff").select("id, camp_id, team_member_id"),
     ]);
@@ -154,14 +155,14 @@ function TeamPage() {
           {invited.length > 0 && (
             <Section title="Pending invites" count={invited.length}>
               {invited.map((m) => (
-                <Row key={m.id} m={m} assignmentsCount={assignments.filter((a) => a.team_member_id === m.id).length} onActivate={() => activate(m.id)} onRemove={() => remove(m.id)} onPermission={setPermission} onAssign={() => setAssignFor(m)} />
+                <Row key={m.id} m={m} assignedCamps={camps.filter((c) => assignments.some((a) => a.team_member_id === m.id && a.camp_id === c.id))} onActivate={() => activate(m.id)} onRemove={() => remove(m.id)} onPermission={setPermission} onAssign={() => setAssignFor(m)} />
               ))}
             </Section>
           )}
           {active.length > 0 && (
             <Section title="Active" count={active.length}>
               {active.map((m) => (
-                <Row key={m.id} m={m} assignmentsCount={assignments.filter((a) => a.team_member_id === m.id).length} onRemove={() => remove(m.id)} onPermission={setPermission} onAssign={() => setAssignFor(m)} />
+                <Row key={m.id} m={m} assignedCamps={camps.filter((c) => assignments.some((a) => a.team_member_id === m.id && a.camp_id === c.id))} onRemove={() => remove(m.id)} onPermission={setPermission} onAssign={() => setAssignFor(m)} />
               ))}
             </Section>
           )}
@@ -289,20 +290,21 @@ function Section({ title, count, children }: { title: string; count: number; chi
 
 function Row({
   m,
-  assignmentsCount,
+  assignedCamps,
   onActivate,
   onRemove,
   onPermission,
   onAssign,
 }: {
   m: Member;
-  assignmentsCount: number;
+  assignedCamps: Camp[];
   onActivate?: () => void;
   onRemove: () => void;
   onPermission: (id: string, level: "coach" | "assistant") => void;
   onAssign: () => void;
 }) {
   const initials = m.email.slice(0, 2).toUpperCase();
+  const campsLabel = assignedCamps.length > 0 ? assignedCamps.map((c) => c.name).join(", ") : "No camps assigned";
   return (
     <div className="space-y-2 rounded-2xl border border-border/60 bg-surface p-3">
       <div className="flex items-center gap-3">
@@ -361,8 +363,11 @@ function Row({
             </button>
           ))}
         </div>
-        <button onClick={onAssign} className="ml-auto flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-[10px] font-bold text-foreground">
-          <CalendarDays size={10} /> {assignmentsCount} {assignmentsCount === 1 ? "camp" : "camps"}
+        <p className="min-w-0 flex-1 truncate text-[10px] text-muted-foreground" title={campsLabel}>
+          {campsLabel}
+        </p>
+        <button onClick={onAssign} className="flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-[10px] font-bold text-foreground">
+          <CalendarDays size={10} /> Assign to Camp
         </button>
       </div>
     </div>
