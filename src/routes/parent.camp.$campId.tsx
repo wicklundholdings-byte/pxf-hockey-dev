@@ -31,14 +31,16 @@ function daysUntil(d: string | null) {
 
 function ParentCampDetail() {
   const { campId } = useParams({ from: "/parent/camp/$campId" });
+  const navigate = useNavigate();
   const { user } = useAuth();
-  const [camp, setCamp] = useState<{ id: string; name: string; venue_name: string | null; address: string | null; start_date: string | null; end_date: string | null } | null>(null);
+  const [camp, setCamp] = useState<{ id: string; name: string; venue_name: string | null; address: string | null; start_date: string | null; end_date: string | null; owner_id: string | null } | null>(null);
   const [sessions, setSessions] = useState<Array<{ id: string; session_date: string; start_time: string | null; end_time: string | null }>>([]);
   const [rosterCount, setRosterCount] = useState(0);
   const [tab, setTab] = useState<Tab>("schedule");
   const [myRegs, setMyRegs] = useState<Array<{ id: string; athlete_name: string }>>([]);
   const [rsvps, setRsvps] = useState<Array<{ id: string; camp_session_id: string; status: string; registration_id: string }>>([]);
   const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [openingDm, setOpeningDm] = useState(false);
 
   useEffect(() => {
     (async () => {
