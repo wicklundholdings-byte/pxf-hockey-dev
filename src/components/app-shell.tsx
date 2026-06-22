@@ -43,8 +43,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     pathname.startsWith("/onboarding") ||
     (!!user && !authLoading);
 
-  const athleteRoots = ["/", "/drills", "/sessions", "/profile"];
-  const onAthleteRoute = athleteRoots.includes(pathname);
+  const athleteRoots = ["/", "/drills", "/sessions", "/profile", "/saved-sessions"];
+  const onAthleteRoute =
+    athleteRoots.includes(pathname) ||
+    pathname.startsWith("/session-detail/") ||
+    pathname.startsWith("/drill-detail/") ||
+    pathname === "/drill-builder";
   useEffect(() => {
     if (authLoading || roleLoading || !role) return;
     const correctHome = roleHome(role);
