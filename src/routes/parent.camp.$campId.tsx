@@ -46,7 +46,7 @@ function ParentCampDetail() {
     (async () => {
       const { data: c } = await supabase
         .from("camps")
-        .select("id, name, venue_name, address, start_date, end_date")
+        .select("id, name, venue_name, address, start_date, end_date, owner_id")
         .eq("id", campId)
         .maybeSingle();
       setCamp(c ?? null);
