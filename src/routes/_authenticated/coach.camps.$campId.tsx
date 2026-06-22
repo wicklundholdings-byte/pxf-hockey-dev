@@ -947,6 +947,13 @@ function CampStaffSection({ campId }: { campId: string }) {
                 <p className="truncate text-[10px] text-muted-foreground">{m.email}</p>
               </div>
               <span className="rounded-full bg-surface px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{m.permission_level}</span>
+              <button
+                onClick={() => toggle(m.id)}
+                title="Remove from camp"
+                className="ml-1 rounded-full bg-destructive/15 p-1.5 text-destructive hover:bg-destructive/25"
+              >
+                <X size={12} />
+              </button>
             </li>
           ))}
         </ul>
