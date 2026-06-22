@@ -4,6 +4,7 @@ import { Plus, Clock, Heart, Folder as FolderIcon, Trash2, MoreVertical, X } fro
 import { usePlaybookFolders } from "@/hooks/usePlaybookFolders";
 import { usePlaybookFavorites } from "@/hooks/usePlaybookFavorites";
 import { FolderManager } from "./folder-manager";
+import { SeriesManager } from "./series-manager";
 import { CATEGORIES } from "@/data/pxf";
 
 type SessionBlock = { uid: string; drillId: string; mins: number };
@@ -33,6 +34,7 @@ export function PlaybookSessions() {
   const [createOpen, setCreateOpen] = useState(false);
   const [assignFor, setAssignFor] = useState<string | null>(null);
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
+  const [view, setView] = useState<"individual" | "series">("individual");
   const folders = usePlaybookFolders("session");
   const fav = usePlaybookFavorites();
 
@@ -73,6 +75,12 @@ export function PlaybookSessions() {
 
   return (
     <div className="pt-1">
+      <div className="mb-3 grid grid-cols-2 gap-1 rounded-full border border-border bg-surface p-1">
+        <button onClick={() => setView("individual")} className={"rounded-full py-1.5 text-[11px] font-bold tracking-wide " + (view === "individual" ? "bg-teal text-background" : "text-muted-foreground")}>Individual Sessions</button>
+        <button onClick={() => setView("series")} className={"rounded-full py-1.5 text-[11px] font-bold tracking-wide " + (view === "series" ? "bg-teal text-background" : "text-muted-foreground")}>Series</button>
+      </div>
+      {view === "series" ? <SeriesManager /> : (
+      <>
       <div className="flex items-center justify-between gap-2">
         <div className="flex flex-1 gap-1 overflow-x-auto pb-1">
           <Chip active={activeFolder === null} onClick={() => setActiveFolder(null)}>All</Chip>
@@ -147,6 +155,8 @@ export function PlaybookSessions() {
 
       {showFolders && <FolderManager kind="session" onClose={() => setShowFolders(false)} />}
       {createOpen && <CreateSessionModal onClose={() => setCreateOpen(false)} onSave={createSession} />}
+      </>
+      )}
     </div>
   );
 }
