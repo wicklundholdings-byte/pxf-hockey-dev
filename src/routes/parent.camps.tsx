@@ -96,11 +96,9 @@ function ParentCamps() {
                     <p className="truncate font-semibold">{r.camp.name}</p>
                     <p className="mt-0.5 text-[11px] text-muted-foreground">For {r.child_name}</p>
                   </div>
-                  {r.status && (
-                    <span className={"rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider " + (r.status === "paid" ? "bg-volt/15 text-volt" : "bg-teal/15 text-teal")}>
-                      {r.status}
-                    </span>
-                  )}
+                  <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal">
+                    Registered
+                  </span>
                 </div>
                 <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
                   <span className="flex items-center gap-1"><MapPin size={11} />{r.camp.venue_name ?? "Venue TBA"}</span>
