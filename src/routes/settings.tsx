@@ -384,6 +384,14 @@ function SettingsScreen() {
     );
   }
 
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-teal border-t-transparent" />
+      </div>
+    );
+  }
+
   if (role === "parent") {
     return <ParentSettings user={user} signOut={signOut} />;
   }
