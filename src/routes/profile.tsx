@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Settings, Shield, Bell, HelpCircle, LogOut, LogIn, ChevronRight, Award, Users, Crown, Heart, ClipboardList, CalendarDays, ShieldCheck } from "lucide-react";
+import { Settings, Shield, Bell, HelpCircle, LogOut, LogIn, ChevronRight, Award, Users, Crown, Heart, ClipboardList, CalendarDays, ShieldCheck, Wrench } from "lucide-react";
 import { useAuth, useIsAdmin } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +22,7 @@ function Profile() {
   const { user, loading, signOut } = useAuth();
   const { isAdmin } = useIsAdmin(user?.id);
   const [fullName, setFullName] = useState<string | null>(null);
+  const [promoting, setPromoting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -127,6 +128,28 @@ function Profile() {
       >
         <LogOut size={16} /> SIGN OUT
       </button>
+
+      {!isAdmin && (
+        <button
+          disabled={promoting}
+          onClick={async () => {
+            if (!user) return;
+            setPromoting(true);
+            const { error } = await supabase
+              .from("user_roles")
+              .insert({ user_id: user.id, role: "admin" });
+            setPromoting(false);
+            if (error && !String(error.message).includes("duplicate")) {
+              alert("Failed: " + error.message);
+              return;
+            }
+            window.location.href = "/coach";
+          }}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-volt/40 bg-volt/10 py-3 text-xs font-bold tracking-wider text-volt"
+        >
+          <Wrench size={14} /> {promoting ? "PROMOTING…" : "BECOME A COACH (DEV)"}
+        </button>
+      )}
 
       <div className="mt-6 text-center">
         <p className="font-display text-[11px] font-bold tracking-[0.4em]">
