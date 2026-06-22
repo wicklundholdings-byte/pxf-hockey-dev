@@ -67,6 +67,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as CampsSlugIndexRouteImport } from './routes/camps.$slug.index'
 import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authenticated/coach.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as ParentConversationConversationIdRouteImport } from './routes/parent.conversation.$conversationId'
 import { Route as ParentCampCampIdRouteImport } from './routes/parent.camp.$campId'
 import { Route as CampsSlugWaiverRouteImport } from './routes/camps.$slug.waiver'
 import { Route as CampsSlugRegisterRouteImport } from './routes/camps.$slug.register'
@@ -397,6 +398,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const ParentConversationConversationIdRoute =
+  ParentConversationConversationIdRouteImport.update({
+    id: '/conversation/$conversationId',
+    path: '/conversation/$conversationId',
+    getParentRoute: () => ParentRoute,
+  } as any)
 const ParentCampCampIdRoute = ParentCampCampIdRouteImport.update({
   id: '/camp/$campId',
   path: '/camp/$campId',
@@ -711,6 +718,7 @@ export interface FileRoutesByFullPath {
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
+  '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/coach/': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug/': typeof CampsSlugIndexRoute
@@ -805,6 +813,7 @@ export interface FileRoutesByTo {
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
+  '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/coach': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug': typeof CampsSlugIndexRoute
@@ -906,6 +915,7 @@ export interface FileRoutesById {
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
+  '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/coach/': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug/': typeof CampsSlugIndexRoute
@@ -1007,6 +1017,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
     | '/parent/camp/$campId'
+    | '/parent/conversation/$conversationId'
     | '/admin/'
     | '/coach/'
     | '/camps/$slug/'
@@ -1101,6 +1112,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
     | '/parent/camp/$campId'
+    | '/parent/conversation/$conversationId'
     | '/admin'
     | '/coach'
     | '/camps/$slug'
@@ -1201,6 +1213,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
     | '/parent/camp/$campId'
+    | '/parent/conversation/$conversationId'
     | '/_authenticated/admin/'
     | '/_authenticated/coach/'
     | '/camps/$slug/'
@@ -1675,6 +1688,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/parent/conversation/$conversationId': {
+      id: '/parent/conversation/$conversationId'
+      path: '/conversation/$conversationId'
+      fullPath: '/parent/conversation/$conversationId'
+      preLoaderRoute: typeof ParentConversationConversationIdRouteImport
+      parentRoute: typeof ParentRoute
+    }
     '/parent/camp/$campId': {
       id: '/parent/camp/$campId'
       path: '/camp/$campId'
@@ -2145,6 +2165,7 @@ interface ParentRouteChildren {
   ParentScheduleRoute: typeof ParentScheduleRoute
   ParentIndexRoute: typeof ParentIndexRoute
   ParentCampCampIdRoute: typeof ParentCampCampIdRoute
+  ParentConversationConversationIdRoute: typeof ParentConversationConversationIdRoute
 }
 
 const ParentRouteChildren: ParentRouteChildren = {
@@ -2154,6 +2175,7 @@ const ParentRouteChildren: ParentRouteChildren = {
   ParentScheduleRoute: ParentScheduleRoute,
   ParentIndexRoute: ParentIndexRoute,
   ParentCampCampIdRoute: ParentCampCampIdRoute,
+  ParentConversationConversationIdRoute: ParentConversationConversationIdRoute,
 }
 
 const ParentRouteWithChildren =
