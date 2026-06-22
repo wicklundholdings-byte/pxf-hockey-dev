@@ -113,7 +113,7 @@ function RegisterScreen() {
     );
   }
 
-  const hasPickedAthlete = draft.children.length > 0;
+  const hasPickedAthlete = draft.children.length > 0 && draft.children.every((c) => c.skill_level);
   const manualValid = draft.child.full_name.trim() && draft.child.skill_level;
   const valid =
     draft.parent.full_name.trim() &&
