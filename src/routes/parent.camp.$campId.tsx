@@ -143,7 +143,7 @@ function ParentCampDetail() {
           {tab === "schedule" && (
             <ul className="space-y-2">
               {sessions.length === 0 && <p className="text-xs text-muted-foreground">No sessions scheduled yet.</p>}
-              {sessions.map((s, i) => {
+              {sessions.map((s, i) => (
                   <li key={s.id} className="rounded-2xl border border-border bg-card px-4 py-3">
                     <div className="flex items-center justify-between">
                       <div>
@@ -195,7 +195,7 @@ function ParentCampDetail() {
                       </div>
                     )}
                   </li>
-              ;})}
+              ))}
             </ul>
           )}
 
