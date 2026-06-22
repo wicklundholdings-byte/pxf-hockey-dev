@@ -402,7 +402,9 @@ export type Database = {
           absent_alert: boolean
           absent_alert_minutes: number
           address: string | null
+          age_group: string | null
           capacity: number
+          city: string | null
           confirmation_sms: boolean
           created_at: string
           description: string | null
@@ -418,6 +420,7 @@ export type Database = {
           name: string
           owner_id: string
           payment_plan: Database["public"]["Enums"]["payment_plan"]
+          postal_code: string | null
           price_cents: number
           reminder_1day: boolean
           reminder_7day: boolean
@@ -425,7 +428,9 @@ export type Database = {
           show_remaining: boolean
           sibling_discount: boolean
           sibling_discount_percent: number
+          skill_level: string | null
           slug: string
+          sport_type: string | null
           start_date: string | null
           start_time: string | null
           status: Database["public"]["Enums"]["camp_status"]
@@ -441,7 +446,9 @@ export type Database = {
           absent_alert?: boolean
           absent_alert_minutes?: number
           address?: string | null
+          age_group?: string | null
           capacity?: number
+          city?: string | null
           confirmation_sms?: boolean
           created_at?: string
           description?: string | null
@@ -457,6 +464,7 @@ export type Database = {
           name: string
           owner_id: string
           payment_plan?: Database["public"]["Enums"]["payment_plan"]
+          postal_code?: string | null
           price_cents?: number
           reminder_1day?: boolean
           reminder_7day?: boolean
@@ -464,7 +472,9 @@ export type Database = {
           show_remaining?: boolean
           sibling_discount?: boolean
           sibling_discount_percent?: number
+          skill_level?: string | null
           slug: string
+          sport_type?: string | null
           start_date?: string | null
           start_time?: string | null
           status?: Database["public"]["Enums"]["camp_status"]
@@ -480,7 +490,9 @@ export type Database = {
           absent_alert?: boolean
           absent_alert_minutes?: number
           address?: string | null
+          age_group?: string | null
           capacity?: number
+          city?: string | null
           confirmation_sms?: boolean
           created_at?: string
           description?: string | null
@@ -496,6 +508,7 @@ export type Database = {
           name?: string
           owner_id?: string
           payment_plan?: Database["public"]["Enums"]["payment_plan"]
+          postal_code?: string | null
           price_cents?: number
           reminder_1day?: boolean
           reminder_7day?: boolean
@@ -503,7 +516,9 @@ export type Database = {
           show_remaining?: boolean
           sibling_discount?: boolean
           sibling_discount_percent?: number
+          skill_level?: string | null
           slug?: string
+          sport_type?: string | null
           start_date?: string | null
           start_time?: string | null
           status?: Database["public"]["Enums"]["camp_status"]
@@ -1399,10 +1414,15 @@ export type Database = {
       }
       profiles: {
         Row: {
+          bio: string | null
+          city: string | null
           created_at: string
           email: string
           full_name: string | null
           id: string
+          marketplace_visible: boolean
+          postal_code: string | null
+          slug: string | null
           sms_provider: string
           sms_sender_name: string | null
           sms_sender_phone: string | null
@@ -1411,10 +1431,15 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bio?: string | null
+          city?: string | null
           created_at?: string
           email: string
           full_name?: string | null
           id: string
+          marketplace_visible?: boolean
+          postal_code?: string | null
+          slug?: string | null
           sms_provider?: string
           sms_sender_name?: string | null
           sms_sender_phone?: string | null
@@ -1423,10 +1448,15 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bio?: string | null
+          city?: string | null
           created_at?: string
           email?: string
           full_name?: string | null
           id?: string
+          marketplace_visible?: boolean
+          postal_code?: string | null
+          slug?: string | null
           sms_provider?: string
           sms_sender_name?: string | null
           sms_sender_phone?: string | null

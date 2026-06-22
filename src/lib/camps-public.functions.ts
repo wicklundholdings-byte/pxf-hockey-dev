@@ -11,17 +11,84 @@ function publicClient() {
   );
 }
 
-export const listLiveCamps = createServerFn({ method: "GET" }).handler(async () => {
-  const supabase = publicClient();
-  const { data, error } = await supabase
-    .from("camps")
-    .select("id, name, slug, owner_id, hero_image, venue_name, location_type, start_date, end_date, price_cents, capacity")
-    .eq("status", "live")
-    .order("start_date", { ascending: true })
-    .limit(60);
-  if (error) return { camps: [] as Array<NonNullable<typeof data>[number]>, error: "Unavailable" };
-  return { camps: data ?? [], error: null as string | null };
-});
+const listFiltersSchema = z
+  .object({
+    q: z.string().max(120).optional(),
+    location: z.string().max(120).optional(),
+    ageGroup: z.string().max(40).optional(),
+    skillLevel: z.string().max(40).optional(),
+    sportType: z.string().max(40).optional(),
+  })
+  .partial();
+
+export const listLiveCamps = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => (d ? listFiltersSchema.parse(d) : {}))
+  .handler(async ({ data }) => {
+    const supabase = publicClient();
+    // Only show camps from coaches who opted into the public marketplace.
+    const { data: visibleCoaches } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .eq("marketplace_visible", true);
+    const visibleIds = (visibleCoaches ?? []).map((p) => p.id);
+    if (visibleIds.length === 0) {
+      return { camps: [], coaches: {} as Record<string, string>, error: null as string | null };
+    }
+    let query = supabase
+      .from("camps")
+      .select(
+        "id, name, slug, owner_id, hero_image, venue_name, location_type, start_date, end_date, price_cents, capacity, age_group, skill_level, sport_type, city, postal_code",
+      )
+      .eq("status", "live")
+      .in("owner_id", visibleIds)
+      .order("start_date", { ascending: true })
+      .limit(60);
+    if (data?.ageGroup) query = query.eq("age_group", data.ageGroup);
+    if (data?.skillLevel) query = query.eq("skill_level", data.skillLevel);
+    if (data?.sportType) query = query.eq("sport_type", data.sportType);
+    if (data?.location) {
+      const loc = data.location.trim();
+      query = query.or(`city.ilike.%${loc}%,postal_code.ilike.%${loc}%,venue_name.ilike.%${loc}%`);
+    }
+    if (data?.q) {
+      const q = data.q.trim();
+      query = query.or(`name.ilike.%${q}%,venue_name.ilike.%${q}%`);
+    }
+    const { data: camps, error } = await query;
+    if (error) return { camps: [], coaches: {}, error: "Unavailable" };
+    const coachMap: Record<string, string> = {};
+    for (const c of visibleCoaches ?? []) coachMap[c.id] = c.full_name ?? "PXF Coach";
+    return { camps: camps ?? [], coaches: coachMap, error: null as string | null };
+  });
+
+export const getPublicCoachProfile = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ slug: z.string().min(1).max(120) }).parse(d))
+  .handler(async ({ data }) => {
+    const supabase = publicClient();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id, full_name, bio, city, slug, marketplace_visible")
+      .or(`slug.eq.${data.slug},id.eq.${data.slug}`)
+      .eq("marketplace_visible", true)
+      .maybeSingle();
+    if (!profile) return { profile: null, camps: [], verified: false };
+    const [{ data: camps }, { data: verif }] = await Promise.all([
+      supabase
+        .from("camps")
+        .select("id, name, slug, start_date, end_date, price_cents, capacity, venue_name, city")
+        .eq("owner_id", profile.id)
+        .eq("status", "live")
+        .order("start_date", { ascending: true }),
+      supabase
+        .from("coach_verifications")
+        .select("status, expires_at")
+        .eq("user_id", profile.id)
+        .eq("status", "approved")
+        .maybeSingle(),
+    ]);
+    const verified = !!verif && (!verif.expires_at || new Date(verif.expires_at) > new Date());
+    return { profile, camps: camps ?? [], verified };
+  });
 
 export const getPublicCamp = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ slug: z.string().min(1).max(120) }).parse(d))

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare, LogOut, ShieldCheck, ChevronRight } from "lucide-react";
 import { LayoutDashboard, CalendarDays, BookOpen, MessageSquare as InboxIcon, Users } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
@@ -45,6 +46,28 @@ function SettingsScreen() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const verified = useCoachVerified(user?.id);
+  const [marketplaceOn, setMarketplaceOn] = useState(false);
+  const [marketplaceLoaded, setMarketplaceLoaded] = useState(false);
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    supabase
+      .from("profiles")
+      .select("marketplace_visible")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        setMarketplaceOn(!!data?.marketplace_visible);
+        setMarketplaceLoaded(true);
+      });
+    return () => { cancelled = true; };
+  }, [user?.id]);
+  const toggleMarketplace = async (next: boolean) => {
+    setMarketplaceOn(next);
+    if (!user?.id) return;
+    await supabase.from("profiles").update({ marketplace_visible: next }).eq("id", user.id);
+  };
   const coachNav = [
     { to: "/coach", label: "Dashboard", icon: LayoutDashboard, exact: true, match: ["/coach"] },
     { to: "/coach/camps", label: "Events", icon: CalendarDays, match: ["/coach/camps", "/coach/bookings"] },
@@ -179,9 +202,21 @@ function SettingsScreen() {
         </Section>
 
         <Section icon={Lock} title="Privacy & Security">
-          <label className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-sm">
-            Show me on public coach search
-            <input type="checkbox" defaultChecked className="accent-teal" />
+          <label className="flex items-start justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2 text-sm">
+            <span>
+              <span className="block font-semibold">Show my camps in the public PXF marketplace</span>
+              <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                When OFF, your camps are only reachable via your direct booking link.
+                Logged-in parents you've registered will still see your camps inside their app.
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              checked={marketplaceOn}
+              disabled={!marketplaceLoaded}
+              onChange={(e) => toggleMarketplace(e.target.checked)}
+              className="mt-1 accent-teal"
+            />
           </label>
           <label className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-sm">
             Two-factor authentication
