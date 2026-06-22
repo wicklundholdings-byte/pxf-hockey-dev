@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Settings, LogOut, CreditCard, BookOpen, Pencil, Plus, ChevronRight } from "lucide-react";
+import { Settings, LogOut, CreditCard, BookOpen, Pencil, Plus, ChevronRight, ShieldCheck } from "lucide-react";
 import { ChildrenManager } from "@/components/children-manager";
+import { CaregiversManager } from "@/components/caregivers-manager";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -90,6 +91,25 @@ function ParentProfile() {
 
       {/* Account links */}
       <section className="mt-6 space-y-2">
+        {kids.length > 0 && (
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <h2 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">
+              <ShieldCheck size={12} className="text-teal" /> Authorized Caregivers
+            </h2>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              People allowed to pick up your athletes at camp check-out.
+            </p>
+            <div className="mt-3 space-y-4">
+              {kids.map((k) => (
+                <div key={k.id} className="rounded-xl border border-border/60 bg-surface/50 p-3">
+                  <p className="mb-2 text-xs font-semibold text-foreground">{k.full_name}</p>
+                  <CaregiversManager attendeeId={k.id} compact />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <Link to="/bookings" className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
           <span className="flex items-center gap-3 text-sm font-semibold"><BookOpen size={16} className="text-teal" /> My Bookings</span>
           <ChevronRight size={16} className="text-muted-foreground" />

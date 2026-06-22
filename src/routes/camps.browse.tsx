@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { listLiveCamps } from "@/lib/camps-public.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { Search, MapPin, CalendarDays, Map as MapIcon, List, ArrowRight } from "lucide-react";
+import { VerifiedBadge } from "@/components/verified-badge";
 
 export const Route = createFileRoute("/camps/browse")({
   head: () => ({ meta: [{ title: "Find Camps — PXF Hockey" }] }),
@@ -12,6 +14,7 @@ type Camp = {
   id: string;
   name: string;
   slug: string;
+  owner_id: string;
   hero_image: string | null;
   venue_name: string | null;
   location_type: string;
@@ -37,12 +40,24 @@ function BrowseCamps() {
   const [camps, setCamps] = useState<Camp[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [verifiedOwners, setVerifiedOwners] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     (async () => {
       try {
         const res = await listLiveCamps();
-        setCamps((res.camps ?? []) as Camp[]);
+        const list = (res.camps ?? []) as Camp[];
+        setCamps(list);
+        const ownerIds = Array.from(new Set(list.map((c) => c.owner_id).filter(Boolean)));
+        if (ownerIds.length) {
+          const { data: v } = await supabase
+            .from("coach_verifications")
+            .select("user_id, expires_at")
+            .eq("status", "approved")
+            .in("user_id", ownerIds);
+          const now = Date.now();
+          setVerifiedOwners(new Set((v ?? []).filter((r) => !r.expires_at || new Date(r.expires_at).getTime() > now).map((r) => r.user_id)));
+        }
       } finally {
         setLoading(false);
       }
@@ -108,7 +123,10 @@ function BrowseCamps() {
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-semibold text-foreground">{c.name}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-semibold text-foreground">{c.name}</p>
+                        {verifiedOwners.has(c.owner_id) && <VerifiedBadge size="xs" label={false} />}
+                      </div>
                       <p className="mt-0.5 text-xs text-muted-foreground">Hosted by PXF Hockey</p>
                     </div>
                     <span className="shrink-0 rounded-full bg-volt/15 px-2 py-0.5 text-[10px] font-bold text-volt">{c.capacity} spots</span>

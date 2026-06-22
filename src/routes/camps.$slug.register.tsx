@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useRegistrationDraft, type ChildDraft } from "@/hooks/useRegistrationDraft";
 import { RegistrationStepper } from "@/components/parent/registration-stepper";
-import { ChevronRight, Loader2, Check, Plus } from "lucide-react";
+import { ChevronRight, Loader2, Check, Plus, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { CaregiversManager } from "@/components/caregivers-manager";
 
 export const Route = createFileRoute("/camps/$slug/register")({
   head: () => ({ meta: [{ title: "Register — PXF Hockey" }] }),
@@ -276,6 +277,23 @@ function RegisterScreen() {
                 onChange={(v) => update({ customs: { ...draft.customs, [f.id]: v } })}
               />
             ))}
+          </FormSection>
+        )}
+
+        {draft.children.some((c) => c.id) && (
+          <FormSection title="Authorized caregivers">
+            <p className="-mt-1 flex items-start gap-1.5 text-[11px] text-muted-foreground">
+              <ShieldCheck size={12} className="mt-0.5 shrink-0 text-teal" />
+              Anyone besides you allowed to pick up your athlete at check-out. You can also manage these later in your profile.
+            </p>
+            <div className="space-y-3">
+              {draft.children.filter((c) => c.id).map((c) => (
+                <div key={c.id} className="rounded-xl border border-border bg-surface/60 p-3">
+                  <p className="mb-2 text-xs font-semibold text-foreground">{c.full_name}</p>
+                  <CaregiversManager attendeeId={c.id!} compact />
+                </div>
+              ))}
+            </div>
           </FormSection>
         )}
       </form>

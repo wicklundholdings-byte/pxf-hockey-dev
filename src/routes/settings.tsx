@@ -1,10 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare, LogOut } from "lucide-react";
+import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare, LogOut, ShieldCheck, ChevronRight } from "lucide-react";
 import { LayoutDashboard, CalendarDays, BookOpen, MessageSquare as InboxIcon, Users } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { useAuth, useHasCoachAccess } from "@/hooks/use-auth";
 import { useNavigate } from "@tanstack/react-router";
+import { useCoachVerified } from "@/components/verified-badge";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings — PXF Hockey" }] }),
@@ -43,6 +44,7 @@ function SettingsScreen() {
   const { hasAccess } = useHasCoachAccess(user?.id);
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const verified = useCoachVerified(user?.id);
   const coachNav = [
     { to: "/coach", label: "Dashboard", icon: LayoutDashboard, exact: true, match: ["/coach"] },
     { to: "/coach/camps", label: "Events", icon: CalendarDays, match: ["/coach/camps", "/coach/bookings"] },
@@ -57,6 +59,36 @@ function SettingsScreen() {
       <p className="text-xs text-muted-foreground">Manage your account, notifications and subscription.</p>
 
       <div className="mt-5 space-y-4">
+        {hasAccess && (
+          <Link
+            to="/get-verified"
+            className={
+              "block rounded-2xl border p-5 " +
+              (verified
+                ? "border-sky-500/40 bg-sky-500/5"
+                : "border-teal/40 bg-gradient-to-br from-teal/10 to-volt/5")
+            }
+          >
+            <div className="flex items-start gap-3">
+              <span className={"grid h-10 w-10 place-items-center rounded-xl " + (verified ? "bg-sky-500/15 text-sky-400" : "bg-teal/15 text-teal")}>
+                <ShieldCheck size={18} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Trust & Safety</p>
+                <p className="font-display text-base font-bold text-foreground">
+                  {verified ? "You're verified" : "Get Verified"}
+                </p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {verified
+                    ? "The blue VERIFIED badge is showing on your profile and listings."
+                    : "Earn the blue VERIFIED badge with a one-time $35 background check. Parents see this before registering."}
+                </p>
+              </div>
+              <ChevronRight size={16} className="mt-1 text-muted-foreground" />
+            </div>
+          </Link>
+        )}
+
         <Section icon={User} title="Profile">
           <div className="flex items-center gap-3">
             <div className="relative grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-teal/40 to-volt/30 text-xl font-bold">R</div>

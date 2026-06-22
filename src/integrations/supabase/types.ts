@@ -112,6 +112,47 @@ export type Database = {
           },
         ]
       }
+      authorized_caregivers: {
+        Row: {
+          attendee_id: string
+          created_at: string
+          full_name: string
+          id: string
+          notes: string | null
+          phone: string
+          relationship: string
+          updated_at: string
+        }
+        Insert: {
+          attendee_id: string
+          created_at?: string
+          full_name: string
+          id?: string
+          notes?: string | null
+          phone: string
+          relationship: string
+          updated_at?: string
+        }
+        Update: {
+          attendee_id?: string
+          created_at?: string
+          full_name?: string
+          id?: string
+          notes?: string | null
+          phone?: string
+          relationship?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "authorized_caregivers_attendee_id_fkey"
+            columns: ["attendee_id"]
+            isOneToOne: false
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       broadcasts: {
         Row: {
           audience_id: string | null
@@ -473,6 +514,87 @@ export type Database = {
           waiver_required?: boolean
           waiver_text?: string | null
           waiver_url?: string | null
+        }
+        Relationships: []
+      }
+      coach_verifications: {
+        Row: {
+          address_city: string | null
+          address_country: string | null
+          address_line1: string | null
+          address_line2: string | null
+          address_postal: string | null
+          address_region: string | null
+          approved_at: string | null
+          approved_by: string | null
+          checkr_candidate_id: string | null
+          checkr_report_id: string | null
+          consent_given_at: string | null
+          created_at: string
+          date_of_birth: string | null
+          expires_at: string | null
+          fee_amount_cents: number | null
+          fee_paid_at: string | null
+          id: string
+          legal_first_name: string | null
+          legal_last_name: string | null
+          rejected_reason: string | null
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_city?: string | null
+          address_country?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          address_postal?: string | null
+          address_region?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          checkr_candidate_id?: string | null
+          checkr_report_id?: string | null
+          consent_given_at?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          expires_at?: string | null
+          fee_amount_cents?: number | null
+          fee_paid_at?: string | null
+          id?: string
+          legal_first_name?: string | null
+          legal_last_name?: string | null
+          rejected_reason?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_city?: string | null
+          address_country?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          address_postal?: string | null
+          address_region?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          checkr_candidate_id?: string | null
+          checkr_report_id?: string | null
+          consent_given_at?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          expires_at?: string | null
+          fee_amount_cents?: number | null
+          fee_paid_at?: string | null
+          id?: string
+          legal_first_name?: string | null
+          legal_last_name?: string | null
+          rejected_reason?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1860,6 +1982,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_coach_verified: { Args: { _user_id: string }; Returns: boolean }
       is_conversation_member: {
         Args: { _conv: string; _user: string }
         Returns: boolean

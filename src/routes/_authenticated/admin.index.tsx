@@ -1,23 +1,24 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Dumbbell, FolderTree, ListChecks, Users } from "lucide-react";
+import { Dumbbell, FolderTree, ListChecks, Users, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminDashboard,
 });
 
 function AdminDashboard() {
-  const [stats, setStats] = useState({ drills: 0, published: 0, categories: 0, programs: 0, users: 0 });
+  const [stats, setStats] = useState({ drills: 0, published: 0, categories: 0, programs: 0, users: 0, pendingVerifications: 0 });
 
   useEffect(() => {
     (async () => {
-      const [d, p, c, pr, u] = await Promise.all([
+      const [d, p, c, pr, u, vp] = await Promise.all([
         supabase.from("drills").select("*", { count: "exact", head: true }),
         supabase.from("drills").select("*", { count: "exact", head: true }).eq("is_published", true),
         supabase.from("drill_categories").select("*", { count: "exact", head: true }),
         supabase.from("training_programs").select("*", { count: "exact", head: true }),
         supabase.from("profiles").select("*", { count: "exact", head: true }),
+        supabase.from("coach_verifications").select("*", { count: "exact", head: true }).eq("status", "pending"),
       ]);
       setStats({
         drills: d.count ?? 0,
@@ -25,6 +26,7 @@ function AdminDashboard() {
         categories: c.count ?? 0,
         programs: pr.count ?? 0,
         users: u.count ?? 0,
+        pendingVerifications: vp.count ?? 0,
       });
     })();
   }, []);
@@ -34,6 +36,7 @@ function AdminDashboard() {
     { label: "Categories", value: stats.categories, sub: "total", icon: FolderTree, to: "/admin/categories" },
     { label: "Programs", value: stats.programs, sub: "total", icon: ListChecks, to: "/admin/programs" },
     { label: "Users", value: stats.users, sub: "registered", icon: Users },
+    { label: "Verifications", value: stats.pendingVerifications, sub: "pending review", icon: ShieldCheck, to: "/admin/verifications" },
   ] as const;
 
   return (

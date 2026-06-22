@@ -24,6 +24,7 @@ import { Route as ParentRouteImport } from './routes/parent'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MembershipRouteImport } from './routes/membership'
+import { Route as GetVerifiedRouteImport } from './routes/get-verified'
 import { Route as GameiqRouteImport } from './routes/gameiq'
 import { Route as FavouritesRouteImport } from './routes/favourites'
 import { Route as DrillsRouteImport } from './routes/drills'
@@ -92,6 +93,7 @@ import { Route as AuthenticatedCoachBroadcastRouteImport } from './routes/_authe
 import { Route as AuthenticatedCoachBookingsRouteImport } from './routes/_authenticated/coach.bookings'
 import { Route as AuthenticatedCoachAttendeesRouteImport } from './routes/_authenticated/coach.attendees'
 import { Route as AuthenticatedCoachAnalyticsRouteImport } from './routes/_authenticated/coach.analytics'
+import { Route as AuthenticatedAdminVerificationsRouteImport } from './routes/_authenticated/admin.verifications'
 import { Route as AuthenticatedAdminProgramsRouteImport } from './routes/_authenticated/admin.programs'
 import { Route as AuthenticatedAdminDrillsRouteImport } from './routes/_authenticated/admin.drills'
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
@@ -182,6 +184,11 @@ const NotificationsRoute = NotificationsRouteImport.update({
 const MembershipRoute = MembershipRouteImport.update({
   id: '/membership',
   path: '/membership',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GetVerifiedRoute = GetVerifiedRouteImport.update({
+  id: '/get-verified',
+  path: '/get-verified',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GameiqRoute = GameiqRouteImport.update({
@@ -539,6 +546,12 @@ const AuthenticatedCoachAnalyticsRoute =
     path: '/analytics',
     getParentRoute: () => AuthenticatedCoachRoute,
   } as any)
+const AuthenticatedAdminVerificationsRoute =
+  AuthenticatedAdminVerificationsRouteImport.update({
+    id: '/verifications',
+    path: '/verifications',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminProgramsRoute =
   AuthenticatedAdminProgramsRouteImport.update({
     id: '/programs',
@@ -646,6 +659,7 @@ export interface FileRoutesByFullPath {
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
+  '/get-verified': typeof GetVerifiedRoute
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
@@ -694,6 +708,7 @@ export interface FileRoutesByFullPath {
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/admin/programs': typeof AuthenticatedAdminProgramsRoute
+  '/admin/verifications': typeof AuthenticatedAdminVerificationsRoute
   '/coach/analytics': typeof AuthenticatedCoachAnalyticsRoute
   '/coach/attendees': typeof AuthenticatedCoachAttendeesRouteWithChildren
   '/coach/bookings': typeof AuthenticatedCoachBookingsRoute
@@ -746,6 +761,7 @@ export interface FileRoutesByTo {
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
+  '/get-verified': typeof GetVerifiedRoute
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
   '/payments-preview': typeof PaymentsPreviewRoute
@@ -789,6 +805,7 @@ export interface FileRoutesByTo {
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/admin/programs': typeof AuthenticatedAdminProgramsRoute
+  '/admin/verifications': typeof AuthenticatedAdminVerificationsRoute
   '/coach/analytics': typeof AuthenticatedCoachAnalyticsRoute
   '/coach/attendees': typeof AuthenticatedCoachAttendeesRouteWithChildren
   '/coach/bookings': typeof AuthenticatedCoachBookingsRoute
@@ -843,6 +860,7 @@ export interface FileRoutesById {
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
+  '/get-verified': typeof GetVerifiedRoute
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
@@ -891,6 +909,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/_authenticated/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/_authenticated/admin/programs': typeof AuthenticatedAdminProgramsRoute
+  '/_authenticated/admin/verifications': typeof AuthenticatedAdminVerificationsRoute
   '/_authenticated/coach/analytics': typeof AuthenticatedCoachAnalyticsRoute
   '/_authenticated/coach/attendees': typeof AuthenticatedCoachAttendeesRouteWithChildren
   '/_authenticated/coach/bookings': typeof AuthenticatedCoachBookingsRoute
@@ -945,6 +964,7 @@ export interface FileRouteTypes {
     | '/drills'
     | '/favourites'
     | '/gameiq'
+    | '/get-verified'
     | '/membership'
     | '/notifications'
     | '/onboarding'
@@ -993,6 +1013,7 @@ export interface FileRouteTypes {
     | '/admin/categories'
     | '/admin/drills'
     | '/admin/programs'
+    | '/admin/verifications'
     | '/coach/analytics'
     | '/coach/attendees'
     | '/coach/bookings'
@@ -1045,6 +1066,7 @@ export interface FileRouteTypes {
     | '/drills'
     | '/favourites'
     | '/gameiq'
+    | '/get-verified'
     | '/membership'
     | '/notifications'
     | '/payments-preview'
@@ -1088,6 +1110,7 @@ export interface FileRouteTypes {
     | '/admin/categories'
     | '/admin/drills'
     | '/admin/programs'
+    | '/admin/verifications'
     | '/coach/analytics'
     | '/coach/attendees'
     | '/coach/bookings'
@@ -1141,6 +1164,7 @@ export interface FileRouteTypes {
     | '/drills'
     | '/favourites'
     | '/gameiq'
+    | '/get-verified'
     | '/membership'
     | '/notifications'
     | '/onboarding'
@@ -1189,6 +1213,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/categories'
     | '/_authenticated/admin/drills'
     | '/_authenticated/admin/programs'
+    | '/_authenticated/admin/verifications'
     | '/_authenticated/coach/analytics'
     | '/_authenticated/coach/attendees'
     | '/_authenticated/coach/bookings'
@@ -1243,6 +1268,7 @@ export interface RootRouteChildren {
   DrillsRoute: typeof DrillsRoute
   FavouritesRoute: typeof FavouritesRoute
   GameiqRoute: typeof GameiqRoute
+  GetVerifiedRoute: typeof GetVerifiedRoute
   MembershipRoute: typeof MembershipRoute
   NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
@@ -1385,6 +1411,13 @@ declare module '@tanstack/react-router' {
       path: '/membership'
       fullPath: '/membership'
       preLoaderRoute: typeof MembershipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/get-verified': {
+      id: '/get-verified'
+      path: '/get-verified'
+      fullPath: '/get-verified'
+      preLoaderRoute: typeof GetVerifiedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gameiq': {
@@ -1863,6 +1896,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachAnalyticsRouteImport
       parentRoute: typeof AuthenticatedCoachRoute
     }
+    '/_authenticated/admin/verifications': {
+      id: '/_authenticated/admin/verifications'
+      path: '/verifications'
+      fullPath: '/admin/verifications'
+      preLoaderRoute: typeof AuthenticatedAdminVerificationsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/programs': {
       id: '/_authenticated/admin/programs'
       path: '/programs'
@@ -1982,6 +2022,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminCategoriesRoute: typeof AuthenticatedAdminCategoriesRoute
   AuthenticatedAdminDrillsRoute: typeof AuthenticatedAdminDrillsRoute
   AuthenticatedAdminProgramsRoute: typeof AuthenticatedAdminProgramsRoute
+  AuthenticatedAdminVerificationsRoute: typeof AuthenticatedAdminVerificationsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
@@ -1989,6 +2030,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminCategoriesRoute: AuthenticatedAdminCategoriesRoute,
   AuthenticatedAdminDrillsRoute: AuthenticatedAdminDrillsRoute,
   AuthenticatedAdminProgramsRoute: AuthenticatedAdminProgramsRoute,
+  AuthenticatedAdminVerificationsRoute: AuthenticatedAdminVerificationsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
@@ -2212,6 +2254,7 @@ const rootRouteChildren: RootRouteChildren = {
   DrillsRoute: DrillsRoute,
   FavouritesRoute: FavouritesRoute,
   GameiqRoute: GameiqRoute,
+  GetVerifiedRoute: GetVerifiedRoute,
   MembershipRoute: MembershipRoute,
   NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRouteWithChildren,

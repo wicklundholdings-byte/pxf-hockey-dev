@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Camera, Check, X, ScanLine } from "lucide-react";
+import { ArrowLeft, Camera, Check, X, ScanLine, Users, ShieldAlert, UserCheck, Phone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { QRScannerModal } from "@/components/coach/qr-scanner";
 
@@ -12,9 +12,11 @@ type Session = { id: string; session_date: string };
 type Reg = {
   id: string;
   status: string;
+  attendee_id: string | null;
   attendees?: { full_name: string | null } | null;
   contacts?: { full_name: string | null } | null;
 };
+type Caregiver = { id: string; attendee_id: string; full_name: string; relationship: string; phone: string };
 
 function CheckinPage() {
   const { campId } = useParams({ from: "/_authenticated/coach/camps/$campId/checkin" });
@@ -26,6 +28,8 @@ function CheckinPage() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [flash, setFlash] = useState<{ ok: boolean; msg: string } | null>(null);
   const [recent, setRecent] = useState<{ name: string; at: string }[]>([]);
+  const [caregivers, setCaregivers] = useState<Map<string, Caregiver[]>>(new Map());
+  const [pickupFor, setPickupFor] = useState<Reg | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -34,16 +38,33 @@ function CheckinPage() {
         supabase.from("camp_sessions").select("id,session_date").eq("camp_id", campId).order("session_date"),
         supabase
           .from("registrations")
-          .select("id,status, attendees(full_name), contacts(full_name)")
+          .select("id,status, attendee_id, attendees(full_name), contacts(full_name)")
           .eq("camp_id", campId)
           .eq("status", "paid"),
       ]);
       setCampName(c.data?.name ?? "");
       const sess = (s.data ?? []) as Session[];
       setSessions(sess);
-      setRegs((r.data ?? []) as unknown as Reg[]);
+      const regsData = (r.data ?? []) as unknown as Reg[];
+      setRegs(regsData);
       const today = new Date().toISOString().slice(0, 10);
       setActiveSessionId(sess.find((x) => x.session_date === today)?.id ?? sess[0]?.id ?? null);
+
+      // load caregivers for all attendees in this camp
+      const attendeeIds = Array.from(new Set(regsData.map((x) => x.attendee_id).filter((v): v is string => !!v)));
+      if (attendeeIds.length) {
+        const { data: cg } = await supabase
+          .from("authorized_caregivers")
+          .select("id, attendee_id, full_name, relationship, phone")
+          .in("attendee_id", attendeeIds);
+        const m = new Map<string, Caregiver[]>();
+        (cg ?? []).forEach((c: Caregiver) => {
+          const arr = m.get(c.attendee_id) ?? [];
+          arr.push(c);
+          m.set(c.attendee_id, arr);
+        });
+        setCaregivers(m);
+      }
     })();
   }, [campId]);
 
@@ -167,6 +188,108 @@ function CheckinPage() {
       </div>
 
       {scannerOpen && <QRScannerModal onScan={handleScan} onClose={() => setScannerOpen(false)} />}
+
+      <div className="mt-5">
+        <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          <Users size={11} /> Roster ({regs.length})
+        </p>
+        {regs.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-border bg-card p-4 text-center text-[11px] text-muted-foreground">
+            No paid registrations yet
+          </p>
+        ) : (
+          <ul className="space-y-1.5">
+            {regs.map((r) => {
+              const name = r.attendees?.full_name ?? r.contacts?.full_name ?? "Athlete";
+              const cgList = r.attendee_id ? (caregivers.get(r.attendee_id) ?? []) : [];
+              const noCaregivers = r.attendee_id && cgList.length === 0;
+              const present = attendance.get(r.id) === true;
+              return (
+                <li key={r.id} className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
+                  <span className={"grid h-7 w-7 place-items-center rounded-full text-[10px] font-bold " + (present ? "bg-emerald-500/20 text-emerald-400" : "bg-surface text-muted-foreground")}>
+                    {present ? <Check size={12} /> : name.slice(0, 2).toUpperCase()}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="truncate text-xs font-semibold text-foreground">{name}</p>
+                      {noCaregivers && (
+                        <span title="No authorized caregivers on file" className="flex items-center gap-0.5 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold text-amber-300">
+                          <ShieldAlert size={9} /> NO PICKUP
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      {cgList.length > 0 ? `${cgList.length} authorized caregiver${cgList.length === 1 ? "" : "s"}` : "Parent pickup only"}
+                    </p>
+                  </div>
+                  {r.attendee_id && (
+                    <button
+                      onClick={() => setPickupFor(r)}
+                      aria-label={`Show pickup info for ${name}`}
+                      className="grid h-8 w-8 place-items-center rounded-lg border border-border text-teal hover:bg-teal/10"
+                    >
+                      <UserCheck size={14} />
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      {pickupFor && (
+        <PickupSheet
+          reg={pickupFor}
+          caregivers={(pickupFor.attendee_id && caregivers.get(pickupFor.attendee_id)) || []}
+          onClose={() => setPickupFor(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function PickupSheet({ reg, caregivers, onClose }: { reg: Reg; caregivers: Caregiver[]; onClose: () => void }) {
+  const name = reg.attendees?.full_name ?? reg.contacts?.full_name ?? "Athlete";
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-[480px] rounded-t-3xl border-t border-border bg-background p-5 pb-8">
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-border" />
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Authorized for pickup</p>
+            <h2 className="font-display text-lg font-bold text-foreground">{name}</h2>
+          </div>
+          <button onClick={onClose} className="text-muted-foreground"><X size={18} /></button>
+        </div>
+
+        {caregivers.length === 0 ? (
+          <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-500/40 bg-amber-500/5 p-3 text-xs text-amber-300">
+            <ShieldAlert size={14} className="mt-0.5 shrink-0" />
+            <div>
+              <p className="font-semibold">No authorized caregivers on file</p>
+              <p className="mt-0.5 text-amber-300/80">Release this athlete only to their registered parent/guardian. Confirm ID before pickup.</p>
+            </div>
+          </div>
+        ) : (
+          <ul className="mt-4 space-y-2">
+            {caregivers.map((c) => (
+              <li key={c.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-teal/15 text-teal">
+                  <UserCheck size={16} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-foreground">{c.full_name}</p>
+                  <p className="truncate text-[11px] text-muted-foreground">{c.relationship}</p>
+                </div>
+                <a href={`tel:${c.phone}`} className="flex items-center gap-1 rounded-lg bg-teal/15 px-2.5 py-1.5 text-[11px] font-bold text-teal">
+                  <Phone size={11} /> {c.phone}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
