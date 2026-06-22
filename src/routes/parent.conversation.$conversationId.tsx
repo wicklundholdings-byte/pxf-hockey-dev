@@ -32,35 +32,47 @@ function ParentConversation() {
     async function load() {
       if (!user) return;
       setLoading(true);
-      // Verify membership and fetch camp/coach name
+
+      // Verify this user is a member of the conversation
       const { data: membership } = await supabase
         .from("conversation_members")
-        .select("conversation_id, conversations(camp_id, camps(name, owner_id, profiles(full_name)))")
+        .select("conversation_id")
         .eq("conversation_id", conversationId)
         .eq("user_id", user.id)
         .maybeSingle();
 
-      const other = await supabase
+      if (!membership) {
+        setIsMember(false);
+        setLoading(false);
+        return;
+      }
+      setIsMember(true);
+
+      // Load conversation + camp name
+      const { data: convo } = await supabase
+        .from("conversations")
+        .select("id, camp_id, camps(name, owner_id)")
+        .eq("id", conversationId)
+        .maybeSingle();
+      const campName = (convo as any)?.camps?.name;
+
+      // Find the other member (coach) and their profile name
+      const { data: other } = await supabase
         .from("conversation_members")
         .select("user_id, profiles(full_name)")
         .eq("conversation_id", conversationId)
         .neq("user_id", user.id)
         .maybeSingle();
-
-      const convo = (membership as any)?.conversations;
-      const campName = convo?.camps?.name;
-      const otherName = (other?.data as any)?.profiles?.full_name ?? "Coach";
+      const otherName = (other as any)?.profiles?.full_name ?? "Coach";
       setTitle(campName ? `${otherName} — ${campName}` : otherName);
-      setIsMember(!!membership);
 
-      if (membership) {
-        const { data } = await supabase
-          .from("messages")
-          .select("id, conversation_id, sender_id, body, created_at")
-          .eq("conversation_id", conversationId)
-          .order("created_at");
-        setMessages((data ?? []) as Msg[]);
-      }
+      // Load messages
+      const { data } = await supabase
+        .from("messages")
+        .select("id, conversation_id, sender_id, body, created_at")
+        .eq("conversation_id", conversationId)
+        .order("created_at");
+      setMessages((data ?? []) as Msg[]);
       setLoading(false);
     }
     load();
