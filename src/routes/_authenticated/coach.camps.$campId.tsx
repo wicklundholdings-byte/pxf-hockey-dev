@@ -6,6 +6,8 @@ import { StatusBadge } from "@/components/coach/status-badge";
 import { QRScannerModal } from "@/components/coach/qr-scanner";
 import { ApplyCampTemplate } from "@/components/coach/apply-camp-template";
 import { SessionRunner, SessionSummary, readCampCompletions, writeCampCompletion, type RunnerBlock, type RunnerSummary, type SessionRunRecord } from "@/components/session-runner";
+import { toast } from "sonner";
+import { ArrowUp, ArrowDown, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/$campId")({
   component: CampDetailPage,
