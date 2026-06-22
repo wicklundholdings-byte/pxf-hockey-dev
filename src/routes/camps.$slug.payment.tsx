@@ -1,5 +1,5 @@
 import { createFileRoute, useParams, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { submitBooking, previewCoupon } from "@/lib/booking.functions";
 import { useRegistrationDraft } from "@/hooks/useRegistrationDraft";
@@ -46,6 +46,7 @@ function PaymentScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const submittedRef = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -63,7 +64,7 @@ function PaymentScreen() {
   // Guard: must have draft data
   useEffect(() => {
     if (!hydrated) return;
-    if (submitted) return;
+    if (submitted || submittedRef.current) return;
     if (!draft.child.full_name || !draft.parent.email) {
       navigate({ to: "/camps/$slug/register", params: { slug }, replace: true });
     }
@@ -134,6 +135,7 @@ function PaymentScreen() {
             : null,
         },
       });
+      submittedRef.current = true;
       setSubmitted(true);
       navigate({
         to: "/camps/$slug/confirmed",
