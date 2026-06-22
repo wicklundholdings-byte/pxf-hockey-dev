@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 
+export type ChildDraft = {
+  full_name: string;
+  birthday: string;
+  position: string;
+  skill_level: string;
+};
+
 export type RegistrationDraft = {
   campId?: string;
   parent: { full_name: string; email: string; phone: string };
-  child: {
-    full_name: string;
-    birthday: string;
-    position: string;
-    skill_level: string;
-  };
+  child: ChildDraft;
+  children: Array<ChildDraft & { id?: string }>;
   customs: Record<string, string>;
   waiver: { signer_name: string; agreed_at: string | null } | null;
   paymentPlan: "none" | "two" | "three";
@@ -18,6 +21,7 @@ export type RegistrationDraft = {
 const emptyDraft: RegistrationDraft = {
   parent: { full_name: "", email: "", phone: "" },
   child: { full_name: "", birthday: "", position: "", skill_level: "" },
+  children: [],
   customs: {},
   waiver: null,
   paymentPlan: "none",

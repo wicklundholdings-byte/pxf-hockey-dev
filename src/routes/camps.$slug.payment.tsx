@@ -65,10 +65,11 @@ function PaymentScreen() {
   useEffect(() => {
     if (!hydrated) return;
     if (submitted || submittedRef.current) return;
-    if (!draft.child.full_name || !draft.parent.email) {
+    const hasAthlete = draft.children.length > 0 || draft.child.full_name;
+    if (!hasAthlete || !draft.parent.email) {
       navigate({ to: "/camps/$slug/register", params: { slug }, replace: true });
     }
-  }, [hydrated, submitted, draft.child.full_name, draft.parent.email, navigate, slug]);
+  }, [hydrated, submitted, draft.children.length, draft.child.full_name, draft.parent.email, navigate, slug]);
 
   if (loading || !camp || !hydrated) {
     return (
@@ -82,8 +83,11 @@ function PaymentScreen() {
     camp.early_bird_price_cents != null &&
     camp.early_bird_expires_at != null &&
     new Date(camp.early_bird_expires_at) > new Date();
-  const priceCents = earlyBird ? camp.early_bird_price_cents! : camp.price_cents;
-  const totalCents = coupon?.finalCents ?? priceCents;
+  const attendeeCount = Math.max(1, draft.children.length);
+  const perAthlete = earlyBird ? camp.early_bird_price_cents! : camp.price_cents;
+  const priceCents = perAthlete * attendeeCount;
+  const couponFinal = coupon != null ? coupon.finalCents * attendeeCount : null;
+  const totalCents = couponFinal ?? priceCents;
   const depositCents = camp.payment_plan === "two" ? Math.round(totalCents * 0.25) : Math.round(totalCents / 3);
 
   async function applyCoupon() {
@@ -110,11 +114,15 @@ function PaymentScreen() {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await submitBooking({
-        data: {
-          campId: camp.id,
-          parent: { full_name: draft.parent.full_name, email: draft.parent.email, phone: draft.parent.phone || null },
-          attendees: [
+      const attendeesList = draft.children.length > 0
+        ? draft.children.map((c) => ({
+            full_name: c.full_name,
+            birthday: c.birthday || null,
+            position: c.position || null,
+            skill_level: c.skill_level || null,
+            customFieldValues: draft.customs,
+          }))
+        : [
             {
               full_name: draft.child.full_name,
               birthday: draft.child.birthday || null,
@@ -122,7 +130,12 @@ function PaymentScreen() {
               skill_level: draft.child.skill_level || null,
               customFieldValues: draft.customs,
             },
-          ],
+          ];
+      const res = await submitBooking({
+        data: {
+          campId: camp.id,
+          parent: { full_name: draft.parent.full_name, email: draft.parent.email, phone: draft.parent.phone || null },
+          attendees: attendeesList,
           couponCode: draft.couponCode || null,
           paymentPlan: draft.paymentPlan,
           waiver: camp.waiver_required && draft.waiver
@@ -190,7 +203,11 @@ function PaymentScreen() {
           <div className="mt-3 space-y-2 text-sm">
             <SummaryRow label={camp.name} value={dollars(priceCents)} />
             <SummaryRow label={`Dates`} value={`${fmtDate(camp.start_date)}${camp.end_date && camp.end_date !== camp.start_date ? ` – ${fmtDate(camp.end_date)}` : ""}`} muted />
-            <SummaryRow label="Athlete" value={draft.child.full_name} muted />
+            <SummaryRow
+              label={draft.children.length > 1 ? "Athletes" : "Athlete"}
+              value={draft.children.length > 0 ? draft.children.map((c) => c.full_name).join(", ") : draft.child.full_name}
+              muted
+            />
             {coupon && (
               <SummaryRow label={`Promo ${coupon.label}`} value={`–${dollars(coupon.discountCents)}`} accent />
             )}

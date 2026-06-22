@@ -1,9 +1,10 @@
 import { createFileRoute, useParams, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useRegistrationDraft } from "@/hooks/useRegistrationDraft";
+import { useRegistrationDraft, type ChildDraft } from "@/hooks/useRegistrationDraft";
 import { RegistrationStepper } from "@/components/parent/registration-stepper";
-import { ChevronRight, Loader2 } from "lucide-react";
+import { ChevronRight, Loader2, Check, Plus } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/camps/$slug/register")({
   head: () => ({ meta: [{ title: "Register — PXF Hockey" }] }),
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/camps/$slug/register")({
 });
 
 type CustomField = { id: string; label: string; field_type: string; options: string[] | null; required: boolean; sort_order: number };
+type SavedAthlete = { id: string; full_name: string; birthday: string | null; position: string | null; skill_level: string | null };
 
 const positions = ["Forward", "Defense", "Goalie", "Any"];
 const levels = [
@@ -23,9 +25,12 @@ function RegisterScreen() {
   const { slug } = useParams({ from: "/camps/$slug/register" });
   const navigate = useNavigate();
   const { draft, update, hydrated } = useRegistrationDraft(slug);
+  const { user } = useAuth();
   const [campId, setCampId] = useState<string | null>(null);
   const [fields, setFields] = useState<CustomField[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saved, setSaved] = useState<SavedAthlete[]>([]);
+  const [showManual, setShowManual] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -52,6 +57,49 @@ function RegisterScreen() {
     if (campId && draft.campId !== campId) update({ campId });
   }, [campId, draft.campId, update]);
 
+  // Prefill parent info from signed-in profile + load saved athletes
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const [{ data: prof }, { data: kids }] = await Promise.all([
+        supabase.from("profiles").select("full_name, email").eq("id", user.id).maybeSingle(),
+        supabase
+          .from("attendees")
+          .select("id, full_name, birthday, position, skill_level")
+          .eq("owner_id", user.id)
+          .order("created_at"),
+      ]);
+      setSaved((kids ?? []) as SavedAthlete[]);
+      update({
+        parent: {
+          full_name: draft.parent.full_name || prof?.full_name || "",
+          email: draft.parent.email || prof?.email || user.email || "",
+          phone: draft.parent.phone,
+        },
+      });
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  const selectedIds = new Set(draft.children.map((c) => c.id).filter(Boolean) as string[]);
+
+  function toggleAthlete(a: SavedAthlete) {
+    const exists = selectedIds.has(a.id);
+    const next = exists
+      ? draft.children.filter((c) => c.id !== a.id)
+      : [
+          ...draft.children,
+          {
+            id: a.id,
+            full_name: a.full_name,
+            birthday: a.birthday ?? "",
+            position: a.position ?? "",
+            skill_level: (a.skill_level ?? "").toLowerCase(),
+          },
+        ];
+    update({ children: next });
+  }
+
   function submit(e: React.FormEvent) {
     e.preventDefault();
     navigate({ to: "/camps/$slug/waiver", params: { slug } });
@@ -65,11 +113,12 @@ function RegisterScreen() {
     );
   }
 
+  const hasPickedAthlete = draft.children.length > 0;
+  const manualValid = draft.child.full_name.trim() && draft.child.skill_level;
   const valid =
     draft.parent.full_name.trim() &&
     draft.parent.email.trim() &&
-    draft.child.full_name.trim() &&
-    draft.child.skill_level &&
+    (hasPickedAthlete || manualValid) &&
     fields.every((f) => !f.required || (draft.customs[f.id] ?? "").toString().trim());
 
   return (
@@ -87,7 +136,59 @@ function RegisterScreen() {
           <Field label="Phone" type="tel" value={draft.parent.phone} onChange={(v) => update({ parent: { ...draft.parent, phone: v } })} />
         </FormSection>
 
-        <FormSection title="Athlete info">
+        {saved.length > 0 && (
+          <FormSection title={`Your athletes (${saved.length})`}>
+            <p className="-mt-1 text-[11px] text-muted-foreground">
+              Pick one or both — we'll use the info you've already saved.
+            </p>
+            <div className="space-y-2">
+              {saved.map((a) => {
+                const active = selectedIds.has(a.id);
+                return (
+                  <button
+                    type="button"
+                    key={a.id}
+                    onClick={() => toggleAthlete(a)}
+                    className={
+                      "flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors " +
+                      (active ? "border-teal bg-teal/10" : "border-border bg-surface hover:border-teal/40")
+                    }
+                  >
+                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-brand font-display text-sm font-bold text-primary-foreground">
+                      {a.full_name.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold">{a.full_name}</p>
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        {[a.position, a.skill_level].filter(Boolean).join(" · ") || "Tap to register"}
+                      </p>
+                    </div>
+                    <div
+                      className={
+                        "grid h-6 w-6 place-items-center rounded-full border " +
+                        (active ? "border-teal bg-teal text-background" : "border-border text-transparent")
+                      }
+                    >
+                      <Check size={14} />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {!showManual && (
+              <button
+                type="button"
+                onClick={() => setShowManual(true)}
+                className="mt-1 flex w-full items-center justify-center gap-1 rounded-xl border border-dashed border-border px-3 py-2.5 text-[11px] font-semibold text-muted-foreground hover:border-teal hover:text-teal"
+              >
+                <Plus size={12} /> Register a new athlete instead
+              </button>
+            )}
+          </FormSection>
+        )}
+
+        {(saved.length === 0 || showManual) && (
+        <FormSection title={saved.length === 0 ? "Athlete info" : "New athlete"}>
           <Field label="Child's full name" required value={draft.child.full_name} onChange={(v) => update({ child: { ...draft.child, full_name: v } })} />
           <Field label="Date of birth" type="date" value={draft.child.birthday} onChange={(v) => update({ child: { ...draft.child, birthday: v } })} />
           <SelectField label="Position" value={draft.child.position} onChange={(v) => update({ child: { ...draft.child, position: v } })} options={positions} />
@@ -113,6 +214,7 @@ function RegisterScreen() {
             </div>
           </div>
         </FormSection>
+        )}
 
         {fields.length > 0 && (
           <FormSection title="Additional info">
