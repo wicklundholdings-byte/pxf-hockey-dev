@@ -890,6 +890,95 @@ function CampSchedule({
   );
 }
 
+function CampStaffSection({ campId }: { campId: string }) {
+  type TM = { id: string; email: string; title: string; permission_level: "owner" | "coach" | "assistant"; status: string };
+  const [team, setTeam] = useState<TM[]>([]);
+  const [assigned, setAssigned] = useState<Array<{ id: string; team_member_id: string }>>([]);
+  const [picking, setPicking] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const [{ data: t }, { data: a }] = await Promise.all([
+        supabase.from("team_members").select("id, email, title, permission_level, status").eq("owner_id", u.user.id),
+        (supabase as any).from("camp_staff").select("id, team_member_id").eq("camp_id", campId),
+      ]);
+      setTeam((t ?? []) as TM[]);
+      setAssigned((a ?? []) as Array<{ id: string; team_member_id: string }>);
+    })();
+  }, [campId]);
+
+  async function toggle(memberId: string) {
+    const existing = assigned.find((x) => x.team_member_id === memberId);
+    if (existing) {
+      setAssigned((p) => p.filter((x) => x.id !== existing.id));
+      await (supabase as any).from("camp_staff").delete().eq("id", existing.id);
+    } else {
+      const { data } = await (supabase as any)
+        .from("camp_staff")
+        .insert({ camp_id: campId, team_member_id: memberId })
+        .select("id, team_member_id")
+        .maybeSingle();
+      if (data) setAssigned((p) => [...p, data]);
+    }
+  }
+
+  const assignedTeam = team.filter((m) => assigned.some((a) => a.team_member_id === m.id));
+
+  return (
+    <section className="space-y-2">
+      <div className="flex items-center justify-between">
+        <h2 className="text-[10px] font-bold uppercase tracking-wider text-foreground">Staff</h2>
+        <button onClick={() => setPicking((v) => !v)} className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 py-1 text-[10px] font-bold text-muted-foreground">
+          <Plus size={10} /> {picking ? "Done" : "Manage"}
+        </button>
+      </div>
+      {assignedTeam.length === 0 && !picking && (
+        <p className="rounded-2xl border border-dashed border-border bg-card p-4 text-center text-[11px] text-muted-foreground">No staff assigned to this camp yet.</p>
+      )}
+      {assignedTeam.length > 0 && (
+        <ul className="space-y-1.5">
+          {assignedTeam.map((m) => (
+            <li key={m.id} className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2">
+              <div className="grid h-8 w-8 place-items-center rounded-full bg-teal/15 text-[10px] font-bold text-teal">{m.email.slice(0, 2).toUpperCase()}</div>
+              <div className="flex-1 min-w-0">
+                <p className="truncate text-xs font-semibold text-foreground">{m.title}</p>
+                <p className="truncate text-[10px] text-muted-foreground">{m.email}</p>
+              </div>
+              <span className="rounded-full bg-surface px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{m.permission_level}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {picking && (
+        <div className="space-y-1.5 rounded-2xl border border-border bg-card p-2">
+          {team.length === 0 ? (
+            <p className="px-2 py-3 text-center text-[11px] text-muted-foreground">
+              No team members yet. Invite some from Settings → My Team.
+            </p>
+          ) : (
+            team.map((m) => {
+              const isAssigned = assigned.some((a) => a.team_member_id === m.id);
+              return (
+                <button key={m.id} onClick={() => toggle(m.id)}
+                  className={"flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left " + (isAssigned ? "border-teal bg-teal/10" : "border-border bg-surface")}>
+                  <div className="grid h-8 w-8 place-items-center rounded-full bg-card text-[10px] font-bold text-foreground">{m.email.slice(0, 2).toUpperCase()}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate text-xs font-semibold text-foreground">{m.title}</p>
+                    <p className="truncate text-[10px] text-muted-foreground">{m.email} · {m.permission_level}</p>
+                  </div>
+                  <span className={"text-[10px] font-bold " + (isAssigned ? "text-teal" : "text-muted-foreground")}>{isAssigned ? "ASSIGNED" : "ASSIGN"}</span>
+                </button>
+              );
+            })
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function RosterCard({ regs }: { regs: Reg[] }) {
   const visible = regs.slice(0, 5);
   return (
