@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/coach/")({
 });
 
 type Camp = { id: string; name: string; slug: string; capacity: number; status: string; start_date: string | null; price_cents: number };
-type Reg = { id: string; status: string; amount_cents: number; created_at: string; camp_id: string };
+type Reg = { id: string; status: string; amount_cents: number; created_at: string; camp_id: string; attendee_id: string | null; contact_id: string | null };
 
 function fmtMoney(cents: number) {
   return "$" + (cents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -27,7 +27,7 @@ function CoachDashboard() {
     (async () => {
       const [c, r, ct] = await Promise.all([
         supabase.from("camps").select("id,name,slug,capacity,status,start_date,price_cents").order("start_date", { ascending: true }),
-        supabase.from("registrations").select("id,status,amount_cents,created_at,camp_id").order("created_at", { ascending: false }),
+        supabase.from("registrations").select("id,status,amount_cents,created_at,camp_id,attendee_id,contact_id").order("created_at", { ascending: false }),
         supabase.from("contacts").select("*", { count: "exact", head: true }),
       ]);
       setCamps((c.data ?? []) as Camp[]);
@@ -210,21 +210,27 @@ function CoachDashboard() {
             <p className="text-xs text-muted-foreground">Activity will appear here.</p>
           ) : (
             <ul className="space-y-2.5">
-              {recent.map((r) => (
-                <li key={r.id}>
-                  <Link
-                    to="/coach/camps/$campId"
-                    params={{ campId: r.camp_id }}
-                    className="flex items-center justify-between gap-2 rounded-lg p-1.5 -m-1.5 text-xs transition-colors hover:bg-surface"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-foreground">New registration · {campName(r.camp_id)}</p>
-                      <p className="text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleString()}</p>
-                    </div>
-                    <StatusBadge status={r.status} />
-                  </Link>
-                </li>
-              ))}
+              {recent.map((r) => {
+                const linkProps = r.attendee_id
+                  ? { to: "/coach/attendees/$athleteId" as const, params: { athleteId: r.attendee_id } }
+                  : r.contact_id
+                  ? { to: "/coach/contacts/$contactId" as const, params: { contactId: r.contact_id } }
+                  : { to: "/coach/camps/$campId" as const, params: { campId: r.camp_id } };
+                return (
+                  <li key={r.id}>
+                    <Link
+                      {...linkProps}
+                      className="flex items-center justify-between gap-2 rounded-lg p-1.5 -m-1.5 text-xs transition-colors hover:bg-surface"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-foreground">New registration · {campName(r.camp_id)}</p>
+                        <p className="text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleString()}</p>
+                      </div>
+                      <StatusBadge status={r.status} />
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
