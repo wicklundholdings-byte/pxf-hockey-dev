@@ -4,7 +4,7 @@ import { ArrowLeft, ShieldCheck, Lock, FileText, CreditCard, Check, Clock, Alert
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
-export const Route = createFileRoute("/settings/verification")({
+export const Route = createFileRoute("/get-verified")({
   head: () => ({ meta: [{ title: "Get Verified — PXF Hockey" }] }),
   component: VerificationFlow,
 });

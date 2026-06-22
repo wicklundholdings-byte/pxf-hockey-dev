@@ -24,6 +24,7 @@ import { Route as ParentRouteImport } from './routes/parent'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MembershipRouteImport } from './routes/membership'
+import { Route as GetVerifiedRouteImport } from './routes/get-verified'
 import { Route as GameiqRouteImport } from './routes/gameiq'
 import { Route as FavouritesRouteImport } from './routes/favourites'
 import { Route as DrillsRouteImport } from './routes/drills'
@@ -40,7 +41,6 @@ import { Route as OnboardingIndexRouteImport } from './routes/onboarding.index'
 import { Route as CampsIndexRouteImport } from './routes/camps.index'
 import { Route as StoreCartRouteImport } from './routes/store.cart'
 import { Route as StoreProductIdRouteImport } from './routes/store.$productId'
-import { Route as SettingsVerificationRouteImport } from './routes/settings.verification'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
 import { Route as RsvpTokenRouteImport } from './routes/rsvp.$token'
 import { Route as PaymentsSubscribeRouteImport } from './routes/payments.subscribe'
@@ -186,6 +186,11 @@ const MembershipRoute = MembershipRouteImport.update({
   path: '/membership',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GetVerifiedRoute = GetVerifiedRouteImport.update({
+  id: '/get-verified',
+  path: '/get-verified',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GameiqRoute = GameiqRouteImport.update({
   id: '/gameiq',
   path: '/gameiq',
@@ -264,11 +269,6 @@ const StoreProductIdRoute = StoreProductIdRouteImport.update({
   id: '/store/$productId',
   path: '/store/$productId',
   getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsVerificationRoute = SettingsVerificationRouteImport.update({
-  id: '/verification',
-  path: '/verification',
-  getParentRoute: () => SettingsRoute,
 } as any)
 const SessionDetailSessionIdRoute = SessionDetailSessionIdRouteImport.update({
   id: '/session-detail/$sessionId',
@@ -659,6 +659,7 @@ export interface FileRoutesByFullPath {
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
+  '/get-verified': typeof GetVerifiedRoute
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
@@ -670,7 +671,7 @@ export interface FileRoutesByFullPath {
   '/saved-sessions': typeof SavedSessionsRoute
   '/search': typeof SearchRoute
   '/sessions': typeof SessionsRoute
-  '/settings': typeof SettingsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
   '/welcome': typeof WelcomeRoute
@@ -698,7 +699,6 @@ export interface FileRoutesByFullPath {
   '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
-  '/settings/verification': typeof SettingsVerificationRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
   '/camps/': typeof CampsIndexRoute
@@ -761,6 +761,7 @@ export interface FileRoutesByTo {
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
+  '/get-verified': typeof GetVerifiedRoute
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
   '/payments-preview': typeof PaymentsPreviewRoute
@@ -770,7 +771,7 @@ export interface FileRoutesByTo {
   '/saved-sessions': typeof SavedSessionsRoute
   '/search': typeof SearchRoute
   '/sessions': typeof SessionsRoute
-  '/settings': typeof SettingsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
   '/welcome': typeof WelcomeRoute
@@ -795,7 +796,6 @@ export interface FileRoutesByTo {
   '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
-  '/settings/verification': typeof SettingsVerificationRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
   '/camps': typeof CampsIndexRoute
@@ -860,6 +860,7 @@ export interface FileRoutesById {
   '/drills': typeof DrillsRoute
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
+  '/get-verified': typeof GetVerifiedRoute
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
@@ -871,7 +872,7 @@ export interface FileRoutesById {
   '/saved-sessions': typeof SavedSessionsRoute
   '/search': typeof SearchRoute
   '/sessions': typeof SessionsRoute
-  '/settings': typeof SettingsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
   '/welcome': typeof WelcomeRoute
@@ -899,7 +900,6 @@ export interface FileRoutesById {
   '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
-  '/settings/verification': typeof SettingsVerificationRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
   '/camps/': typeof CampsIndexRoute
@@ -964,6 +964,7 @@ export interface FileRouteTypes {
     | '/drills'
     | '/favourites'
     | '/gameiq'
+    | '/get-verified'
     | '/membership'
     | '/notifications'
     | '/onboarding'
@@ -1003,7 +1004,6 @@ export interface FileRouteTypes {
     | '/payments/subscribe'
     | '/rsvp/$token'
     | '/session-detail/$sessionId'
-    | '/settings/verification'
     | '/store/$productId'
     | '/store/cart'
     | '/camps/'
@@ -1066,6 +1066,7 @@ export interface FileRouteTypes {
     | '/drills'
     | '/favourites'
     | '/gameiq'
+    | '/get-verified'
     | '/membership'
     | '/notifications'
     | '/payments-preview'
@@ -1100,7 +1101,6 @@ export interface FileRouteTypes {
     | '/payments/subscribe'
     | '/rsvp/$token'
     | '/session-detail/$sessionId'
-    | '/settings/verification'
     | '/store/$productId'
     | '/store/cart'
     | '/camps'
@@ -1164,6 +1164,7 @@ export interface FileRouteTypes {
     | '/drills'
     | '/favourites'
     | '/gameiq'
+    | '/get-verified'
     | '/membership'
     | '/notifications'
     | '/onboarding'
@@ -1203,7 +1204,6 @@ export interface FileRouteTypes {
     | '/payments/subscribe'
     | '/rsvp/$token'
     | '/session-detail/$sessionId'
-    | '/settings/verification'
     | '/store/$productId'
     | '/store/cart'
     | '/camps/'
@@ -1268,6 +1268,7 @@ export interface RootRouteChildren {
   DrillsRoute: typeof DrillsRoute
   FavouritesRoute: typeof FavouritesRoute
   GameiqRoute: typeof GameiqRoute
+  GetVerifiedRoute: typeof GetVerifiedRoute
   MembershipRoute: typeof MembershipRoute
   NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
@@ -1279,7 +1280,7 @@ export interface RootRouteChildren {
   SavedSessionsRoute: typeof SavedSessionsRoute
   SearchRoute: typeof SearchRoute
   SessionsRoute: typeof SessionsRoute
-  SettingsRoute: typeof SettingsRouteWithChildren
+  SettingsRoute: typeof SettingsRoute
   SignatureRoute: typeof SignatureRoute
   TeamRoute: typeof TeamRoute
   WelcomeRoute: typeof WelcomeRoute
@@ -1412,6 +1413,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MembershipRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/get-verified': {
+      id: '/get-verified'
+      path: '/get-verified'
+      fullPath: '/get-verified'
+      preLoaderRoute: typeof GetVerifiedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/gameiq': {
       id: '/gameiq'
       path: '/gameiq'
@@ -1523,13 +1531,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/store/$productId'
       preLoaderRoute: typeof StoreProductIdRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/settings/verification': {
-      id: '/settings/verification'
-      path: '/verification'
-      fullPath: '/settings/verification'
-      preLoaderRoute: typeof SettingsVerificationRouteImport
-      parentRoute: typeof SettingsRoute
     }
     '/session-detail/$sessionId': {
       id: '/session-detail/$sessionId'
@@ -2222,18 +2223,6 @@ const ParentRouteChildren: ParentRouteChildren = {
 const ParentRouteWithChildren =
   ParentRoute._addFileChildren(ParentRouteChildren)
 
-interface SettingsRouteChildren {
-  SettingsVerificationRoute: typeof SettingsVerificationRoute
-}
-
-const SettingsRouteChildren: SettingsRouteChildren = {
-  SettingsVerificationRoute: SettingsVerificationRoute,
-}
-
-const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
-  SettingsRouteChildren,
-)
-
 interface CampsSlugRouteChildren {
   CampsSlugConfirmedRoute: typeof CampsSlugConfirmedRoute
   CampsSlugPaymentRoute: typeof CampsSlugPaymentRoute
@@ -2265,6 +2254,7 @@ const rootRouteChildren: RootRouteChildren = {
   DrillsRoute: DrillsRoute,
   FavouritesRoute: FavouritesRoute,
   GameiqRoute: GameiqRoute,
+  GetVerifiedRoute: GetVerifiedRoute,
   MembershipRoute: MembershipRoute,
   NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRouteWithChildren,
@@ -2276,7 +2266,7 @@ const rootRouteChildren: RootRouteChildren = {
   SavedSessionsRoute: SavedSessionsRoute,
   SearchRoute: SearchRoute,
   SessionsRoute: SessionsRoute,
-  SettingsRoute: SettingsRouteWithChildren,
+  SettingsRoute: SettingsRoute,
   SignatureRoute: SignatureRoute,
   TeamRoute: TeamRoute,
   WelcomeRoute: WelcomeRoute,
