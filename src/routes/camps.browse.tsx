@@ -48,6 +48,22 @@ const AGE_GROUPS = ["U8", "U10", "U12", "U14", "U16", "U18", "Junior", "Senior"]
 const SKILL_LEVELS = ["Beginner", "Intermediate", "Advanced", "Elite"];
 const SPORT_TYPES = ["Hockey", "Skating", "Goalie", "Off-Ice"];
 
+function FilterSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: string[] }) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className={`rounded-full border px-3 py-1.5 text-[11px] outline-none ${value ? "border-teal bg-teal/10 text-teal" : "border-border bg-card text-muted-foreground"}`}
+      aria-label={label}
+    >
+      <option value="">{label}</option>
+      {options.map((o) => (
+        <option key={o} value={o}>{o}</option>
+      ))}
+    </select>
+  );
+}
+
 function fmtDate(d: string | null) {
   if (!d) return "TBA";
   return new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
