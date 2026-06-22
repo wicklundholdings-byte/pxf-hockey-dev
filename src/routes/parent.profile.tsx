@@ -23,6 +23,7 @@ function initials(name: string) {
 
 function ParentProfile() {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [kids, setKids] = useState<Kid[]>([]);
   const [showManager, setShowManager] = useState(false);
 
