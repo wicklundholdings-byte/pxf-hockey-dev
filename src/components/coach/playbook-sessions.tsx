@@ -1,16 +1,20 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Clock, Heart, Folder as FolderIcon, Trash2, MoreVertical, X } from "lucide-react";
 import { usePlaybookFolders } from "@/hooks/usePlaybookFolders";
 import { usePlaybookFavorites } from "@/hooks/usePlaybookFavorites";
 import { FolderManager } from "./folder-manager";
+import { CATEGORIES } from "@/data/pxf";
 
 type SessionBlock = { uid: string; drillId: string; mins: number };
 type SavedSession = {
   id: string; name: string; date: string; age: string; level: string;
-  totalMins: number; notes: string; blocks: SessionBlock[];
+  totalMins: number; notes: string; blocks: SessionBlock[]; focus?: string;
   completed?: boolean; completedAt?: string; folderId?: string | null;
 };
+
+const AGE_GROUPS = ["U9+", "U11+", "U13+", "U15+"] as const;
+const LEVELS = ["Beginner", "Intermediate", "Advanced", "Elite"] as const;
 
 const KEY = "pxf:sessions:v2";
 function read(): SavedSession[] {
@@ -23,8 +27,10 @@ function write(list: SavedSession[]) {
 }
 
 export function PlaybookSessions() {
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState<SavedSession[]>([]);
   const [showFolders, setShowFolders] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [assignFor, setAssignFor] = useState<string | null>(null);
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
   const folders = usePlaybookFolders("session");
@@ -56,6 +62,13 @@ export function PlaybookSessions() {
     const list = read().filter((s) => s.id !== id);
     write(list); setSessions(list);
   }
+  function createSession(session: SavedSession) {
+    const list = [session, ...read()].slice(0, 100);
+    write(list);
+    setSessions(list);
+    setCreateOpen(false);
+    navigate({ to: "/session-detail/$sessionId", params: { sessionId: session.id } });
+  }
 
   return (
     <div className="pt-1">
@@ -70,18 +83,18 @@ export function PlaybookSessions() {
         <button onClick={() => setShowFolders(true)} className="rounded-full border border-border bg-surface p-2 text-muted-foreground" aria-label="Manage folders">
           <FolderIcon size={14} />
         </button>
-        <Link to="/sessions" className="flex items-center gap-1 rounded-full bg-teal px-3 py-1.5 text-[11px] font-bold text-black">
+        <button onClick={() => setCreateOpen(true)} className="flex items-center gap-1 rounded-full bg-teal px-3 py-1.5 text-[11px] font-bold text-black">
           <Plus size={12} /> New
-        </Link>
+        </button>
       </div>
 
       {visible.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-dashed border-border bg-surface/40 p-6 text-center">
           <p className="text-sm font-semibold text-foreground">No sessions yet</p>
           <p className="mt-1 text-xs text-muted-foreground">Build a session to add it here.</p>
-          <Link to="/sessions" className="mt-3 inline-flex items-center gap-1 rounded-full bg-teal px-4 py-1.5 text-[11px] font-bold text-black">
+          <button onClick={() => setCreateOpen(true)} className="mt-3 inline-flex items-center gap-1 rounded-full bg-teal px-4 py-1.5 text-[11px] font-bold text-black">
             <Plus size={12} /> Build session
-          </Link>
+          </button>
         </div>
       ) : (
         <ul className="mt-3 space-y-2">
@@ -132,6 +145,93 @@ export function PlaybookSessions() {
       )}
 
       {showFolders && <FolderManager kind="session" onClose={() => setShowFolders(false)} />}
+      {createOpen && <CreateSessionModal onClose={() => setCreateOpen(false)} onSave={createSession} />}
+    </div>
+  );
+}
+
+function CreateSessionModal({ onClose, onSave }: { onClose: () => void; onSave: (session: SavedSession) => void }) {
+  const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const [name, setName] = useState("");
+  const [date, setDate] = useState(todayISO);
+  const [age, setAge] = useState<string>("U13+");
+  const [level, setLevel] = useState<string>("Intermediate");
+  const [mins, setMins] = useState<number>(60);
+  const [focus, setFocus] = useState<string>(CATEGORIES[0]?.name ?? "Skating");
+  const [notes, setNotes] = useState("");
+  const [touched, setTouched] = useState(false);
+
+  const nameError = touched && !name.trim() ? "Session name is required" : null;
+
+  function submit() {
+    setTouched(true);
+    if (!name.trim()) return;
+    onSave({
+      id: `s-${Date.now()}`,
+      name: name.trim(),
+      date,
+      age,
+      level,
+      totalMins: Math.max(5, Number(mins) || 60),
+      notes: notes.trim(),
+      focus,
+      blocks: [],
+      completed: false,
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur" onClick={onClose}>
+      <div className="max-h-[92vh] w-full max-w-screen-sm overflow-y-auto rounded-t-3xl border-t border-border bg-surface" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface px-4 py-3">
+          <div>
+            <p className="text-[10px] font-bold tracking-[0.3em] text-volt">NEW</p>
+            <h2 className="mt-0.5 text-lg font-bold text-foreground">Create Session</h2>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="grid h-9 w-9 place-items-center rounded-full bg-surface-2 text-foreground">
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="space-y-4 p-4">
+          <ModalField label="Session Name" error={nameError}>
+            <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Friday PEP Development" className="w-full rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-teal" />
+          </ModalField>
+          <ModalField label="Date">
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-sm text-foreground outline-none focus:border-teal" />
+          </ModalField>
+          <ModalField label="Age Group">
+            <div className="flex flex-wrap gap-1.5">{AGE_GROUPS.map((a) => <Chip key={a} active={age === a} onClick={() => setAge(a)}>{a}</Chip>)}</div>
+          </ModalField>
+          <ModalField label="Skill Level">
+            <div className="flex flex-wrap gap-1.5">{LEVELS.map((l) => <Chip key={l} active={level === l} onClick={() => setLevel(l)}>{l}</Chip>)}</div>
+          </ModalField>
+          <ModalField label="Total Duration (minutes)">
+            <input type="number" min={5} step={5} value={mins} onChange={(e) => setMins(Number(e.target.value))} className="w-full rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-sm text-foreground outline-none focus:border-teal" />
+          </ModalField>
+          <ModalField label="Main Focus">
+            <div className="flex flex-wrap gap-1.5">{CATEGORIES.map((c) => <Chip key={c.name} active={focus === c.name} onClick={() => setFocus(c.name)}>{c.name}</Chip>)}</div>
+          </ModalField>
+          <ModalField label="Notes">
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Session intent, key cues, equipment reminders…" className="w-full resize-none rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-teal" />
+          </ModalField>
+        </div>
+
+        <div className="sticky bottom-0 flex gap-2 border-t border-border bg-surface p-3">
+          <button onClick={onClose} className="flex-1 rounded-2xl border border-border bg-surface-2 py-3 text-[12px] font-bold tracking-wide text-foreground">CANCEL</button>
+          <button onClick={submit} className="flex-[1.4] rounded-2xl bg-gradient-brand py-3 text-[12px] font-bold tracking-wide text-primary-foreground shadow-glow-teal">SAVE SESSION</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModalField({ label, error, children }: { label: string; error?: string | null; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground">{label.toUpperCase()}</label>
+      <div className="mt-1.5">{children}</div>
+      {error && <p className="mt-1 text-[11px] text-destructive">{error}</p>}
     </div>
   );
 }
