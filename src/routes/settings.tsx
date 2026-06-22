@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare, LogOut, ShieldCheck, ChevronRight } from "lucide-react";
+import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare, LogOut, ShieldCheck, ChevronRight, UserCog } from "lucide-react";
 import { LayoutDashboard, CalendarDays, BookOpen, MessageSquare as InboxIcon, Users } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { useAuth, useHasCoachAccess } from "@/hooks/use-auth";
@@ -105,6 +105,27 @@ function SettingsScreen() {
                   {verified
                     ? "The blue VERIFIED badge is showing on your profile and listings."
                     : "Earn the blue VERIFIED badge with a one-time $35 background check. Parents see this before registering."}
+                </p>
+              </div>
+              <ChevronRight size={16} className="mt-1 text-muted-foreground" />
+            </div>
+          </Link>
+        )}
+
+        {hasAccess && (
+          <Link
+            to="/coach/team"
+            className="block rounded-2xl border border-border bg-card p-5"
+          >
+            <div className="flex items-start gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-volt/15 text-volt">
+                <UserCog size={18} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Academy</p>
+                <p className="font-display text-base font-bold text-foreground">My Team</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Invite staff, set permission levels (Owner / Coach / Assistant) and assign them to specific camps.
                 </p>
               </div>
               <ChevronRight size={16} className="mt-1 text-muted-foreground" />
