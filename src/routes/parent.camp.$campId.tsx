@@ -108,6 +108,52 @@ function ParentCampDetail() {
     setSavingKey(null);
   }
 
+  async function openCoachDm() {
+    if (!user || !camp?.owner_id) return;
+    setOpeningDm(true);
+    let conversationId: string | null = null;
+
+    // Find an existing DM for this camp between the parent and coach
+    const { data: parentMemberships } = await supabase
+      .from("conversation_members")
+      .select("conversation_id, conversations!inner(id, type, camp_id)")
+      .eq("user_id", user.id)
+      .eq("conversations.type", "dm")
+      .eq("conversations.camp_id", campId);
+
+    if (parentMemberships && parentMemberships.length > 0) {
+      const ids = parentMemberships.map((m) => m.conversation_id);
+      const { data: coachMemberships } = await supabase
+        .from("conversation_members")
+        .select("conversation_id")
+        .in("conversation_id", ids)
+        .eq("user_id", camp.owner_id);
+      if (coachMemberships && coachMemberships.length > 0) {
+        conversationId = coachMemberships[0].conversation_id;
+      }
+    }
+
+    if (!conversationId) {
+      const { data: conv, error: convErr } = await supabase
+        .from("conversations")
+        .insert({ type: "dm", camp_id: campId, created_by: user.id })
+        .select("id")
+        .single();
+      if (convErr || !conv) {
+        setOpeningDm(false);
+        return;
+      }
+      conversationId = conv.id;
+      await supabase.from("conversation_members").insert([
+        { conversation_id: conversationId, user_id: user.id },
+        { conversation_id: conversationId, user_id: camp.owner_id },
+      ]);
+    }
+
+    setOpeningDm(false);
+    navigate({ to: "/parent/conversation/$conversationId", params: { conversationId } });
+  }
+
   return (
     <div className="min-h-screen bg-background pb-24 text-foreground">
       <header className="sticky top-0 z-20 border-b border-border bg-background/95 px-5 py-3 backdrop-blur-xl">
