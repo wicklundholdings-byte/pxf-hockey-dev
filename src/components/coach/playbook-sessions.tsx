@@ -76,8 +76,28 @@ export function PlaybookSessions() {
   return (
     <div className="pt-1">
       <div className="mb-3 grid grid-cols-2 gap-1 rounded-full border border-border bg-surface p-1">
-        <button onClick={() => setView("individual")} className={"rounded-full py-1.5 text-[11px] font-bold tracking-wide " + (view === "individual" ? "bg-teal text-background" : "text-muted-foreground")}>Individual Sessions</button>
-        <button onClick={() => setView("series")} className={"rounded-full py-1.5 text-[11px] font-bold tracking-wide " + (view === "series" ? "bg-teal text-background" : "text-muted-foreground")}>Series</button>
+        <button
+          onClick={() => setView("individual")}
+          className={
+            "rounded-full py-2 text-[12px] font-bold tracking-wide transition-all " +
+            (view === "individual"
+              ? "bg-gradient-to-r from-teal-400 to-green-400 text-background shadow-md"
+              : "text-muted-foreground")
+          }
+        >
+          Individual Sessions
+        </button>
+        <button
+          onClick={() => setView("series")}
+          className={
+            "rounded-full py-2 text-[12px] font-bold tracking-wide transition-all " +
+            (view === "series"
+              ? "bg-gradient-to-r from-teal-400 to-green-400 text-background shadow-md"
+              : "text-muted-foreground")
+          }
+        >
+          Series
+        </button>
       </div>
       {view === "series" ? <SeriesManager /> : (
       <>
