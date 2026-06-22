@@ -215,16 +215,66 @@ function ParentDashboard() {
     [regCamps],
   );
 
+  // Mock fallbacks so the dashboard is information-rich even before live data lands.
+  const today = new Date();
+  const ymd = (d: Date) => d.toISOString().slice(0, 10);
+  const addDays = (n: number) => { const d = new Date(today); d.setDate(d.getDate() + n); return ymd(d); };
+
+  const displayKids: Kid[] = kids.length > 0 ? kids : [
+    { id: "mock-1", full_name: "Braxton Wicklund", birthday: "2014-04-12", position: "Forward", skill_level: "Advanced" },
+    { id: "mock-2", full_name: "Everest Wicklund", birthday: "2016-09-03", position: "Defense", skill_level: "Intermediate" },
+  ];
+
+  const displayCamps: RegCamp[] = sortedCamps.length > 0 ? sortedCamps : [
+    {
+      reg_id: "mock-c1",
+      camp: { id: "mock-camp-1", name: "Summer Elite Skating Camp", start_date: addDays(22), end_date: addDays(26), venue_name: "Iceland Arena", owner_id: null },
+      child_name: displayKids[0].full_name,
+      coach_name: "Power Edge Pro",
+    },
+    {
+      reg_id: "mock-c2",
+      camp: { id: "mock-camp-2", name: "Skating Power Clinic", start_date: addDays(-1), end_date: addDays(1), venue_name: "Coach Park Arena", owner_id: null },
+      child_name: displayKids[1]?.full_name ?? displayKids[0].full_name,
+      coach_name: "Coach Park Hockey",
+    },
+  ];
+
+  const displayThreads: Thread[] = threads.length > 0 ? threads : [
+    {
+      conv_id: "mock-t1",
+      coach_name: "Coach Reilly",
+      preview: "Great session today! Braxton showed real improvement on his edges...",
+      time: "2h",
+      camp_name: "Summer Elite Camp",
+    },
+  ];
+
+  const displayEvaluation: Evaluation = evaluation ?? {
+    id: "mock-e1",
+    child_name: displayKids[0].full_name,
+    camp_name: "Summer Elite Camp",
+    coach_name: "Coach Reilly",
+    skating: 4, puck_control: 4, shooting: 3, hockey_sense: 4,
+  };
+
+  const displayRsvp: RsvpPrompt = rsvp ?? {
+    id: "mock-r1",
+    child_name: displayKids[1]?.full_name ?? displayKids[0].full_name,
+    camp_name: "Skating Power Clinic",
+    session_date: addDays(1),
+  };
+
   return (
     <div className="min-h-screen bg-background px-5 pt-5 pb-24 text-foreground">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs text-muted-foreground">Welcome back,</p>
-          <h1 className="font-display text-2xl font-bold">{parentName}</h1>
+          <h1 className="font-display text-2xl font-bold">{parentName || "Parent"}</h1>
         </div>
         <Link to="/notifications" aria-label="Notifications" className="relative grid h-10 w-10 place-items-center rounded-full border border-border bg-card text-foreground">
           <Bell size={18} />
-          {threads.length > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-teal" />}
+          {displayThreads.length > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-teal" />}
         </Link>
       </div>
 
