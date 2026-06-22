@@ -308,40 +308,29 @@ function ParentDashboard() {
     },
   ];
 
-  // Next session across all registered children — earliest upcoming camp day.
-  const nextSession: NextSession = (() => {
+  // Next session per child — earliest upcoming (or currently-live) camp for each registered athlete.
+  const nextSessions: NextSession[] = (() => {
     const todayYmd = ymd(today);
-    const upcoming = displayCamps
-      .filter((c) => c.camp.start_date && c.camp.start_date >= todayYmd)
-      .sort((a, b) => (a.camp.start_date ?? "").localeCompare(b.camp.start_date ?? ""))[0];
-    if (upcoming) {
-      return {
-        camp_id: upcoming.camp.id,
-        child_name: upcoming.child_name,
-        camp_name: upcoming.camp.name,
-        session_title: null,
-        session_date: upcoming.camp.start_date!,
+    const byChild = new Map<string, NextSession>();
+    const sorted = [...displayCamps].sort((a, b) => (a.camp.start_date ?? "").localeCompare(b.camp.start_date ?? ""));
+    for (const c of sorted) {
+      if (byChild.has(c.child_name)) continue;
+      const isUpcoming = c.camp.start_date && c.camp.start_date >= todayYmd;
+      const live = isLive(c.camp.start_date, c.camp.end_date);
+      if (!isUpcoming && !live) continue;
+      byChild.set(c.child_name, {
+        camp_id: c.camp.id,
+        child_name: c.child_name,
+        camp_name: c.camp.name,
+        session_title: live ? "Edge Work & Power Skating" : null,
+        session_date: live ? ymd(today) : c.camp.start_date!,
         start_time: "16:30",
         end_time: "18:00",
-        venue_name: upcoming.camp.venue_name,
-      };
+        venue_name: c.camp.venue_name,
+      });
     }
-    // fallback to live camp
-    const live = displayCamps.find((c) => isLive(c.camp.start_date, c.camp.end_date));
-    return {
-      camp_id: live?.camp.id ?? displayCamps[0].camp.id,
-      child_name: live?.child_name ?? displayCamps[0].child_name,
-      camp_name: live?.camp.name ?? displayCamps[0].camp.name,
-      session_title: "Edge Work & Power Skating",
-      session_date: ymd(today),
-      start_time: "16:30",
-      end_time: "18:00",
-      venue_name: live?.camp.venue_name ?? displayCamps[0].camp.venue_name,
-    };
+    return Array.from(byChild.values()).sort((a, b) => a.session_date.localeCompare(b.session_date));
   })();
-  const nextSessionDays = daysUntil(nextSession.session_date);
-  const nextSessionLabel =
-    nextSessionDays === 0 ? "TODAY" : nextSessionDays === 1 ? "TOMORROW" : new Date(nextSession.session_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 
   return (
     <div className="min-h-screen bg-background px-5 pt-5 pb-24 text-foreground">
