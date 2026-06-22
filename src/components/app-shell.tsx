@@ -43,7 +43,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     pathname.startsWith("/onboarding") ||
     (!!user && !authLoading);
 
-  const athleteRoots = ["/", "/drills", "/sessions", "/profile", "/saved-sessions"];
+  const athleteRoots = ["/", "/drills", "/sessions", "/profile", "/saved-sessions", "/calendar"];
   const onAthleteRoute =
     athleteRoots.includes(pathname) ||
     pathname.startsWith("/session-detail/") ||
