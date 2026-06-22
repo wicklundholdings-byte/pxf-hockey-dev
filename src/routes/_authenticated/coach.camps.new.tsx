@@ -177,7 +177,7 @@ function NewCampWizard() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {([
                 { v: "camp" as const, t: "Camp", d: "Multi-day event with a single registration." },
-                { v: "session" as const, t: "Training Session", d: "Recurring session (weekly/biweekly)." },
+                { v: "session" as const, t: "Training Session", d: "One off/weekly/biweekly\u00a0" },
               ]).map((opt) => (
                 <button
                   key={opt.v}
