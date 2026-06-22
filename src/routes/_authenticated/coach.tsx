@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, redirect, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, CalendarDays, Users, MessageSquare, Bell, Megaphone, Settings, BookOpen } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, MessageSquare, Bell, Megaphone, Settings, BookOpen, Heart } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { TrialBanner } from "@/components/trial-banner";
 
@@ -53,6 +53,9 @@ function CoachLayout() {
             </button>
             <Link to="/coach/broadcast" className="flex items-center gap-1 rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-primary-foreground">
               <Megaphone size={12} /> Broadcast
+            </Link>
+            <Link to="/coach/family" className="rounded-full border border-border bg-surface p-1.5 text-muted-foreground hover:text-foreground" aria-label="My Family">
+              <Heart size={14} />
             </Link>
             <Link to="/settings" className="rounded-full border border-border bg-surface p-1.5 text-muted-foreground hover:text-foreground" aria-label="Settings">
               <Settings size={14} />
