@@ -93,6 +93,7 @@ import { Route as AuthenticatedCoachBroadcastRouteImport } from './routes/_authe
 import { Route as AuthenticatedCoachBookingsRouteImport } from './routes/_authenticated/coach.bookings'
 import { Route as AuthenticatedCoachAttendeesRouteImport } from './routes/_authenticated/coach.attendees'
 import { Route as AuthenticatedCoachAnalyticsRouteImport } from './routes/_authenticated/coach.analytics'
+import { Route as AuthenticatedAdminVerificationsRouteImport } from './routes/_authenticated/admin.verifications'
 import { Route as AuthenticatedAdminProgramsRouteImport } from './routes/_authenticated/admin.programs'
 import { Route as AuthenticatedAdminDrillsRouteImport } from './routes/_authenticated/admin.drills'
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
@@ -545,6 +546,12 @@ const AuthenticatedCoachAnalyticsRoute =
     path: '/analytics',
     getParentRoute: () => AuthenticatedCoachRoute,
   } as any)
+const AuthenticatedAdminVerificationsRoute =
+  AuthenticatedAdminVerificationsRouteImport.update({
+    id: '/verifications',
+    path: '/verifications',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminProgramsRoute =
   AuthenticatedAdminProgramsRouteImport.update({
     id: '/programs',
@@ -701,6 +708,7 @@ export interface FileRoutesByFullPath {
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/admin/programs': typeof AuthenticatedAdminProgramsRoute
+  '/admin/verifications': typeof AuthenticatedAdminVerificationsRoute
   '/coach/analytics': typeof AuthenticatedCoachAnalyticsRoute
   '/coach/attendees': typeof AuthenticatedCoachAttendeesRouteWithChildren
   '/coach/bookings': typeof AuthenticatedCoachBookingsRoute
@@ -797,6 +805,7 @@ export interface FileRoutesByTo {
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/admin/programs': typeof AuthenticatedAdminProgramsRoute
+  '/admin/verifications': typeof AuthenticatedAdminVerificationsRoute
   '/coach/analytics': typeof AuthenticatedCoachAnalyticsRoute
   '/coach/attendees': typeof AuthenticatedCoachAttendeesRouteWithChildren
   '/coach/bookings': typeof AuthenticatedCoachBookingsRoute
@@ -900,6 +909,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/_authenticated/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/_authenticated/admin/programs': typeof AuthenticatedAdminProgramsRoute
+  '/_authenticated/admin/verifications': typeof AuthenticatedAdminVerificationsRoute
   '/_authenticated/coach/analytics': typeof AuthenticatedCoachAnalyticsRoute
   '/_authenticated/coach/attendees': typeof AuthenticatedCoachAttendeesRouteWithChildren
   '/_authenticated/coach/bookings': typeof AuthenticatedCoachBookingsRoute
@@ -1003,6 +1013,7 @@ export interface FileRouteTypes {
     | '/admin/categories'
     | '/admin/drills'
     | '/admin/programs'
+    | '/admin/verifications'
     | '/coach/analytics'
     | '/coach/attendees'
     | '/coach/bookings'
@@ -1099,6 +1110,7 @@ export interface FileRouteTypes {
     | '/admin/categories'
     | '/admin/drills'
     | '/admin/programs'
+    | '/admin/verifications'
     | '/coach/analytics'
     | '/coach/attendees'
     | '/coach/bookings'
@@ -1201,6 +1213,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/categories'
     | '/_authenticated/admin/drills'
     | '/_authenticated/admin/programs'
+    | '/_authenticated/admin/verifications'
     | '/_authenticated/coach/analytics'
     | '/_authenticated/coach/attendees'
     | '/_authenticated/coach/bookings'
@@ -1882,6 +1895,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachAnalyticsRouteImport
       parentRoute: typeof AuthenticatedCoachRoute
     }
+    '/_authenticated/admin/verifications': {
+      id: '/_authenticated/admin/verifications'
+      path: '/verifications'
+      fullPath: '/admin/verifications'
+      preLoaderRoute: typeof AuthenticatedAdminVerificationsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/programs': {
       id: '/_authenticated/admin/programs'
       path: '/programs'
@@ -2001,6 +2021,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminCategoriesRoute: typeof AuthenticatedAdminCategoriesRoute
   AuthenticatedAdminDrillsRoute: typeof AuthenticatedAdminDrillsRoute
   AuthenticatedAdminProgramsRoute: typeof AuthenticatedAdminProgramsRoute
+  AuthenticatedAdminVerificationsRoute: typeof AuthenticatedAdminVerificationsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
@@ -2008,6 +2029,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminCategoriesRoute: AuthenticatedAdminCategoriesRoute,
   AuthenticatedAdminDrillsRoute: AuthenticatedAdminDrillsRoute,
   AuthenticatedAdminProgramsRoute: AuthenticatedAdminProgramsRoute,
+  AuthenticatedAdminVerificationsRoute: AuthenticatedAdminVerificationsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 

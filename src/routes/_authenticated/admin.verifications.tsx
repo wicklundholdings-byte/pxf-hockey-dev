@@ -19,7 +19,6 @@ type Row = {
   submitted_at: string | null;
   approved_at: string | null;
   expires_at: string | null;
-  profile?: { email: string | null; full_name: string | null } | null;
 };
 
 function AdminVerifications() {
@@ -30,7 +29,7 @@ function AdminVerifications() {
   async function load() {
     let q = supabase
       .from("coach_verifications")
-      .select("id, user_id, status, legal_first_name, legal_last_name, date_of_birth, address_city, address_region, submitted_at, approved_at, expires_at, profile:profiles!coach_verifications_user_id_fkey(email, full_name)")
+      .select("id, user_id, status, legal_first_name, legal_last_name, date_of_birth, address_city, address_region, submitted_at, approved_at, expires_at")
       .order("submitted_at", { ascending: false });
     if (filter !== "all") q = q.eq("status", filter);
     const { data } = await q;
@@ -94,7 +93,7 @@ function AdminVerifications() {
                   {r.legal_first_name} {r.legal_last_name}
                 </p>
                 <p className="truncate text-[11px] text-muted-foreground">
-                  {r.profile?.email ?? r.user_id.slice(0, 8)} · {r.address_city}, {r.address_region}
+                  {r.user_id.slice(0, 8)} · {r.address_city}, {r.address_region}
                 </p>
                 <p className="mt-1 text-[10px] text-muted-foreground">
                   DOB {r.date_of_birth} · submitted {r.submitted_at ? new Date(r.submitted_at).toLocaleDateString() : "—"}
