@@ -52,7 +52,7 @@ function ParentCamps() {
       let q = supabase
         .from("camps")
         .select("id, name, start_date, end_date, venue_name, owner_id")
-        .eq("status", "live")
+        .neq("status", "draft")
         .gte("end_date", today)
         .order("start_date", { ascending: true })
         .limit(20);
