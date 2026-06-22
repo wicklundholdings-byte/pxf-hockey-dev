@@ -318,6 +318,42 @@ export type Database = {
           },
         ]
       }
+      camp_staff: {
+        Row: {
+          camp_id: string
+          created_at: string
+          id: string
+          team_member_id: string
+        }
+        Insert: {
+          camp_id: string
+          created_at?: string
+          id?: string
+          team_member_id: string
+        }
+        Update: {
+          camp_id?: string
+          created_at?: string
+          id?: string
+          team_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "camp_staff_camp_id_fkey"
+            columns: ["camp_id"]
+            isOneToOne: false
+            referencedRelation: "camps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "camp_staff_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       camp_template_days: {
         Row: {
           created_at: string
@@ -1751,6 +1787,7 @@ export type Database = {
           id: string
           member_user_id: string | null
           owner_id: string
+          permission_level: Database["public"]["Enums"]["team_permission"]
           phone: string | null
           status: Database["public"]["Enums"]["team_member_status"]
           title: string
@@ -1761,6 +1798,7 @@ export type Database = {
           id?: string
           member_user_id?: string | null
           owner_id: string
+          permission_level?: Database["public"]["Enums"]["team_permission"]
           phone?: string | null
           status?: Database["public"]["Enums"]["team_member_status"]
           title?: string
@@ -1771,6 +1809,7 @@ export type Database = {
           id?: string
           member_user_id?: string | null
           owner_id?: string
+          permission_level?: Database["public"]["Enums"]["team_permission"]
           phone?: string | null
           status?: Database["public"]["Enums"]["team_member_status"]
           title?: string
@@ -2017,6 +2056,14 @@ export type Database = {
         Args: { _conv: string; _user: string }
         Returns: boolean
       }
+      my_team_membership: {
+        Args: never
+        Returns: {
+          owner_id: string
+          permission_level: Database["public"]["Enums"]["team_permission"]
+          team_member_id: string
+        }[]
+      }
       respond_to_rsvp: {
         Args: { _reason?: string; _status: string; _token: string }
         Returns: Json
@@ -2045,6 +2092,7 @@ export type Database = {
         | "past_due"
         | "canceled"
       team_member_status: "active" | "invited"
+      team_permission: "owner" | "coach" | "assistant"
       waitlist_status:
         | "waiting"
         | "offered"
@@ -2202,6 +2250,7 @@ export const Constants = {
         "canceled",
       ],
       team_member_status: ["active", "invited"],
+      team_permission: ["owner", "coach", "assistant"],
       waitlist_status: ["waiting", "offered", "claimed", "expired", "released"],
     },
   },

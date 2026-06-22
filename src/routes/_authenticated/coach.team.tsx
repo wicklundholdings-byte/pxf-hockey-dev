@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { UserCog, Plus, Mail, Phone, Trash2, X, Check, Clock } from "lucide-react";
+import { UserCog, Plus, Mail, Phone, Trash2, X, Check, Clock, Shield, CalendarDays } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/team")({
   component: TeamPage,
@@ -16,28 +16,45 @@ type Member = {
   email: string;
   phone: string | null;
   created_at: string;
+  permission_level: "owner" | "coach" | "assistant";
 };
+
+type Camp = { id: string; name: string; start_date: string | null };
+type Assignment = { id: string; camp_id: string; team_member_id: string };
 
 function TeamPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [showInvite, setShowInvite] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [form, setForm] = useState({ email: "", title: "Assistant Coach", phone: "" });
+  const [form, setForm] = useState<{ email: string; title: string; phone: string; permission_level: "coach" | "assistant" }>({ email: "", title: "Assistant Coach", phone: "", permission_level: "coach" });
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [camps, setCamps] = useState<Camp[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [assignFor, setAssignFor] = useState<Member | null>(null);
 
   async function load() {
     setLoading(true);
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     setUserId(u.user.id);
-    const { data } = await supabase
-      .from("team_members")
-      .select("*")
-      .eq("owner_id", u.user.id)
-      .order("created_at", { ascending: false });
+    const [{ data }, { data: c }, { data: a }] = await Promise.all([
+      supabase
+        .from("team_members")
+        .select("*")
+        .eq("owner_id", u.user.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("camps")
+        .select("id, name, start_date")
+        .eq("owner_id", u.user.id)
+        .order("start_date", { ascending: false }),
+      (supabase as any).from("camp_staff").select("id, camp_id, team_member_id"),
+    ]);
     setMembers((data ?? []) as Member[]);
+    setCamps((c ?? []) as Camp[]);
+    setAssignments((a ?? []) as Assignment[]);
     setLoading(false);
   }
 
@@ -55,13 +72,14 @@ function TeamPage() {
       title: form.title.trim(),
       phone: form.phone.trim() || null,
       status: "invited",
+      permission_level: form.permission_level,
     });
     setSaving(false);
     if (error) {
       setErr(error.message);
       return;
     }
-    setForm({ email: "", title: "Assistant Coach", phone: "" });
+    setForm({ email: "", title: "Assistant Coach", phone: "", permission_level: "coach" });
     setShowInvite(false);
     load();
   }
@@ -75,6 +93,26 @@ function TeamPage() {
     if (!confirm("Remove this team member?")) return;
     await supabase.from("team_members").delete().eq("id", id);
     load();
+  }
+
+  async function setPermission(id: string, level: "coach" | "assistant") {
+    setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, permission_level: level } : m)));
+    await (supabase as any).from("team_members").update({ permission_level: level }).eq("id", id);
+  }
+
+  async function toggleAssignment(memberId: string, campId: string) {
+    const existing = assignments.find((a) => a.team_member_id === memberId && a.camp_id === campId);
+    if (existing) {
+      setAssignments((prev) => prev.filter((a) => a.id !== existing.id));
+      await (supabase as any).from("camp_staff").delete().eq("id", existing.id);
+    } else {
+      const { data } = await (supabase as any)
+        .from("camp_staff")
+        .insert({ camp_id: campId, team_member_id: memberId })
+        .select("id, camp_id, team_member_id")
+        .maybeSingle();
+      if (data) setAssignments((prev) => [...prev, data as Assignment]);
+    }
   }
 
   const active = members.filter((m) => m.status === "active");
@@ -116,14 +154,14 @@ function TeamPage() {
           {invited.length > 0 && (
             <Section title="Pending invites" count={invited.length}>
               {invited.map((m) => (
-                <Row key={m.id} m={m} onActivate={() => activate(m.id)} onRemove={() => remove(m.id)} />
+                <Row key={m.id} m={m} assignmentsCount={assignments.filter((a) => a.team_member_id === m.id).length} onActivate={() => activate(m.id)} onRemove={() => remove(m.id)} onPermission={setPermission} onAssign={() => setAssignFor(m)} />
               ))}
             </Section>
           )}
           {active.length > 0 && (
             <Section title="Active" count={active.length}>
               {active.map((m) => (
-                <Row key={m.id} m={m} onRemove={() => remove(m.id)} />
+                <Row key={m.id} m={m} assignmentsCount={assignments.filter((a) => a.team_member_id === m.id).length} onRemove={() => remove(m.id)} onPermission={setPermission} onAssign={() => setAssignFor(m)} />
               ))}
             </Section>
           )}
@@ -168,6 +206,17 @@ function TeamPage() {
                   className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground"
                 />
               </Field>
+              <Field label="Permission level">
+                <div className="grid grid-cols-2 gap-2">
+                  {(["coach","assistant"] as const).map((p) => (
+                    <button key={p} type="button" onClick={() => setForm({ ...form, permission_level: p })}
+                      className={"rounded-xl border px-3 py-2 text-left text-xs " + (form.permission_level === p ? "border-teal bg-teal/15 text-foreground" : "border-border bg-surface text-muted-foreground")}>
+                      <p className="font-bold capitalize">{p}</p>
+                      <p className="text-[10px] text-muted-foreground">{p === "coach" ? "Run assigned camps" : "View + check-in only"}</p>
+                    </button>
+                  ))}
+                </div>
+              </Field>
               {err && <p className="text-xs text-destructive">{err}</p>}
               <button
                 disabled={saving || !form.email.trim()}
@@ -177,6 +226,39 @@ function TeamPage() {
                 {saving ? "Sending…" : "Send invite"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {assignFor && (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/60" onClick={() => setAssignFor(null)}>
+          <div className="w-full rounded-t-3xl border-t border-border bg-background p-5 pb-8" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h3 className="font-display text-lg font-bold">Assign to camps</h3>
+                <p className="text-[11px] text-muted-foreground">{assignFor.email} · {assignFor.permission_level}</p>
+              </div>
+              <button onClick={() => setAssignFor(null)} className="text-muted-foreground"><X size={18} /></button>
+            </div>
+            {camps.length === 0 ? (
+              <p className="rounded-xl bg-surface p-4 text-center text-xs text-muted-foreground">No camps yet.</p>
+            ) : (
+              <div className="max-h-[60vh] space-y-1.5 overflow-y-auto">
+                {camps.map((c) => {
+                  const assigned = assignments.some((a) => a.camp_id === c.id && a.team_member_id === assignFor.id);
+                  return (
+                    <button key={c.id} onClick={() => toggleAssignment(assignFor.id, c.id)}
+                      className={"flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-left " + (assigned ? "border-teal bg-teal/10" : "border-border bg-surface")}>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{c.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{c.start_date ? new Date(c.start_date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "TBA"}</p>
+                      </div>
+                      <span className={"text-[10px] font-bold " + (assigned ? "text-teal" : "text-muted-foreground")}>{assigned ? "ASSIGNED" : "ASSIGN"}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -207,16 +289,23 @@ function Section({ title, count, children }: { title: string; count: number; chi
 
 function Row({
   m,
+  assignmentsCount,
   onActivate,
   onRemove,
+  onPermission,
+  onAssign,
 }: {
   m: Member;
+  assignmentsCount: number;
   onActivate?: () => void;
   onRemove: () => void;
+  onPermission: (id: string, level: "coach" | "assistant") => void;
+  onAssign: () => void;
 }) {
   const initials = m.email.slice(0, 2).toUpperCase();
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-surface p-3">
+    <div className="space-y-2 rounded-2xl border border-border/60 bg-surface p-3">
+      <div className="flex items-center gap-3">
       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal/15 text-xs font-bold text-teal">
         {initials}
       </div>
@@ -260,6 +349,20 @@ function Row({
           title="Remove"
         >
           <Trash2 size={14} />
+        </button>
+      </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5 border-t border-border pt-2">
+        <div className="flex items-center gap-1 rounded-full bg-card p-0.5">
+          {(["coach","assistant"] as const).map((p) => (
+            <button key={p} onClick={() => onPermission(m.id, p)}
+              className={"flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold capitalize " + (m.permission_level === p ? "bg-gradient-brand text-primary-foreground" : "text-muted-foreground")}>
+              <Shield size={9} /> {p}
+            </button>
+          ))}
+        </div>
+        <button onClick={onAssign} className="ml-auto flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-[10px] font-bold text-foreground">
+          <CalendarDays size={10} /> {assignmentsCount} {assignmentsCount === 1 ? "camp" : "camps"}
         </button>
       </div>
     </div>
