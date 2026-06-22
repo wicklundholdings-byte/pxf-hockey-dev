@@ -2038,9 +2038,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_marketplace_profiles: {
+        Row: {
+          bio: string | null
+          city: string | null
+          full_name: string | null
+          id: string | null
+          marketplace_visible: boolean | null
+          slug: string | null
+        }
+        Insert: {
+          bio?: string | null
+          city?: string | null
+          full_name?: string | null
+          id?: string | null
+          marketplace_visible?: boolean | null
+          slug?: string | null
+        }
+        Update: {
+          bio?: string | null
+          city?: string | null
+          full_name?: string | null
+          id?: string | null
+          marketplace_visible?: boolean | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      claim_coach_role: { Args: never; Returns: undefined }
       current_user_contact_ids: { Args: never; Returns: string[] }
       get_rsvp_by_token: { Args: { _token: string }; Returns: Json }
       has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
