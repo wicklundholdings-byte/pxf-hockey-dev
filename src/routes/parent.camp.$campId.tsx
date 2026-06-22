@@ -261,7 +261,13 @@ function ParentCampDetail() {
               <MessageCircle size={28} className="mx-auto text-teal" />
               <p className="mt-3 text-sm font-semibold">Message your coach</p>
               <p className="mt-1 text-[11px] text-muted-foreground">Conversations from this camp will appear here.</p>
-              <Link to="/parent/inbox" className="mt-4 inline-flex rounded-xl bg-gradient-brand px-4 py-2 text-xs font-bold text-primary-foreground">Open inbox</Link>
+              <button
+                onClick={openCoachDm}
+                disabled={openingDm || !camp?.owner_id}
+                className="mt-4 inline-flex rounded-xl bg-gradient-brand px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-40"
+              >
+                {openingDm ? "Opening…" : "Open inbox"}
+              </button>
             </div>
           )}
 
