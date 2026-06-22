@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PxfLogo } from "@/components/app-shell";
 import { Users } from "lucide-react";
+import { getUserAppRole, roleHome } from "@/lib/user-role";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -63,32 +64,13 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-      // After auth, route coach/admin users to the coach console regardless
-      // of the original `redirect` param so elite-tier users land on /coach.
+      // After auth, always route from the database role into the correct shell.
       const { data: sess } = await supabase.auth.getSession();
       const uid = sess.session?.user?.id;
-      let dest: string = redirect || "/";
+      let dest: string = "/parent";
       if (uid) {
-        const [{ data: role }, { data: subs }] = await Promise.all([
-          supabase.from("user_roles").select("role").eq("user_id", uid).eq("role", "admin").maybeSingle(),
-          supabase
-            .from("subscriptions")
-            .select("plan_name,status,current_period_end")
-            .eq("user_id", uid)
-            .eq("status", "active"),
-        ]);
-        const subActive = (subs ?? []).some((s) => {
-          const notExpired = !s.current_period_end || new Date(s.current_period_end) > new Date();
-          const plan = (s.plan_name ?? "").toLowerCase();
-          return notExpired && (plan.includes("coach") || plan.includes("platinum") || plan.includes("elite"));
-        });
-        if (role || subActive) {
-          // Coaches always land in the coach console.
-          dest = "/coach";
-        } else {
-          // Parents/athletes land in the parent app unless an explicit non-root redirect was provided.
-          if (!redirect || redirect === "/") dest = "/parent";
-        }
+        const appRole = await getUserAppRole(uid);
+        dest = roleHome(appRole);
       }
       navigate({ to: dest as "/" });
     } catch (err) {

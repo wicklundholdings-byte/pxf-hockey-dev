@@ -1,7 +1,9 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { Home, Dumbbell, CalendarDays, User, Bell } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
-import { useAuth, useHasCoachAccess } from "@/hooks/use-auth";
+import { useAuth, useUserAppRole } from "@/hooks/use-auth";
+import { getUserAppRole, roleHome } from "@/lib/user-role";
+import { supabase } from "@/integrations/supabase/client";
 
 type NavItem = { to: string; label: string; icon: typeof Home; exact?: boolean };
 const baseNav: NavItem[] = [
@@ -27,8 +29,8 @@ export function PxfLogo({ className = "" }: { className?: string }) {
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { hasAccess } = useHasCoachAccess(user?.id);
+  const { user, loading: authLoading } = useAuth();
+  const { role, loading: roleLoading } = useUserAppRole(user?.id);
   const isChromeless =
     pathname.startsWith("/book/") ||
     pathname === "/auth" ||
@@ -39,17 +41,37 @@ export function AppShell({ children }: { children: ReactNode }) {
     pathname === "/parent" ||
     pathname.startsWith("/parent/") ||
     pathname.startsWith("/onboarding") ||
-    (hasAccess && pathname === "/settings");
-  // Coaches should never see the athlete bottom nav. If a signed-in coach
-  // lands on an athlete-shell route, send them to the coach console.
+    (!!user && !authLoading);
+
   const athleteRoots = ["/", "/drills", "/sessions", "/profile"];
   const onAthleteRoute = athleteRoots.includes(pathname);
   useEffect(() => {
-    if (hasAccess && onAthleteRoute) {
-      navigate({ to: "/coach", replace: true });
+    if (authLoading || roleLoading || !role) return;
+    const correctHome = roleHome(role);
+    if (onAthleteRoute || (role === "coach" && pathname.startsWith("/parent")) || (role === "parent" && pathname.startsWith("/coach"))) {
+      navigate({ to: correctHome, replace: true });
     }
-  }, [hasAccess, onAthleteRoute, navigate]);
-  if (hasAccess && onAthleteRoute) {
+  }, [authLoading, roleLoading, role, pathname, onAthleteRoute, navigate]);
+
+  useEffect(() => {
+    if (pathname === "/auth" || pathname.startsWith("/onboarding") || pathname.startsWith("/book/")) return;
+    let cancelled = false;
+    supabase.auth.getSession().then(async ({ data }) => {
+      const sessionUser = data.session?.user;
+      if (!sessionUser || cancelled) return;
+      const currentRole = await getUserAppRole(sessionUser.id);
+      if (cancelled) return;
+      const correctHome = roleHome(currentRole);
+      if (onAthleteRoute || (currentRole === "coach" && pathname.startsWith("/parent")) || (currentRole === "parent" && pathname.startsWith("/coach"))) {
+        navigate({ to: correctHome, replace: true });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, onAthleteRoute, navigate]);
+
+  if ((authLoading && onAthleteRoute) || (user && (roleLoading || onAthleteRoute || (role === "coach" && pathname.startsWith("/parent")) || (role === "parent" && pathname.startsWith("/coach"))))) {
     return <div className="min-h-screen bg-background text-foreground" />;
   }
   if (isChromeless) {

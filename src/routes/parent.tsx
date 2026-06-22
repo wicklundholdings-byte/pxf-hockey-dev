@@ -1,8 +1,18 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { Flag, CalendarCheck, MessageCircle, User } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
+import { supabase } from "@/integrations/supabase/client";
+import { getUserAppRole } from "@/lib/user-role";
 
 export const Route = createFileRoute("/parent")({
+  ssr: false,
+  beforeLoad: async ({ location }) => {
+    const { data } = await supabase.auth.getSession();
+    const user = data.session?.user;
+    if (!user) throw redirect({ to: "/auth", search: { mode: "login", redirect: location.href } });
+    const role = await getUserAppRole(user.id);
+    if (role === "coach") throw redirect({ to: "/coach" });
+  },
   component: ParentLayout,
 });
 
