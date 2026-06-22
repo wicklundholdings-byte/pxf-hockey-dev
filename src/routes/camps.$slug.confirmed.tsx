@@ -2,6 +2,7 @@ import { createFileRoute, useParams, useSearch, Link } from "@tanstack/react-rou
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, CalendarPlus, Download, ArrowRight } from "lucide-react";
+import { CalendarSyncButton } from "@/components/calendar-sync-button";
 
 export const Route = createFileRoute("/camps/$slug/confirmed")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -42,37 +43,6 @@ function ConfirmedScreen() {
     })();
   }, [slug]);
 
-  function downloadIcs() {
-    if (!camp) return;
-    const lines = [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "PRODID:-//PXF Hockey//Camp//EN",
-    ];
-    for (const s of sessions) {
-      const dt = s.session_date.replace(/-/g, "");
-      const st = (s.start_time ?? "09:00:00").replace(/:/g, "").slice(0, 6);
-      const et = (s.end_time ?? "10:00:00").replace(/:/g, "").slice(0, 6);
-      lines.push(
-        "BEGIN:VEVENT",
-        `UID:${dt}-${st}-${camp.id}@pxfhockey`,
-        `SUMMARY:${camp.name}`,
-        `DTSTART:${dt}T${st}`,
-        `DTEND:${dt}T${et}`,
-        camp.venue_name ? `LOCATION:${camp.venue_name}` : "",
-        "END:VEVENT",
-      );
-    }
-    lines.push("END:VCALENDAR");
-    const blob = new Blob([lines.filter(Boolean).join("\r\n")], { type: "text/calendar" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${camp.name.replace(/\s+/g, "-").toLowerCase()}.ics`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
   if (kind === "waitlisted") {
     return (
       <div className="min-h-screen bg-background px-5 pt-16 text-center text-foreground">
@@ -105,9 +75,16 @@ function ConfirmedScreen() {
         )}
 
         <div className="grid grid-cols-2 gap-2">
-          <button onClick={downloadIcs} className="flex h-12 items-center justify-center gap-1.5 rounded-2xl border border-border bg-surface text-xs font-semibold">
-            <CalendarPlus size={14} className="text-teal" /> Add to calendar
-          </button>
+          {camp ? (
+            <CalendarSyncButton
+              camp={{ id: camp.id, name: camp.name, venue_name: camp.venue_name }}
+              sessions={sessions}
+            />
+          ) : (
+            <button disabled className="flex h-12 items-center justify-center gap-1.5 rounded-2xl border border-border bg-surface text-xs font-semibold opacity-40">
+              <CalendarPlus size={14} className="text-teal" /> Add to calendar
+            </button>
+          )}
           <button onClick={() => window.print()} className="flex h-12 items-center justify-center gap-1.5 rounded-2xl border border-border bg-surface text-xs font-semibold">
             <Download size={14} className="text-teal" /> Download receipt
           </button>
