@@ -65,10 +65,11 @@ function PaymentScreen() {
   useEffect(() => {
     if (!hydrated) return;
     if (submitted || submittedRef.current) return;
-    if (!draft.child.full_name || !draft.parent.email) {
+    const hasAthlete = draft.children.length > 0 || draft.child.full_name;
+    if (!hasAthlete || !draft.parent.email) {
       navigate({ to: "/camps/$slug/register", params: { slug }, replace: true });
     }
-  }, [hydrated, submitted, draft.child.full_name, draft.parent.email, navigate, slug]);
+  }, [hydrated, submitted, draft.children.length, draft.child.full_name, draft.parent.email, navigate, slug]);
 
   if (loading || !camp || !hydrated) {
     return (
@@ -110,11 +111,15 @@ function PaymentScreen() {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await submitBooking({
-        data: {
-          campId: camp.id,
-          parent: { full_name: draft.parent.full_name, email: draft.parent.email, phone: draft.parent.phone || null },
-          attendees: [
+      const attendeesList = draft.children.length > 0
+        ? draft.children.map((c) => ({
+            full_name: c.full_name,
+            birthday: c.birthday || null,
+            position: c.position || null,
+            skill_level: c.skill_level || null,
+            customFieldValues: draft.customs,
+          }))
+        : [
             {
               full_name: draft.child.full_name,
               birthday: draft.child.birthday || null,
@@ -122,7 +127,12 @@ function PaymentScreen() {
               skill_level: draft.child.skill_level || null,
               customFieldValues: draft.customs,
             },
-          ],
+          ];
+      const res = await submitBooking({
+        data: {
+          campId: camp.id,
+          parent: { full_name: draft.parent.full_name, email: draft.parent.email, phone: draft.parent.phone || null },
+          attendees: attendeesList,
           couponCode: draft.couponCode || null,
           paymentPlan: draft.paymentPlan,
           waiver: camp.waiver_required && draft.waiver
