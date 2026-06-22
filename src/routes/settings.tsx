@@ -2,9 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare, LogOut, ShieldCheck, ChevronRight, UserCog } from "lucide-react";
-import { LayoutDashboard, CalendarDays, BookOpen, MessageSquare as InboxIcon, Users } from "lucide-react";
+import { LayoutDashboard, CalendarDays, BookOpen, MessageSquare as InboxIcon, Users, Flag, MessageCircle } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
-import { useAuth, useHasCoachAccess } from "@/hooks/use-auth";
+import { useAuth, useHasCoachAccess, useUserAppRole } from "@/hooks/use-auth";
 import { useNavigate } from "@tanstack/react-router";
 import { useCoachVerified } from "@/components/verified-badge";
 
@@ -19,6 +19,13 @@ const notifTypes = [
   { id: "remind", label: "Camp reminder" },
   { id: "wait", label: "Waitlist movement" },
   { id: "pay", label: "Payment received" },
+];
+
+const parentNotifTypes = [
+  { id: "remind", label: "Camp reminder" },
+  { id: "msg", label: "New message from coach" },
+  { id: "eval", label: "Evaluation posted" },
+  { id: "rsvp", label: "RSVP request" },
 ];
 
 function Section({ icon: Icon, title, children }: { icon: typeof User; title: string; children: React.ReactNode }) {
@@ -39,15 +46,87 @@ function Field({ label, ...props }: { label: string } & React.InputHTMLAttribute
   );
 }
 
-function SettingsScreen() {
+function ParentSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["user"]; signOut: () => Promise<void> }) {
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<{ full_name: string | null; phone: string | null } | null>(null);
+  const [prefs, setPrefs] = useState<Record<string, boolean>>({ remind: true, msg: true, eval: true, rsvp: true });
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from("profiles").select("full_name,phone").eq("id", user.id).maybeSingle().then(({ data }) => {
+      setProfile(data ?? null);
+    });
+  }, [user?.id]);
+
+  const name = profile?.full_name ?? user?.user_metadata?.full_name ?? user?.email?.split("@")[0] ?? "Parent";
+  const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
+
+  const parentNav = [
+    { to: "/parent", label: "Dashboard", icon: LayoutDashboard, exact: true },
+    { to: "/parent/camps", label: "Camps", icon: Flag },
+    { to: "/parent/inbox", label: "Inbox", icon: MessageCircle },
+    { to: "/parent/profile", label: "Profile", icon: User },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background px-5 pt-4 pb-24 text-foreground">
+      <h1 className="font-display text-2xl font-bold">Settings</h1>
+      <p className="text-xs text-muted-foreground">Manage your account and preferences.</p>
+
+      <div className="mt-5 space-y-4">
+        <Section icon={User} title="Profile">
+          <div className="flex items-center gap-3">
+            <div className="relative grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-teal/40 to-volt/30 text-xl font-bold text-foreground">
+              {initials || "P"}
+            </div>
+            <button className="flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs"><Camera size={12} /> Change photo</button>
+          </div>
+          <Field label="Name" defaultValue={name} />
+          <Field label="Email" type="email" defaultValue={user?.email ?? ""} readOnly />
+          <Field label="Phone" defaultValue={profile?.phone ?? ""} />
+        </Section>
+
+        <Section icon={Bell} title="Notifications">
+          {parentNotifTypes.map((n) => (
+            <label key={n.id} className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-sm">
+              {n.label}
+              <input type="checkbox" checked={prefs[n.id]} onChange={(e) => setPrefs({ ...prefs, [n.id]: e.target.checked })} className="accent-teal" />
+            </label>
+          ))}
+        </Section>
+
+        <Section icon={Lock} title="Privacy & Security">
+          <button className="w-full rounded-lg border border-border py-2 text-xs font-semibold">Change Password</button>
+        </Section>
+
+        <Section icon={Trash2} title="Danger Zone">
+          <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4">
+            <p className="text-sm font-semibold text-destructive">Delete account</p>
+            <p className="mt-1 text-xs text-muted-foreground">Permanently delete your account and all data. This cannot be undone.</p>
+            <button className="mt-3 rounded-lg border border-destructive bg-destructive/10 px-4 py-2 text-xs font-bold text-destructive">Delete Account</button>
+          </div>
+        </Section>
+
+        <button
+          onClick={async () => { await signOut(); navigate({ to: "/auth", search: { mode: "login" } }); }}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card p-3 text-sm font-semibold text-destructive"
+        >
+          <LogOut size={14} /> Sign out
+        </button>
+      </div>
+      <BottomNav items={parentNav} />
+    </div>
+  );
+}
+
+function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["user"]; signOut: () => Promise<void> }) {
   const [prefs, setPrefs] = useState<Record<string, boolean>>({ reg: true, msg: true, remind: true, wait: false, pay: true });
-  const { user } = useAuth();
   const { hasAccess } = useHasCoachAccess(user?.id);
-  const { signOut } = useAuth();
   const navigate = useNavigate();
   const verified = useCoachVerified(user?.id);
   const [marketplaceOn, setMarketplaceOn] = useState(false);
   const [marketplaceLoaded, setMarketplaceLoaded] = useState(false);
+
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
@@ -63,11 +142,13 @@ function SettingsScreen() {
       });
     return () => { cancelled = true; };
   }, [user?.id]);
+
   const toggleMarketplace = async (next: boolean) => {
     setMarketplaceOn(next);
     if (!user?.id) return;
     await supabase.from("profiles").update({ marketplace_visible: next }).eq("id", user.id);
   };
+
   const coachNav = [
     { to: "/coach", label: "Dashboard", icon: LayoutDashboard, exact: true, match: ["/coach"] },
     { to: "/coach/camps", label: "Events", icon: CalendarDays, match: ["/coach/camps", "/coach/bookings"] },
@@ -169,7 +250,7 @@ function SettingsScreen() {
           </div>
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Banner image</span>
-            <div className="mt-1 flex h-24 items-center justify-center rounded-xl border border-dashed border-border bg-gradient-to-br from-teal/15 to-volt/10 text-[11px] text-muted-foreground">
+            <div className="mt-1 flex h-24 items-center justify-center rounded-xl border border-dashed border-border bg-gradient-toe-to-br from-teal/15 to-volt/10 text-[11px] text-muted-foreground">
               1600 × 600 · click to upload
             </div>
           </div>
@@ -290,4 +371,23 @@ function SettingsScreen() {
       {hasAccess && <BottomNav items={coachNav} />}
     </div>
   );
+}
+
+function SettingsScreen() {
+  const { user, signOut } = useAuth();
+  const { role, loading: roleLoading } = useUserAppRole(user?.id);
+
+  if (roleLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-teal border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (role === "parent") {
+    return <ParentSettings user={user} signOut={signOut} />;
+  }
+
+  return <CoachSettings user={user} signOut={signOut} />;
 }
