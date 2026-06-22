@@ -137,8 +137,7 @@ function PaymentScreen() {
       });
       submittedRef.current = true;
       setSubmitted(true);
-      console.log("[pay] navigating to /confirmed", { slug, kind: res.kind });
-      const navP = navigate({
+      navigate({
         to: "/camps/$slug/confirmed",
         params: { slug },
         replace: true,
@@ -148,7 +147,6 @@ function PaymentScreen() {
           plan: draft.paymentPlan,
         },
       });
-      Promise.resolve(navP).then(() => console.log("[pay] nav done", window.location.pathname)).catch((e) => console.error("[pay] nav err", e));
       clear();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Payment failed");
