@@ -1,12 +1,22 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Clock, Disc3,
   CheckCircle2, Circle, ArrowUpRight, Tag,
 } from "lucide-react";
 import { DRILLS, type Category } from "@/data/pxf";
+import { supabase } from "@/integrations/supabase/client";
+import { getUserAppRole, roleHome } from "@/lib/user-role";
 
 export const Route = createFileRoute("/calendar")({
+  ssr: false,
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getSession();
+    const user = data.session?.user;
+    if (!user) return;
+    const role = await getUserAppRole(user.id);
+    throw redirect({ to: roleHome(role) });
+  },
   head: () => ({
     meta: [
       { title: "Session Calendar — PXF Hockey" },
