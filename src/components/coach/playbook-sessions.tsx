@@ -68,7 +68,7 @@ export function PlaybookSessions() {
     setSessions(list);
     setCreateOpen(false);
     // Stay inside the coach console so the bottom nav remains available.
-    navigate({ to: "/coach/playbook", search: { tab: "sessions" } as never });
+    navigate({ to: "/coach/playbook" });
   }
 
   return (
