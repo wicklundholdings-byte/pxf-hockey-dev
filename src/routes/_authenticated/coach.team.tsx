@@ -19,7 +19,7 @@ type Member = {
   permission_level: "owner" | "coach" | "assistant";
 };
 
-type Camp = { id: string; name: string; start_date: string | null };
+type Camp = { id: string; name: string; start_date: string | null; status: "draft" | "live" | "ended" };
 type Assignment = { id: string; camp_id: string; team_member_id: string };
 
 function TeamPage() {
@@ -47,8 +47,9 @@ function TeamPage() {
         .order("created_at", { ascending: false }),
       supabase
         .from("camps")
-        .select("id, name, start_date")
+        .select("id, name, start_date, status")
         .eq("owner_id", u.user.id)
+        .neq("status", "ended")
         .order("start_date", { ascending: false }),
       (supabase as any).from("camp_staff").select("id, camp_id, team_member_id"),
     ]);
@@ -154,14 +155,14 @@ function TeamPage() {
           {invited.length > 0 && (
             <Section title="Pending invites" count={invited.length}>
               {invited.map((m) => (
-                <Row key={m.id} m={m} assignmentsCount={assignments.filter((a) => a.team_member_id === m.id).length} onActivate={() => activate(m.id)} onRemove={() => remove(m.id)} onPermission={setPermission} onAssign={() => setAssignFor(m)} />
+                <Row key={m.id} m={m} assignedCamps={camps.filter((c) => assignments.some((a) => a.team_member_id === m.id && a.camp_id === c.id))} onActivate={() => activate(m.id)} onRemove={() => remove(m.id)} onPermission={setPermission} onAssign={() => setAssignFor(m)} />
               ))}
             </Section>
           )}
           {active.length > 0 && (
             <Section title="Active" count={active.length}>
               {active.map((m) => (
-                <Row key={m.id} m={m} assignmentsCount={assignments.filter((a) => a.team_member_id === m.id).length} onRemove={() => remove(m.id)} onPermission={setPermission} onAssign={() => setAssignFor(m)} />
+                <Row key={m.id} m={m} assignedCamps={camps.filter((c) => assignments.some((a) => a.team_member_id === m.id && a.camp_id === c.id))} onRemove={() => remove(m.id)} onPermission={setPermission} onAssign={() => setAssignFor(m)} />
               ))}
             </Section>
           )}
