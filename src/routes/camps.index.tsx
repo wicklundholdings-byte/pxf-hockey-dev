@@ -41,7 +41,7 @@ function CampsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await listLiveCamps();
+        const res = await listLiveCamps({ data: {} });
         setCamps((res.camps ?? []) as Camp[]);
         setErr(res.error ?? null);
       } catch {
