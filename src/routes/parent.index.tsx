@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { MapPin, Star, MessageCircle, Search, ChevronDown, Check, ChevronRight } from "lucide-react";
+import { MapPin, Star, MessageCircle, Search, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -10,8 +10,9 @@ export const Route = createFileRoute("/parent/")({
 });
 
 const bookings = [
-  { name: "Summer Elite Camp", coach: "Coach Reilly", date: "Aug 12–16", days: 12, location: "Mississauga, ON" },
-  { name: "Skating Power Clinic", coach: "Coach Park", date: "Jul 22", days: 4, location: "Toronto, ON" },
+  { name: "Summer Elite Camp", coach: "Power Edge Pro", date: "Aug 12–16", days: 12, location: "Mississauga, ON" },
+  { name: "Skating Power Clinic", coach: "Coach Park Hockey", date: "Jul 22", days: 4, location: "Toronto, ON" },
+  { name: "PXF Summer Intensive", coach: "PXF Skills Academy", date: "Aug 5–9", days: 8, location: "Toronto, ON" },
 ];
 
 const evals = [
@@ -22,18 +23,12 @@ const evals = [
 ];
 
 const messages = [
-  { from: "Coach Reilly", preview: "Reminder: bring water bottle Friday.", time: "2h" },
-  { from: "Coach Park", preview: "Great work this week, Jake!", time: "1d" },
+  { from: "Coach Reilly", camp: "Summer Elite Camp", preview: "Reminder: bring water bottle Friday.", time: "2h" },
+  { from: "Coach Park", camp: "Skating Power Clinic", preview: "Great work this week, Jake!", time: "1d" },
+  { from: "PXF Skills", camp: "PXF Summer Intensive", preview: "Schedule for week 2 just posted.", time: "2d" },
 ];
 
 function ParentHome() {
-  const coaches = [
-    { id: "pep", name: "Power Edge Pro", initials: "PEP", color: "from-teal/40 to-volt/30" },
-    { id: "pxf", name: "PXF Skills Academy", initials: "PXF", color: "from-volt/30 to-teal/40" },
-    { id: "park", name: "Coach Park Hockey", initials: "CP", color: "from-teal/30 to-blue-500/30" },
-  ];
-  const [active, setActive] = useState(coaches[0]);
-  const [open, setOpen] = useState(false);
   const { user } = useAuth();
   const [myCamps, setMyCamps] = useState<Array<{ id: string; name: string; start_date: string | null; end_date: string | null; venue_name: string | null }>>([]);
 
@@ -61,43 +56,9 @@ function ParentHome() {
 
   return (
     <div className="min-h-screen bg-background px-5 pt-4 pb-24 text-foreground">
-      {/* Coach switcher */}
-      <div className="relative">
-        <button
-          onClick={() => setOpen((o) => !o)}
-          className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-3"
-        >
-          <div className="flex items-center gap-3">
-            <div className={`grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br ${active.color} text-[10px] font-bold`}>{active.initials}</div>
-            <div className="text-left">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">You are viewing</p>
-              <p className="text-sm font-semibold">{active.name}</p>
-            </div>
-          </div>
-          <ChevronDown size={16} className={`text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
-        </button>
-        {open && (
-          <div className="absolute z-20 mt-2 w-full rounded-2xl border border-border bg-card p-2 shadow-xl">
-            {coaches.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => { setActive(c); setOpen(false); }}
-                className="flex w-full items-center gap-3 rounded-xl p-2 text-left hover:bg-surface"
-              >
-                <div className={`grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br ${c.color} text-[9px] font-bold`}>{c.initials}</div>
-                <span className="flex-1 text-xs font-semibold">{c.name}</span>
-                {active.id === c.id && <Check size={14} className="text-teal" />}
-              </button>
-            ))}
-            <Link to="/search" className="mt-1 block rounded-xl border border-dashed border-border p-2 text-center text-[11px] text-muted-foreground">
-              + Find another coach
-            </Link>
-          </div>
-        )}
-      </div>
-
-      <p className="mt-4 text-xs text-muted-foreground">Welcome back, Sarah</p>
+      <p className="text-xs text-muted-foreground">Welcome back, Sarah</p>
       <h1 className="font-display text-2xl font-bold">Jake's hockey journey</h1>
+      <p className="mt-1 text-[11px] text-muted-foreground">All camps and coaches in one view.</p>
 
       {/* Upcoming bookings */}
       <section className="mt-5">
@@ -108,13 +69,16 @@ function ParentHome() {
           </Link>
         </div>
         <div className="mt-2 space-y-2">
-          {(myCamps.length > 0 ? myCamps : bookings.map((b, i) => ({ id: `demo-${i}`, name: b.name, start_date: null, end_date: null, venue_name: b.location }))).map((c) => {
+          {(myCamps.length > 0 ? myCamps.map((c) => ({ ...c, coach: null as string | null })) : bookings.map((b, i) => ({ id: `demo-${i}`, name: b.name, start_date: null, end_date: null, venue_name: b.location, coach: b.coach }))).map((c) => {
             const isReal = !c.id.startsWith("demo-");
             const countdown = daysUntil(c.start_date);
             const card = (
               <>
                 <div className="flex items-center justify-between">
-                  <p className="font-semibold">{c.name}</p>
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{c.name}</p>
+                    {c.coach && <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-teal">{c.coach}</p>}
+                  </div>
                   {countdown != null && (
                     <span className="rounded-full bg-volt/15 px-2 py-0.5 text-[10px] font-bold text-volt">{countdown === 0 ? "Today" : `${countdown}d`}</span>
                   )}
@@ -168,6 +132,7 @@ function ParentHome() {
                   <p className="text-sm font-semibold">{m.from}</p>
                   <span className="text-[10px] text-muted-foreground">{m.time}</span>
                 </div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-teal/80">{m.camp}</p>
                 <p className="text-xs text-muted-foreground">{m.preview}</p>
               </div>
             </div>
