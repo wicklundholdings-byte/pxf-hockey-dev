@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { CalendarDays, MapPin, Users, MessageCircle, Info, ChevronLeft, Clock, Check, X } from "lucide-react";
+import { CalendarSyncButton } from "@/components/calendar-sync-button";
 
 export const Route = createFileRoute("/parent/camp/$campId")({
   head: () => ({ meta: [{ title: "Camp — PXF Hockey" }] }),
@@ -189,7 +190,14 @@ function ParentCampDetail() {
 
         <div className="mt-4">
           {tab === "schedule" && (
-            <ul className="space-y-2">
+            <div className="space-y-3">
+              {camp && sessions.length > 0 && (
+                <CalendarSyncButton
+                  camp={{ id: camp.id, name: camp.name, venue_name: camp.venue_name, address: camp.address }}
+                  sessions={sessions}
+                />
+              )}
+              <ul className="space-y-2">
               {sessions.length === 0 && <p className="text-xs text-muted-foreground">No sessions scheduled yet.</p>}
               {sessions.map((s, i) => (
                   <li key={s.id} className="rounded-2xl border border-border bg-card px-4 py-3">
@@ -244,7 +252,8 @@ function ParentCampDetail() {
                     )}
                   </li>
               ))}
-            </ul>
+              </ul>
+            </div>
           )}
 
           {tab === "roster" && (
