@@ -6,6 +6,8 @@ import { StatusBadge } from "@/components/coach/status-badge";
 import { QRScannerModal } from "@/components/coach/qr-scanner";
 import { ApplyCampTemplate } from "@/components/coach/apply-camp-template";
 import { SessionRunner, SessionSummary, readCampCompletions, writeCampCompletion, type RunnerBlock, type RunnerSummary, type SessionRunRecord } from "@/components/session-runner";
+import { toast } from "sonner";
+import { ArrowUp, ArrowDown, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/$campId")({
   component: CampDetailPage,
@@ -313,6 +315,8 @@ function CampDetailPage() {
           sessions={sessions}
           campId={campId}
           completions={completions}
+          registeredCount={regs.filter((r) => r.status === "paid").length}
+          onSessionsChange={(next) => setSessions(next)}
           onCompleted={(sessionId, rec) => {
             writeCampCompletion(campId, sessionId, rec);
             setCompletions((prev) => ({ ...prev, [sessionId]: rec }));
@@ -425,11 +429,15 @@ function CampSchedule({
   campId,
   completions,
   onCompleted,
+  registeredCount,
+  onSessionsChange,
 }: {
   sessions: Session[];
   campId: string;
   completions: Record<string, SessionRunRecord>;
   onCompleted: (sessionId: string, rec: SessionRunRecord) => void;
+  registeredCount: number;
+  onSessionsChange: (next: Session[]) => void;
 }) {
   const planKey = `pxf:camp-plans:${campId}`;
   const [library, setLibrary] = useState<SavedSession[]>([]);
@@ -438,6 +446,9 @@ function CampSchedule({
   const [pickerFor, setPickerFor] = useState<string | null>(null);
   const [runningSessionId, setRunningSessionId] = useState<string | null>(null);
   const [summary, setSummary] = useState<{ sessionId: string; rec: SessionRunRecord } | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editingDay, setEditingDay] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Session | null>(null);
 
   useEffect(() => {
     setLibrary(readSavedSessions());
@@ -456,11 +467,72 @@ function CampSchedule({
     setPickerFor(null);
   }
 
+  function notifyParents(message: string) {
+    if (registeredCount > 0) {
+      toast.success(`Schedule updated — push + SMS sent to ${registeredCount} registered ${registeredCount === 1 ? "parent" : "parents"}.`, { description: message });
+    } else {
+      toast.success("Schedule updated.", { description: message });
+    }
+  }
+
+  async function updateDay(s: Session, patch: Partial<Session>) {
+    const next = sessions.map((x) => (x.id === s.id ? { ...x, ...patch } : x)).sort((a, b) => a.session_date.localeCompare(b.session_date));
+    onSessionsChange(next);
+    const { error } = await supabase.from("camp_sessions").update(patch).eq("id", s.id);
+    if (error) { toast.error("Couldn't save day change"); return; }
+    notifyParents(`${new Date((patch.session_date ?? s.session_date) + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}`);
+  }
+
+  async function deleteDay(s: Session) {
+    const next = sessions.filter((x) => x.id !== s.id);
+    onSessionsChange(next);
+    setConfirmDelete(null);
+    const { error } = await supabase.from("camp_sessions").delete().eq("id", s.id);
+    if (error) { toast.error("Couldn't delete day"); return; }
+    if (assignments[s.id]) assign(s.id, null);
+    notifyParents(`Day removed: ${new Date(s.session_date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}`);
+  }
+
+  async function addDay() {
+    const last = sessions[sessions.length - 1];
+    const baseDate = last ? new Date(last.session_date + "T00:00:00") : new Date();
+    baseDate.setDate(baseDate.getDate() + 1);
+    const newDate = baseDate.toISOString().slice(0, 10);
+    const payload = {
+      camp_id: campId,
+      session_date: newDate,
+      start_time: last?.start_time ?? "09:00:00",
+      end_time: last?.end_time ?? "10:00:00",
+      sort_order: sessions.length,
+    };
+    const { data, error } = await supabase.from("camp_sessions").insert(payload).select("id, session_date, start_time, end_time").maybeSingle();
+    if (error || !data) { toast.error("Couldn't add day"); return; }
+    onSessionsChange([...sessions, data as Session]);
+    notifyParents(`New day added: ${new Date(newDate + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}`);
+  }
+
+  async function swapDays(i: number, j: number) {
+    if (i < 0 || j < 0 || i >= sessions.length || j >= sessions.length) return;
+    const a = sessions[i]; const b = sessions[j];
+    // Swap dates so order changes.
+    const aDate = a.session_date; const bDate = b.session_date;
+    const next = sessions.map((x) => x.id === a.id ? { ...x, session_date: bDate } : x.id === b.id ? { ...x, session_date: aDate } : x).sort((x, y) => x.session_date.localeCompare(y.session_date));
+    onSessionsChange(next);
+    await Promise.all([
+      supabase.from("camp_sessions").update({ session_date: bDate }).eq("id", a.id),
+      supabase.from("camp_sessions").update({ session_date: aDate }).eq("id", b.id),
+    ]);
+    notifyParents("Camp days reordered.");
+  }
+
   if (sessions.length === 0) {
     return (
-      <p className="rounded-2xl border border-border bg-card p-6 text-center text-xs text-muted-foreground">
-        No camp days scheduled yet.
-      </p>
+      <div className="rounded-2xl border border-border bg-card p-6 text-center text-xs text-muted-foreground">
+        <p>No camp days scheduled yet.</p>
+        <button onClick={addDay} className="mt-3 inline-flex items-center gap-1 rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-primary-foreground">
+          <Plus size={12} /> Add first day
+        </button>
+      </div>
     );
   }
 
@@ -486,6 +558,15 @@ function CampSchedule({
 
   return (
     <div className="space-y-2">
+      <div className="flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => { setEditMode((v) => !v); setEditingDay(null); }}
+          className={"inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold transition " + (editMode ? "border-teal bg-teal/15 text-teal" : "border-border bg-surface text-muted-foreground")}
+        >
+          <Pencil size={10} /> {editMode ? "Done" : "Edit days"}
+        </button>
+      </div>
       <div className="-mx-5 overflow-x-auto px-5">
         <div className="flex gap-2">
           {sessions.map((s, i) => {
@@ -501,6 +582,64 @@ function CampSchedule({
                 ? "border-teal bg-teal/10"
                 : "border-border bg-card opacity-60";
             const ringIfOpen = isOpen ? " ring-2 ring-teal/60" : "";
+            if (editMode) {
+              const isEditing = editingDay === s.id;
+              return (
+                <div key={s.id} className={"relative flex w-40 shrink-0 flex-col gap-1.5 rounded-2xl border border-teal/40 bg-card p-3 text-left"}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-teal">Day {i + 1}</p>
+                    <button
+                      onClick={() => setConfirmDelete(s)}
+                      className="rounded-full bg-red-500/15 p-1 text-red-400"
+                      aria-label="Delete day"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                  {isEditing ? (
+                    <div className="space-y-1.5">
+                      <input
+                        type="date"
+                        value={s.session_date}
+                        onChange={(e) => updateDay(s, { session_date: e.target.value })}
+                        className="w-full rounded-lg border border-border bg-surface px-2 py-1 text-[11px] text-foreground"
+                      />
+                      <div className="flex gap-1">
+                        <input
+                          type="time"
+                          value={(s.start_time ?? "09:00:00").slice(0, 5)}
+                          onChange={(e) => updateDay(s, { start_time: e.target.value + ":00" })}
+                          className="w-full rounded-lg border border-border bg-surface px-1.5 py-1 text-[10px] text-foreground"
+                        />
+                        <input
+                          type="time"
+                          value={(s.end_time ?? "10:00:00").slice(0, 5)}
+                          onChange={(e) => updateDay(s, { end_time: e.target.value + ":00" })}
+                          className="w-full rounded-lg border border-border bg-surface px-1.5 py-1 text-[10px] text-foreground"
+                        />
+                      </div>
+                      <button onClick={() => setEditingDay(null)} className="w-full rounded-lg bg-gradient-brand py-1 text-[10px] font-bold text-primary-foreground">Done</button>
+                    </div>
+                  ) : (
+                    <button onClick={() => setEditingDay(s.id)} className="text-left">
+                      <p className="font-display text-xl font-bold text-foreground leading-none">{date.getDate()}</p>
+                      <p className="text-[10px] text-muted-foreground">{date.toLocaleDateString("en-US", { weekday: "short", month: "short" })}</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        {(s.start_time ?? "09:00").slice(0, 5)} – {(s.end_time ?? "10:00").slice(0, 5)}
+                      </p>
+                    </button>
+                  )}
+                  <div className="mt-1 flex items-center justify-between border-t border-border pt-1.5">
+                    <button disabled={i === 0} onClick={() => swapDays(i, i - 1)} className="rounded-full p-1 text-muted-foreground disabled:opacity-30">
+                      <ArrowUp size={12} />
+                    </button>
+                    <button disabled={i === sessions.length - 1} onClick={() => swapDays(i, i + 1)} className="rounded-full p-1 text-muted-foreground disabled:opacity-30">
+                      <ArrowDown size={12} />
+                    </button>
+                  </div>
+                </div>
+              );
+            }
             return (
               <button
                 key={s.id}
@@ -528,6 +667,15 @@ function CampSchedule({
               </button>
             );
           })}
+          {editMode && (
+            <button
+              onClick={addDay}
+              className="flex w-32 shrink-0 flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-teal/50 bg-teal/5 p-3 text-teal"
+            >
+              <Plus size={20} />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Add day</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -715,6 +863,27 @@ function CampSchedule({
           />
         );
       })()}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-5" onClick={() => setConfirmDelete(null)}>
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-display text-base font-bold text-foreground">Delete this day?</h3>
+            {assignments[confirmDelete.id] && (
+              <p className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-[11px] text-amber-300">
+                ⚠️ This day has a session plan attached. Deleting it will remove the session assignment.
+              </p>
+            )}
+            {registeredCount > 0 && (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                {registeredCount} registered {registeredCount === 1 ? "parent" : "parents"} will be notified by push + SMS.
+              </p>
+            )}
+            <div className="mt-4 flex gap-2">
+              <button onClick={() => setConfirmDelete(null)} className="flex-1 rounded-xl border border-border bg-surface py-2 text-xs font-semibold text-foreground">Cancel</button>
+              <button onClick={() => deleteDay(confirmDelete)} className="flex-1 rounded-xl bg-red-500 py-2 text-xs font-bold text-white">Delete day</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
