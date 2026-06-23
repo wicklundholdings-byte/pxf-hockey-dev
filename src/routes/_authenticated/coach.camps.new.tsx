@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, ArrowRight, Check, Upload, Plus, Trash2, CalendarDays, MapPin, DollarSign, FileText } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Upload, Plus, Trash2, CalendarDays, MapPin, DollarSign, FileText, Snowflake } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/new")({
@@ -62,27 +62,49 @@ function NewCampWizard() {
   const [paymentPlan, setPaymentPlan] = useState<PaymentPlan>("none");
   const [waiverUrl, setWaiverUrl] = useState("");
   const [fields, setFields] = useState<CustomField[]>([]);
-  const [linkedIceSlotId, setLinkedIceSlotId] = useState<string | null>(null);
+  const [selectedIceSlotIds, setSelectedIceSlotIds] = useState<string[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<Array<{ id: string; slot_date: string; start_time: string; end_time: string; surface_type: string | null; rinks: { name: string | null; address: string | null; color: string | null } | null }>>([]);
+
+  useEffect(() => {
+    (async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data } = await (supabase as any)
+        .from("ice_slots")
+        .select("id, slot_date, start_time, end_time, surface_type, rinks(name, address, color)")
+        .is("camp_id", null)
+        .gte("slot_date", today)
+        .order("slot_date", { ascending: true })
+        .order("start_time", { ascending: true });
+      setAvailableSlots((data as any[]) ?? []);
+    })();
+  }, []);
 
   useEffect(() => {
     const id = search?.ice_slot_id;
     if (!id) return;
-    (async () => {
-      const { data: slot } = await (supabase as any)
-        .from("ice_slots")
-        .select("id, slot_date, start_time, end_time, rink_id, rinks(name, address)")
-        .eq("id", id)
-        .maybeSingle();
-      if (!slot) return;
-      setLinkedIceSlotId(slot.id);
-      if (slot.slot_date) setStartDate(slot.slot_date);
-      if (slot.start_time) setStartTime(String(slot.start_time).slice(0, 5));
-      if (slot.end_time) setEndTime(String(slot.end_time).slice(0, 5));
-      if (slot.rinks?.name) setVenueName(slot.rinks.name);
-      if (slot.rinks?.address) setAddress(slot.rinks.address);
-      setLocationType("venue");
-    })();
+    setSelectedIceSlotIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
   }, [search?.ice_slot_id]);
+
+  // Auto-derive dates/times/venue from selected ice slots
+  useEffect(() => {
+    if (selectedIceSlotIds.length === 0) return;
+    const selected = availableSlots.filter((s) => selectedIceSlotIds.includes(s.id));
+    if (selected.length === 0) return;
+    const dates = selected.map((s) => s.slot_date).sort();
+    setStartDate(dates[0]);
+    if (dates.length > 1) setEndDate(dates[dates.length - 1]);
+    const sameDayTimes = selected.filter((s) => s.slot_date === dates[0]);
+    if (sameDayTimes.length) {
+      const minStart = sameDayTimes.map((s) => s.start_time).sort()[0];
+      const maxEnd = sameDayTimes.map((s) => s.end_time).sort().reverse()[0];
+      if (minStart) setStartTime(String(minStart).slice(0, 5));
+      if (maxEnd) setEndTime(String(maxEnd).slice(0, 5));
+    }
+    const first = selected[0];
+    if (first?.rinks?.name) setVenueName((v) => v || first.rinks!.name!);
+    if (first?.rinks?.address) setAddress((v) => v || first.rinks!.address!);
+    setLocationType("venue");
+  }, [selectedIceSlotIds, availableSlots]);
 
   function handleHero(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -150,11 +172,11 @@ function NewCampWizard() {
         );
       }
 
-      if (linkedIceSlotId && camp) {
+      if (selectedIceSlotIds.length > 0 && camp) {
         const { error: linkErr } = await (supabase as any)
           .from("ice_slots")
           .update({ camp_id: camp.id })
-          .eq("id", linkedIceSlotId);
+          .in("id", selectedIceSlotIds);
         if (linkErr) {
           alert(`Camp created but ice slot link failed: ${linkErr.message}`);
         }
@@ -271,6 +293,42 @@ function NewCampWizard() {
         {step === 3 && (
           <div className="space-y-4">
             <h2 className="font-display text-base font-bold text-foreground">Location & time</h2>
+            {availableSlots.length > 0 && (
+              <div className="rounded-xl border border-teal/30 bg-teal/5 p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Snowflake size={14} className="text-teal" />
+                    <span className="text-xs font-bold text-foreground">Pick ice times for this camp</span>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">{selectedIceSlotIds.length} selected</span>
+                </div>
+                <p className="mb-2 text-[10px] text-muted-foreground">Selecting slots auto-fills dates, times, and venue below.</p>
+                <ul className="max-h-56 space-y-1 overflow-y-auto pr-1">
+                  {availableSlots.map((s) => {
+                    const checked = selectedIceSlotIds.includes(s.id);
+                    const dateLabel = new Date(s.slot_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+                    return (
+                      <li key={s.id}>
+                        <label className={"flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-2 text-[11px] transition " + (checked ? "border-teal bg-teal/10" : "border-border bg-surface hover:border-teal/60")}>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              setSelectedIceSlotIds((prev) => e.target.checked ? [...prev, s.id] : prev.filter((x) => x !== s.id));
+                            }}
+                            className="h-3.5 w-3.5 accent-teal"
+                          />
+                          {s.rinks?.color && <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: s.rinks.color }} />}
+                          <span className="font-semibold text-foreground">{dateLabel}</span>
+                          <span className="text-muted-foreground">{String(s.start_time).slice(0, 5)}–{String(s.end_time).slice(0, 5)}</span>
+                          <span className="truncate text-muted-foreground">· {s.rinks?.name ?? "Rink"}</span>
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
             <div className="grid grid-cols-3 gap-2">
               {([
                 { v: "venue" as const, t: "Venue" },
