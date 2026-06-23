@@ -127,7 +127,7 @@ function PracticePlan() {
     <div>
       <Link to="/coach/teams/$teamId/schedule/$eventId" params={{ teamId, eventId }} className="inline-flex items-center gap-1 text-xs text-muted-foreground"><ArrowLeft size={14} /> Back to event</Link>
       <div className="mt-2 flex items-center justify-between">
-        <h3 className="font-display text-lg font-bold">Practice plan</h3>
+        <h3 className="font-display text-lg font-bold">Practice Plan</h3>
         <span className="rounded-full bg-surface-2 px-2.5 py-1 text-[11px] font-bold">Total {total} min</span>
       </div>
       <div className="mt-3 space-y-2">
