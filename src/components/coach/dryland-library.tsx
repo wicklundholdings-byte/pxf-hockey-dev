@@ -16,7 +16,7 @@ type Program = {
   session_count: number;
   avg_session_minutes: number;
 };
-type Athlete = { id: string; full_name: string; age_group: string | null };
+type Athlete = { id: string; full_name: string };
 
 const CATS = [
   { id: "all", label: "All", icon: Dumbbell },
@@ -147,7 +147,7 @@ function AssignSheet({ program, ownerId, onClose }: { program: Program; ownerId:
     (async () => {
       const { data } = await supabase
         .from("attendees")
-        .select("id, full_name, age_group")
+        .select("id, full_name")
         .eq("owner_id", ownerId)
         .order("full_name");
       setAthletes((data ?? []) as Athlete[]);
@@ -237,7 +237,6 @@ function AssignSheet({ program, ownerId, onClose }: { program: Program; ownerId:
                   >
                     <div>
                       <p className="text-sm font-semibold text-foreground">{a.full_name}</p>
-                      {a.age_group && <p className="text-[10px] text-muted-foreground">{a.age_group}</p>}
                     </div>
                     {on && <Check size={16} className="text-teal" />}
                   </button>
