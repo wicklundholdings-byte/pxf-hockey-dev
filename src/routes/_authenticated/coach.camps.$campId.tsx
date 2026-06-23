@@ -279,6 +279,8 @@ function CampDetailPage() {
         </Link>
       </div>
 
+      <CampStaffSection campId={campId} />
+
       {/* Quick links to dedicated sub-routes */}
       <div className="grid grid-cols-3 gap-2">
         <Link
@@ -323,8 +325,6 @@ function CampDetailPage() {
           }}
         />
       </section>
-
-      <CampStaffSection campId={campId} />
 
       {/* Roster + Today's RSVP */}
       <div className="grid grid-cols-2 gap-2">
