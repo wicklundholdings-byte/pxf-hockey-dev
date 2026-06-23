@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedu
 });
 
 type Item = { id: string; itemType: "drill" | "note"; drillId?: string; drillName?: string; noteText?: string; durationMinutes: number };
-type Drill = { id: string; name: string };
+type Drill = { id: string; title: string };
 
 function PracticePlan() {
   const { teamId, eventId } = Route.useParams();
@@ -21,7 +21,7 @@ function PracticePlan() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    supabase.from("drills").select("id,name").order("name").limit(200).then(({ data }) => setDrills((data ?? []) as Drill[]));
+    supabase.from("drills").select("id,title").order("title").limit(200).then(({ data }) => setDrills((data ?? []) as Drill[]));
   }, []);
 
   function add(item: Item) { setItems([...items, item]); }
@@ -78,8 +78,8 @@ function PracticePlan() {
             <p className="text-xs font-bold">Choose a drill</p>
             <div className="mt-2 space-y-1">
               {drills.map((d) => (
-                <button key={d.id} onClick={() => { add({ id: crypto.randomUUID(), itemType: "drill", drillId: d.id, drillName: d.name, durationMinutes: 10 }); setPicking(false); }}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-left text-sm">{d.name}</button>
+                <button key={d.id} onClick={() => { add({ id: crypto.randomUUID(), itemType: "drill", drillId: d.id, drillName: d.title, durationMinutes: 10 }); setPicking(false); }}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-left text-sm">{d.title}</button>
               ))}
               {drills.length === 0 && <p className="text-xs text-muted-foreground">No drills in your library yet.</p>}
             </div>
