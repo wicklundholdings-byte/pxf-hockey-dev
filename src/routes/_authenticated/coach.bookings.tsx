@@ -1,11 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Clock, MapPin, DollarSign, Calendar as CalIcon } from "lucide-react";
+import { TierGate } from "@/components/tier-gate";
 
 export const Route = createFileRoute("/_authenticated/coach/bookings")({
   head: () => ({ meta: [{ title: "1-on-1 Bookings — Coach" }] }),
-  component: BookingsScreen,
+  component: GatedBookings,
 });
+
+function GatedBookings() {
+  return (
+    <TierGate feature="privateSessionBooking">
+      <BookingsScreen />
+    </TierGate>
+  );
+}
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const SLOTS = ["6a", "7a", "8a", "9a", "4p", "5p", "6p", "7p", "8p"];

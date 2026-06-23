@@ -1,10 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Banknote, TrendingUp, Calendar, CheckCircle2, Clock, ChevronRight } from "lucide-react";
+import { TierGate } from "@/components/tier-gate";
 
 export const Route = createFileRoute("/payments/payouts")({
   head: () => ({ meta: [{ title: "Payouts — Coach Dashboard" }] }),
-  component: PayoutsScreen,
+  component: GatedPayouts,
 });
+
+function GatedPayouts() {
+  return (
+    <TierGate feature="stripePayouts">
+      <PayoutsScreen />
+    </TierGate>
+  );
+}
 
 const payouts = [
   { id: "po_5", date: "Jul 5", amount: 184220, status: "paid" as const },

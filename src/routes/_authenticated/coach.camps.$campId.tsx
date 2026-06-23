@@ -9,6 +9,43 @@ import { ApplyCampTemplate } from "@/components/coach/apply-camp-template";
 import { SessionRunner, SessionSummary, readCampCompletions, writeCampCompletion, type RunnerBlock, type RunnerSummary, type SessionRunRecord } from "@/components/session-runner";
 import { toast } from "sonner";
 import { ArrowUp, ArrowDown, Trash2 } from "lucide-react";
+import { useHasFeature } from "@/hooks/use-tier";
+import { gateMessage } from "@/lib/tiers";
+
+function PublishLinkButtons({ slug }: { slug: string }) {
+  const { allowed } = useHasFeature("publicRegistration");
+  if (!allowed) {
+    return (
+      <Link
+        to="/coach/plans"
+        className="flex flex-1 items-center justify-center gap-1 rounded-full border border-teal/40 bg-teal/10 py-2 text-[11px] font-semibold text-teal"
+        title={gateMessage("publicRegistration")}
+      >
+        <Lock size={12} /> Upgrade to publish publicly
+      </Link>
+    );
+  }
+  return (
+    <>
+      <a
+        href={`/camps/${slug}`}
+        target="_blank"
+        rel="noreferrer"
+        className="flex flex-1 items-center justify-center gap-1 rounded-full bg-gradient-brand py-2 text-[11px] font-bold text-primary-foreground"
+      >
+        <Share2 size={12} /> Booking page
+      </a>
+      <a
+        href={`/camps/${slug}`}
+        target="_blank"
+        rel="noreferrer"
+        className="flex items-center justify-center gap-1 rounded-full border border-teal/40 bg-teal/10 px-3 py-2 text-[11px] font-semibold text-teal"
+      >
+        Preview as parent
+      </a>
+    </>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/coach/camps/$campId")({
   component: CampDetailPage,
@@ -239,22 +276,7 @@ function CampDetailPage() {
           </div>
 
           <div className="mt-3 flex gap-2">
-            <a
-              href={`/camps/${camp.slug}`}
-              target="_blank"
-              rel="noreferrer"
-              className="flex flex-1 items-center justify-center gap-1 rounded-full bg-gradient-brand py-2 text-[11px] font-bold text-primary-foreground"
-            >
-              <Share2 size={12} /> Booking page
-            </a>
-            <a
-              href={`/camps/${camp.slug}`}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center gap-1 rounded-full border border-teal/40 bg-teal/10 px-3 py-2 text-[11px] font-semibold text-teal"
-            >
-              Preview as parent
-            </a>
+            <PublishLinkButtons slug={camp.slug} />
             <button className="flex items-center justify-center gap-1 rounded-full border border-border bg-surface px-3 py-2 text-[11px] font-semibold text-foreground">
               <Pencil size={12} /> Edit
             </button>
