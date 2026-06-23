@@ -1737,6 +1737,7 @@ export type Database = {
       }
       messages: {
         Row: {
+          athlete_media_id: string | null
           body: string | null
           conversation_id: string
           created_at: string
@@ -1747,6 +1748,7 @@ export type Database = {
           sender_id: string
         }
         Insert: {
+          athlete_media_id?: string | null
           body?: string | null
           conversation_id: string
           created_at?: string
@@ -1757,6 +1759,7 @@ export type Database = {
           sender_id: string
         }
         Update: {
+          athlete_media_id?: string | null
           body?: string | null
           conversation_id?: string
           created_at?: string
@@ -1767,6 +1770,13 @@ export type Database = {
           sender_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "messages_athlete_media_id_fkey"
+            columns: ["athlete_media_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_media"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "messages_conversation_id_fkey"
             columns: ["conversation_id"]
