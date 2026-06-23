@@ -554,8 +554,14 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
         <Section icon={CreditCard} title="Subscription">
           <div className="rounded-xl border border-volt/40 bg-volt/5 p-4">
             <p className="text-[10px] font-bold uppercase tracking-wider text-volt">Current plan</p>
-            <p className="mt-1 font-display text-lg font-bold">Platinum — $24.99/mo</p>
-            <p className="mt-1 text-[11px] text-muted-foreground">Founding member rate · renews Jul 14, 2026</p>
+            <p className="mt-1 font-display text-lg font-bold">Elite Coach — $49.99/mo</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">Founding Member — free until Dec 31, 2027 · next billing Jan 1, 2028</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Upgrade</p>
+            <p className="mt-1 text-sm font-semibold">Academy — $99/mo</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">Multiple coaches under one organization, staff management, org-wide analytics.</p>
+            <button className="mt-3 w-full rounded-lg bg-gradient-brand py-2 text-xs font-bold text-primary-foreground">Upgrade to Academy</button>
           </div>
           <div className="flex gap-2">
             <button className="flex-1 rounded-lg bg-teal py-2 text-xs font-bold text-background">Manage Plan</button>
