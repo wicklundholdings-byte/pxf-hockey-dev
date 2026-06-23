@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Search, List, Calendar as CalendarIcon, MapPin, AlertTriangle } from "lucide-react";
+import { Plus, Search, List, Calendar as CalendarIcon, MapPin, AlertTriangle, Snowflake } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/")({
@@ -106,6 +106,15 @@ function CampsPage() {
             <Plus size={12} /> New
           </Link>
         </div>
+        <Link
+          to="/coach/ice"
+          className="flex items-center justify-between rounded-2xl border border-teal/40 bg-teal/5 p-3 text-xs"
+        >
+          <span className="flex items-center gap-2 font-semibold text-foreground">
+            <Snowflake size={14} className="text-teal" /> Ice Time Log
+          </span>
+          <span className="text-[10px] font-bold text-teal">Manage →</span>
+        </Link>
         <div className="flex flex-wrap gap-2">
           {(["all", "live", "draft", "ended"] as const).map((f) => (
             <button
