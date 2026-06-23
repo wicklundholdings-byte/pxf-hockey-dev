@@ -27,8 +27,8 @@ export function MetaPixel({
   useEffect(() => {
     if (!coachId) return;
     let cancelled = false;
-    supabase
-      .from("coach_marketing_settings" as never)
+    (supabase as any)
+      .from("coach_marketing_settings")
       .select("meta_pixel_id")
       .eq("coach_id", coachId)
       .maybeSingle()
