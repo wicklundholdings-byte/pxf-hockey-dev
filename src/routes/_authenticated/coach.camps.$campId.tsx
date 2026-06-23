@@ -1232,7 +1232,7 @@ function RosterTab({ regs }: { regs: Reg[] }) {
         </button>
       </div>
       <div className="flex flex-wrap gap-2">
-        {(["all", "paid", "pending", "refunded"] as const).map((f) => (
+        {(["all", "paid", "pending", "overdue"] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
