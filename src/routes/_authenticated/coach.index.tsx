@@ -151,19 +151,6 @@ function CoachDashboard() {
           <span className="text-xs font-semibold text-emerald-400">+ Create Session</span>
         </Link>
       </div>
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {statCards.map((s) => (
-          <div key={s.label} className="rounded-2xl border border-border bg-card p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</span>
-              <s.icon size={14} className={s.accent} />
-            </div>
-            <div className={"mt-1 font-display text-xl font-bold " + s.accent}>{s.value}</div>
-          </div>
-        ))}
-      </div>
-
       {/* Quick Access */}
       <div className="grid grid-cols-4 gap-2">
         {[
@@ -180,6 +167,19 @@ function CoachDashboard() {
             <q.icon size={18} className="text-teal" />
             <span className="text-[10px] font-semibold leading-tight text-foreground">{q.label}</span>
           </Link>
+        ))}
+      </div>
+
+      {/* Stats grid */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {statCards.map((s) => (
+          <div key={s.label} className="rounded-2xl border border-border bg-card p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</span>
+              <s.icon size={14} className={s.accent} />
+            </div>
+            <div className={"mt-1 font-display text-xl font-bold " + s.accent}>{s.value}</div>
+          </div>
         ))}
       </div>
 
