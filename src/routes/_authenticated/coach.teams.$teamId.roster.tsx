@@ -52,6 +52,8 @@ function AddPlayer({ teamId, onClose, onSaved }: { teamId: string; onClose: () =
   const [form, setForm] = useState({ displayName: "", jerseyNumber: "", position: "", parentEmail: "", parentName: "" });
   const [saving, setSaving] = useState(false);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const [emailStatus, setEmailStatus] = useState<"sent" | "skipped" | "failed" | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -61,6 +63,8 @@ function AddPlayer({ teamId, onClose, onSaved }: { teamId: string; onClose: () =
       const res = await add({ data: { teamId, ...form } });
       const url = `${window.location.origin}/team-invite/${res.inviteToken}`;
       setInviteUrl(url);
+      setEmailStatus(res.emailStatus ?? "skipped");
+      setEmailError(res.emailError ?? null);
     } catch (err: any) { alert(err?.message || "Failed"); }
     finally { setSaving(false); }
   }
@@ -77,22 +81,33 @@ function AddPlayer({ teamId, onClose, onSaved }: { teamId: string; onClose: () =
         <div className="flex items-center justify-between"><h3 className="font-bold">{inviteUrl ? "Invite ready" : "Add player"}</h3><button onClick={inviteUrl ? onSaved : onClose}><X size={16} /></button></div>
         {inviteUrl ? (
           <div className="mt-4 space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Player added. Share this link with <span className="text-foreground font-semibold">{form.parentEmail}</span> — they'll complete the athlete profile, phone, and emergency contacts.
-            </p>
+            {emailStatus === "sent" && (
+              <div className="rounded-xl border border-teal/40 bg-teal/10 p-3 text-sm">
+                <p className="font-semibold text-teal">Invite email sent ✓</p>
+                <p className="mt-1 text-muted-foreground">
+                  We emailed the signup link to <span className="text-foreground font-semibold">{form.parentEmail}</span>.
+                </p>
+              </div>
+            )}
+            {emailStatus === "failed" && (
+              <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm">
+                <p className="font-semibold text-destructive">Email failed to send</p>
+                <p className="mt-1 text-muted-foreground">Share the link below instead.</p>
+                {emailError && <p className="mt-1 text-[10px] text-muted-foreground">{emailError}</p>}
+              </div>
+            )}
+            {emailStatus === "skipped" && (
+              <p className="text-sm text-muted-foreground">
+                Share this link with <span className="text-foreground font-semibold">{form.parentEmail}</span>.
+              </p>
+            )}
             <div className="flex items-center gap-2 rounded-xl border border-border bg-background p-2">
               <code className="flex-1 truncate text-[11px]">{inviteUrl}</code>
               <button onClick={copyLink} className="grid h-8 w-8 place-items-center rounded-lg bg-teal text-background">
                 {copied ? <Check size={14} /> : <Copy size={14} />}
               </button>
             </div>
-            <a
-              href={`mailto:${encodeURIComponent(form.parentEmail)}?subject=${encodeURIComponent("You're invited to join our team")}&body=${encodeURIComponent(`Hi${form.parentName ? " " + form.parentName : ""},\n\nPlease complete your athlete's profile here:\n${inviteUrl}\n\nThanks!`)}`}
-              className="block w-full rounded-full bg-gradient-brand py-2.5 text-center text-sm font-bold text-primary-foreground"
-            >
-              Open email to send
-            </a>
-            <button onClick={onSaved} className="w-full rounded-full border border-border py-2 text-xs font-semibold">Done</button>
+            <button onClick={onSaved} className="w-full rounded-full bg-gradient-brand py-2.5 text-sm font-bold text-primary-foreground">Done</button>
           </div>
         ) : (
         <form onSubmit={submit} className="mt-3 space-y-3">
