@@ -1,84 +1,69 @@
-## Parent Camp Registration Experience
+## Team Management System — Implementation Plan
 
-Goal: ship the 6 screens you described as a cohesive flow that parents land on from a coach's shared link. Reuse the existing booking data layer (`/book/$slug` already wires `submitBooking`, coupons, custom fields, waivers, payment plans) but redesign the UX into the modern, sectioned dashboard look the rest of the app uses.
+This is a large feature spanning permissions, messaging rules, scheduling, and geography. I'll deliver it in scoped phases so each is reviewable.
 
-### Routes
+### Phase 1 — Permission roles & schema (foundation)
 
-```text
-/camps/$slug              → Screen 1  Public camp page (hero, info, CTAs)
-/camps/$slug/register     → Screen 2  Registration form
-/camps/$slug/waiver       → Screen 3  Scroll-to-sign waiver
-/camps/$slug/payment      → Screen 4  Order summary + payment plans + Stripe
-/camps/$slug/confirmed    → Screen 5  Confirmation + add-to-calendar + view-in-app
-/parent                   → Screen 6  Camps tab (already exists, redesign card)
-/parent/camp/$campId      → Screen 6  Camp detail with Schedule / Roster / Inbox / Info sub-tabs
-```
+**Database:**
+- Extend `team_permission` enum to 5 roles: `owner`, `manager`, `coach`, `assistant`, `content_creator` (currently the project uses a coarser model).
+- Add `home_area_lat`, `home_area_lng`, `home_area_label` to `team_members` (optional, city-level).
+- Add `min_buffer_minutes` (default 30) to `profiles` (owner settings).
+- Helper SQL functions: `team_role(_user uuid)`, `can_access_camp(_user, _camp)`, `can_message_contact(_user, _contact)`.
 
-`/book/$slug` stays as a redirect into `/camps/$slug` so old coach links keep working.
+**Code:**
+- Central `src/lib/permissions.ts` exposing `usePermissions()` returning capabilities `{ canViewFinancials, canMessageAnyone, canEditCamp(campId), canCheckIn(campId), canAccessPlaybook }`.
+- Apply gates in existing routes (camps list, camp detail, messaging, playbook, settings).
 
-A small `useRegistrationDraft(slug)` hook persists parent + child + waiver + plan + coupon to `sessionStorage` so refreshes and back-navigation don't lose progress across the 4 wizard steps. Screen 1 has the only entry point; deep-linking later steps without a draft bounces to step 1.
+### Phase 2 — Attendee payment status
 
-### Screen-by-screen
+- Compute status (`paid` / `pending` / `overdue`) from existing `registrations` + `payment_installments` via a SQL view `attendee_payment_status`.
+- Add badge + filter on coach camp detail attendee list.
+- Dashboard summary card "X attendees have outstanding payments" with drill-down sheet — visible to owner/manager only.
 
-**Screen 1 — Public Camp Page (`/camps/$slug`)**
-- Public route (no `_authenticated`). Loader reads camp via the existing `getPublicCamp` server fn (publishable key, narrow column projection) so SSR/OG tags work for shared links.
-- Hero: cover image, camp name, coach name + logo, date range, time, venue, price (early-bird strikethrough when active), `8 spots left` chip (uses `camp.show_remaining`).
-- Sections (cards): Description, What's included, Daily schedule overview (from `camp_sessions`), Coach bio (from `profiles`).
-- Sticky bottom bar on mobile: `Register Now` (teal gradient) + `Share` (native share / copy link).
-- `head()` sets title, description, `og:title`, `og:description`, `og:image` from camp hero.
+### Phase 3 — Messaging permission rules
 
-**Screen 2 — Registration Form (`/camps/$slug/register`)**
-- Single-column form, sectioned: Parent info, Child info, Custom fields (loaded from `camp_custom_fields`).
-- Skill level pill selector (Beginner / Intermediate / Advanced), position select, DOB date input.
-- Custom-field renderer covers text / textarea / select / checkbox / number.
-- `Continue` advances to `/waiver` after writing the draft.
+- Server fn `listMessageableContacts()` returns contacts based on role:
+  - owner/manager → all org contacts + staff
+  - coach → parents/athletes in assigned camps only
+  - assistant/content_creator → none
+- RLS on `conversations` / `conversation_members` updated to enforce who can start a conversation.
+- Existing chat UI unchanged; new-conversation picker filtered by the server fn.
 
-**Screen 3 — Waiver (`/camps/$slug/waiver`)**
-- Scrollable card with full `camp.waiver_text`. Tracks scroll position; agree controls stay disabled until bottom is reached (visible progress hint).
-- Checkbox `I have read and agree…` + typed-name signature field.
-- `Continue` requires both; on submit, draft stores agreement timestamp + typed name.
+### Phase 4 — Team Overview screen
 
-**Screen 4 — Payment (`/camps/$slug/payment`)**
-- Order summary card: camp name, dates, child name, price.
-- When `camp.payment_plan !== 'none'`: two radio cards at top — `Pay in full` vs `Pay deposit` (deposit + remaining due date derived from camp config).
-- Promo code: collapsed row "Have a promo code?" → expands to input + Apply, calls existing `previewCoupon`. Discount line shows in summary.
-- Stripe payment form below (placeholder Stripe Elements wrapper — wired identically to current `book.$slug.tsx` `submitBooking` call). Pay button at bottom in the teal gradient style.
-- On success → navigate to `/camps/$slug/confirmed` with registration IDs in router state.
+- New route `/_authenticated/coach.team.tsx` — staff cards with name, role, this-month assigned camp count, availability indicator.
+- Filters: date range, location, role.
+- Tap card → drawer with that staff member's schedule calendar (reusing existing schedule components).
 
-**Screen 5 — Confirmation (`/camps/$slug/confirmed`)**
-- Animated green check (CSS, no library).
-- Child name, camp name, dates, total paid.
-- `Add to calendar` (generates `.ics` client-side from camp_sessions).
-- `Download receipt` (generates a simple printable receipt page).
-- Copy: "You'll receive a confirmation email and SMS shortly. Your coach will be in touch before camp starts."
-- `View in app →` routes to `/auth?mode=signup&redirect=/parent` (or `/parent` if already signed in).
+### Phase 5 — Unassigned alerts
 
-**Screen 6 — Parent App (`/parent` + `/parent/camp/$campId`)**
-- `/parent` Camps tab card: camp name, dates, coach name, big countdown chip (`14 days until camp`), tap → detail.
-- New nested route `/parent/camp/$campId` with horizontal sub-tabs:
-  - **Schedule** — read-only list of `camp_sessions` grouped by day.
-  - **Roster** — `X kids enrolled` count only; no names.
-  - **Inbox** — message thread with coach (reuses existing `conversations` / `messages`).
-  - **Info** — venue, address, map link, "What to bring" list.
+- Dashboard warning card with quick-assign action.
+- Orange badge on event cards where `camp_staff` is empty.
+- Team screen tab listing all unassigned camps + sessions.
+
+### Phase 6 — Conflict detection
+
+- Server fn `checkAssignmentConflicts({ teamMemberId, campSessionId })` returning `{ hardConflicts: [...], softWarnings: [...] }`.
+- Hard: overlapping `camp_sessions` for same team member → block assignment.
+- Soft: gap < owner's `min_buffer_minutes` → warn, require confirm.
+- Setting in owner settings page for buffer minutes.
+
+### Phase 7 — Geography-aware scheduling (Google Maps)
+
+- Uses existing Google Maps connector (already wired for the venue map feature).
+- Server fn `getDriveTimes({ teamMemberId, campSessionId })` calls Routes API `computeRouteMatrix` for: home→venue and previousAssignmentVenue→venue.
+- Assignment UI shows drive times inline.
+- Smart suggestion: when assigning, sort eligible coaches by drive-time-from-home and no-conflict.
+- Conflict warning text per spec; owner can override with confirmation modal.
+
+---
 
 ### Technical notes
+- All work is in TanStack server functions + new routes; no edge functions.
+- Google Maps calls go through the existing connector gateway (`routes/distanceMatrix/v2:computeRouteMatrix`).
+- Permission helper is the single source of truth — every gated UI reads from it.
 
-- New components:
-  - `src/components/parent/camp-hero.tsx`
-  - `src/components/parent/registration-stepper.tsx` (1/4 progress dots reused across screens 2–4)
-  - `src/components/parent/order-summary.tsx`
-  - `src/components/parent/payment-plan-picker.tsx`
-  - `src/components/parent/waiver-scroll.tsx`
-  - `src/components/parent/countdown-chip.tsx`
-- New server fns in `src/lib/camps-public.functions.ts`: `getPublicCamp(slug)`, `getPublicCampSchedule(campId)`, `getPublicCoachBio(userId)` — all use the server publishable client + narrow column projection against existing `TO anon` SELECT policies (no schema changes).
-- New authenticated server fn `getParentCamp(campId)` for screen 6 detail (RLS-scoped reads of camp + sessions + roster count).
-- Reuse existing `submitBooking`, `previewCoupon`, `camp_custom_fields`, `waiver_signatures`.
-- Tokens only: teal gradient buttons, `bg-surface`/`bg-card`, `border-border`, `text-muted-foreground` — no hardcoded colors.
-- All public routes set `head()` metadata; only `/camps/$slug` adds `og:image`.
-- Out of scope this pass: real Stripe Elements wiring (keeps placeholder), actual SMS delivery, calendar OAuth.
+### Scope confirmation
+Phases 1–3 are foundational and unlock the rest. Phases 4–7 are larger UI/integration pieces.
 
-### Open questions before I build
-
-1. Should `/book/$slug` keep working as an alias (redirect to `/camps/$slug`), or do you want the old route deleted entirely?
-2. For Add-to-calendar, is a client-generated `.ics` download fine, or do you want Google/Apple deep links too?
-3. Screen 6 Inbox — wire it to the real `conversations` table now, or stub the thread UI in this pass and wire later?
+**Should I proceed with all 7 phases in sequence, or would you like to confirm phase-by-phase?** Also: any role-name preferences (e.g. "Assistant" vs "Assistant Coach")?
