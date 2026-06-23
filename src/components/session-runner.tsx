@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, Pause, Play, RotateCcw, SkipForward, Video, Image as ImageIcon, X } from "lucide-react";
+import { CheckCircle2, Pause, Play, RotateCcw, SkipForward, Video, Image as ImageIcon, X, VideoIcon as RecordIcon } from "lucide-react";
 import { findDrill } from "@/data/pxf";
+import { InSessionRecorder } from "@/components/in-session-recorder";
 
 export type RunnerBlock = { uid: string; drillId: string; mins: number; notes?: string };
 export type RunnerSummary = { drillsCompleted: number; totalDrills: number; totalSeconds: number; completedAt: string };
@@ -10,17 +11,22 @@ export function SessionRunner({
   blocks,
   onClose,
   onComplete,
+  roster,
+  sessionId,
 }: {
   title: string;
   blocks: RunnerBlock[];
   onClose: () => void;
   onComplete: (summary: RunnerSummary) => void;
+  roster?: { id: string; full_name: string }[];
+  sessionId?: string;
 }) {
   const [idx, setIdx] = useState(0);
   const [done, setDone] = useState<Set<string>>(new Set());
   const [elapsed, setElapsed] = useState(0); // total elapsed across all drills
   const [showVideo, setShowVideo] = useState(false);
   const [showDiagram, setShowDiagram] = useState(false);
+  const [recordOpen, setRecordOpen] = useState(false);
 
   const block = blocks[idx];
   const drill = block ? findDrill(block.drillId) : null;
@@ -90,8 +96,21 @@ export function SessionRunner({
           <p className="text-[10px] font-bold tracking-[0.3em] text-volt">{title.toUpperCase()}</p>
           <p className="text-[11px] text-muted-foreground">Drill {idx + 1} of {total}</p>
         </div>
-        <div className="w-9" />
+        <button
+          onClick={() => setRecordOpen(true)}
+          aria-label="Record clip"
+          className="grid h-9 w-9 place-items-center rounded-full bg-rose-500 text-white"
+        >
+          <RecordIcon size={14} />
+        </button>
       </div>
+      {recordOpen && (
+        <InSessionRecorder
+          roster={roster ?? []}
+          sessionId={sessionId}
+          onClose={() => setRecordOpen(false)}
+        />
+      )}
 
       <div className="flex gap-1 px-4 pt-3">
         {blocks.map((b, i) => (
