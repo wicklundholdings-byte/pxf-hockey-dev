@@ -133,6 +133,18 @@ function TeamPage() {
     return aS < bE && bS < aE;
   }
 
+  // Returns the smallest minute gap between two non-overlapping camps (or null if overlapping / undated).
+  function gapMinutes(a: Camp, b: Camp): { other: Camp; gap: number } | null {
+    if (!a.start_date || !b.start_date) return null;
+    const aS = new Date(`${a.start_date}T${a.start_time ?? "00:00"}`);
+    const aE = new Date(`${a.end_date ?? a.start_date}T${a.end_time ?? "23:59"}`);
+    const bS = new Date(`${b.start_date}T${b.start_time ?? "00:00"}`);
+    const bE = new Date(`${b.end_date ?? b.start_date}T${b.end_time ?? "23:59"}`);
+    if (aS < bE && bS < aE) return null; // overlap (handled separately)
+    const gap = aE <= bS ? (bS.getTime() - aE.getTime()) / 60000 : (aS.getTime() - bE.getTime()) / 60000;
+    return { other: a, gap: Math.round(gap) };
+  }
+
   async function toggleAssignment(memberId: string, campId: string) {
     const existing = assignments.find((a) => a.team_member_id === memberId && a.camp_id === campId);
     if (existing) {
