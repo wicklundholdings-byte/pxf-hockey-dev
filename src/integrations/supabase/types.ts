@@ -663,6 +663,144 @@ export type Database = {
           },
         ]
       }
+      camp_update_athlete_tags: {
+        Row: {
+          athlete_id: string
+          update_id: string
+        }
+        Insert: {
+          athlete_id: string
+          update_id: string
+        }
+        Update: {
+          athlete_id?: string
+          update_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "camp_update_athlete_tags_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "camp_update_athlete_tags_update_id_fkey"
+            columns: ["update_id"]
+            isOneToOne: false
+            referencedRelation: "camp_updates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      camp_update_media: {
+        Row: {
+          created_at: string
+          display_order: number
+          duration_seconds: number | null
+          id: string
+          media_type: Database["public"]["Enums"]["camp_update_media_type"]
+          thumbnail_url: string | null
+          update_id: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          duration_seconds?: number | null
+          id?: string
+          media_type: Database["public"]["Enums"]["camp_update_media_type"]
+          thumbnail_url?: string | null
+          update_id: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          duration_seconds?: number | null
+          id?: string
+          media_type?: Database["public"]["Enums"]["camp_update_media_type"]
+          thumbnail_url?: string | null
+          update_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "camp_update_media_update_id_fkey"
+            columns: ["update_id"]
+            isOneToOne: false
+            referencedRelation: "camp_updates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      camp_update_reactions: {
+        Row: {
+          created_at: string
+          parent_id: string
+          update_id: string
+        }
+        Insert: {
+          created_at?: string
+          parent_id: string
+          update_id: string
+        }
+        Update: {
+          created_at?: string
+          parent_id?: string
+          update_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "camp_update_reactions_update_id_fkey"
+            columns: ["update_id"]
+            isOneToOne: false
+            referencedRelation: "camp_updates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      camp_updates: {
+        Row: {
+          camp_day_date: string | null
+          camp_id: string
+          caption: string | null
+          created_at: string
+          id: string
+          post_type: Database["public"]["Enums"]["camp_update_post_type"]
+          posted_by: string
+          updated_at: string
+        }
+        Insert: {
+          camp_day_date?: string | null
+          camp_id: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          post_type?: Database["public"]["Enums"]["camp_update_post_type"]
+          posted_by: string
+          updated_at?: string
+        }
+        Update: {
+          camp_day_date?: string | null
+          camp_id?: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          post_type?: Database["public"]["Enums"]["camp_update_post_type"]
+          posted_by?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "camp_updates_camp_id_fkey"
+            columns: ["camp_id"]
+            isOneToOne: false
+            referencedRelation: "camps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       camps: {
         Row: {
           absent_alert: boolean
@@ -2816,6 +2954,8 @@ export type Database = {
       app_role: "admin" | "user"
       camp_format: "camp" | "session"
       camp_status: "draft" | "live" | "ended"
+      camp_update_media_type: "photo" | "video"
+      camp_update_post_type: "daily" | "wrap"
       combine_category:
         | "speed_power"
         | "jumping_explosiveness"
@@ -2988,6 +3128,8 @@ export const Constants = {
       app_role: ["admin", "user"],
       camp_format: ["camp", "session"],
       camp_status: ["draft", "live", "ended"],
+      camp_update_media_type: ["photo", "video"],
+      camp_update_post_type: ["daily", "wrap"],
       combine_category: [
         "speed_power",
         "jumping_explosiveness",

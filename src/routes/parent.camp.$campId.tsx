@@ -2,16 +2,17 @@ import { createFileRoute, useParams, Link, useNavigate } from "@tanstack/react-r
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { CalendarDays, MapPin, Users, MessageCircle, Info, ChevronLeft, Clock, Check, X, Shield } from "lucide-react";
+import { CalendarDays, MapPin, Users, MessageCircle, Info, ChevronLeft, Clock, Check, X, Shield, Image as ImageIcon } from "lucide-react";
 import { VenueMap } from "@/components/venue-map";
 import { CalendarSyncButton } from "@/components/calendar-sync-button";
+import { CampUpdatesFeed } from "@/components/camp-updates-feed";
 
 export const Route = createFileRoute("/parent/camp/$campId")({
   head: () => ({ meta: [{ title: "Camp — PXF Hockey" }] }),
   component: ParentCampDetail,
 });
 
-type Tab = "schedule" | "staff" | "roster" | "inbox" | "info";
+type Tab = "schedule" | "updates" | "staff" | "roster" | "inbox" | "info";
 
 function fmtDate(d: string | null) {
   if (!d) return "TBA";
@@ -222,7 +223,7 @@ function ParentCampDetail() {
 
         {/* Sub-tabs */}
         <div className="mt-5 flex gap-1 rounded-2xl border border-border bg-card p-1">
-          {(["schedule", "staff", "roster", "inbox", "info"] as Tab[]).map((t) => (
+          {(["schedule", "updates", "staff", "roster", "inbox", "info"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -237,6 +238,10 @@ function ParentCampDetail() {
         </div>
 
         <div className="mt-4">
+          {tab === "updates" && (
+            <CampUpdatesFeed campId={campId} canManage={false} />
+          )}
+
           {tab === "schedule" && (
             <div className="space-y-3">
               {camp && sessions.length > 0 && (
