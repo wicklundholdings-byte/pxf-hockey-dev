@@ -264,7 +264,7 @@ export function CampUpdateComposer({
         .from("registrations")
         .select("attendees(id, full_name)")
         .eq("camp_id", campId)
-        .in("status", ["paid", "confirmed", "checked_in"]);
+        .eq("status", "paid");
       const seen = new Set<string>();
       const list: Attendee[] = [];
       for (const r of (data ?? []) as any[]) {
