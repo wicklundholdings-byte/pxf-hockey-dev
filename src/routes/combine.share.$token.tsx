@@ -11,7 +11,6 @@ export const Route = createFileRoute("/combine/share/$token")({
   component: PublicCombineShare,
 });
 
-type Share = { athlete_id: string };
 type Score = { category: string; score: number; percentile: number | null; global_rank: number | null };
 type Athlete = { full_name: string | null; age_group: string | null; position: string | null };
 
