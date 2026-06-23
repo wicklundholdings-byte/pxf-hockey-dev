@@ -3234,6 +3234,7 @@ export type Database = {
           invited_at: string
           jersey_number: string | null
           joined_at: string | null
+          parent_submission: Json | null
           parent1_email: string | null
           parent1_name: string | null
           parent1_phone: string | null
@@ -3241,6 +3242,7 @@ export type Database = {
           parent2_name: string | null
           position: string | null
           status: Database["public"]["Enums"]["team_invite_status"]
+          submitted_at: string | null
           team_id: string
         }
         Insert: {
@@ -3252,6 +3254,7 @@ export type Database = {
           invited_at?: string
           jersey_number?: string | null
           joined_at?: string | null
+          parent_submission?: Json | null
           parent1_email?: string | null
           parent1_name?: string | null
           parent1_phone?: string | null
@@ -3259,6 +3262,7 @@ export type Database = {
           parent2_name?: string | null
           position?: string | null
           status?: Database["public"]["Enums"]["team_invite_status"]
+          submitted_at?: string | null
           team_id: string
         }
         Update: {
@@ -3270,6 +3274,7 @@ export type Database = {
           invited_at?: string
           jersey_number?: string | null
           joined_at?: string | null
+          parent_submission?: Json | null
           parent1_email?: string | null
           parent1_name?: string | null
           parent1_phone?: string | null
@@ -3277,6 +3282,7 @@ export type Database = {
           parent2_name?: string | null
           position?: string | null
           status?: Database["public"]["Enums"]["team_invite_status"]
+          submitted_at?: string | null
           team_id?: string
         }
         Relationships: [
@@ -3878,6 +3884,7 @@ export type Database = {
       effective_owner_id: { Args: never; Returns: string }
       get_combine_share: { Args: { _token: string }; Returns: Json }
       get_rsvp_by_token: { Args: { _token: string }; Returns: Json }
+      get_team_invite_by_token: { Args: { _token: string }; Returns: Json }
       get_team_rsvp_by_token: { Args: { _token: string }; Returns: Json }
       has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
@@ -3913,6 +3920,16 @@ export type Database = {
       }
       respond_to_team_rsvp: {
         Args: { _note?: string; _response: string; _token: string }
+        Returns: Json
+      }
+      submit_team_invite: {
+        Args: {
+          _athlete_dob: string
+          _parent_name: string
+          _parent_phone: string
+          _submission: Json
+          _token: string
+        }
         Returns: Json
       }
     }
