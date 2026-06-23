@@ -3,13 +3,22 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, ArrowRight, Check, Upload, Plus, Trash2, CalendarDays, MapPin, DollarSign, FileText, Snowflake } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
+import { TierGate } from "@/components/tier-gate";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/new")({
-  component: NewCampWizard,
+  component: GatedNewCampWizard,
   validateSearch: (s: Record<string, unknown>) => ({
     ice_slot_id: typeof s.ice_slot_id === "string" ? s.ice_slot_id : undefined,
   }),
 });
+
+function GatedNewCampWizard() {
+  return (
+    <TierGate feature="campManagement">
+      <NewCampWizard />
+    </TierGate>
+  );
+}
 
 type Format = "camp" | "session";
 type LocType = "venue" | "online" | "tba";
