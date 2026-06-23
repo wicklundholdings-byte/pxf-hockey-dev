@@ -363,6 +363,39 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
           </div>
         </Section>
 
+        <Section icon={Calculator} title="Connect Accounting">
+          <p className="text-[11px] text-muted-foreground">
+            Sync every camp registration payment to your accounting software. Each transaction posts with the camp name, parent name, amount, and date.
+          </p>
+          {([
+            { id: "quickbooks", label: "QuickBooks", tint: "from-emerald-500/20 to-emerald-700/10", badge: "QB" },
+            { id: "xero", label: "Xero", tint: "from-sky-500/20 to-sky-700/10", badge: "X" },
+          ] as const).map((p) => {
+            const conn = accounting[p.id];
+            const connected = conn?.status === "connected";
+            return (
+              <div key={p.id} className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                <div className="flex items-center gap-3">
+                  <div className={`grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br ${p.tint} text-[10px] font-bold`}>{p.badge}</div>
+                  <div>
+                    <p className="font-semibold">{p.label}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {connected
+                        ? `Connected${conn?.account_name ? ` · ${conn.account_name}` : ""}`
+                        : "Auto-post payments as sales receipts"}
+                    </p>
+                  </div>
+                </div>
+                {connected ? (
+                  <span className="flex items-center gap-1 rounded-full bg-volt/15 px-2 py-1 text-[10px] font-bold text-volt"><Check size={10} /> Connected</span>
+                ) : (
+                  <button className="rounded-lg border border-border px-3 py-1 text-[10px]">Connect</button>
+                )}
+              </div>
+            );
+          })}
+        </Section>
+
         <Section icon={CreditCard} title="Subscription">
           <div className="rounded-xl border border-volt/40 bg-volt/5 p-4">
             <p className="text-[10px] font-bold uppercase tracking-wider text-volt">Current plan</p>
