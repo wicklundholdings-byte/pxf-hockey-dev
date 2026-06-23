@@ -70,6 +70,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as CampsSlugIndexRouteImport } from './routes/camps.$slug.index'
 import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authenticated/coach.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as RsvpTeamTokenRouteImport } from './routes/rsvp.team.$token'
 import { Route as ParentTrainProgramIdRouteImport } from './routes/parent.train.$programId'
 import { Route as ParentTeamTeamIdRouteImport } from './routes/parent.team.$teamId'
 import { Route as ParentConversationConversationIdRouteImport } from './routes/parent.conversation.$conversationId'
@@ -439,6 +440,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const RsvpTeamTokenRoute = RsvpTeamTokenRouteImport.update({
+  id: '/rsvp/team/$token',
+  path: '/rsvp/team/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ParentTrainProgramIdRoute = ParentTrainProgramIdRouteImport.update({
   id: '/$programId',
@@ -908,6 +914,7 @@ export interface FileRoutesByFullPath {
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/parent/team/$teamId': typeof ParentTeamTeamIdRoute
   '/parent/train/$programId': typeof ParentTrainProgramIdRoute
+  '/rsvp/team/$token': typeof RsvpTeamTokenRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/coach/': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug/': typeof CampsSlugIndexRoute
@@ -1029,6 +1036,7 @@ export interface FileRoutesByTo {
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/parent/team/$teamId': typeof ParentTeamTeamIdRoute
   '/parent/train/$programId': typeof ParentTrainProgramIdRoute
+  '/rsvp/team/$token': typeof RsvpTeamTokenRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/coach': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug': typeof CampsSlugIndexRoute
@@ -1157,6 +1165,7 @@ export interface FileRoutesById {
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/parent/team/$teamId': typeof ParentTeamTeamIdRoute
   '/parent/train/$programId': typeof ParentTrainProgramIdRoute
+  '/rsvp/team/$token': typeof RsvpTeamTokenRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/coach/': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug/': typeof CampsSlugIndexRoute
@@ -1286,6 +1295,7 @@ export interface FileRouteTypes {
     | '/parent/conversation/$conversationId'
     | '/parent/team/$teamId'
     | '/parent/train/$programId'
+    | '/rsvp/team/$token'
     | '/admin/'
     | '/coach/'
     | '/camps/$slug/'
@@ -1407,6 +1417,7 @@ export interface FileRouteTypes {
     | '/parent/conversation/$conversationId'
     | '/parent/team/$teamId'
     | '/parent/train/$programId'
+    | '/rsvp/team/$token'
     | '/admin'
     | '/coach'
     | '/camps/$slug'
@@ -1534,6 +1545,7 @@ export interface FileRouteTypes {
     | '/parent/conversation/$conversationId'
     | '/parent/team/$teamId'
     | '/parent/train/$programId'
+    | '/rsvp/team/$token'
     | '/_authenticated/admin/'
     | '/_authenticated/coach/'
     | '/camps/$slug/'
@@ -1615,6 +1627,7 @@ export interface RootRouteChildren {
   CampsIndexRoute: typeof CampsIndexRoute
   StoreIndexRoute: typeof StoreIndexRoute
   CombineShareTokenRoute: typeof CombineShareTokenRoute
+  RsvpTeamTokenRoute: typeof RsvpTeamTokenRoute
   ApiPublicHooksRsvpRemindersRoute: typeof ApiPublicHooksRsvpRemindersRoute
 }
 
@@ -2046,6 +2059,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/rsvp/team/$token': {
+      id: '/rsvp/team/$token'
+      path: '/rsvp/team/$token'
+      fullPath: '/rsvp/team/$token'
+      preLoaderRoute: typeof RsvpTeamTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/parent/train/$programId': {
       id: '/parent/train/$programId'
@@ -2893,6 +2913,7 @@ const rootRouteChildren: RootRouteChildren = {
   CampsIndexRoute: CampsIndexRoute,
   StoreIndexRoute: StoreIndexRoute,
   CombineShareTokenRoute: CombineShareTokenRoute,
+  RsvpTeamTokenRoute: RsvpTeamTokenRoute,
   ApiPublicHooksRsvpRemindersRoute: ApiPublicHooksRsvpRemindersRoute,
 }
 export const routeTree = rootRouteImport
