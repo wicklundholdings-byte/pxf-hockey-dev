@@ -3779,6 +3779,7 @@ export type Database = {
       teams: {
         Row: {
           age_group: string | null
+          association_id: string | null
           association_name: string | null
           coach_id: string
           created_at: string
@@ -3793,6 +3794,7 @@ export type Database = {
         }
         Insert: {
           age_group?: string | null
+          association_id?: string | null
           association_name?: string | null
           coach_id: string
           created_at?: string
@@ -3807,6 +3809,7 @@ export type Database = {
         }
         Update: {
           age_group?: string | null
+          association_id?: string | null
           association_name?: string | null
           coach_id?: string
           created_at?: string
