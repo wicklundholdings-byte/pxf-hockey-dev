@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Camera, Check, X, ScanLine, Users, ShieldAlert, UserCheck, Phone } from "lucide-react";
+import { ArrowLeft, Camera, Check, X, ScanLine, Users, ShieldAlert, UserCheck, Phone, HeartPulse } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { QRScannerModal } from "@/components/coach/qr-scanner";
 
@@ -18,6 +18,15 @@ type Reg = {
 };
 type Caregiver = { id: string; attendee_id: string; full_name: string; relationship: string; phone: string };
 
+type EmergencyContact = { name: string; relationship: string; phone: string };
+type HealthProfileRow = {
+  athlete_id: string;
+  allergies: { categories: string[]; notes: string } | null;
+  medications: string | null;
+  conditions: string | null;
+  emergency_contacts: EmergencyContact[] | null;
+};
+
 function CheckinPage() {
   const { campId } = useParams({ from: "/_authenticated/coach/camps/$campId/checkin" });
   const [campName, setCampName] = useState("");
@@ -30,6 +39,8 @@ function CheckinPage() {
   const [recent, setRecent] = useState<{ name: string; at: string }[]>([]);
   const [caregivers, setCaregivers] = useState<Map<string, Caregiver[]>>(new Map());
   const [pickupFor, setPickupFor] = useState<Reg | null>(null);
+  const [health, setHealth] = useState<Map<string, HealthProfileRow>>(new Map());
+  const [medicalFor, setMedicalFor] = useState<Reg | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -64,6 +75,16 @@ function CheckinPage() {
           m.set(c.attendee_id, arr);
         });
         setCaregivers(m);
+
+        const { data: hp } = await supabase
+          .from("athlete_health_profiles")
+          .select("athlete_id, allergies, medications, conditions, emergency_contacts")
+          .in("athlete_id", attendeeIds);
+        const hm = new Map<string, HealthProfileRow>();
+        (hp ?? []).forEach((row) => {
+          hm.set(row.athlete_id, row as unknown as HealthProfileRow);
+        });
+        setHealth(hm);
       }
     })();
   }, [campId]);
