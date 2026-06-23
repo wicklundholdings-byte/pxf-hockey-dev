@@ -166,7 +166,7 @@ function CoachDashboard() {
           className="flex items-center justify-center gap-2 rounded-2xl border border-volt/40 bg-volt/10 py-3 text-sm font-bold text-volt hover:bg-volt/20 transition-colors"
         >
           <Plus size={18} />
-          New Session/Camp
+          Create Session
         </Link>
       </div>
 
