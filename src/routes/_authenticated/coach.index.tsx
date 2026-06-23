@@ -152,6 +152,15 @@ function CoachDashboard() {
         ))}
       </div>
 
+      {/* Add Ice Times — primary action */}
+      <Link
+        to="/coach/ice"
+        className="flex items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-teal/10 py-3 text-sm font-bold text-teal hover:bg-teal/20 transition-colors"
+      >
+        <Snowflake size={18} />
+        Add Ice times
+      </Link>
+
       {/* Quick access */}
       <div className="grid grid-cols-2 gap-2">
         {[
