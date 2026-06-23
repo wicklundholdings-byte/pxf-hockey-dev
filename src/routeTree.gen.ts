@@ -106,6 +106,7 @@ import { Route as AuthenticatedAdminVerificationsRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminProgramsRouteImport } from './routes/_authenticated/admin.programs'
 import { Route as AuthenticatedAdminDrillsRouteImport } from './routes/_authenticated/admin.drills'
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
+import { Route as AuthenticatedCoachTeamsIndexRouteImport } from './routes/_authenticated/coach.teams.index'
 import { Route as AuthenticatedCoachCampsIndexRouteImport } from './routes/_authenticated/coach.camps.index'
 import { Route as ParentTrainSessionSessionIdRouteImport } from './routes/parent.train.session.$sessionId'
 import { Route as ApiPublicHooksRsvpRemindersRouteImport } from './routes/api/public/hooks/rsvp-reminders'
@@ -627,6 +628,12 @@ const AuthenticatedAdminCategoriesRoute =
     path: '/categories',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedCoachTeamsIndexRoute =
+  AuthenticatedCoachTeamsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedCoachTeamsRoute,
+  } as any)
 const AuthenticatedCoachCampsIndexRoute =
   AuthenticatedCoachCampsIndexRouteImport.update({
     id: '/camps/',
@@ -803,7 +810,7 @@ export interface FileRoutesByFullPath {
   '/coach/roster': typeof AuthenticatedCoachRosterRoute
   '/coach/sequences': typeof AuthenticatedCoachSequencesRoute
   '/coach/team': typeof AuthenticatedCoachTeamRoute
-  '/coach/teams': typeof AuthenticatedCoachTeamsRoute
+  '/coach/teams': typeof AuthenticatedCoachTeamsRouteWithChildren
   '/coach/train': typeof AuthenticatedCoachTrainRoute
   '/coach/waivers': typeof AuthenticatedCoachWaiversRoute
   '/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
@@ -828,6 +835,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
   '/coach/camps/': typeof AuthenticatedCoachCampsIndexRoute
+  '/coach/teams/': typeof AuthenticatedCoachTeamsIndexRoute
   '/coach/camps/$campId/attendance': typeof AuthenticatedCoachCampsCampIdAttendanceRoute
   '/coach/camps/$campId/checkin': typeof AuthenticatedCoachCampsCampIdCheckinRoute
   '/coach/camps/$campId/feedback': typeof AuthenticatedCoachCampsCampIdFeedbackRoute
@@ -912,7 +920,6 @@ export interface FileRoutesByTo {
   '/coach/roster': typeof AuthenticatedCoachRosterRoute
   '/coach/sequences': typeof AuthenticatedCoachSequencesRoute
   '/coach/team': typeof AuthenticatedCoachTeamRoute
-  '/coach/teams': typeof AuthenticatedCoachTeamsRoute
   '/coach/train': typeof AuthenticatedCoachTrainRoute
   '/coach/waivers': typeof AuthenticatedCoachWaiversRoute
   '/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
@@ -937,6 +944,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
   '/coach/camps': typeof AuthenticatedCoachCampsIndexRoute
+  '/coach/teams': typeof AuthenticatedCoachTeamsIndexRoute
   '/coach/camps/$campId/attendance': typeof AuthenticatedCoachCampsCampIdAttendanceRoute
   '/coach/camps/$campId/checkin': typeof AuthenticatedCoachCampsCampIdCheckinRoute
   '/coach/camps/$campId/feedback': typeof AuthenticatedCoachCampsCampIdFeedbackRoute
@@ -1028,7 +1036,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/roster': typeof AuthenticatedCoachRosterRoute
   '/_authenticated/coach/sequences': typeof AuthenticatedCoachSequencesRoute
   '/_authenticated/coach/team': typeof AuthenticatedCoachTeamRoute
-  '/_authenticated/coach/teams': typeof AuthenticatedCoachTeamsRoute
+  '/_authenticated/coach/teams': typeof AuthenticatedCoachTeamsRouteWithChildren
   '/_authenticated/coach/train': typeof AuthenticatedCoachTrainRoute
   '/_authenticated/coach/waivers': typeof AuthenticatedCoachWaiversRoute
   '/_authenticated/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
@@ -1053,6 +1061,7 @@ export interface FileRoutesById {
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
   '/_authenticated/coach/camps/': typeof AuthenticatedCoachCampsIndexRoute
+  '/_authenticated/coach/teams/': typeof AuthenticatedCoachTeamsIndexRoute
   '/_authenticated/coach/camps/$campId/attendance': typeof AuthenticatedCoachCampsCampIdAttendanceRoute
   '/_authenticated/coach/camps/$campId/checkin': typeof AuthenticatedCoachCampsCampIdCheckinRoute
   '/_authenticated/coach/camps/$campId/feedback': typeof AuthenticatedCoachCampsCampIdFeedbackRoute
@@ -1169,6 +1178,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/rsvp-reminders'
     | '/parent/train/session/$sessionId'
     | '/coach/camps/'
+    | '/coach/teams/'
     | '/coach/camps/$campId/attendance'
     | '/coach/camps/$campId/checkin'
     | '/coach/camps/$campId/feedback'
@@ -1253,7 +1263,6 @@ export interface FileRouteTypes {
     | '/coach/roster'
     | '/coach/sequences'
     | '/coach/team'
-    | '/coach/teams'
     | '/coach/train'
     | '/coach/waivers'
     | '/home-coach/inbox'
@@ -1278,6 +1287,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/rsvp-reminders'
     | '/parent/train/session/$sessionId'
     | '/coach/camps'
+    | '/coach/teams'
     | '/coach/camps/$campId/attendance'
     | '/coach/camps/$campId/checkin'
     | '/coach/camps/$campId/feedback'
@@ -1393,6 +1403,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/rsvp-reminders'
     | '/parent/train/session/$sessionId'
     | '/_authenticated/coach/camps/'
+    | '/_authenticated/coach/teams/'
     | '/_authenticated/coach/camps/$campId/attendance'
     | '/_authenticated/coach/camps/$campId/checkin'
     | '/_authenticated/coach/camps/$campId/feedback'
@@ -2136,6 +2147,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCategoriesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/coach/teams/': {
+      id: '/_authenticated/coach/teams/'
+      path: '/'
+      fullPath: '/coach/teams/'
+      preLoaderRoute: typeof AuthenticatedCoachTeamsIndexRouteImport
+      parentRoute: typeof AuthenticatedCoachTeamsRoute
+    }
     '/_authenticated/coach/camps/': {
       id: '/_authenticated/coach/camps/'
       path: '/camps'
@@ -2300,6 +2318,20 @@ const AuthenticatedCoachContactsRouteWithChildren =
     AuthenticatedCoachContactsRouteChildren,
   )
 
+interface AuthenticatedCoachTeamsRouteChildren {
+  AuthenticatedCoachTeamsIndexRoute: typeof AuthenticatedCoachTeamsIndexRoute
+}
+
+const AuthenticatedCoachTeamsRouteChildren: AuthenticatedCoachTeamsRouteChildren =
+  {
+    AuthenticatedCoachTeamsIndexRoute: AuthenticatedCoachTeamsIndexRoute,
+  }
+
+const AuthenticatedCoachTeamsRouteWithChildren =
+  AuthenticatedCoachTeamsRoute._addFileChildren(
+    AuthenticatedCoachTeamsRouteChildren,
+  )
+
 interface AuthenticatedCoachCampsCampIdRouteChildren {
   AuthenticatedCoachCampsCampIdAttendanceRoute: typeof AuthenticatedCoachCampsCampIdAttendanceRoute
   AuthenticatedCoachCampsCampIdCheckinRoute: typeof AuthenticatedCoachCampsCampIdCheckinRoute
@@ -2354,7 +2386,7 @@ interface AuthenticatedCoachRouteChildren {
   AuthenticatedCoachRosterRoute: typeof AuthenticatedCoachRosterRoute
   AuthenticatedCoachSequencesRoute: typeof AuthenticatedCoachSequencesRoute
   AuthenticatedCoachTeamRoute: typeof AuthenticatedCoachTeamRoute
-  AuthenticatedCoachTeamsRoute: typeof AuthenticatedCoachTeamsRoute
+  AuthenticatedCoachTeamsRoute: typeof AuthenticatedCoachTeamsRouteWithChildren
   AuthenticatedCoachTrainRoute: typeof AuthenticatedCoachTrainRoute
   AuthenticatedCoachWaiversRoute: typeof AuthenticatedCoachWaiversRoute
   AuthenticatedCoachIndexRoute: typeof AuthenticatedCoachIndexRoute
@@ -2383,7 +2415,7 @@ const AuthenticatedCoachRouteChildren: AuthenticatedCoachRouteChildren = {
   AuthenticatedCoachRosterRoute: AuthenticatedCoachRosterRoute,
   AuthenticatedCoachSequencesRoute: AuthenticatedCoachSequencesRoute,
   AuthenticatedCoachTeamRoute: AuthenticatedCoachTeamRoute,
-  AuthenticatedCoachTeamsRoute: AuthenticatedCoachTeamsRoute,
+  AuthenticatedCoachTeamsRoute: AuthenticatedCoachTeamsRouteWithChildren,
   AuthenticatedCoachTrainRoute: AuthenticatedCoachTrainRoute,
   AuthenticatedCoachWaiversRoute: AuthenticatedCoachWaiversRoute,
   AuthenticatedCoachIndexRoute: AuthenticatedCoachIndexRoute,
