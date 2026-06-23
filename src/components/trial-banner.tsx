@@ -1,7 +1,32 @@
 import { Link } from "@tanstack/react-router";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Flame } from "lucide-react";
+import { FOUNDING_MEMBER_END } from "@/lib/tiers";
 
-export function TrialBanner({ daysLeft = 12, plan = "Elite" }: { daysLeft?: number; plan?: string }) {
+export function TrialBanner({
+  daysLeft = 12,
+  plan = "Elite Coach",
+  foundingMember = true,
+}: {
+  daysLeft?: number;
+  plan?: string;
+  foundingMember?: boolean;
+}) {
+  if (foundingMember) {
+    return (
+      <Link
+        to="/coach/plans"
+        className="mb-3 flex items-center justify-between gap-2 rounded-xl border border-teal/40 bg-gradient-to-r from-teal/15 to-volt/10 px-3 py-2"
+      >
+        <div className="flex items-center gap-2">
+          <Flame size={14} className="text-teal" />
+          <span className="text-[11px] font-semibold text-foreground">
+            Founding Member — Free until {FOUNDING_MEMBER_END}
+          </span>
+        </div>
+        <span className="rounded-full bg-teal px-2.5 py-1 text-[10px] font-bold text-black">{plan}</span>
+      </Link>
+    );
+  }
   return (
     <Link
       to="/coach/plans"

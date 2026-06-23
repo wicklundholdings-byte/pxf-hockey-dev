@@ -36,7 +36,7 @@ function CoachLayout() {
   return (
     <div className="min-h-screen bg-background">
       <div className="px-5 pt-4 pb-28">
-        {!hideChrome && <TrialBanner daysLeft={12} plan="Elite" />}
+        {!hideChrome && <TrialBanner foundingMember plan="Elite Coach" />}
         <div className="flex items-center justify-end">
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[10px] font-bold tracking-wider text-teal">COACH</span>
