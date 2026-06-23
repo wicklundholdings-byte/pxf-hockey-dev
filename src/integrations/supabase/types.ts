@@ -237,6 +237,91 @@ export type Database = {
           },
         ]
       }
+      athlete_note_videos: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          note_id: string
+          thumbnail_url: string | null
+          video_url: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          note_id: string
+          thumbnail_url?: string | null
+          video_url: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          note_id?: string
+          thumbnail_url?: string | null
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_note_videos_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      athlete_notes: {
+        Row: {
+          athlete_id: string
+          coach_id: string
+          created_at: string
+          drill_freetext: Json
+          drill_ids: Json
+          id: string
+          is_shared: boolean
+          note_date: string
+          session_rating: number | null
+          updated_at: string
+          written_notes: string | null
+        }
+        Insert: {
+          athlete_id: string
+          coach_id: string
+          created_at?: string
+          drill_freetext?: Json
+          drill_ids?: Json
+          id?: string
+          is_shared?: boolean
+          note_date?: string
+          session_rating?: number | null
+          updated_at?: string
+          written_notes?: string | null
+        }
+        Update: {
+          athlete_id?: string
+          coach_id?: string
+          created_at?: string
+          drill_freetext?: Json
+          drill_ids?: Json
+          id?: string
+          is_shared?: boolean
+          note_date?: string
+          session_rating?: number | null
+          updated_at?: string
+          written_notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_notes_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       athlete_program_enrollments: {
         Row: {
           athlete_id: string
