@@ -11,6 +11,34 @@ const attendeeSchema = z.object({
   customFieldValues: z.record(z.string(), z.unknown()).optional(),
 });
 
+const healthProfileSchema = z.object({
+  allergies: z.object({
+    categories: z.array(z.string().max(40)).max(10),
+    notes: z.string().max(2000).optional().default(""),
+  }),
+  medications: z.string().max(2000).optional().nullable(),
+  conditions: z.string().max(2000).optional().nullable(),
+  physician_name: z.string().max(120).optional().nullable(),
+  physician_phone: z.string().max(40).optional().nullable(),
+  emergency_contacts: z
+    .array(
+      z.object({
+        name: z.string().max(120),
+        relationship: z.string().max(60),
+        phone: z.string().max(40),
+      }),
+    )
+    .max(4),
+  insurance_info: z
+    .object({
+      provider: z.string().max(120),
+      policy_number: z.string().max(80),
+    })
+    .nullable()
+    .optional(),
+  clearance_doc_url: z.string().max(1000).nullable().optional(),
+});
+
 const submitSchema = z.object({
   campId: z.string().uuid(),
   parent: z.object({
@@ -19,6 +47,7 @@ const submitSchema = z.object({
     phone: z.string().max(40).optional().nullable(),
   }),
   attendees: z.array(attendeeSchema).min(1).max(6),
+  healthProfiles: z.array(healthProfileSchema).max(6).optional(),
   couponCode: z.string().trim().max(40).optional().nullable(),
   paymentPlan: z.enum(["none", "two", "three"]).optional().default("none"),
   waiver: z
