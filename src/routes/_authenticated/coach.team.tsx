@@ -331,6 +331,7 @@ function Row({
   onActivate,
   onRemove,
   onPermission,
+  onHomeArea,
   onAssign,
 }: {
   m: Member;
@@ -427,6 +428,27 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
         {label}
       </label>
       {children}
+    </div>
+  );
+}
+
+function UnassignedCampsCard({ camps, assignments }: { camps: Camp[]; assignments: Assignment[] }) {
+  const unassigned = camps.filter((c) => !assignments.some((a) => a.camp_id === c.id));
+  if (unassigned.length === 0) return null;
+  return (
+    <div className="rounded-2xl border border-orange-500/40 bg-orange-500/5 p-3">
+      <div className="mb-2 flex items-center gap-2">
+        <AlertTriangle size={14} className="text-orange-500" />
+        <p className="text-xs font-bold text-foreground">{unassigned.length} unassigned camp{unassigned.length === 1 ? "" : "s"}</p>
+      </div>
+      <ul className="space-y-1">
+        {unassigned.slice(0, 6).map((c) => (
+          <li key={c.id} className="flex items-center justify-between text-[11px]">
+            <span className="truncate text-foreground">{c.name}</span>
+            <span className="text-muted-foreground">{c.start_date ?? "TBA"}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

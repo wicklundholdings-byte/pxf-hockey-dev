@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare, LogOut, ShieldCheck, ChevronRight, UserCog, Calculator, Megaphone, Mail } from "lucide-react";
+import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare, LogOut, ShieldCheck, ChevronRight, UserCog, Calculator, Megaphone, Mail, Clock as ClockIcon } from "lucide-react";
 import { LayoutDashboard, CalendarDays, BookOpen, MessageSquare as InboxIcon, Users, Flag, MessageCircle } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { useAuth, useHasCoachAccess, useUserAppRole } from "@/hooks/use-auth";
@@ -130,6 +130,9 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
   const [pixelSaving, setPixelSaving] = useState(false);
   const [pixelSaved, setPixelSaved] = useState(false);
   const [emailMarketing, setEmailMarketing] = useState<Record<string, { status: string; account_name: string | null; list_name: string | null }>>({});
+  const [bufferMin, setBufferMin] = useState<number>(30);
+  const [bufferSaving, setBufferSaving] = useState(false);
+  const [bufferSaved, setBufferSaved] = useState(false);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -164,6 +167,15 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
       .then(({ data }) => {
         if (cancelled) return;
         setPixelId(data?.meta_pixel_id ?? "");
+      });
+    (supabase as any)
+      .from("profiles")
+      .select("min_buffer_minutes")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }: { data: { min_buffer_minutes?: number } | null }) => {
+        if (cancelled) return;
+        if (data && typeof data.min_buffer_minutes === "number") setBufferMin(data.min_buffer_minutes);
       });
     supabase
       .from("email_marketing_connections")
