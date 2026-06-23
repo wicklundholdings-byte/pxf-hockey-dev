@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, ArrowRight, Check, Upload, Plus, Trash2, CalendarDays, MapPin, DollarSign, FileText } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Upload, Plus, Trash2, CalendarDays, MapPin, DollarSign, FileText, Snowflake } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/new")({
@@ -62,27 +62,49 @@ function NewCampWizard() {
   const [paymentPlan, setPaymentPlan] = useState<PaymentPlan>("none");
   const [waiverUrl, setWaiverUrl] = useState("");
   const [fields, setFields] = useState<CustomField[]>([]);
-  const [linkedIceSlotId, setLinkedIceSlotId] = useState<string | null>(null);
+  const [selectedIceSlotIds, setSelectedIceSlotIds] = useState<string[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<Array<{ id: string; slot_date: string; start_time: string; end_time: string; surface_type: string | null; rinks: { name: string | null; address: string | null; color: string | null } | null }>>([]);
+
+  useEffect(() => {
+    (async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data } = await (supabase as any)
+        .from("ice_slots")
+        .select("id, slot_date, start_time, end_time, surface_type, rinks(name, address, color)")
+        .is("camp_id", null)
+        .gte("slot_date", today)
+        .order("slot_date", { ascending: true })
+        .order("start_time", { ascending: true });
+      setAvailableSlots((data as any[]) ?? []);
+    })();
+  }, []);
 
   useEffect(() => {
     const id = search?.ice_slot_id;
     if (!id) return;
-    (async () => {
-      const { data: slot } = await (supabase as any)
-        .from("ice_slots")
-        .select("id, slot_date, start_time, end_time, rink_id, rinks(name, address)")
-        .eq("id", id)
-        .maybeSingle();
-      if (!slot) return;
-      setLinkedIceSlotId(slot.id);
-      if (slot.slot_date) setStartDate(slot.slot_date);
-      if (slot.start_time) setStartTime(String(slot.start_time).slice(0, 5));
-      if (slot.end_time) setEndTime(String(slot.end_time).slice(0, 5));
-      if (slot.rinks?.name) setVenueName(slot.rinks.name);
-      if (slot.rinks?.address) setAddress(slot.rinks.address);
-      setLocationType("venue");
-    })();
+    setSelectedIceSlotIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
   }, [search?.ice_slot_id]);
+
+  // Auto-derive dates/times/venue from selected ice slots
+  useEffect(() => {
+    if (selectedIceSlotIds.length === 0) return;
+    const selected = availableSlots.filter((s) => selectedIceSlotIds.includes(s.id));
+    if (selected.length === 0) return;
+    const dates = selected.map((s) => s.slot_date).sort();
+    setStartDate(dates[0]);
+    if (dates.length > 1) setEndDate(dates[dates.length - 1]);
+    const sameDayTimes = selected.filter((s) => s.slot_date === dates[0]);
+    if (sameDayTimes.length) {
+      const minStart = sameDayTimes.map((s) => s.start_time).sort()[0];
+      const maxEnd = sameDayTimes.map((s) => s.end_time).sort().reverse()[0];
+      if (minStart) setStartTime(String(minStart).slice(0, 5));
+      if (maxEnd) setEndTime(String(maxEnd).slice(0, 5));
+    }
+    const first = selected[0];
+    if (first?.rinks?.name) setVenueName((v) => v || first.rinks!.name!);
+    if (first?.rinks?.address) setAddress((v) => v || first.rinks!.address!);
+    setLocationType("venue");
+  }, [selectedIceSlotIds, availableSlots]);
 
   function handleHero(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -150,11 +172,11 @@ function NewCampWizard() {
         );
       }
 
-      if (linkedIceSlotId && camp) {
+      if (selectedIceSlotIds.length > 0 && camp) {
         const { error: linkErr } = await (supabase as any)
           .from("ice_slots")
           .update({ camp_id: camp.id })
-          .eq("id", linkedIceSlotId);
+          .in("id", selectedIceSlotIds);
         if (linkErr) {
           alert(`Camp created but ice slot link failed: ${linkErr.message}`);
         }
