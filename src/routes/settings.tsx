@@ -465,11 +465,6 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
           })}
         </Section>
 
-        <Section icon={Megaphone} title="Meta Pixel">
-          {null}
-        </Section>
-
-        {/* dummy placeholder so the patch context above matches the original */}
         <Section icon={ClockIcon} title="Scheduling buffer">
           <p className="text-[11px] text-muted-foreground">
             Minimum minutes between back-to-back assignments for any team member. If a coach's gap is shorter than this, we'll warn before confirming the assignment.
