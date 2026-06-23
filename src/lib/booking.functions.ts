@@ -162,7 +162,8 @@ export const submitBooking = createServerFn({ method: "POST" })
 
     // Insert all attendees
     const attendeeRows: { id: string }[] = [];
-    for (const a of data.attendees) {
+    for (let i = 0; i < data.attendees.length; i++) {
+      const a = data.attendees[i];
       const { data: row, error: aErr } = await supabaseAdmin
         .from("attendees")
         .insert({
@@ -179,6 +180,22 @@ export const submitBooking = createServerFn({ method: "POST" })
         .single();
       if (aErr) throw new Error(aErr.message);
       attendeeRows.push(row);
+
+      const hp = data.healthProfiles?.[i];
+      if (hp) {
+        const { error: hErr } = await supabaseAdmin.from("athlete_health_profiles").insert({
+          athlete_id: row.id,
+          allergies: hp.allergies as never,
+          medications: hp.medications ?? null,
+          conditions: hp.conditions ?? null,
+          physician_name: hp.physician_name ?? null,
+          physician_phone: hp.physician_phone ?? null,
+          emergency_contacts: hp.emergency_contacts as never,
+          insurance_info: (hp.insurance_info ?? null) as never,
+          clearance_doc_url: hp.clearance_doc_url ?? null,
+        });
+        if (hErr) throw new Error(hErr.message);
+      }
     }
 
     if (isFull) {
