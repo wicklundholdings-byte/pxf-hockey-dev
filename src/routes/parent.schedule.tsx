@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Clock, MapPin } from "lucide-react";
+import { VenueMap } from "@/components/venue-map";
 
 export const Route = createFileRoute("/parent/schedule")({
   component: ParentSchedule,
@@ -29,6 +30,9 @@ function ParentSchedule() {
             <div className="mt-2 flex gap-3 text-[11px] text-muted-foreground">
               <span className="flex items-center gap-1"><Clock size={10} /> {d.time}</span>
               <span className="flex items-center gap-1"><MapPin size={10} /> {d.venue}</span>
+            </div>
+            <div className="mt-3">
+              <VenueMap venueName={d.venue} address={null} heightClass="h-32" compact />
             </div>
           </div>
         ))}
