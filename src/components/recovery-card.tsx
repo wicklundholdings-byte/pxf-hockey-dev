@@ -60,8 +60,8 @@ export function RecoveryCard({ athleteId }: { athleteId: string | null | undefin
       recovery_score: 72,
       daily_strain: 14.2,
     };
-    const { data, error } = await supabase
-      .from("athlete_device_connections" as never)
+    const { data, error } = await (supabase as any)
+      .from("athlete_device_connections")
       .upsert(
         { athlete_id: athleteId, provider, access_token: "stub_token", ...stub },
         { onConflict: "athlete_id,provider" },
