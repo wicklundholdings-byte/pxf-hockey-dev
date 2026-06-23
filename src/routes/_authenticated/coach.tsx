@@ -1,9 +1,11 @@
 import { createFileRoute, Outlet, Link, redirect, useRouterState } from "@tanstack/react-router";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, CalendarDays, MessageSquare, Bell, Megaphone, Settings, BookOpen, Heart, Users } from "lucide-react";
+import { LayoutDashboard, CalendarDays, MessageSquare, Bell, Megaphone, Settings, BookOpen, Heart, Users, Camera } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { TrialBanner } from "@/components/trial-banner";
 import { getUserAppRole } from "@/lib/user-role";
+import { StandaloneRecorder } from "@/routes/_authenticated/coach.film";
 
 export const Route = createFileRoute("/_authenticated/coach")({
   ssr: false,
@@ -19,6 +21,7 @@ export const Route = createFileRoute("/_authenticated/coach")({
 
 function CoachLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [recorderOpen, setRecorderOpen] = useState(false);
   const navItems = [
     { to: "/coach", label: "Dashboard", icon: LayoutDashboard, exact: true, match: ["/coach"] },
     { to: "/coach/camps", label: "Events", icon: CalendarDays, match: ["/coach/camps", "/coach/bookings"] },
@@ -43,6 +46,13 @@ function CoachLayout() {
             <Link to="/coach/broadcast" className="flex items-center gap-1 rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-primary-foreground">
               <Megaphone size={12} /> Broadcast
             </Link>
+            <button
+              onClick={() => setRecorderOpen(true)}
+              className="rounded-full border border-border bg-surface p-1.5 text-muted-foreground hover:text-foreground"
+              aria-label="Record film"
+            >
+              <Camera size={14} />
+            </button>
             <Link to="/coach/family" className="rounded-full border border-border bg-surface p-1.5 text-muted-foreground hover:text-foreground" aria-label="My Family">
               <Heart size={14} />
             </Link>
@@ -63,6 +73,7 @@ function CoachLayout() {
 
       {/* Bottom nav */}
       <BottomNav items={navItems} />
+      {recorderOpen && <StandaloneRecorder onClose={() => setRecorderOpen(false)} />}
     </div>
   );
 }
