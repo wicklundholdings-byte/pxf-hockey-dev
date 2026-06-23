@@ -152,14 +152,23 @@ function CoachDashboard() {
         ))}
       </div>
 
-      {/* Add Ice Times — primary action */}
-      <Link
-        to="/coach/ice"
-        className="flex items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-teal/10 py-3 text-sm font-bold text-teal hover:bg-teal/20 transition-colors"
-      >
-        <Snowflake size={18} />
-        Add Ice times
-      </Link>
+      {/* Primary action row */}
+      <div className="grid grid-cols-2 gap-2">
+        <Link
+          to="/coach/ice"
+          className="flex items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-teal/10 py-3 text-sm font-bold text-teal hover:bg-teal/20 transition-colors"
+        >
+          <Snowflake size={18} />
+          Add Ice times
+        </Link>
+        <Link
+          to="/coach/camps/new"
+          className="flex items-center justify-center gap-2 rounded-2xl border border-voltool/40 bg-violetool/10 py-3 text-sm font-bold text-violetool hover:bg-violetool/20 transition-colors"
+        >
+          <Plus size={18} />
+          New Session/Camp
+        </Link>
+      </div>
 
       {/* Quick access */}
       <div className="grid grid-cols-2 gap-2">
