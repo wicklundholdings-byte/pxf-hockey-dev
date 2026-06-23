@@ -72,9 +72,9 @@ function EventDetail() {
       {(event.event_type === "practice" || event.event_type === "game") && (
         <div className="mt-3 grid grid-cols-2 gap-2">
           {event.event_type === "practice" && (
-            <Link to="/coach/teams/$teamId/schedule/$eventId/practice-plan" params={{ teamId, eventId }} className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold">
-              <ClipboardList size={14} /> Practice plan
-            </Link>
+          <Link to="/coach/teams/$teamId/schedule/$eventId/practice-plan" params={{ teamId, eventId }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-brand px-3 py-2 text-xs font-bold text-primary-foreground shadow-glow-teal">
+            <ClipboardList size={14} /> Practice plan
+          </Link>
           )}
           {event.event_type === "game" && (
             <Link to="/coach/teams/$teamId/schedule/$eventId/lineup" params={{ teamId, eventId }} className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold">
