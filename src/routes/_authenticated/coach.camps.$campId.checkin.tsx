@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Camera, Check, X, ScanLine, Users, ShieldAlert, UserCheck, Phone } from "lucide-react";
+import { ArrowLeft, Camera, Check, X, ScanLine, Users, ShieldAlert, UserCheck, Phone, HeartPulse } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { QRScannerModal } from "@/components/coach/qr-scanner";
 
@@ -18,6 +18,15 @@ type Reg = {
 };
 type Caregiver = { id: string; attendee_id: string; full_name: string; relationship: string; phone: string };
 
+type EmergencyContact = { name: string; relationship: string; phone: string };
+type HealthProfileRow = {
+  athlete_id: string;
+  allergies: { categories: string[]; notes: string } | null;
+  medications: string | null;
+  conditions: string | null;
+  emergency_contacts: EmergencyContact[] | null;
+};
+
 function CheckinPage() {
   const { campId } = useParams({ from: "/_authenticated/coach/camps/$campId/checkin" });
   const [campName, setCampName] = useState("");
@@ -30,6 +39,8 @@ function CheckinPage() {
   const [recent, setRecent] = useState<{ name: string; at: string }[]>([]);
   const [caregivers, setCaregivers] = useState<Map<string, Caregiver[]>>(new Map());
   const [pickupFor, setPickupFor] = useState<Reg | null>(null);
+  const [health, setHealth] = useState<Map<string, HealthProfileRow>>(new Map());
+  const [medicalFor, setMedicalFor] = useState<Reg | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -64,6 +75,16 @@ function CheckinPage() {
           m.set(c.attendee_id, arr);
         });
         setCaregivers(m);
+
+        const { data: hp } = await supabase
+          .from("athlete_health_profiles")
+          .select("athlete_id, allergies, medications, conditions, emergency_contacts")
+          .in("athlete_id", attendeeIds);
+        const hm = new Map<string, HealthProfileRow>();
+        (hp ?? []).forEach((row) => {
+          hm.set(row.athlete_id, row as unknown as HealthProfileRow);
+        });
+        setHealth(hm);
       }
     })();
   }, [campId]);
@@ -204,6 +225,11 @@ function CheckinPage() {
               const cgList = r.attendee_id ? (caregivers.get(r.attendee_id) ?? []) : [];
               const noCaregivers = r.attendee_id && cgList.length === 0;
               const present = attendance.get(r.id) === true;
+              const hp = r.attendee_id ? health.get(r.attendee_id) : undefined;
+              const allergyCats = hp?.allergies?.categories ?? [];
+              const hasAllergies = allergyCats.length > 0 && !allergyCats.includes("none");
+              const hasConditions = !!(hp?.conditions && hp.conditions.trim());
+              const medicalAlert = hasAllergies || hasConditions;
               return (
                 <li key={r.id} className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
                   <span className={"grid h-7 w-7 place-items-center rounded-full text-[10px] font-bold " + (present ? "bg-emerald-500/20 text-emerald-400" : "bg-surface text-muted-foreground")}>
@@ -212,6 +238,16 @@ function CheckinPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <p className="truncate text-xs font-semibold text-foreground">{name}</p>
+                      {medicalAlert && (
+                        <button
+                          type="button"
+                          onClick={() => setMedicalFor(r)}
+                          title="Medical alert — tap for details"
+                          className="flex items-center gap-0.5 rounded-full bg-red-500/20 px-1.5 py-0.5 text-[9px] font-bold text-red-400 hover:bg-red-500/30"
+                        >
+                          <HeartPulse size={9} /> MEDICAL
+                        </button>
+                      )}
                       {noCaregivers && (
                         <span title="No authorized caregivers on file" className="flex items-center gap-0.5 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold text-amber-300">
                           <ShieldAlert size={9} /> NO PICKUP
@@ -243,6 +279,14 @@ function CheckinPage() {
           reg={pickupFor}
           caregivers={(pickupFor.attendee_id && caregivers.get(pickupFor.attendee_id)) || []}
           onClose={() => setPickupFor(null)}
+        />
+      )}
+
+      {medicalFor && medicalFor.attendee_id && (
+        <MedicalSheet
+          reg={medicalFor}
+          profile={health.get(medicalFor.attendee_id) ?? null}
+          onClose={() => setMedicalFor(null)}
         />
       )}
     </div>
@@ -290,6 +334,106 @@ function PickupSheet({ reg, caregivers, onClose }: { reg: Reg; caregivers: Careg
           </ul>
         )}
       </div>
+    </div>
+  );
+}
+
+function MedicalSheet({
+  reg, profile, onClose,
+}: {
+  reg: Reg;
+  profile: HealthProfileRow | null;
+  onClose: () => void;
+}) {
+  const name = reg.attendees?.full_name ?? reg.contacts?.full_name ?? "Athlete";
+  const allergyCats = (profile?.allergies?.categories ?? []).filter((c) => c !== "none");
+  const allergyNotes = profile?.allergies?.notes ?? "";
+  const emergency = profile?.emergency_contacts ?? [];
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-[480px] rounded-t-3xl border-t border-red-500/40 bg-background p-5 pb-8">
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-border" />
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-red-500/15 text-red-400">
+              <HeartPulse size={16} />
+            </span>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-red-400">Medical alert</p>
+              <h2 className="font-display text-lg font-bold text-foreground">{name}</h2>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-muted-foreground"><X size={18} /></button>
+        </div>
+
+        {!profile ? (
+          <p className="mt-4 rounded-xl border border-border bg-card p-3 text-xs text-muted-foreground">
+            No health profile on file.
+          </p>
+        ) : (
+          <div className="mt-4 space-y-3">
+            <Section title="Allergies">
+              {allergyCats.length === 0 && !allergyNotes ? (
+                <p className="text-xs text-muted-foreground">None reported</p>
+              ) : (
+                <>
+                  <div className="flex flex-wrap gap-1.5">
+                    {allergyCats.map((c) => (
+                      <span key={c} className="rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-400">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                  {allergyNotes && <p className="mt-2 text-xs text-foreground">{allergyNotes}</p>}
+                </>
+              )}
+            </Section>
+
+            {profile.medications && (
+              <Section title="Medications">
+                <p className="text-xs text-foreground whitespace-pre-line">{profile.medications}</p>
+              </Section>
+            )}
+
+            {profile.conditions && (
+              <Section title="Conditions">
+                <p className="text-xs text-foreground whitespace-pre-line">{profile.conditions}</p>
+              </Section>
+            )}
+
+            <Section title="Emergency contacts">
+              {emergency.length === 0 ? (
+                <p className="text-xs text-muted-foreground">None on file</p>
+              ) : (
+                <ul className="space-y-2">
+                  {emergency.map((ec, i) => (
+                    <li key={i} className="flex items-center gap-3 rounded-xl border border-border bg-card p-2.5">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-semibold text-foreground">{ec.name || "—"}</p>
+                        <p className="truncate text-[10px] text-muted-foreground">{ec.relationship || "Contact"}</p>
+                      </div>
+                      {ec.phone && (
+                        <a href={`tel:${ec.phone}`} className="flex items-center gap-1 rounded-lg bg-red-500/15 px-2.5 py-1.5 text-[11px] font-bold text-red-400">
+                          <Phone size={11} /> {ec.phone}
+                        </a>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Section>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</p>
+      {children}
     </div>
   );
 }

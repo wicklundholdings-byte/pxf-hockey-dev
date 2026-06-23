@@ -4,7 +4,8 @@ import { ChevronLeft } from "lucide-react";
 const steps = [
   { n: 1, label: "Info", path: "register" as const },
   { n: 2, label: "Waiver", path: "waiver" as const },
-  { n: 3, label: "Payment", path: "payment" as const },
+  { n: 3, label: "Health", path: "health" as const },
+  { n: 4, label: "Payment", path: "payment" as const },
 ];
 
 export function RegistrationStepper({
@@ -13,7 +14,7 @@ export function RegistrationStepper({
   backTo,
 }: {
   slug: string;
-  active: 1 | 2 | 3;
+  active: 1 | 2 | 3 | 4;
   backTo: { to: string; params?: Record<string, string> };
 }) {
   return (
@@ -51,7 +52,7 @@ export function RegistrationStepper({
             );
           })}
         </div>
-        <span className="w-10 text-right text-[10px] text-muted-foreground">{active}/3</span>
+        <span className="w-10 text-right text-[10px] text-muted-foreground">{active}/4</span>
       </div>
     </header>
   );
