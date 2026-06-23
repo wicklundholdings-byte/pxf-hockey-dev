@@ -1,4 +1,4 @@
-import { CalendarDays, Swords, Dumbbell, Star } from "lucide-react";
+import { CalendarDays, Swords, Dumbbell, Star, Image as ImageIcon } from "lucide-react";
 
 const TYPE_META: Record<string, { label: string; color: string; bg: string; icon: typeof CalendarDays }> = {
   game: { label: "Game", color: "text-red-400", bg: "bg-red-500/15", icon: Swords },
@@ -18,6 +18,7 @@ export function TeamEventRow({ event, counts }: {
     team_name?: string | null;
   };
   counts?: { yes: number; no: number; maybe: number; none: number };
+  hasMedia?: boolean;
 }) {
   const meta = TYPE_META[event.event_type] || TYPE_META.team_event;
   const Icon = meta.icon;
@@ -34,6 +35,7 @@ export function TeamEventRow({ event, counts }: {
         <div className="flex items-center gap-2">
           <span className={"rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider " + meta.bg + " " + meta.color}>{meta.label.toUpperCase()}</span>
           {event.team_name && <span className="truncate text-[10px] text-muted-foreground">{event.team_name}</span>}
+          {arguments[0]?.hasMedia && <ImageIcon size={11} className="text-teal" aria-label="Has media" />}
         </div>
         <p className="mt-0.5 truncate text-sm font-semibold">{label}</p>
         <p className="text-[11px] text-muted-foreground">
