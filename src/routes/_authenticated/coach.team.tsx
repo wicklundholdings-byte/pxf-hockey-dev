@@ -227,6 +227,8 @@ function TeamPage() {
           <UnassignedCampsCard camps={camps} assignments={assignments} />
         </>
       )}
+      </>
+      )}
 
       {showInvite && (
         <div className="fixed inset-0 z-50 flex items-end bg-black/60" onClick={() => setShowInvite(false)}>
