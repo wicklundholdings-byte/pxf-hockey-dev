@@ -4159,6 +4159,14 @@ export type Database = {
       current_user_contact_ids: { Args: never; Returns: string[] }
       effective_owner_id: { Args: never; Returns: string }
       get_combine_share: { Args: { _token: string }; Returns: Json }
+      get_meta_pixel_id: { Args: { _coach_id: string }; Returns: string }
+      get_profile_names: {
+        Args: { _ids: string[] }
+        Returns: {
+          full_name: string
+          id: string
+        }[]
+      }
       get_rsvp_by_token: { Args: { _token: string }; Returns: Json }
       get_team_invite_by_token: { Args: { _token: string }; Returns: Json }
       get_team_rsvp_by_token: { Args: { _token: string }; Returns: Json }
