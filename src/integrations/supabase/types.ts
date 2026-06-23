@@ -62,6 +62,62 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_device_connections: {
+        Row: {
+          access_token: string | null
+          athlete_id: string
+          created_at: string
+          daily_strain: number | null
+          hrv: number | null
+          id: string
+          last_synced_at: string | null
+          provider: Database["public"]["Enums"]["device_provider"]
+          recovery_score: number | null
+          refresh_token: string | null
+          resting_hr: number | null
+          sleep_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          athlete_id: string
+          created_at?: string
+          daily_strain?: number | null
+          hrv?: number | null
+          id?: string
+          last_synced_at?: string | null
+          provider: Database["public"]["Enums"]["device_provider"]
+          recovery_score?: number | null
+          refresh_token?: string | null
+          resting_hr?: number | null
+          sleep_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          athlete_id?: string
+          created_at?: string
+          daily_strain?: number | null
+          hrv?: number | null
+          id?: string
+          last_synced_at?: string | null
+          provider?: Database["public"]["Enums"]["device_provider"]
+          recovery_score?: number | null
+          refresh_token?: string | null
+          resting_hr?: number | null
+          sleep_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_device_connections_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance: {
         Row: {
           id: string
@@ -623,6 +679,30 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_marketing_settings: {
+        Row: {
+          coach_id: string
+          created_at: string
+          id: string
+          meta_pixel_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          id?: string
+          meta_pixel_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          id?: string
+          meta_pixel_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coach_verifications: {
         Row: {
           address_city: string | null
@@ -703,6 +783,126 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      combine_public_shares: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          revoked_at: string | null
+          token: string
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          revoked_at?: string | null
+          token?: string
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          revoked_at?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "combine_public_shares_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      combine_scores: {
+        Row: {
+          athlete_id: string
+          category: Database["public"]["Enums"]["combine_category"]
+          global_rank: number | null
+          id: string
+          percentile: number | null
+          score: number
+          updated_at: string
+        }
+        Insert: {
+          athlete_id: string
+          category: Database["public"]["Enums"]["combine_category"]
+          global_rank?: number | null
+          id?: string
+          percentile?: number | null
+          score: number
+          updated_at?: string
+        }
+        Update: {
+          athlete_id?: string
+          category?: Database["public"]["Enums"]["combine_category"]
+          global_rank?: number | null
+          id?: string
+          percentile?: number | null
+          score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "combine_scores_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      combine_tests: {
+        Row: {
+          athlete_id: string
+          category: Database["public"]["Enums"]["combine_category"]
+          created_at: string
+          hardware_source: string | null
+          id: string
+          metric: string
+          recorded_by: string | null
+          tested_at: string
+          unit: string
+          value: number
+        }
+        Insert: {
+          athlete_id: string
+          category: Database["public"]["Enums"]["combine_category"]
+          created_at?: string
+          hardware_source?: string | null
+          id?: string
+          metric: string
+          recorded_by?: string | null
+          tested_at?: string
+          unit: string
+          value: number
+        }
+        Update: {
+          athlete_id?: string
+          category?: Database["public"]["Enums"]["combine_category"]
+          created_at?: string
+          hardware_source?: string | null
+          id?: string
+          metric?: string
+          recorded_by?: string | null
+          tested_at?: string
+          unit?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "combine_tests_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contacts: {
         Row: {
@@ -995,6 +1195,8 @@ export type Database = {
           skill_focus: string | null
           slug: string
           sort_order: number
+          source_credit: string | null
+          source_url: string | null
           thumbnail_url: string | null
           title: string
           updated_at: string
@@ -1021,6 +1223,8 @@ export type Database = {
           skill_focus?: string | null
           slug: string
           sort_order?: number
+          source_credit?: string | null
+          source_url?: string | null
           thumbnail_url?: string | null
           title: string
           updated_at?: string
@@ -1047,6 +1251,8 @@ export type Database = {
           skill_focus?: string | null
           slug?: string
           sort_order?: number
+          source_credit?: string | null
+          source_url?: string | null
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
@@ -2305,7 +2511,15 @@ export type Database = {
       app_role: "admin" | "user"
       camp_format: "camp" | "session"
       camp_status: "draft" | "live" | "ended"
+      combine_category:
+        | "speed_power"
+        | "jumping_explosiveness"
+        | "shot_power"
+        | "shot_speed"
+        | "agility_circuits"
+        | "recovery_wellness"
       conversation_type: "camp_group" | "dm"
+      device_provider: "apple_health" | "whoop" | "garmin"
       difficulty_level: "beginner" | "intermediate" | "advanced" | "elite"
       email_campaign_status: "draft" | "scheduled" | "sent"
       email_marketing_provider: "mailchimp" | "klaviyo"
@@ -2468,7 +2682,16 @@ export const Constants = {
       app_role: ["admin", "user"],
       camp_format: ["camp", "session"],
       camp_status: ["draft", "live", "ended"],
+      combine_category: [
+        "speed_power",
+        "jumping_explosiveness",
+        "shot_power",
+        "shot_speed",
+        "agility_circuits",
+        "recovery_wellness",
+      ],
       conversation_type: ["camp_group", "dm"],
+      device_provider: ["apple_health", "whoop", "garmin"],
       difficulty_level: ["beginner", "intermediate", "advanced", "elite"],
       email_campaign_status: ["draft", "scheduled", "sent"],
       email_marketing_provider: ["mailchimp", "klaviyo"],
