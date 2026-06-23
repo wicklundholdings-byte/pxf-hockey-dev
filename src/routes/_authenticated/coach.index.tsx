@@ -141,6 +141,16 @@ function CoachDashboard() {
           )}
         </div>
       )}
+      <div className="grid grid-cols-2 gap-3">
+        <Link to="/coach/ice" className="flex items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-transparent py-3 text-center transition-colors hover:bg-teal/5">
+          <Snowflake size={18} className="text-teal" />
+          <span className="text-xs font-semibold text-teal">Add Ice Times</span>
+        </Link>
+        <Link to="/coach/camps/new" className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/40 bg-transparent py-3 text-center transition-colors hover:bg-emerald-400/5">
+          <Plus size={18} className="text-emerald-400" />
+          <span className="text-xs font-semibold text-emerald-400">+ Create Session</span>
+        </Link>
+      </div>
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {statCards.map((s) => (
