@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LayoutDashboard, CalendarDays, MessageSquare, Bell, Megaphone, Settings, BookOpen, Heart, Users, Camera } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { TrialBanner } from "@/components/trial-banner";
+import { DevTierSwitcher } from "@/components/tier-gate";
 import { getUserAppRole } from "@/lib/user-role";
 import { StandaloneRecorder } from "@/routes/_authenticated/coach.film";
 
@@ -74,6 +75,7 @@ function CoachLayout() {
       {/* Bottom nav */}
       <BottomNav items={navItems} />
       {recorderOpen && <StandaloneRecorder onClose={() => setRecorderOpen(false)} />}
+      <DevTierSwitcher />
     </div>
   );
 }
