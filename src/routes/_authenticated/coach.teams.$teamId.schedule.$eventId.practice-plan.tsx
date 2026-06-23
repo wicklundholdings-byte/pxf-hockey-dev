@@ -41,9 +41,10 @@ function PracticePlan() {
 
   useEffect(() => {
     (async () => {
-      const { data: cats } = await supabase.from("drill_categories").select("id,name").order("sort_order");
-      const catMap = new Map<string, string>((cats ?? []).map((c: { id: string; name: string }) => [c.id, c.name]));
-      setDbCategories((cats ?? []).map((c: { name: string }) => c.name));
+      const { data: cats } = await supabase.from("drill_categories").select("id,title").order("sort_order");
+      const catRows = (cats ?? []) as Array<{ id: string; title: string }>;
+      const catMap = new Map<string, string>(catRows.map((c) => [c.id, c.title]));
+      setDbCategories(catRows.map((c) => c.title));
       const { data: rows } = await supabase.from("drills").select("id,title,category_id,duration_minutes").order("title").limit(500);
       setDrills(((rows ?? []) as Array<{ id: string; title: string; category_id: string | null; duration_minutes: number | null }>).map((r) => ({
         id: r.id, title: r.title, category: r.category_id ? (catMap.get(r.category_id) ?? null) : null, duration_minutes: r.duration_minutes,
