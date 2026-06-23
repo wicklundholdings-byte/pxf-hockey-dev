@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { DollarSign, TrendingUp, Users, CalendarDays, Activity, BarChart3, ChevronRight, AlertTriangle, Snowflake, CalendarPlus, Layers, Megaphone, Clock, Crown, Plus } from "lucide-react";
+import { DollarSign, TrendingUp, Users, CalendarDays, Activity, BarChart3, ChevronRight, AlertTriangle, Snowflake, CalendarPlus, Layers, Megaphone, Plus } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip, CartesianGrid } from "recharts";
 import { StatusBadge } from "@/components/coach/status-badge";
 import { TodaysAttendanceCard } from "@/components/coach/todays-attendance-card";
@@ -184,21 +184,20 @@ function CoachDashboard() {
       </div>
 
       {/* Quick Access */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-4 gap-2">
         {[
-          { to: "/coach/ice", label: "Ice Times", icon: Clock },
-          { to: "/coach/financials", label: "Financials", icon: DollarSign },
-          { to: "/coach/memberships", label: "Memberships", icon: Crown },
-          { to: "/coach/analytics", label: "Analytics", icon: BarChart3 },
+          { to: "/coach/camps/new", label: "Create Camp", icon: CalendarPlus },
           { to: "/coach/roster", label: "Roster", icon: Users },
+          { to: "/coach/financials", label: "Financials", icon: DollarSign },
+          { to: "/coach/analytics", label: "Analytics", icon: BarChart3 },
         ].map((q) => (
           <Link
-            key={q.to}
+            key={q.label}
             to={q.to}
-            className="group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/60 bg-surface p-2 transition-all hover:border-teal/40 hover:bg-surface-2"
+            className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/60 bg-surface px-2 py-3 text-center transition-colors hover:border-teal/40"
           >
-            <q.icon size={22} strokeWidth={1.6} className="text-teal" />
-            <span className="text-center text-[9.5px] font-semibold leading-tight text-foreground">{q.label}</span>
+            <q.icon size={18} className="text-teal" />
+            <span className="text-[10px] font-semibold leading-tight text-foreground">{q.label}</span>
           </Link>
         ))}
       </div>
