@@ -2239,6 +2239,54 @@ export type Database = {
           },
         ]
       }
+      game_highlight_reels: {
+        Row: {
+          clip_ids: Json
+          created_at: string
+          created_by: string
+          event_id: string
+          id: string
+          is_shared: boolean
+          team_id: string
+          title: string
+        }
+        Insert: {
+          clip_ids?: Json
+          created_at?: string
+          created_by: string
+          event_id: string
+          id?: string
+          is_shared?: boolean
+          team_id: string
+          title: string
+        }
+        Update: {
+          clip_ids?: Json
+          created_at?: string
+          created_by?: string
+          event_id?: string
+          id?: string
+          is_shared?: boolean
+          team_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_highlight_reels_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "team_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_highlight_reels_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_lineups: {
         Row: {
           created_at: string
@@ -2292,6 +2340,66 @@ export type Database = {
           },
           {
             foreignKeyName: "game_lineups_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_media: {
+        Row: {
+          athlete_tags: Json
+          caption: string | null
+          created_at: string
+          duration_seconds: number | null
+          event_id: string
+          id: string
+          label: Database["public"]["Enums"]["game_media_label"]
+          media_type: Database["public"]["Enums"]["game_media_type"]
+          team_id: string
+          thumbnail_url: string | null
+          uploaded_by: string
+          url: string
+        }
+        Insert: {
+          athlete_tags?: Json
+          caption?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          event_id: string
+          id?: string
+          label?: Database["public"]["Enums"]["game_media_label"]
+          media_type: Database["public"]["Enums"]["game_media_type"]
+          team_id: string
+          thumbnail_url?: string | null
+          uploaded_by: string
+          url: string
+        }
+        Update: {
+          athlete_tags?: Json
+          caption?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          event_id?: string
+          id?: string
+          label?: Database["public"]["Enums"]["game_media_label"]
+          media_type?: Database["public"]["Enums"]["game_media_type"]
+          team_id?: string
+          thumbnail_url?: string | null
+          uploaded_by?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_media_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "team_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_media_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
@@ -4124,6 +4232,15 @@ export type Database = {
       email_marketing_provider: "mailchimp" | "klaviyo"
       enrollment_role: "parent" | "coach"
       enrollment_status: "active" | "paused" | "completed"
+      game_media_label:
+        | "highlight"
+        | "full_game"
+        | "period_1"
+        | "period_2"
+        | "period_3"
+        | "warmup"
+        | "other"
+      game_media_type: "photo" | "video"
       location_type: "venue" | "online" | "tba"
       media_annotation_status: "raw" | "reviewed" | "annotated"
       order_status: "pending" | "paid" | "refunded" | "failed"
@@ -4310,6 +4427,16 @@ export const Constants = {
       email_marketing_provider: ["mailchimp", "klaviyo"],
       enrollment_role: ["parent", "coach"],
       enrollment_status: ["active", "paused", "completed"],
+      game_media_label: [
+        "highlight",
+        "full_game",
+        "period_1",
+        "period_2",
+        "period_3",
+        "warmup",
+        "other",
+      ],
+      game_media_type: ["photo", "video"],
       location_type: ["venue", "online", "tba"],
       media_annotation_status: ["raw", "reviewed", "annotated"],
       order_status: ["pending", "paid", "refunded", "failed"],
