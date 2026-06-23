@@ -1,0 +1,1 @@
+ALTER TABLE public.athlete_media ALTER COLUMN athlete_id DROP NOT NULL;
