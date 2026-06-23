@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare, LogOut, ShieldCheck, ChevronRight, UserCog, Calculator } from "lucide-react";
+import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare, LogOut, ShieldCheck, ChevronRight, UserCog, Calculator, Megaphone, Mail } from "lucide-react";
 import { LayoutDashboard, CalendarDays, BookOpen, MessageSquare as InboxIcon, Users, Flag, MessageCircle } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { useAuth, useHasCoachAccess, useUserAppRole } from "@/hooks/use-auth";
@@ -126,6 +126,10 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
   const [marketplaceOn, setMarketplaceOn] = useState(false);
   const [marketplaceLoaded, setMarketplaceLoaded] = useState(false);
   const [accounting, setAccounting] = useState<Record<string, { status: string; account_name: string | null; last_synced_at: string | null }>>({});
+  const [pixelId, setPixelId] = useState("");
+  const [pixelSaving, setPixelSaving] = useState(false);
+  const [pixelSaved, setPixelSaved] = useState(false);
+  const [emailMarketing, setEmailMarketing] = useState<Record<string, { status: string; account_name: string | null; list_name: string | null }>>({});
 
   useEffect(() => {
     if (!user?.id) return;
@@ -148,6 +152,48 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
       });
     return () => { cancelled = true; };
   }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    supabase
+      .from("profiles")
+      .select("meta_pixel_id")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        setPixelId(data?.meta_pixel_id ?? "");
+      });
+    supabase
+      .from("email_marketing_connections")
+      .select("provider, status, account_name, list_name")
+      .eq("owner_id", user.id)
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        const map: Record<string, { status: string; account_name: string | null; list_name: string | null }> = {};
+        for (const row of data) {
+          map[row.provider as string] = {
+            status: row.status,
+            account_name: row.account_name,
+            list_name: row.list_name,
+          };
+        }
+        setEmailMarketing(map);
+      });
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
+  const savePixel = async () => {
+    if (!user?.id) return;
+    setPixelSaving(true);
+    setPixelSaved(false);
+    const trimmed = pixelId.trim();
+    await supabase.from("profiles").update({ meta_pixel_id: trimmed || null }).eq("id", user.id);
+    setPixelSaving(false);
+    setPixelSaved(true);
+    setTimeout(() => setPixelSaved(false), 1800);
+  };
 
   useEffect(() => {
     if (!user?.id) return;
