@@ -65,7 +65,7 @@ function RecordPanel() {
   );
 }
 
-function StandaloneRecorder({ onClose }: { onClose: () => void }) {
+export function StandaloneRecorder({ onClose }: { onClose: () => void }) {
   const rosterFn = useServerFn(listCoachRoster);
   const sessionsFn = useServerFn(listCoachSessions);
   const create = useServerFn(createAthleteMedia);
