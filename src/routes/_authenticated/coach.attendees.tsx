@@ -1,19 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Search, Filter } from "lucide-react";
+import { Search, ChevronDown } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/attendees")({
   component: AttendeesScreen,
 });
 
 type Badge = "new" | "returning" | "veteran";
-const ATHLETES: { id: string; name: string; gender: "M" | "F"; birthday: string; age: number; parent: string; camps: number; badge: Badge }[] = [
-  { id: "a1", name: "Jordan Walsh", gender: "M", birthday: "2014-03-12", age: 11, parent: "Sarah Walsh", camps: 6, badge: "veteran" },
-  { id: "a2", name: "Riley Walsh", gender: "F", birthday: "2016-09-04", age: 9, parent: "Sarah Walsh", camps: 2, badge: "returning" },
-  { id: "a3", name: "Mason Chen", gender: "M", birthday: "2013-11-22", age: 12, parent: "Linda Chen", camps: 1, badge: "new" },
-  { id: "a4", name: "Ava Thompson", gender: "F", birthday: "2015-06-30", age: 10, parent: "Mike Thompson", camps: 4, badge: "returning" },
-  { id: "a5", name: "Lucas Park", gender: "M", birthday: "2012-01-18", age: 13, parent: "Jin Park", camps: 8, badge: "veteran" },
-  { id: "a6", name: "Ella Brooks", gender: "F", birthday: "2017-04-09", age: 8, parent: "Dana Brooks", camps: 1, badge: "new" },
+type Source = { kind: "camp" | "team"; id: string; name: string };
+const SOURCES: Source[] = [
+  { kind: "camp", id: "c1", name: "Summer Elite Camp" },
+  { kind: "camp", id: "c2", name: "Spring Skills Camp" },
+  { kind: "camp", id: "c3", name: "Goalie Intensive" },
+  { kind: "team", id: "t1", name: "U13 Thunder" },
+  { kind: "team", id: "t2", name: "U11 Lightning" },
+];
+const ATHLETES: { id: string; name: string; gender: "M" | "F"; birthday: string; age: number; parent: string; camps: number; badge: Badge; sources: Source[] }[] = [
+  { id: "a1", name: "Jordan Walsh", gender: "M", birthday: "2014-03-12", age: 11, parent: "Sarah Walsh", camps: 6, badge: "veteran", sources: [SOURCES[0], SOURCES[3]] },
+  { id: "a2", name: "Riley Walsh", gender: "F", birthday: "2016-09-04", age: 9, parent: "Sarah Walsh", camps: 2, badge: "returning", sources: [SOURCES[1], SOURCES[4]] },
+  { id: "a3", name: "Mason Chen", gender: "M", birthday: "2013-11-22", age: 12, parent: "Linda Chen", camps: 1, badge: "new", sources: [SOURCES[0]] },
+  { id: "a4", name: "Ava Thompson", gender: "F", birthday: "2015-06-30", age: 10, parent: "Mike Thompson", camps: 4, badge: "returning", sources: [SOURCES[3]] },
+  { id: "a5", name: "Lucas Park", gender: "M", birthday: "2012-01-18", age: 13, parent: "Jin Park", camps: 8, badge: "veteran", sources: [SOURCES[2], SOURCES[3]] },
+  { id: "a6", name: "Ella Brooks", gender: "F", birthday: "2017-04-09", age: 8, parent: "Dana Brooks", camps: 1, badge: "new", sources: [SOURCES[1]] },
 ];
 
 function badgeStyle(b: Badge) {
@@ -24,33 +32,64 @@ function badgeStyle(b: Badge) {
 
 function AttendeesScreen() {
   const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<"all" | Badge>("all");
+  const [filter, setFilter] = useState<"all" | "camps" | "teams" | "new" | "returning">("all");
+  const [sourceId, setSourceId] = useState<string>("");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const filtered = ATHLETES.filter((a) => {
-    if (filter !== "all" && a.badge !== filter) return false;
+    if (filter === "camps" && !a.sources.some((s) => s.kind === "camp")) return false;
+    if (filter === "teams" && !a.sources.some((s) => s.kind === "team")) return false;
+    if (filter === "new" && a.badge !== "new") return false;
+    if (filter === "returning" && a.badge === "new") return false;
+    if (sourceId && !a.sources.some((s) => s.id === sourceId)) return false;
     if (q && !a.name.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
   });
+  const selectedSource = SOURCES.find((s) => s.id === sourceId);
 
   return (
     <div className="space-y-3">
       <div>
-        <h2 className="font-display text-lg font-bold text-foreground">Attendees</h2>
-        <p className="text-[11px] text-muted-foreground">All athletes who have attended your camps.</p>
+        <h2 className="font-display text-lg font-bold text-foreground">Athletes</h2>
+        <p className="text-[11px] text-muted-foreground">Every athlete across your camps, teams, and sessions.</p>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="relative flex items-center gap-2">
         <div className="relative flex-1">
           <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search athletes…"
             className="w-full rounded-full border border-border bg-card py-2 pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-teal focus:outline-none" />
         </div>
-        <button className="flex items-center gap-1 rounded-full border border-border bg-card px-3 py-2 text-[10px] font-semibold text-muted-foreground">
-          <Filter size={11} /> Filter
+        <button onClick={() => setDropdownOpen((o) => !o)}
+          className={"flex items-center gap-1 rounded-full border px-3 py-2 text-[10px] font-semibold " +
+            (selectedSource ? "border-teal bg-teal/10 text-teal" : "border-border bg-card text-muted-foreground")}>
+          {selectedSource ? selectedSource.name : "All sources"} <ChevronDown size={11} />
         </button>
+        {dropdownOpen && (
+          <div className="absolute right-0 top-full z-20 mt-1 w-56 overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
+            <button onClick={() => { setSourceId(""); setDropdownOpen(false); }}
+              className="block w-full px-3 py-2 text-left text-[11px] font-semibold text-foreground hover:bg-teal/10">
+              All sources
+            </button>
+            <div className="px-3 pt-2 text-[9px] uppercase tracking-wider text-muted-foreground">Camps</div>
+            {SOURCES.filter((s) => s.kind === "camp").map((s) => (
+              <button key={s.id} onClick={() => { setSourceId(s.id); setDropdownOpen(false); }}
+                className="block w-full px-3 py-1.5 text-left text-[11px] text-foreground hover:bg-teal/10">
+                {s.name}
+              </button>
+            ))}
+            <div className="px-3 pt-2 text-[9px] uppercase tracking-wider text-muted-foreground">Teams</div>
+            {SOURCES.filter((s) => s.kind === "team").map((s) => (
+              <button key={s.id} onClick={() => { setSourceId(s.id); setDropdownOpen(false); }}
+                className="block w-full px-3 py-1.5 text-left text-[11px] text-foreground hover:bg-teal/10">
+                {s.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {(["all", "new", "returning", "veteran"] as const).map((f) => (
+        {(["all", "camps", "teams", "new", "returning"] as const).map((f) => (
           <button key={f} onClick={() => setFilter(f)}
             className={"rounded-full border px-3 py-1 text-[10px] font-semibold capitalize " +
               (filter === f ? "border-teal bg-teal/10 text-teal" : "border-border bg-card text-muted-foreground")}>
@@ -80,6 +119,9 @@ function AttendeesScreen() {
                 </div>
                 <p className="truncate text-[10px] text-muted-foreground">
                   {a.gender} · {a.age} yrs · DOB {a.birthday} · Parent: {a.parent}
+                </p>
+                <p className="mt-0.5 truncate text-[10px] text-teal">
+                  {a.sources.map((s) => s.name).join(" · ")}
                 </p>
               </div>
               <div className="text-right">
