@@ -1569,6 +1569,109 @@ export type Database = {
           },
         ]
       }
+      ice_import_batches: {
+        Row: {
+          created_at: string
+          id: string
+          imported_at: string
+          owner_id: string
+          source_file_name: string | null
+          source_file_url: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          imported_at?: string
+          owner_id: string
+          source_file_name?: string | null
+          source_file_url?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          imported_at?: string
+          owner_id?: string
+          source_file_name?: string | null
+          source_file_url?: string | null
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
+      ice_slots: {
+        Row: {
+          ambiguous: boolean
+          batch_id: string | null
+          booked_by_coach_id: string | null
+          camp_id: string | null
+          created_at: string
+          end_time: string
+          id: string
+          notes: string | null
+          owner_id: string
+          rink_id: string | null
+          slot_date: string
+          start_time: string
+          surface_type: string
+          updated_at: string
+        }
+        Insert: {
+          ambiguous?: boolean
+          batch_id?: string | null
+          booked_by_coach_id?: string | null
+          camp_id?: string | null
+          created_at?: string
+          end_time: string
+          id?: string
+          notes?: string | null
+          owner_id: string
+          rink_id?: string | null
+          slot_date: string
+          start_time: string
+          surface_type?: string
+          updated_at?: string
+        }
+        Update: {
+          ambiguous?: boolean
+          batch_id?: string | null
+          booked_by_coach_id?: string | null
+          camp_id?: string | null
+          created_at?: string
+          end_time?: string
+          id?: string
+          notes?: string | null
+          owner_id?: string
+          rink_id?: string | null
+          slot_date?: string
+          start_time?: string
+          surface_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ice_slots_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "ice_import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ice_slots_camp_id_fkey"
+            columns: ["camp_id"]
+            isOneToOne: false
+            referencedRelation: "camps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ice_slots_rink_id_fkey"
+            columns: ["rink_id"]
+            isOneToOne: false
+            referencedRelation: "rinks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           body: string | null
@@ -1953,6 +2056,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rinks: {
+        Row: {
+          address: string | null
+          color: string
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       scheduled_messages: {
         Row: {
@@ -2474,6 +2607,7 @@ export type Database = {
     Functions: {
       claim_coach_role: { Args: never; Returns: undefined }
       current_user_contact_ids: { Args: never; Returns: string[] }
+      effective_owner_id: { Args: never; Returns: string }
       get_combine_share: { Args: { _token: string }; Returns: Json }
       get_rsvp_by_token: { Args: { _token: string }; Returns: Json }
       has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
