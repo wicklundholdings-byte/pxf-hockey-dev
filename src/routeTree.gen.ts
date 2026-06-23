@@ -58,6 +58,7 @@ import { Route as ParentCampsRouteImport } from './routes/parent.camps'
 import { Route as OnboardingParentRouteImport } from './routes/onboarding.parent'
 import { Route as OnboardingCoachRouteImport } from './routes/onboarding.coach'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
+import { Route as CombineAthleteIdRouteImport } from './routes/combine.$athleteId'
 import { Route as CoachesSlugRouteImport } from './routes/coaches.$slug'
 import { Route as CampsBrowseRouteImport } from './routes/camps.browse'
 import { Route as CampsSlugRouteImport } from './routes/camps.$slug'
@@ -353,6 +354,11 @@ const OnboardingCoachRoute = OnboardingCoachRouteImport.update({
 const DrillDetailDrillIdRoute = DrillDetailDrillIdRouteImport.update({
   id: '/drill-detail/$drillId',
   path: '/drill-detail/$drillId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CombineAthleteIdRoute = CombineAthleteIdRouteImport.update({
+  id: '/combine/$athleteId',
+  path: '/combine/$athleteId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoachesSlugRoute = CoachesSlugRouteImport.update({
@@ -682,6 +688,7 @@ export interface FileRoutesByFullPath {
   '/camps/$slug': typeof CampsSlugRouteWithChildren
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
+  '/combine/$athleteId': typeof CombineAthleteIdRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/onboarding/coach': typeof OnboardingCoachRoute
   '/onboarding/parent': typeof OnboardingParentRoute
@@ -779,6 +786,7 @@ export interface FileRoutesByTo {
   '/book/$slug': typeof BookSlugRoute
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
+  '/combine/$athleteId': typeof CombineAthleteIdRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/onboarding/coach': typeof OnboardingCoachRoute
   '/onboarding/parent': typeof OnboardingParentRoute
@@ -883,6 +891,7 @@ export interface FileRoutesById {
   '/camps/$slug': typeof CampsSlugRouteWithChildren
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
+  '/combine/$athleteId': typeof CombineAthleteIdRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/onboarding/coach': typeof OnboardingCoachRoute
   '/onboarding/parent': typeof OnboardingParentRoute
@@ -987,6 +996,7 @@ export interface FileRouteTypes {
     | '/camps/$slug'
     | '/camps/browse'
     | '/coaches/$slug'
+    | '/combine/$athleteId'
     | '/drill-detail/$drillId'
     | '/onboarding/coach'
     | '/onboarding/parent'
@@ -1084,6 +1094,7 @@ export interface FileRouteTypes {
     | '/book/$slug'
     | '/camps/browse'
     | '/coaches/$slug'
+    | '/combine/$athleteId'
     | '/drill-detail/$drillId'
     | '/onboarding/coach'
     | '/onboarding/parent'
@@ -1187,6 +1198,7 @@ export interface FileRouteTypes {
     | '/camps/$slug'
     | '/camps/browse'
     | '/coaches/$slug'
+    | '/combine/$athleteId'
     | '/drill-detail/$drillId'
     | '/onboarding/coach'
     | '/onboarding/parent'
@@ -1288,6 +1300,7 @@ export interface RootRouteChildren {
   CampsSlugRoute: typeof CampsSlugRouteWithChildren
   CampsBrowseRoute: typeof CampsBrowseRoute
   CoachesSlugRoute: typeof CoachesSlugRoute
+  CombineAthleteIdRoute: typeof CombineAthleteIdRoute
   DrillDetailDrillIdRoute: typeof DrillDetailDrillIdRoute
   PaymentsCheckoutRoute: typeof PaymentsCheckoutRoute
   PaymentsConfirmationRoute: typeof PaymentsConfirmationRoute
@@ -1649,6 +1662,13 @@ declare module '@tanstack/react-router' {
       path: '/drill-detail/$drillId'
       fullPath: '/drill-detail/$drillId'
       preLoaderRoute: typeof DrillDetailDrillIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/combine/$athleteId': {
+      id: '/combine/$athleteId'
+      path: '/combine/$athleteId'
+      fullPath: '/combine/$athleteId'
+      preLoaderRoute: typeof CombineAthleteIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/coaches/$slug': {
@@ -2274,6 +2294,7 @@ const rootRouteChildren: RootRouteChildren = {
   CampsSlugRoute: CampsSlugRouteWithChildren,
   CampsBrowseRoute: CampsBrowseRoute,
   CoachesSlugRoute: CoachesSlugRoute,
+  CombineAthleteIdRoute: CombineAthleteIdRoute,
   DrillDetailDrillIdRoute: DrillDetailDrillIdRoute,
   PaymentsCheckoutRoute: PaymentsCheckoutRoute,
   PaymentsConfirmationRoute: PaymentsConfirmationRoute,
