@@ -11,10 +11,12 @@ export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedu
 });
 
 type EventRow = { id: string; event_type: "game" | "practice" | "team_event"; title: string | null; opponent_name: string | null; venue: string | null; event_date: string; start_time: string | null };
+type RsvpCounts = { yes: number; no: number; maybe: number; none: number };
 
 function Schedule() {
   const { teamId } = Route.useParams();
   const [events, setEvents] = useState<EventRow[]>([]);
+  const [counts, setCounts] = useState<Record<string, RsvpCounts>>({});
   const [adding, setAdding] = useState(false);
 
   async function refresh() {
@@ -23,7 +25,28 @@ function Schedule() {
       .select("id,event_type,title,opponent_name,venue,event_date,start_time")
       .eq("team_id", teamId)
       .order("event_date", { ascending: true });
-    setEvents((data ?? []) as EventRow[]);
+    const evs = (data ?? []) as EventRow[];
+    setEvents(evs);
+    if (evs.length) {
+      const eventIds = evs.map((e) => e.id);
+      const [{ data: roster }, { data: rsvps }] = await Promise.all([
+        supabase.from("team_players").select("id").eq("team_id", teamId),
+        supabase.from("team_event_rsvps").select("event_id,response").in("event_id", eventIds),
+      ]);
+      const total = (roster ?? []).length;
+      const map: Record<string, RsvpCounts> = {};
+      for (const id of eventIds) map[id] = { yes: 0, no: 0, maybe: 0, none: total };
+      for (const r of (rsvps ?? []) as { event_id: string; response: string }[]) {
+        const c = map[r.event_id]; if (!c) continue;
+        if (r.response === "yes") c.yes++;
+        else if (r.response === "no") c.no++;
+        else if (r.response === "maybe") c.maybe++;
+        c.none = Math.max(0, c.none - 1);
+      }
+      setCounts(map);
+    } else {
+      setCounts({});
+    }
   }
   useEffect(() => { refresh(); }, [teamId]);
 
@@ -41,7 +64,7 @@ function Schedule() {
         )}
         {events.map((e) => (
           <Link key={e.id} to="/coach/teams/$teamId/schedule/$eventId" params={{ teamId, eventId: e.id }}>
-            <TeamEventRow event={e} />
+            <TeamEventRow event={e} counts={counts[e.id]} />
           </Link>
         ))}
       </div>
