@@ -80,8 +80,96 @@ export const addPlayerWithInvite = createServerFn({ method: "POST" })
       .single();
     if (iErr) throw new Error(iErr.message);
 
-    return { playerId: player.id, inviteToken: invite.invite_token };
+    // Look up team + coach for email context
+    const { data: team } = await context.supabase
+      .from("teams")
+      .select("name")
+      .eq("id", data.teamId)
+      .single();
+    const { data: coach } = await context.supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", context.userId)
+      .single();
+
+    const origin =
+      process.env.SITE_URL ||
+      process.env.PUBLIC_SITE_URL ||
+      "https://pxf-hockey-dev.lovable.app";
+    const inviteUrl = `${origin}/team-invite/${invite.invite_token}`;
+
+    let emailStatus: "sent" | "skipped" | "failed" = "skipped";
+    let emailError: string | null = null;
+    const apiKey = process.env.RESEND_API_KEY;
+    if (apiKey) {
+      try {
+        const teamName = team?.name ?? "the team";
+        const coachName = coach?.full_name ?? "Your coach";
+        const greeting = data.parentName ? `Hi ${data.parentName},` : "Hi there,";
+        const html = `
+          <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#111">
+            <h2 style="margin:0 0 12px">You're invited to join ${escapeHtml(teamName)}</h2>
+            <p style="margin:0 0 12px">${escapeHtml(greeting)}</p>
+            <p style="margin:0 0 12px">
+              ${escapeHtml(coachName)} added <strong>${escapeHtml(data.displayName)}</strong>
+              to the <strong>${escapeHtml(teamName)}</strong> roster.
+              Please complete the athlete profile, your phone number, and emergency contacts so the coach can reach you.
+            </p>
+            <p style="margin:24px 0">
+              <a href="${inviteUrl}" style="background:#0ea5a3;color:#000;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:700;display:inline-block">
+                Complete profile
+              </a>
+            </p>
+            <p style="margin:0 0 8px;color:#555;font-size:12px">Or copy this link:</p>
+            <p style="margin:0 0 16px;color:#555;font-size:12px;word-break:break-all">${inviteUrl}</p>
+            <hr style="border:none;border-top:1px solid #eee;margin:24px 0" />
+            <p style="margin:0;color:#888;font-size:11px">If you weren't expecting this, you can safely ignore the email.</p>
+          </div>
+        `;
+        const res = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: "PXF Hockey <onboarding@resend.dev>",
+            to: [data.parentEmail],
+            subject: `Complete ${data.displayName}'s profile for ${teamName}`,
+            html,
+          }),
+        });
+        if (!res.ok) {
+          emailStatus = "failed";
+          emailError = `Resend ${res.status}: ${await res.text()}`;
+          console.error(emailError);
+        } else {
+          emailStatus = "sent";
+        }
+      } catch (e: any) {
+        emailStatus = "failed";
+        emailError = e?.message ?? "Unknown error";
+        console.error("Invite email failed", e);
+      }
+    }
+
+    return {
+      playerId: player.id,
+      inviteToken: invite.invite_token,
+      inviteUrl,
+      emailStatus,
+      emailError,
+    };
   });
+
+function escapeHtml(s: string) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 export const createEvent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
