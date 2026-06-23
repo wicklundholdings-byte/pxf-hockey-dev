@@ -1,11 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, ArrowRight, Check, Upload, Plus, Trash2, CalendarDays, MapPin, DollarSign, FileText } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/new")({
   component: NewCampWizard,
+  validateSearch: (s: Record<string, unknown>) => ({
+    ice_slot_id: typeof s.ice_slot_id === "string" ? s.ice_slot_id : undefined,
+  }),
 });
 
 type Format = "camp" | "session";
@@ -27,6 +30,7 @@ function slugify(s: string) {
 
 function NewCampWizard() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
 
@@ -58,6 +62,27 @@ function NewCampWizard() {
   const [paymentPlan, setPaymentPlan] = useState<PaymentPlan>("none");
   const [waiverUrl, setWaiverUrl] = useState("");
   const [fields, setFields] = useState<CustomField[]>([]);
+  const [linkedIceSlotId, setLinkedIceSlotId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const id = search?.ice_slot_id;
+    if (!id) return;
+    (async () => {
+      const { data: slot } = await (supabase as any)
+        .from("ice_slots")
+        .select("id, slot_date, start_time, end_time, rink_id, rinks(name, address)")
+        .eq("id", id)
+        .maybeSingle();
+      if (!slot) return;
+      setLinkedIceSlotId(slot.id);
+      if (slot.slot_date) setStartDate(slot.slot_date);
+      if (slot.start_time) setStartTime(String(slot.start_time).slice(0, 5));
+      if (slot.end_time) setEndTime(String(slot.end_time).slice(0, 5));
+      if (slot.rinks?.name) setVenueName(slot.rinks.name);
+      if (slot.rinks?.address) setAddress(slot.rinks.address);
+      setLocationType("venue");
+    })();
+  }, [search?.ice_slot_id]);
 
   function handleHero(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -123,6 +148,16 @@ function NewCampWizard() {
             sort_order: i,
           })),
         );
+      }
+
+      if (linkedIceSlotId && camp) {
+        const { error: linkErr } = await (supabase as any)
+          .from("ice_slots")
+          .update({ camp_id: camp.id })
+          .eq("id", linkedIceSlotId);
+        if (linkErr) {
+          alert(`Camp created but ice slot link failed: ${linkErr.message}`);
+        }
       }
 
       navigate({ to: "/coach/camps" });
