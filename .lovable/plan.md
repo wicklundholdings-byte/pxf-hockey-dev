@@ -1,69 +1,78 @@
-## Team Management System — Implementation Plan
+# Dryland Training Programs (Prompt 19)
 
-This is a large feature spanning permissions, messaging rules, scheduling, and geography. I'll deliver it in scoped phases so each is reviewable.
+Self-serve dryland library for parents + coaches. Year-round training between camps.
 
-### Phase 1 — Permission roles & schema (foundation)
+## Phase 1 — Schema & Seed
 
-**Database:**
-- Extend `team_permission` enum to 5 roles: `owner`, `manager`, `coach`, `assistant`, `content_creator` (currently the project uses a coarser model).
-- Add `home_area_lat`, `home_area_lng`, `home_area_label` to `team_members` (optional, city-level).
-- Add `min_buffer_minutes` (default 30) to `profiles` (owner settings).
-- Helper SQL functions: `team_role(_user uuid)`, `can_access_camp(_user, _camp)`, `can_message_contact(_user, _contact)`.
+New tables (all under `public`, RLS + GRANTs):
 
-**Code:**
-- Central `src/lib/permissions.ts` exposing `usePermissions()` returning capabilities `{ canViewFinancials, canMessageAnyone, canEditCamp(campId), canCheckIn(campId), canAccessPlaybook }`.
-- Apply gates in existing routes (camps list, camp detail, messaging, playbook, settings).
+- `dryland_programs` — id, name, category enum (`stick_skills`/`shooting`/`strength_explosiveness`), difficulty enum (`beginner`/`intermediate`/`advanced`), age_group_min, age_group_max, description, session_count, avg_session_minutes, is_published, created_by_admin
+- `dryland_program_weeks` — program_id, week_number, description
+- `dryland_sessions` — id, program_id, week_number, day_number, name, duration_minutes
+- `dryland_exercises` — id, session_id, display_order, name, sets, reps, duration_seconds, rest_seconds, instruction_text, video_url
+- `athlete_program_enrollments` — id, athlete_id, program_id, enrolled_by (user), enrolled_by_role enum (`parent`/`coach`), start_date, training_days jsonb (array of weekday ints), status enum (`active`/`paused`/`completed`)
+- `athlete_session_completions` — id, athlete_id, session_id, enrollment_id, completed_at, duration_actual_seconds, notes
+- `program_recommendations` — id, coach_id, athlete_id, program_id, message, status enum (`pending`/`accepted`/`dismissed`), created_at
 
-### Phase 2 — Attendee payment status
+RLS:
+- Programs: public SELECT for any authenticated user when `is_published = true`. Admin write.
+- Enrollments / completions: parent can manage their athletes' rows (via `current_user_contact_ids` → registrations/attendees), coach can read athletes they coach + write hard assigns.
+- Recommendations: coach who owns it can write; parent of athlete can read.
 
-- Compute status (`paid` / `pending` / `overdue`) from existing `registrations` + `payment_installments` via a SQL view `attendee_payment_status`.
-- Add badge + filter on coach camp detail attendee list.
-- Dashboard summary card "X attendees have outstanding payments" with drill-down sheet — visible to owner/manager only.
+Seed: 3 programs (one per category), 4 sessions each, ~6 exercises per session, using existing sample video URLs.
 
-### Phase 3 — Messaging permission rules
+## Phase 2 — Parent Train Tab
 
-- Server fn `listMessageableContacts()` returns contacts based on role:
-  - owner/manager → all org contacts + staff
-  - coach → parents/athletes in assigned camps only
-  - assistant/content_creator → none
-- RLS on `conversations` / `conversation_members` updated to enforce who can start a conversation.
-- Existing chat UI unchanged; new-conversation picker filtered by the server fn.
+- Add `Train` to parent bottom nav (`src/routes/parent.tsx`) — Dumbbell icon. Bump nav to 5 items, keep Inbox/Profile.
+- New routes:
+  - `parent.train.tsx` — library browse, filters (category, difficulty, age)
+  - `parent.train.$programId.tsx` — program detail, drill list preview, "Start This Program" sheet (child picker, weekday picker, start date)
+  - `parent.train.session.$sessionId.tsx` — session runner
 
-### Phase 4 — Team Overview screen
+Confirmation/dashboard nudges:
+- `camps.$slug.confirmed.tsx` — add card linking to `/parent/train` ("Keep [athlete] training between camps")
+- `parent.index.tsx` — persistent card when no active enrollment
 
-- New route `/_authenticated/coach.team.tsx` — staff cards with name, role, this-month assigned camp count, availability indicator.
-- Filters: date range, location, role.
-- Tap card → drawer with that staff member's schedule calendar (reusing existing schedule components).
+## Phase 3 — Session Runner
 
-### Phase 5 — Unassigned alerts
+`parent.train.session.$sessionId.tsx`:
+- Progress bar `Drill X of N`
+- Looping muted `<video>` demo (tap to unmute)
+- Sets/reps/duration display
+- Instruction text + optional rest timer
+- "Complete & Next" advances; final summary screen writes `athlete_session_completions`
+- TODO comment: future single-video w/ chapter markers
 
-- Dashboard warning card with quick-assign action.
-- Orange badge on event cards where `camp_staff` is empty.
-- Team screen tab listing all unassigned camps + sessions.
+## Phase 4 — Coach Visibility
 
-### Phase 6 — Conflict detection
+- On `coach.attendees.$athleteId.tsx` add a "Dryland" panel: active enrollments + completion rate + last completion.
+- New server fn to recommend program (creates `program_recommendations` row).
+- Parent dashboard surfaces pending recommendations as a card.
 
-- Server fn `checkAssignmentConflicts({ teamMemberId, campSessionId })` returning `{ hardConflicts: [...], softWarnings: [...] }`.
-- Hard: overlapping `camp_sessions` for same team member → block assignment.
-- Soft: gap < owner's `min_buffer_minutes` → warn, require confirm.
-- Setting in owner settings page for buffer minutes.
+## Phase 5 — Calendar integration
 
-### Phase 7 — Geography-aware scheduling (Google Maps)
+- Add a helper that generates virtual calendar entries for the next 30 days from active enrollments (weekday match + start_date filter). Surface in `parent.schedule.tsx` with dumbbell icon + distinct color (`text-volt`).
 
-- Uses existing Google Maps connector (already wired for the venue map feature).
-- Server fn `getDriveTimes({ teamMemberId, campSessionId })` calls Routes API `computeRouteMatrix` for: home→venue and previousAssignmentVenue→venue.
-- Assignment UI shows drive times inline.
-- Smart suggestion: when assigning, sort eligible coaches by drive-time-from-home and no-conflict.
-- Conflict warning text per spec; owner can override with confirmation modal.
+## Out of scope (note in code as TODO)
+- Push notifications (no push infra wired yet — leave hook stubbed in enrollment server fn).
+- Replacing per-drill videos with full session video + chapters.
 
----
+## Files
 
-### Technical notes
-- All work is in TanStack server functions + new routes; no edge functions.
-- Google Maps calls go through the existing connector gateway (`routes/distanceMatrix/v2:computeRouteMatrix`).
-- Permission helper is the single source of truth — every gated UI reads from it.
+Created:
+- `supabase/migrations/<ts>_dryland.sql`
+- `src/lib/dryland.functions.ts`
+- `src/routes/parent.train.tsx`
+- `src/routes/parent.train.$programId.tsx`
+- `src/routes/parent.train.session.$sessionId.tsx`
+- `src/components/dryland-session-runner.tsx`
+- `src/components/dryland-recommendations-card.tsx`
 
-### Scope confirmation
-Phases 1–3 are foundational and unlock the rest. Phases 4–7 are larger UI/integration pieces.
-
-**Should I proceed with all 7 phases in sequence, or would you like to confirm phase-by-phase?** Also: any role-name preferences (e.g. "Assistant" vs "Assistant Coach")?
+Edited:
+- `src/routes/parent.tsx` (nav)
+- `src/routes/parent.index.tsx` (empty-state card)
+- `src/routes/camps.$slug.confirmed.tsx` (post-reg nudge)
+- `src/routes/parent.schedule.tsx` (dryland sessions on calendar)
+- `src/routes/_authenticated/coach.attendees.$athleteId.tsx` (dryland panel + recommend button)
+- `src/integrations/supabase/types.ts` (regenerated after migration)
+- `src/routeTree.gen.ts` (regenerated by plugin)

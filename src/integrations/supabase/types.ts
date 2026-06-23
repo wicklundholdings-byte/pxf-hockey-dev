@@ -237,6 +237,112 @@ export type Database = {
           },
         ]
       }
+      athlete_program_enrollments: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          enrolled_by: string
+          enrolled_by_role: Database["public"]["Enums"]["enrollment_role"]
+          id: string
+          program_id: string
+          start_date: string
+          status: Database["public"]["Enums"]["enrollment_status"]
+          training_days: Json
+          updated_at: string
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          enrolled_by: string
+          enrolled_by_role: Database["public"]["Enums"]["enrollment_role"]
+          id?: string
+          program_id: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["enrollment_status"]
+          training_days?: Json
+          updated_at?: string
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          enrolled_by?: string
+          enrolled_by_role?: Database["public"]["Enums"]["enrollment_role"]
+          id?: string
+          program_id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["enrollment_status"]
+          training_days?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_program_enrollments_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_program_enrollments_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "dryland_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      athlete_session_completions: {
+        Row: {
+          athlete_id: string
+          completed_at: string
+          duration_actual_seconds: number | null
+          enrollment_id: string | null
+          id: string
+          notes: string | null
+          session_id: string
+        }
+        Insert: {
+          athlete_id: string
+          completed_at?: string
+          duration_actual_seconds?: number | null
+          enrollment_id?: string | null
+          id?: string
+          notes?: string | null
+          session_id: string
+        }
+        Update: {
+          athlete_id?: string
+          completed_at?: string
+          duration_actual_seconds?: number | null
+          enrollment_id?: string | null
+          id?: string
+          notes?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_session_completions_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_session_completions_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_program_enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_session_completions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "dryland_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance: {
         Row: {
           id: string
@@ -1525,6 +1631,177 @@ export type Database = {
           },
         ]
       }
+      dryland_exercises: {
+        Row: {
+          created_at: string
+          display_order: number
+          duration_seconds: number | null
+          id: string
+          instruction_text: string | null
+          name: string
+          reps: number | null
+          rest_seconds: number | null
+          session_id: string
+          sets: number | null
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          duration_seconds?: number | null
+          id?: string
+          instruction_text?: string | null
+          name: string
+          reps?: number | null
+          rest_seconds?: number | null
+          session_id: string
+          sets?: number | null
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          duration_seconds?: number | null
+          id?: string
+          instruction_text?: string | null
+          name?: string
+          reps?: number | null
+          rest_seconds?: number | null
+          session_id?: string
+          sets?: number | null
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dryland_exercises_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "dryland_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dryland_program_weeks: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          program_id: string
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          program_id: string
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          program_id?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dryland_program_weeks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "dryland_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dryland_programs: {
+        Row: {
+          age_group_max: number
+          age_group_min: number
+          avg_session_minutes: number
+          category: Database["public"]["Enums"]["dryland_category"]
+          created_at: string
+          created_by_admin: string | null
+          description: string | null
+          difficulty: Database["public"]["Enums"]["dryland_difficulty"]
+          id: string
+          is_published: boolean
+          name: string
+          session_count: number
+          updated_at: string
+        }
+        Insert: {
+          age_group_max?: number
+          age_group_min?: number
+          avg_session_minutes?: number
+          category: Database["public"]["Enums"]["dryland_category"]
+          created_at?: string
+          created_by_admin?: string | null
+          description?: string | null
+          difficulty: Database["public"]["Enums"]["dryland_difficulty"]
+          id?: string
+          is_published?: boolean
+          name: string
+          session_count?: number
+          updated_at?: string
+        }
+        Update: {
+          age_group_max?: number
+          age_group_min?: number
+          avg_session_minutes?: number
+          category?: Database["public"]["Enums"]["dryland_category"]
+          created_at?: string
+          created_by_admin?: string | null
+          description?: string | null
+          difficulty?: Database["public"]["Enums"]["dryland_difficulty"]
+          id?: string
+          is_published?: boolean
+          name?: string
+          session_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      dryland_sessions: {
+        Row: {
+          created_at: string
+          day_number: number
+          display_order: number
+          duration_minutes: number
+          id: string
+          name: string
+          program_id: string
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          day_number?: number
+          display_order?: number
+          duration_minutes?: number
+          id?: string
+          name: string
+          program_id: string
+          week_number?: number
+        }
+        Update: {
+          created_at?: string
+          day_number?: number
+          display_order?: number
+          duration_minutes?: number
+          id?: string
+          name?: string
+          program_id?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dryland_sessions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "dryland_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_campaigns: {
         Row: {
           audience_filter: Json
@@ -2257,6 +2534,51 @@ export type Database = {
           },
         ]
       }
+      program_recommendations: {
+        Row: {
+          athlete_id: string
+          coach_id: string
+          created_at: string
+          id: string
+          message: string | null
+          program_id: string
+          status: Database["public"]["Enums"]["recommendation_status"]
+        }
+        Insert: {
+          athlete_id: string
+          coach_id: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          program_id: string
+          status?: Database["public"]["Enums"]["recommendation_status"]
+        }
+        Update: {
+          athlete_id?: string
+          coach_id?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          program_id?: string
+          status?: Database["public"]["Enums"]["recommendation_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_recommendations_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "program_recommendations_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "dryland_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       registrations: {
         Row: {
           amount_cents: number
@@ -2966,12 +3288,17 @@ export type Database = {
       conversation_type: "camp_group" | "dm"
       device_provider: "apple_health" | "whoop" | "garmin"
       difficulty_level: "beginner" | "intermediate" | "advanced" | "elite"
+      dryland_category: "stick_skills" | "shooting" | "strength_explosiveness"
+      dryland_difficulty: "beginner" | "intermediate" | "advanced"
       email_campaign_status: "draft" | "scheduled" | "sent"
       email_marketing_provider: "mailchimp" | "klaviyo"
+      enrollment_role: "parent" | "coach"
+      enrollment_status: "active" | "paused" | "completed"
       location_type: "venue" | "online" | "tba"
       media_annotation_status: "raw" | "reviewed" | "annotated"
       order_status: "pending" | "paid" | "refunded" | "failed"
       payment_plan: "none" | "two" | "three"
+      recommendation_status: "pending" | "accepted" | "dismissed"
       registration_status:
         | "paid"
         | "abandoned"
@@ -3141,12 +3468,17 @@ export const Constants = {
       conversation_type: ["camp_group", "dm"],
       device_provider: ["apple_health", "whoop", "garmin"],
       difficulty_level: ["beginner", "intermediate", "advanced", "elite"],
+      dryland_category: ["stick_skills", "shooting", "strength_explosiveness"],
+      dryland_difficulty: ["beginner", "intermediate", "advanced"],
       email_campaign_status: ["draft", "scheduled", "sent"],
       email_marketing_provider: ["mailchimp", "klaviyo"],
+      enrollment_role: ["parent", "coach"],
+      enrollment_status: ["active", "paused", "completed"],
       location_type: ["venue", "online", "tba"],
       media_annotation_status: ["raw", "reviewed", "annotated"],
       order_status: ["pending", "paid", "refunded", "failed"],
       payment_plan: ["none", "two", "three"],
+      recommendation_status: ["pending", "accepted", "dismissed"],
       registration_status: [
         "paid",
         "abandoned",

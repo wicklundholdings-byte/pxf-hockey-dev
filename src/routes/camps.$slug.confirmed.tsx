@@ -1,7 +1,7 @@
 import { createFileRoute, useParams, useSearch, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle2, CalendarPlus, Download, ArrowRight } from "lucide-react";
+import { CheckCircle2, CalendarPlus, Download, ArrowRight, Dumbbell } from "lucide-react";
 import { CalendarSyncButton } from "@/components/calendar-sync-button";
 import { MetaPixel } from "@/components/meta-pixel";
 
@@ -97,6 +97,21 @@ function ConfirmedScreen() {
         <p className="rounded-xl bg-surface px-4 py-3 text-left text-xs text-muted-foreground">
           You'll receive a confirmation email and SMS shortly. Your coach will be in touch before camp starts.
         </p>
+
+        <Link
+          to="/auth"
+          search={{ mode: "signup", redirect: "/parent/train" }}
+          className="flex items-start gap-3 rounded-2xl border border-volt/40 bg-volt/10 p-4 text-left"
+        >
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-volt/20">
+            <Dumbbell size={18} className="text-volt" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-foreground">Keep training between camps</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Add a free dryland program to your athlete's schedule — stick skills, shooting, or strength.</p>
+          </div>
+          <ArrowRight size={16} className="mt-1 text-volt" />
+        </Link>
 
         <Link
           to="/auth"

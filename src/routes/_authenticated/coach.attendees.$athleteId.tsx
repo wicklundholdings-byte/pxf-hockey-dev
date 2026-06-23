@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, Mail, Phone, Calendar, TrendingUp, CheckCircle2, XCircle, Activity, Film } from "lucide-react";
 import { AthleteMediaTab } from "@/components/athlete-media-tab";
+import { DrylandCoachPanel } from "@/components/dryland-coach-panel";
 
 export const Route = createFileRoute("/_authenticated/coach/attendees/$athleteId")({
   component: AthleteProfile,
@@ -156,6 +157,8 @@ function AthleteProfile() {
           Overall: <span className="font-bold text-foreground">4 of 5 days</span> · 80% attendance
         </p>
       </Section>
+
+      <DrylandCoachPanel athleteId={athleteId} />
       </>)}
     </div>
   );
