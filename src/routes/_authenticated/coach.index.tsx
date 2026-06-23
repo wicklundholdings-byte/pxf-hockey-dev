@@ -163,7 +163,7 @@ function CoachDashboard() {
         </Link>
         <Link
           to="/coach/camps/new"
-          className="flex items-center justify-center gap-2 rounded-2xl border border-voltool/40 bg-violetool/10 py-3 text-sm font-bold text-violetool hover:bg-violetool/20 transition-colors"
+          className="flex items-center justify-center gap-2 rounded-2xl border border-volt/40 bg-volt/10 py-3 text-sm font-bold text-volt hover:bg-volt/20 transition-colors"
         >
           <Plus size={18} />
           New Session/Camp
