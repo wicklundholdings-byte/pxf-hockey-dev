@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare, LogOut, ShieldCheck, ChevronRight, UserCog, Calculator } from "lucide-react";
+import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare, LogOut, ShieldCheck, ChevronRight, UserCog, Calculator, Megaphone, Mail } from "lucide-react";
 import { LayoutDashboard, CalendarDays, BookOpen, MessageSquare as InboxIcon, Users, Flag, MessageCircle } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { useAuth, useHasCoachAccess, useUserAppRole } from "@/hooks/use-auth";
@@ -126,6 +126,10 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
   const [marketplaceOn, setMarketplaceOn] = useState(false);
   const [marketplaceLoaded, setMarketplaceLoaded] = useState(false);
   const [accounting, setAccounting] = useState<Record<string, { status: string; account_name: string | null; last_synced_at: string | null }>>({});
+  const [pixelId, setPixelId] = useState("");
+  const [pixelSaving, setPixelSaving] = useState(false);
+  const [pixelSaved, setPixelSaved] = useState(false);
+  const [emailMarketing, setEmailMarketing] = useState<Record<string, { status: string; account_name: string | null; list_name: string | null }>>({});
 
   useEffect(() => {
     if (!user?.id) return;
@@ -148,6 +152,48 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
       });
     return () => { cancelled = true; };
   }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    supabase
+      .from("profiles")
+      .select("meta_pixel_id")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        setPixelId(data?.meta_pixel_id ?? "");
+      });
+    supabase
+      .from("email_marketing_connections")
+      .select("provider, status, account_name, list_name")
+      .eq("owner_id", user.id)
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        const map: Record<string, { status: string; account_name: string | null; list_name: string | null }> = {};
+        for (const row of data) {
+          map[row.provider as string] = {
+            status: row.status,
+            account_name: row.account_name,
+            list_name: row.list_name,
+          };
+        }
+        setEmailMarketing(map);
+      });
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
+  const savePixel = async () => {
+    if (!user?.id) return;
+    setPixelSaving(true);
+    setPixelSaved(false);
+    const trimmed = pixelId.trim();
+    await supabase.from("profiles").update({ meta_pixel_id: trimmed || null }).eq("id", user.id);
+    setPixelSaving(false);
+    setPixelSaved(true);
+    setTimeout(() => setPixelSaved(false), 1800);
+  };
 
   useEffect(() => {
     if (!user?.id) return;
@@ -383,6 +429,63 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
                       {connected
                         ? `Connected${conn?.account_name ? ` · ${conn.account_name}` : ""}`
                         : "Auto-post payments as sales receipts"}
+                    </p>
+                  </div>
+                </div>
+                {connected ? (
+                  <span className="flex items-center gap-1 rounded-full bg-volt/15 px-2 py-1 text-[10px] font-bold text-volt"><Check size={10} /> Connected</span>
+                ) : (
+                  <button className="rounded-lg border border-border px-3 py-1 text-[10px]">Connect</button>
+                )}
+              </div>
+            );
+          })}
+        </Section>
+
+        <Section icon={Megaphone} title="Meta Pixel">
+          <p className="text-[11px] text-muted-foreground">
+            Paste your Facebook / Instagram Pixel ID to track ad conversions. We'll fire a Purchase event with the camp name and amount whenever a registration completes.
+          </p>
+          <label className="block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pixel ID</span>
+            <input
+              value={pixelId}
+              onChange={(e) => setPixelId(e.target.value)}
+              placeholder="e.g. 1234567890123456"
+              inputMode="numeric"
+              maxLength={32}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-sm tracking-wider"
+            />
+          </label>
+          <button
+            onClick={savePixel}
+            disabled={pixelSaving}
+            className="rounded-lg bg-teal px-4 py-2 text-xs font-bold text-background disabled:opacity-60"
+          >
+            {pixelSaving ? "Saving…" : pixelSaved ? "Saved" : "Save Pixel ID"}
+          </button>
+        </Section>
+
+        <Section icon={Mail} title="Email Marketing">
+          <p className="text-[11px] text-muted-foreground">
+            Auto-add new registrants to your email list. Pick a provider, then choose which list new parents should join.
+          </p>
+          {([
+            { id: "mailchimp", label: "Mailchimp", tint: "from-yellow-500/20 to-yellow-700/10", badge: "MC" },
+            { id: "klaviyo", label: "Klaviyo", tint: "from-fuchsia-500/20 to-fuchsia-700/10", badge: "K" },
+          ] as const).map((p) => {
+            const conn = emailMarketing[p.id];
+            const connected = conn?.status === "connected";
+            return (
+              <div key={p.id} className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                <div className="flex items-center gap-3">
+                  <div className={`grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br ${p.tint} text-[10px] font-bold`}>{p.badge}</div>
+                  <div>
+                    <p className="font-semibold">{p.label}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {connected
+                        ? `Syncing to ${conn?.list_name ?? "selected list"}`
+                        : "Connect with API key, then pick a list"}
                     </p>
                   </div>
                 </div>
