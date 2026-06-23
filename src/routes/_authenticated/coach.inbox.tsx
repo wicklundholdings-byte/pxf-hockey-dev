@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { MessageSquare, Send, ArrowLeft, Users, Plus, Pin, X, Megaphone } from "lucide-react";
+import { MessageSquare, Send, ArrowLeft, Users, Plus, Pin, X, Megaphone, User } from "lucide-react";
+import { listMessageableContacts, type MessageableContact } from "@/lib/messaging.functions";
 
 export const Route = createFileRoute("/_authenticated/coach/inbox")({
   component: InboxPage,
@@ -283,16 +284,30 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
 
 function NewConvoSheet({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
   const { user } = useAuth();
+  const [mode, setMode] = useState<"camp" | "dm">("camp");
   const [camps, setCamps] = useState<Camp[]>([]);
   const [campId, setCampId] = useState<string>("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [contacts, setContacts] = useState<MessageableContact[]>([]);
+  const [contactsLoading, setContactsLoading] = useState(false);
+  const [contactId, setContactId] = useState<string>("");
+  const [contactSearch, setContactSearch] = useState("");
 
   useEffect(() => {
     supabase.from("camps").select("id,name").order("created_at", { ascending: false }).then(({ data }) => {
       setCamps((data ?? []) as Camp[]);
     });
   }, []);
+
+  useEffect(() => {
+    if (mode !== "dm" || contacts.length > 0) return;
+    setContactsLoading(true);
+    listMessageableContacts()
+      .then((rows) => setContacts(rows))
+      .catch((e) => setError(e.message ?? "Failed to load contacts"))
+      .finally(() => setContactsLoading(false));
+  }, [mode]);
 
   async function createGroup() {
     if (!user || !campId) return;
@@ -309,6 +324,30 @@ function NewConvoSheet({ onClose, onCreated }: { onClose: () => void; onCreated:
     onCreated(data.id);
   }
 
+  async function createDm() {
+    if (!user || !contactId) return;
+    setCreating(true);
+    setError(null);
+    const { data, error: err } = await supabase
+      .from("conversations")
+      .insert({ type: "dm", created_by: user.id })
+      .select("id")
+      .single();
+    if (err) { setError(err.message); setCreating(false); return; }
+    await supabase.from("conversation_members").insert({ conversation_id: data.id, user_id: user.id });
+    setCreating(false);
+    onCreated(data.id);
+  }
+
+  const filteredContacts = contacts.filter((c) => {
+    const q = contactSearch.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      (c.full_name ?? "").toLowerCase().includes(q) ||
+      (c.email ?? "").toLowerCase().includes(q)
+    );
+  });
+
   return (
     <div onClick={onClose} className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm">
       <div onClick={(e) => e.stopPropagation()} className="w-full max-w-[480px] rounded-t-3xl border-t border-border bg-background p-5">
@@ -316,30 +355,89 @@ function NewConvoSheet({ onClose, onCreated }: { onClose: () => void; onCreated:
           <h2 className="font-display text-lg font-bold text-foreground">New conversation</h2>
           <button onClick={onClose} className="rounded-full bg-surface p-1.5 text-muted-foreground"><X size={14} /></button>
         </div>
-        <p className="mt-1 text-[11px] text-muted-foreground">Start a group chat tied to one of your camps.</p>
 
-        <label className="mt-4 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Camp</label>
-        <select
-          value={campId}
-          onChange={(e) => setCampId(e.target.value)}
-          className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-foreground"
-        >
-          <option value="">Select a camp…</option>
-          {camps.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button onClick={() => setMode("camp")} className={"flex items-center justify-center gap-1.5 rounded-xl border py-2 text-xs font-bold " + (mode === "camp" ? "border-teal bg-teal/10 text-teal" : "border-border bg-surface text-muted-foreground")}>
+            <Users size={12} /> Camp group
+          </button>
+          <button onClick={() => setMode("dm")} className={"flex items-center justify-center gap-1.5 rounded-xl border py-2 text-xs font-bold " + (mode === "dm" ? "border-teal bg-teal/10 text-teal" : "border-border bg-surface text-muted-foreground")}>
+            <User size={12} /> Direct message
+          </button>
+        </div>
 
-        {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
-
-        <button
-          disabled={!campId || creating}
-          onClick={createGroup}
-          className="mt-5 w-full rounded-full bg-gradient-brand py-3 text-sm font-bold text-primary-foreground disabled:opacity-40"
-        >
-          {creating ? "Creating…" : "Create group"}
-        </button>
-        <p className="mt-3 text-center text-[10px] text-muted-foreground">
-          Invite parents from the camp roster once they have an account.
-        </p>
+        {mode === "camp" ? (
+          <>
+            <p className="mt-3 text-[11px] text-muted-foreground">Start a group chat tied to one of your camps.</p>
+            <label className="mt-4 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Camp</label>
+            <select
+              value={campId}
+              onChange={(e) => setCampId(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-foreground"
+            >
+              <option value="">Select a camp…</option>
+              {camps.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
+            <button
+              disabled={!campId || creating}
+              onClick={createGroup}
+              className="mt-5 w-full rounded-full bg-gradient-brand py-3 text-sm font-bold text-primary-foreground disabled:opacity-40"
+            >
+              {creating ? "Creating…" : "Create group"}
+            </button>
+            <p className="mt-3 text-center text-[10px] text-muted-foreground">
+              Invite parents from the camp roster once they have an account.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="mt-3 text-[11px] text-muted-foreground">
+              You can only message parents your role allows. Coaches and assistants see contacts from their assigned camps only.
+            </p>
+            <input
+              value={contactSearch}
+              onChange={(e) => setContactSearch(e.target.value)}
+              placeholder="Search by name or email…"
+              className="mt-3 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60"
+            />
+            <div className="mt-2 max-h-64 overflow-y-auto rounded-xl border border-border bg-surface">
+              {contactsLoading ? (
+                <p className="p-4 text-center text-xs text-muted-foreground">Loading contacts…</p>
+              ) : filteredContacts.length === 0 ? (
+                <p className="p-4 text-center text-xs text-muted-foreground">
+                  {contacts.length === 0 ? "No contacts available with your permission level." : "No matches."}
+                </p>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {filteredContacts.map((c) => (
+                    <li key={c.id}>
+                      <button
+                        onClick={() => setContactId(c.id)}
+                        className={"flex w-full items-center gap-2 px-3 py-2 text-left " + (contactId === c.id ? "bg-teal/10" : "")}
+                      >
+                        <div className="grid h-7 w-7 place-items-center rounded-full bg-teal/15 text-[10px] font-bold text-teal">
+                          {(c.full_name ?? c.email).slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs font-semibold text-foreground">{c.full_name || c.email}</p>
+                          <p className="truncate text-[10px] text-muted-foreground">{c.email}</p>
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
+            <button
+              disabled={!contactId || creating}
+              onClick={createDm}
+              className="mt-4 w-full rounded-full bg-gradient-brand py-3 text-sm font-bold text-primary-foreground disabled:opacity-40"
+            >
+              {creating ? "Starting…" : "Start direct message"}
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
