@@ -316,6 +316,13 @@ function CampDetailPage() {
         >
           <Camera size={16} className="text-teal" /> Photos
         </Link>
+        <Link
+          to="/coach/camps/$campId/updates"
+          params={{ campId }}
+          className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-card py-3 text-[11px] font-semibold text-foreground hover:border-teal/40"
+        >
+          <Bell size={16} className="text-teal" /> Updates
+        </Link>
       </div>
 
       {/* Visual camp schedule */}
