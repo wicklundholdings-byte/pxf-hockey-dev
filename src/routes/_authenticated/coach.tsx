@@ -48,10 +48,10 @@ function CoachLayout() {
             </Link>
             <button
               onClick={() => setRecorderOpen(true)}
-              className="rounded-full border border-border bg-surface p-1.5 text-muted-foreground hover:text-foreground"
+              className="flex items-center gap-1 rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-primary-foreground"
               aria-label="Record film"
             >
-              <Camera size={14} />
+              <Camera size={12} /> Film
             </button>
             <Link to="/coach/family" className="rounded-full border border-border bg-surface p-1.5 text-muted-foreground hover:text-foreground" aria-label="My Family">
               <Heart size={14} />
