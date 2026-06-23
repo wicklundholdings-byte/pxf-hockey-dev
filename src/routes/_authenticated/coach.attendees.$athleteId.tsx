@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, Mail, Phone, Calendar, TrendingUp, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Calendar, TrendingUp, CheckCircle2, XCircle, Activity } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/attendees/$athleteId")({
   component: AthleteProfile,
@@ -34,6 +34,15 @@ function AthleteProfile() {
     <div className="space-y-4">
       <Link to="/coach/attendees" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
         <ArrowLeft size={12} /> All attendees
+      </Link>
+
+      <Link
+        to="/combine/$athleteId"
+        params={{ athleteId }}
+        className="flex items-center justify-between rounded-xl border border-teal/40 bg-teal/10 px-3 py-2 text-xs font-semibold text-teal"
+      >
+        <span className="flex items-center gap-2"><Activity size={14} /> View PXF Combine profile</span>
+        <span>→</span>
       </Link>
 
       <div className="rounded-2xl border border-border bg-card p-4">
