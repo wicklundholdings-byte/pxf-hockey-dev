@@ -282,6 +282,91 @@ export const saveLineup = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const saveGameLineup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: {
+    teamId: string; eventId: string;
+    positions: Record<string, string | null>;
+    ppUnits: Record<string, (string | null)[]>;
+    pkUnits: Record<string, (string | null)[]>;
+    scratches: string[];
+    templateName?: string | null;
+    isShared?: boolean;
+  }) => d)
+  .handler(async ({ data, context }) => {
+    const { data: existing } = await context.supabase
+      .from("game_lineups").select("id").eq("event_id", data.eventId).maybeSingle();
+    const payload = {
+      team_id: data.teamId,
+      event_id: data.eventId,
+      positions: data.positions,
+      pp_units: data.ppUnits,
+      pk_units: data.pkUnits,
+      scratches: data.scratches,
+      template_name: data.templateName ?? null,
+      is_shared: data.isShared ?? false,
+      created_by: context.userId,
+    };
+    if (existing?.id) {
+      const { error } = await context.supabase.from("game_lineups").update(payload).eq("id", existing.id);
+      if (error) throw new Error(error.message);
+      return { id: existing.id };
+    }
+    const { data: row, error } = await context.supabase.from("game_lineups").insert(payload).select("id").single();
+    if (error) throw new Error(error.message);
+    return { id: row.id };
+  });
+
+export const saveGamePlan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: {
+    teamId: string; eventId: string;
+    opponentNotes?: string; ourGameplan?: string;
+    matchups: Array<{ ourPlayer: string; theirPlayer: string; notes?: string }>;
+    drillIds: string[]; videoClipIds: string[];
+  }) => d)
+  .handler(async ({ data, context }) => {
+    const payload = {
+      team_id: data.teamId,
+      event_id: data.eventId,
+      opponent_notes: data.opponentNotes ?? null,
+      our_gameplan: data.ourGameplan ?? null,
+      matchups: data.matchups,
+      drill_ids: data.drillIds,
+      video_clip_ids: data.videoClipIds,
+      created_by: context.userId,
+    };
+    const { error } = await context.supabase
+      .from("game_plans")
+      .upsert(payload, { onConflict: "event_id" });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const saveCoachGameNotes = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: {
+    teamId: string; eventId: string;
+    pepTalk?: string;
+    periodNotes: { p1?: string; p2?: string; p3?: string };
+    postGameNotes?: string;
+  }) => d)
+  .handler(async ({ data, context }) => {
+    const payload = {
+      team_id: data.teamId,
+      event_id: data.eventId,
+      pep_talk: data.pepTalk ?? null,
+      period_notes: data.periodNotes,
+      post_game_notes: data.postGameNotes ?? null,
+      created_by: context.userId,
+    };
+    const { error } = await context.supabase
+      .from("coach_game_notes")
+      .upsert(payload, { onConflict: "event_id" });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const recordGameStats = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { teamId: string; teamPlayerId: string; season?: string; goals?: number; assists?: number; penaltyMinutes?: number; gamesPlayed?: number }) => d)
