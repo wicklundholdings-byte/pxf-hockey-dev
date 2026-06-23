@@ -28,13 +28,10 @@ export function MetaPixel({
     if (!coachId) return;
     let cancelled = false;
     (supabase as any)
-      .from("coach_marketing_settings")
-      .select("meta_pixel_id")
-      .eq("coach_id", coachId)
-      .maybeSingle()
-      .then(({ data }: { data: { meta_pixel_id: string | null } | null }) => {
+      .rpc("get_meta_pixel_id", { _coach_id: coachId })
+      .then(({ data }: { data: string | null }) => {
         if (cancelled) return;
-        setPixelId(data?.meta_pixel_id ?? null);
+        setPixelId(data ?? null);
       });
     return () => { cancelled = true; };
   }, [coachId]);
