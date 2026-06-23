@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { DollarSign, TrendingUp, Users, CalendarDays, Activity, Wallet, Repeat, BarChart3, ChevronRight, UserSquare2, ClipboardCheck, UserCog, AlertTriangle } from "lucide-react";
+import { DollarSign, TrendingUp, Users, CalendarDays, Activity, Wallet, Repeat, BarChart3, ChevronRight, UserSquare2, ClipboardCheck, UserCog, AlertTriangle, Snowflake } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip, CartesianGrid } from "recharts";
 import { StatusBadge } from "@/components/coach/status-badge";
 import { TodaysAttendanceCard } from "@/components/coach/todays-attendance-card";
@@ -24,15 +24,18 @@ function CoachDashboard() {
   const [contactCount, setContactCount] = useState(0);
   const [unassignedCampIds, setUnassignedCampIds] = useState<string[]>([]);
   const [outstandingCount, setOutstandingCount] = useState(0);
+  const [unscheduledIce, setUnscheduledIce] = useState(0);
+  const [unscheduledIceHours, setUnscheduledIceHours] = useState(0);
 
   useEffect(() => {
     (async () => {
-      const [c, r, ct, st, ps] = await Promise.all([
+      const [c, r, ct, st, ps, ice] = await Promise.all([
         supabase.from("camps").select("id,name,slug,capacity,status,start_date,price_cents").order("start_date", { ascending: true }),
         supabase.from("registrations").select("id,status,amount_cents,created_at,camp_id,attendee_id,contact_id").order("created_at", { ascending: false }),
         supabase.from("contacts").select("*", { count: "exact", head: true }),
         (supabase as any).from("camp_staff").select("camp_id"),
         (supabase as any).from("attendee_payment_status").select("registration_id, payment_status").in("payment_status", ["pending", "overdue"]),
+        (supabase as any).from("ice_slots").select("id,start_time,end_time,slot_date").is("camp_id", null).gte("slot_date", new Date().toISOString().slice(0, 10)),
       ]);
       setCamps((c.data ?? []) as Camp[]);
       setRegs((r.data ?? []) as Reg[]);
@@ -41,6 +44,15 @@ function CoachDashboard() {
       const upcomingCamps = ((c.data ?? []) as Camp[]).filter((cc) => cc.status !== "ended");
       setUnassignedCampIds(upcomingCamps.filter((cc) => !staffed.has(cc.id)).map((cc) => cc.id));
       setOutstandingCount(((ps.data as any[]) ?? []).length);
+      const slots = (ice.data as any[]) ?? [];
+      setUnscheduledIce(slots.length);
+      const mins = slots.reduce((acc, s) => {
+        if (!s.start_time || !s.end_time) return acc;
+        const [sh, sm] = String(s.start_time).split(":").map(Number);
+        const [eh, em] = String(s.end_time).split(":").map(Number);
+        return acc + Math.max(0, (eh * 60 + em) - (sh * 60 + sm));
+      }, 0);
+      setUnscheduledIceHours(Math.round((mins / 60) * 10) / 10);
     })();
   }, []);
 
@@ -93,8 +105,18 @@ function CoachDashboard() {
   return (
     <div className="space-y-5">
       <TodaysAttendanceCard />
-      {(unassignedCampIds.length > 0 || outstandingCount > 0) && (
+      {(unassignedCampIds.length > 0 || outstandingCount > 0 || unscheduledIce > 0) && (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {unscheduledIce > 0 && (
+            <Link to="/coach/ice" className="flex items-center gap-3 rounded-2xl border border-teal/40 bg-teal/5 p-3">
+              <Snowflake size={18} className="text-teal" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-foreground">{unscheduledIce} ice slot{unscheduledIce === 1 ? "" : "s"} not assigned to a camp</p>
+                <p className="text-[10px] text-muted-foreground">{unscheduledIceHours}h unscheduled · tap to schedule</p>
+              </div>
+              <ChevronRight size={14} className="text-muted-foreground" />
+            </Link>
+          )}
           {unassignedCampIds.length > 0 && (
             <Link to="/coach/team" className="flex items-center gap-3 rounded-2xl border border-orange-500/40 bg-orange-500/5 p-3">
               <AlertTriangle size={18} className="text-orange-500" />
@@ -133,6 +155,7 @@ function CoachDashboard() {
       {/* Quick access */}
       <div className="grid grid-cols-2 gap-2">
         {[
+          { to: "/coach/ice", label: "Ice Times", icon: Snowflake, accent: "text-teal" },
           { to: "/coach/financials", label: "Financials", icon: Wallet, accent: "text-teal" },
           { to: "/coach/memberships", label: "Memberships", icon: Repeat, accent: "text-volt" },
           { to: "/coach/analytics", label: "Analytics", icon: BarChart3, accent: "text-emerald-400" },
