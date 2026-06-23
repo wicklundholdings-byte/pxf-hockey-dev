@@ -476,3 +476,87 @@ function UnassignedCampsCard({ camps, assignments }: { camps: Camp[]; assignment
     </div>
   );
 }
+
+function ScheduleOverview({ members, camps, assignments }: { members: Member[]; camps: Camp[]; assignments: Assignment[] }) {
+  // Next 14 days
+  const days = useMemo(() => {
+    const out: Date[] = [];
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      out.push(d);
+    }
+    return out;
+  }, []);
+
+  function campsForMemberOnDay(memberId: string, day: Date): Camp[] {
+    const ymd = day.toISOString().slice(0, 10);
+    return assignments
+      .filter((a) => a.team_member_id === memberId)
+      .map((a) => camps.find((c) => c.id === a.camp_id))
+      .filter((c): c is Camp => !!c && !!c.start_date)
+      .filter((c) => {
+        const s = c.start_date!;
+        const e = c.end_date ?? c.start_date!;
+        return ymd >= s && ymd <= e;
+      });
+  }
+
+  if (members.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-surface p-6 text-center text-xs text-muted-foreground">
+        No active staff yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-[10px] text-muted-foreground">Next 14 days · tap a member to filter view</p>
+      <div className="space-y-2">
+        {members.map((m) => {
+          const totalCamps = assignments.filter((a) => a.team_member_id === m.id).length;
+          return (
+            <div key={m.id} className="rounded-2xl border border-border/60 bg-surface p-3">
+              <div className="mb-2 flex items-center gap-2">
+                <div className="grid h-8 w-8 place-items-center rounded-full bg-teal/15 text-[10px] font-bold text-teal">
+                  {m.email.slice(0, 2).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-semibold text-foreground">{m.title}</p>
+                  <p className="truncate text-[10px] text-muted-foreground">
+                    {m.permission_level} · {totalCamps} camp{totalCamps === 1 ? "" : "s"} total
+                  </p>
+                </div>
+                {m.home_area_label && (
+                  <span className="flex items-center gap-1 rounded-full bg-card px-2 py-0.5 text-[10px] text-muted-foreground">
+                    <MapPin size={10} /> {m.home_area_label}
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-1 overflow-x-auto pb-1">
+                {days.map((d, idx) => {
+                  const dayCamps = campsForMemberOnDay(m.id, d);
+                  const busy = dayCamps.length > 0;
+                  return (
+                    <div key={idx} className={"min-w-[44px] shrink-0 rounded-lg border px-1 py-1 text-center " + (busy ? "border-teal/40 bg-teal/10" : "border-border bg-card")}>
+                      <p className="text-[9px] uppercase text-muted-foreground">{d.toLocaleDateString("en-US", { weekday: "short" })}</p>
+                      <p className="text-[11px] font-bold text-foreground">{d.getDate()}</p>
+                      {busy && (
+                        <p className="mt-0.5 truncate text-[8px] font-bold text-teal" title={dayCamps.map((c) => c.name).join(", ")}>
+                          {dayCamps.length} ●
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
