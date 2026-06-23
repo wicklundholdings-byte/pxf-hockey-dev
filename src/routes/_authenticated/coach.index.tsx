@@ -164,25 +164,6 @@ function CoachDashboard() {
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-4 gap-2">
-        {[
-          { to: "/coach/camps/new", label: "Create Camp", icon: CalendarPlus },
-          { to: "/coach/camps/new", label: "Create Session", icon: Layers },
-          { to: "/coach/ice", label: "Add Ice Time", icon: Snowflake },
-          { to: "/coach/broadcast", label: "Broadcast", icon: Megaphone },
-        ].map((q) => (
-          <Link
-            key={q.label}
-            to={q.to}
-            className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/60 bg-surface px-2 py-3 text-center transition-colors hover:border-teal/40"
-          >
-            <q.icon size={18} className="text-teal" />
-            <span className="text-[10px] font-semibold leading-tight text-foreground">{q.label}</span>
-          </Link>
-        ))}
-      </div>
-
       {/* Quick Access */}
       <div className="grid grid-cols-4 gap-2">
         {[
