@@ -32,8 +32,8 @@ export function RecoveryCard({ athleteId }: { athleteId: string | null | undefin
   useEffect(() => {
     if (!athleteId) { setLoading(false); return; }
     let cancelled = false;
-    supabase
-      .from("athlete_device_connections" as never)
+    (supabase as any)
+      .from("athlete_device_connections")
       .select("provider, last_synced_at, resting_hr, hrv, sleep_score, recovery_score, daily_strain")
       .eq("athlete_id", athleteId)
       .then(({ data }: { data: Connection[] | null }) => {
