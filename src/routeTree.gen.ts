@@ -109,6 +109,7 @@ import { Route as AuthenticatedCoachCampsNewRouteImport } from './routes/_authen
 import { Route as AuthenticatedCoachCampsCampIdRouteImport } from './routes/_authenticated/coach.camps.$campId'
 import { Route as AuthenticatedCoachAttendeesAthleteIdRouteImport } from './routes/_authenticated/coach.attendees.$athleteId'
 import { Route as AuthenticatedCoachSessionsSessionIdReviewRouteImport } from './routes/_authenticated/coach.sessions.$sessionId.review'
+import { Route as AuthenticatedCoachCampsCampIdUpdatesRouteImport } from './routes/_authenticated/coach.camps.$campId.updates'
 import { Route as AuthenticatedCoachCampsCampIdSessionPlansRouteImport } from './routes/_authenticated/coach.camps.$campId.session-plans'
 import { Route as AuthenticatedCoachCampsCampIdReviewsRouteImport } from './routes/_authenticated/coach.camps.$campId.reviews'
 import { Route as AuthenticatedCoachCampsCampIdPhotosRouteImport } from './routes/_authenticated/coach.camps.$campId.photos'
@@ -643,6 +644,12 @@ const AuthenticatedCoachSessionsSessionIdReviewRoute =
     path: '/sessions/$sessionId/review',
     getParentRoute: () => AuthenticatedCoachRoute,
   } as any)
+const AuthenticatedCoachCampsCampIdUpdatesRoute =
+  AuthenticatedCoachCampsCampIdUpdatesRouteImport.update({
+    id: '/updates',
+    path: '/updates',
+    getParentRoute: () => AuthenticatedCoachCampsCampIdRoute,
+  } as any)
 const AuthenticatedCoachCampsCampIdSessionPlansRoute =
   AuthenticatedCoachCampsCampIdSessionPlansRouteImport.update({
     id: '/session-plans',
@@ -791,6 +798,7 @@ export interface FileRoutesByFullPath {
   '/coach/camps/$campId/photos': typeof AuthenticatedCoachCampsCampIdPhotosRoute
   '/coach/camps/$campId/reviews': typeof AuthenticatedCoachCampsCampIdReviewsRoute
   '/coach/camps/$campId/session-plans': typeof AuthenticatedCoachCampsCampIdSessionPlansRoute
+  '/coach/camps/$campId/updates': typeof AuthenticatedCoachCampsCampIdUpdatesRoute
   '/coach/sessions/$sessionId/review': typeof AuthenticatedCoachSessionsSessionIdReviewRoute
   '/coach/camps/$campId/evaluations/$athleteId': typeof AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute
 }
@@ -894,6 +902,7 @@ export interface FileRoutesByTo {
   '/coach/camps/$campId/photos': typeof AuthenticatedCoachCampsCampIdPhotosRoute
   '/coach/camps/$campId/reviews': typeof AuthenticatedCoachCampsCampIdReviewsRoute
   '/coach/camps/$campId/session-plans': typeof AuthenticatedCoachCampsCampIdSessionPlansRoute
+  '/coach/camps/$campId/updates': typeof AuthenticatedCoachCampsCampIdUpdatesRoute
   '/coach/sessions/$sessionId/review': typeof AuthenticatedCoachSessionsSessionIdReviewRoute
   '/coach/camps/$campId/evaluations/$athleteId': typeof AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute
 }
@@ -1004,6 +1013,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/camps/$campId/photos': typeof AuthenticatedCoachCampsCampIdPhotosRoute
   '/_authenticated/coach/camps/$campId/reviews': typeof AuthenticatedCoachCampsCampIdReviewsRoute
   '/_authenticated/coach/camps/$campId/session-plans': typeof AuthenticatedCoachCampsCampIdSessionPlansRoute
+  '/_authenticated/coach/camps/$campId/updates': typeof AuthenticatedCoachCampsCampIdUpdatesRoute
   '/_authenticated/coach/sessions/$sessionId/review': typeof AuthenticatedCoachSessionsSessionIdReviewRoute
   '/_authenticated/coach/camps/$campId/evaluations/$athleteId': typeof AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute
 }
@@ -1114,6 +1124,7 @@ export interface FileRouteTypes {
     | '/coach/camps/$campId/photos'
     | '/coach/camps/$campId/reviews'
     | '/coach/camps/$campId/session-plans'
+    | '/coach/camps/$campId/updates'
     | '/coach/sessions/$sessionId/review'
     | '/coach/camps/$campId/evaluations/$athleteId'
   fileRoutesByTo: FileRoutesByTo
@@ -1217,6 +1228,7 @@ export interface FileRouteTypes {
     | '/coach/camps/$campId/photos'
     | '/coach/camps/$campId/reviews'
     | '/coach/camps/$campId/session-plans'
+    | '/coach/camps/$campId/updates'
     | '/coach/sessions/$sessionId/review'
     | '/coach/camps/$campId/evaluations/$athleteId'
   id:
@@ -1326,6 +1338,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach/camps/$campId/photos'
     | '/_authenticated/coach/camps/$campId/reviews'
     | '/_authenticated/coach/camps/$campId/session-plans'
+    | '/_authenticated/coach/camps/$campId/updates'
     | '/_authenticated/coach/sessions/$sessionId/review'
     | '/_authenticated/coach/camps/$campId/evaluations/$athleteId'
   fileRoutesById: FileRoutesById
@@ -2083,6 +2096,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachSessionsSessionIdReviewRouteImport
       parentRoute: typeof AuthenticatedCoachRoute
     }
+    '/_authenticated/coach/camps/$campId/updates': {
+      id: '/_authenticated/coach/camps/$campId/updates'
+      path: '/updates'
+      fullPath: '/coach/camps/$campId/updates'
+      preLoaderRoute: typeof AuthenticatedCoachCampsCampIdUpdatesRouteImport
+      parentRoute: typeof AuthenticatedCoachCampsCampIdRoute
+    }
     '/_authenticated/coach/camps/$campId/session-plans': {
       id: '/_authenticated/coach/camps/$campId/session-plans'
       path: '/session-plans'
@@ -2191,6 +2211,7 @@ interface AuthenticatedCoachCampsCampIdRouteChildren {
   AuthenticatedCoachCampsCampIdPhotosRoute: typeof AuthenticatedCoachCampsCampIdPhotosRoute
   AuthenticatedCoachCampsCampIdReviewsRoute: typeof AuthenticatedCoachCampsCampIdReviewsRoute
   AuthenticatedCoachCampsCampIdSessionPlansRoute: typeof AuthenticatedCoachCampsCampIdSessionPlansRoute
+  AuthenticatedCoachCampsCampIdUpdatesRoute: typeof AuthenticatedCoachCampsCampIdUpdatesRoute
   AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute: typeof AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute
 }
 
@@ -2208,6 +2229,8 @@ const AuthenticatedCoachCampsCampIdRouteChildren: AuthenticatedCoachCampsCampIdR
       AuthenticatedCoachCampsCampIdReviewsRoute,
     AuthenticatedCoachCampsCampIdSessionPlansRoute:
       AuthenticatedCoachCampsCampIdSessionPlansRoute,
+    AuthenticatedCoachCampsCampIdUpdatesRoute:
+      AuthenticatedCoachCampsCampIdUpdatesRoute,
     AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute:
       AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute,
   }
