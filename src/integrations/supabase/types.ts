@@ -2083,6 +2083,7 @@ export type Database = {
         Args: { _conv: string; _user: string }
         Returns: boolean
       }
+      is_parent_of_camp: { Args: { _camp_id: string }; Returns: boolean }
       my_team_membership: {
         Args: never
         Returns: {

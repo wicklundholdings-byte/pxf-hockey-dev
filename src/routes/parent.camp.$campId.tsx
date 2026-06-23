@@ -2,7 +2,7 @@ import { createFileRoute, useParams, Link, useNavigate } from "@tanstack/react-r
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { CalendarDays, MapPin, Users, MessageCircle, Info, ChevronLeft, Clock, Check, X } from "lucide-react";
+import { CalendarDays, MapPin, Users, MessageCircle, Info, ChevronLeft, Clock, Check, X, Shield } from "lucide-react";
 import { CalendarSyncButton } from "@/components/calendar-sync-button";
 
 export const Route = createFileRoute("/parent/camp/$campId")({
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/parent/camp/$campId")({
   component: ParentCampDetail,
 });
 
-type Tab = "schedule" | "roster" | "inbox" | "info";
+type Tab = "schedule" | "staff" | "roster" | "inbox" | "info";
 
 function fmtDate(d: string | null) {
   if (!d) return "TBA";
@@ -42,6 +42,7 @@ function ParentCampDetail() {
   const [rsvps, setRsvps] = useState<Array<{ id: string; camp_session_id: string; status: string; registration_id: string }>>([]);
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [openingDm, setOpeningDm] = useState(false);
+  const [staff, setStaff] = useState<Array<{ user_id: string; name: string; role: string; subtitle?: string }>>([]);
 
   useEffect(() => {
     (async () => {
@@ -57,6 +58,38 @@ function ParentCampDetail() {
       ]);
       setSessions(s ?? []);
       setRosterCount(count ?? 0);
+
+      // Load staff: head coach (camp owner) + assigned team members with linked accounts
+      const staffList: Array<{ user_id: string; name: string; role: string; subtitle?: string }> = [];
+      if (c?.owner_id) {
+        const { data: ownerProfile } = await supabase
+          .from("profiles")
+          .select("full_name, email")
+          .eq("id", c.owner_id)
+          .maybeSingle();
+        staffList.push({
+          user_id: c.owner_id,
+          name: ownerProfile?.full_name || ownerProfile?.email || "Head Coach",
+          role: "Head Coach",
+          subtitle: ownerProfile?.email ?? undefined,
+        });
+      }
+      const { data: cs } = await (supabase as any)
+        .from("camp_staff")
+        .select("team_members(id, title, email, member_user_id, permission_level)")
+        .eq("camp_id", campId);
+      for (const row of (cs ?? []) as any[]) {
+        const tm = row.team_members;
+        if (!tm?.member_user_id) continue;
+        if (tm.member_user_id === c?.owner_id) continue;
+        staffList.push({
+          user_id: tm.member_user_id,
+          name: tm.title || tm.email || "Staff",
+          role: tm.permission_level === "coach" ? "Coach" : "Assistant Coach",
+          subtitle: tm.email ?? undefined,
+        });
+      }
+      setStaff(staffList);
 
       // Find this parent's registrations for this camp via contacts(email)
       const parentEmail = user?.email ?? "";
@@ -109,8 +142,8 @@ function ParentCampDetail() {
     setSavingKey(null);
   }
 
-  async function openCoachDm() {
-    if (!user || !camp?.owner_id) return;
+  async function openDm(targetUserId: string) {
+    if (!user || !targetUserId) return;
     setOpeningDm(true);
     let conversationId: string | null = null;
 
@@ -128,7 +161,7 @@ function ParentCampDetail() {
         .from("conversation_members")
         .select("conversation_id")
         .in("conversation_id", ids)
-        .eq("user_id", camp.owner_id);
+        .eq("user_id", targetUserId);
       if (coachMemberships && coachMemberships.length > 0) {
         conversationId = coachMemberships[0].conversation_id;
       }
@@ -147,12 +180,16 @@ function ParentCampDetail() {
       conversationId = conv.id;
       await supabase.from("conversation_members").insert([
         { conversation_id: conversationId, user_id: user.id },
-        { conversation_id: conversationId, user_id: camp.owner_id },
+        { conversation_id: conversationId, user_id: targetUserId },
       ]);
     }
 
     setOpeningDm(false);
     navigate({ to: "/parent/conversation/$conversationId", params: { conversationId } });
+  }
+
+  async function openCoachDm() {
+    if (camp?.owner_id) await openDm(camp.owner_id);
   }
 
   return (
@@ -184,7 +221,7 @@ function ParentCampDetail() {
 
         {/* Sub-tabs */}
         <div className="mt-5 flex gap-1 rounded-2xl border border-border bg-card p-1">
-          {(["schedule", "roster", "inbox", "info"] as Tab[]).map((t) => (
+          {(["schedule", "staff", "roster", "inbox", "info"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -272,6 +309,37 @@ function ParentCampDetail() {
               <p className="mt-3 font-display text-3xl font-bold">{rosterCount}</p>
               <p className="text-xs text-muted-foreground">athletes enrolled</p>
               <p className="mt-3 text-[11px] text-muted-foreground">Names are kept private for everyone's safety.</p>
+            </div>
+          )}
+
+          {tab === "staff" && (
+            <div className="space-y-2">
+              {staff.length === 0 && (
+                <div className="rounded-2xl border border-border bg-card p-6 text-center text-xs text-muted-foreground">
+                  No staff assigned yet.
+                </div>
+              )}
+              {staff.map((m) => (
+                <div key={m.user_id} className="flex items-center gap-3 rounded-2xl border border-border bg-card px-3 py-3">
+                  <div className="grid h-10 w-10 place-items-center rounded-full bg-teal/15 text-[11px] font-bold text-teal">
+                    {m.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="truncate text-sm font-semibold text-foreground">{m.name}</p>
+                      {m.role === "Head Coach" && <Shield size={11} className="text-teal" />}
+                    </div>
+                    <p className="truncate text-[11px] text-muted-foreground">{m.role}{m.subtitle ? ` · ${m.subtitle}` : ""}</p>
+                  </div>
+                  <button
+                    onClick={() => openDm(m.user_id)}
+                    disabled={openingDm}
+                    className="inline-flex items-center gap-1 rounded-full bg-gradient-brand px-3 py-1.5 text-[10px] font-bold text-primary-foreground disabled:opacity-40"
+                  >
+                    <MessageCircle size={11} /> Message
+                  </button>
+                </div>
+              ))}
             </div>
           )}
 
