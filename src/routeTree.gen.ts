@@ -51,6 +51,7 @@ import { Route as PaymentsCouponRouteImport } from './routes/payments.coupon'
 import { Route as PaymentsConnectRouteImport } from './routes/payments.connect'
 import { Route as PaymentsConfirmationRouteImport } from './routes/payments.confirmation'
 import { Route as PaymentsCheckoutRouteImport } from './routes/payments.checkout'
+import { Route as ParentUpdatesRouteImport } from './routes/parent.updates'
 import { Route as ParentTrainRouteImport } from './routes/parent.train'
 import { Route as ParentScheduleRouteImport } from './routes/parent.schedule'
 import { Route as ParentProfileRouteImport } from './routes/parent.profile'
@@ -81,7 +82,6 @@ import { Route as CampsSlugRegisterRouteImport } from './routes/camps.$slug.regi
 import { Route as CampsSlugPaymentRouteImport } from './routes/camps.$slug.payment'
 import { Route as CampsSlugHealthRouteImport } from './routes/camps.$slug.health'
 import { Route as CampsSlugConfirmedRouteImport } from './routes/camps.$slug.confirmed'
-import { Route as AuthenticatedParentUpdatesRouteImport } from './routes/_authenticated/parent.updates'
 import { Route as AuthenticatedHomeCoachSessionsRouteImport } from './routes/_authenticated/home-coach.sessions'
 import { Route as AuthenticatedHomeCoachProfileRouteImport } from './routes/_authenticated/home-coach.profile'
 import { Route as AuthenticatedHomeCoachInboxRouteImport } from './routes/_authenticated/home-coach.inbox'
@@ -347,6 +347,11 @@ const PaymentsCheckoutRoute = PaymentsCheckoutRouteImport.update({
   path: '/payments/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ParentUpdatesRoute = ParentUpdatesRouteImport.update({
+  id: '/updates',
+  path: '/updates',
+  getParentRoute: () => ParentRoute,
+} as any)
 const ParentTrainRoute = ParentTrainRouteImport.update({
   id: '/train',
   path: '/train',
@@ -498,12 +503,6 @@ const CampsSlugConfirmedRoute = CampsSlugConfirmedRouteImport.update({
   path: '/confirmed',
   getParentRoute: () => CampsSlugRoute,
 } as any)
-const AuthenticatedParentUpdatesRoute =
-  AuthenticatedParentUpdatesRouteImport.update({
-    id: '/parent/updates',
-    path: '/parent/updates',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedHomeCoachSessionsRoute =
   AuthenticatedHomeCoachSessionsRouteImport.update({
     id: '/sessions',
@@ -868,6 +867,7 @@ export interface FileRoutesByFullPath {
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
   '/parent/train': typeof ParentTrainRouteWithChildren
+  '/parent/updates': typeof ParentUpdatesRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
@@ -911,7 +911,6 @@ export interface FileRoutesByFullPath {
   '/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
   '/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
-  '/parent/updates': typeof AuthenticatedParentUpdatesRoute
   '/camps/$slug/confirmed': typeof CampsSlugConfirmedRoute
   '/camps/$slug/health': typeof CampsSlugHealthRoute
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
@@ -992,6 +991,7 @@ export interface FileRoutesByTo {
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
   '/parent/train': typeof ParentTrainRouteWithChildren
+  '/parent/updates': typeof ParentUpdatesRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
@@ -1034,7 +1034,6 @@ export interface FileRoutesByTo {
   '/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
   '/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
-  '/parent/updates': typeof AuthenticatedParentUpdatesRoute
   '/camps/$slug/confirmed': typeof CampsSlugConfirmedRoute
   '/camps/$slug/health': typeof CampsSlugHealthRoute
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
@@ -1121,6 +1120,7 @@ export interface FileRoutesById {
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
   '/parent/train': typeof ParentTrainRouteWithChildren
+  '/parent/updates': typeof ParentUpdatesRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
@@ -1164,7 +1164,6 @@ export interface FileRoutesById {
   '/_authenticated/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
   '/_authenticated/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/_authenticated/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
-  '/_authenticated/parent/updates': typeof AuthenticatedParentUpdatesRoute
   '/camps/$slug/confirmed': typeof CampsSlugConfirmedRoute
   '/camps/$slug/health': typeof CampsSlugHealthRoute
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
@@ -1252,6 +1251,7 @@ export interface FileRouteTypes {
     | '/parent/profile'
     | '/parent/schedule'
     | '/parent/train'
+    | '/parent/updates'
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
@@ -1295,7 +1295,6 @@ export interface FileRouteTypes {
     | '/home-coach/inbox'
     | '/home-coach/profile'
     | '/home-coach/sessions'
-    | '/parent/updates'
     | '/camps/$slug/confirmed'
     | '/camps/$slug/health'
     | '/camps/$slug/payment'
@@ -1376,6 +1375,7 @@ export interface FileRouteTypes {
     | '/parent/profile'
     | '/parent/schedule'
     | '/parent/train'
+    | '/parent/updates'
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
@@ -1418,7 +1418,6 @@ export interface FileRouteTypes {
     | '/home-coach/inbox'
     | '/home-coach/profile'
     | '/home-coach/sessions'
-    | '/parent/updates'
     | '/camps/$slug/confirmed'
     | '/camps/$slug/health'
     | '/camps/$slug/payment'
@@ -1504,6 +1503,7 @@ export interface FileRouteTypes {
     | '/parent/profile'
     | '/parent/schedule'
     | '/parent/train'
+    | '/parent/updates'
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
@@ -1547,7 +1547,6 @@ export interface FileRouteTypes {
     | '/_authenticated/home-coach/inbox'
     | '/_authenticated/home-coach/profile'
     | '/_authenticated/home-coach/sessions'
-    | '/_authenticated/parent/updates'
     | '/camps/$slug/confirmed'
     | '/camps/$slug/health'
     | '/camps/$slug/payment'
@@ -1940,6 +1939,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PaymentsCheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/parent/updates': {
+      id: '/parent/updates'
+      path: '/updates'
+      fullPath: '/parent/updates'
+      preLoaderRoute: typeof ParentUpdatesRouteImport
+      parentRoute: typeof ParentRoute
+    }
     '/parent/train': {
       id: '/parent/train'
       path: '/train'
@@ -2149,13 +2155,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/camps/$slug/confirmed'
       preLoaderRoute: typeof CampsSlugConfirmedRouteImport
       parentRoute: typeof CampsSlugRoute
-    }
-    '/_authenticated/parent/updates': {
-      id: '/_authenticated/parent/updates'
-      path: '/parent/updates'
-      fullPath: '/parent/updates'
-      preLoaderRoute: typeof AuthenticatedParentUpdatesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/home-coach/sessions': {
       id: '/_authenticated/home-coach/sessions'
@@ -2793,14 +2792,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedCoachRoute: typeof AuthenticatedCoachRouteWithChildren
   AuthenticatedHomeCoachRoute: typeof AuthenticatedHomeCoachRouteWithChildren
-  AuthenticatedParentUpdatesRoute: typeof AuthenticatedParentUpdatesRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedCoachRoute: AuthenticatedCoachRouteWithChildren,
   AuthenticatedHomeCoachRoute: AuthenticatedHomeCoachRouteWithChildren,
-  AuthenticatedParentUpdatesRoute: AuthenticatedParentUpdatesRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -2842,6 +2839,7 @@ interface ParentRouteChildren {
   ParentProfileRoute: typeof ParentProfileRoute
   ParentScheduleRoute: typeof ParentScheduleRoute
   ParentTrainRoute: typeof ParentTrainRouteWithChildren
+  ParentUpdatesRoute: typeof ParentUpdatesRoute
   ParentIndexRoute: typeof ParentIndexRoute
   ParentCampCampIdRoute: typeof ParentCampCampIdRoute
   ParentConversationConversationIdRoute: typeof ParentConversationConversationIdRoute
@@ -2855,6 +2853,7 @@ const ParentRouteChildren: ParentRouteChildren = {
   ParentProfileRoute: ParentProfileRoute,
   ParentScheduleRoute: ParentScheduleRoute,
   ParentTrainRoute: ParentTrainRouteWithChildren,
+  ParentUpdatesRoute: ParentUpdatesRoute,
   ParentIndexRoute: ParentIndexRoute,
   ParentCampCampIdRoute: ParentCampCampIdRoute,
   ParentConversationConversationIdRoute: ParentConversationConversationIdRoute,

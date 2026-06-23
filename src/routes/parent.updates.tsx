@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Star, Tag, Video, Calendar as CalIcon } from "lucide-react";
 import { listSharedNotesForParent } from "@/lib/athlete-notes.functions";
 
-export const Route = createFileRoute("/_authenticated/parent/updates")({
+export const Route = createFileRoute("/parent/updates")({
   component: ParentUpdates,
 });
 
