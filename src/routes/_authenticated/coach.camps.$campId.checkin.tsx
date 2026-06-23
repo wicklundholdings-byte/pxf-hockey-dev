@@ -225,6 +225,11 @@ function CheckinPage() {
               const cgList = r.attendee_id ? (caregivers.get(r.attendee_id) ?? []) : [];
               const noCaregivers = r.attendee_id && cgList.length === 0;
               const present = attendance.get(r.id) === true;
+              const hp = r.attendee_id ? health.get(r.attendee_id) : undefined;
+              const allergyCats = hp?.allergies?.categories ?? [];
+              const hasAllergies = allergyCats.length > 0 && !allergyCats.includes("none");
+              const hasConditions = !!(hp?.conditions && hp.conditions.trim());
+              const medicalAlert = hasAllergies || hasConditions;
               return (
                 <li key={r.id} className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2">
                   <span className={"grid h-7 w-7 place-items-center rounded-full text-[10px] font-bold " + (present ? "bg-emerald-500/20 text-emerald-400" : "bg-surface text-muted-foreground")}>
@@ -233,6 +238,16 @@ function CheckinPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <p className="truncate text-xs font-semibold text-foreground">{name}</p>
+                      {medicalAlert && (
+                        <button
+                          type="button"
+                          onClick={() => setMedicalFor(r)}
+                          title="Medical alert — tap for details"
+                          className="flex items-center gap-0.5 rounded-full bg-red-500/20 px-1.5 py-0.5 text-[9px] font-bold text-red-400 hover:bg-red-500/30"
+                        >
+                          <HeartPulse size={9} /> MEDICAL
+                        </button>
+                      )}
                       {noCaregivers && (
                         <span title="No authorized caregivers on file" className="flex items-center gap-0.5 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold text-amber-300">
                           <ShieldAlert size={9} /> NO PICKUP
@@ -264,6 +279,14 @@ function CheckinPage() {
           reg={pickupFor}
           caregivers={(pickupFor.attendee_id && caregivers.get(pickupFor.attendee_id)) || []}
           onClose={() => setPickupFor(null)}
+        />
+      )}
+
+      {medicalFor && medicalFor.attendee_id && (
+        <MedicalSheet
+          reg={medicalFor}
+          profile={health.get(medicalFor.attendee_id) ?? null}
+          onClose={() => setMedicalFor(null)}
         />
       )}
     </div>
