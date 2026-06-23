@@ -293,6 +293,42 @@ function NewCampWizard() {
         {step === 3 && (
           <div className="space-y-4">
             <h2 className="font-display text-base font-bold text-foreground">Location & time</h2>
+            {availableSlots.length > 0 && (
+              <div className="rounded-xl border border-teal/30 bg-teal/5 p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Snowflake size={14} className="text-teal" />
+                    <span className="text-xs font-bold text-foreground">Pick ice times for this camp</span>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">{selectedIceSlotIds.length} selected</span>
+                </div>
+                <p className="mb-2 text-[10px] text-muted-foreground">Selecting slots auto-fills dates, times, and venue below.</p>
+                <ul className="max-h-56 space-y-1 overflow-y-auto pr-1">
+                  {availableSlots.map((s) => {
+                    const checked = selectedIceSlotIds.includes(s.id);
+                    const dateLabel = new Date(s.slot_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+                    return (
+                      <li key={s.id}>
+                        <label className={"flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-2 text-[11px] transition " + (checked ? "border-teal bg-teal/10" : "border-border bg-surface hover:border-teal/60")}>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              setSelectedIceSlotIds((prev) => e.target.checked ? [...prev, s.id] : prev.filter((x) => x !== s.id));
+                            }}
+                            className="h-3.5 w-3.5 accent-teal"
+                          />
+                          {s.rinks?.color && <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: s.rinks.color }} />}
+                          <span className="font-semibold text-foreground">{dateLabel}</span>
+                          <span className="text-muted-foreground">{String(s.start_time).slice(0, 5)}–{String(s.end_time).slice(0, 5)}</span>
+                          <span className="truncate text-muted-foreground">· {s.rinks?.name ?? "Rink"}</span>
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
             <div className="grid grid-cols-3 gap-2">
               {([
                 { v: "venue" as const, t: "Venue" },
