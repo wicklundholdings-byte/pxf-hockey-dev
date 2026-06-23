@@ -133,9 +133,7 @@ export function SessionVideoReview({
             videoUrl={open.video_url}
             mediaId={open.id}
             athleteName={athleteNames?.[open.athlete_id]}
-            onSendToAthlete={async () => {
-              await update({ data: { id: open.id, is_shared: true } });
-              alert("Sent to parent inbox.");
+            onSendToAthlete={() => {
               refresh();
             }}
           />
