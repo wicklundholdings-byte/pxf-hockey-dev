@@ -40,7 +40,7 @@ function WaiverScreen() {
     if (!waiverRequired && !loading) {
       // No waiver required — auto-advance.
       update({ waiver: { signer_name: draft.parent.full_name, agreed_at: new Date().toISOString() } });
-      navigate({ to: "/camps/$slug/payment", params: { slug }, replace: true });
+      navigate({ to: "/camps/$slug/health", params: { slug }, replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [waiverRequired, loading]);
@@ -55,7 +55,7 @@ function WaiverScreen() {
     update({
       waiver: { signer_name: signature.trim(), agreed_at: new Date().toISOString() },
     });
-    navigate({ to: "/camps/$slug/payment", params: { slug } });
+    navigate({ to: "/camps/$slug/health", params: { slug } });
   }
 
   if (loading || !hydrated) {
