@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare, LogOut, ShieldCheck, ChevronRight, UserCog } from "lucide-react";
+import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare, LogOut, ShieldCheck, ChevronRight, UserCog, Calculator } from "lucide-react";
 import { LayoutDashboard, CalendarDays, BookOpen, MessageSquare as InboxIcon, Users, Flag, MessageCircle } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { useAuth, useHasCoachAccess, useUserAppRole } from "@/hooks/use-auth";
@@ -125,6 +125,29 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
   const verified = useCoachVerified(user?.id);
   const [marketplaceOn, setMarketplaceOn] = useState(false);
   const [marketplaceLoaded, setMarketplaceLoaded] = useState(false);
+  const [accounting, setAccounting] = useState<Record<string, { status: string; account_name: string | null; last_synced_at: string | null }>>({});
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    supabase
+      .from("accounting_connections")
+      .select("provider, status, account_name, last_synced_at")
+      .eq("owner_id", user.id)
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        const map: Record<string, { status: string; account_name: string | null; last_synced_at: string | null }> = {};
+        for (const row of data) {
+          map[row.provider as string] = {
+            status: row.status,
+            account_name: row.account_name,
+            last_synced_at: row.last_synced_at,
+          };
+        }
+        setAccounting(map);
+      });
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user?.id) return;
