@@ -267,6 +267,41 @@ function PaymentScreen() {
           {couponErr && <p className="mt-2 text-[11px] text-destructive">{couponErr}</p>}
         </section>
 
+        {/* Wallet (Apple Pay / Google Pay) */}
+        {walletKind && (
+          <section className="rounded-2xl border border-border bg-card p-4">
+            <h2 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+              <Smartphone size={12} className="text-teal" /> Express checkout
+            </h2>
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={pay}
+              className={
+                "mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-bold disabled:opacity-60 " +
+                (walletKind === "apple"
+                  ? "bg-black text-white"
+                  : "bg-white text-black border border-border")
+              }
+            >
+              {walletKind === "apple" ? (
+                <>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M16.365 1.43c0 1.14-.41 2.21-1.23 3.03-.83.84-1.95 1.41-3.03 1.31-.13-1.1.42-2.27 1.18-3.02C14.1 1.91 15.31 1.46 16.365 1.43zM20.5 17.55c-.55 1.27-.81 1.83-1.52 2.95-.98 1.54-2.36 3.46-4.07 3.48-1.52.01-1.91-.99-3.97-.98-2.06.01-2.49.99-4.01.98-1.71-.03-3.02-1.77-4-3.31C.18 16.43-.32 11.34 1.65 8.66c1.4-1.9 3.61-3.02 5.69-3.02 2.12 0 3.45.99 5.2.99 1.7 0 2.73-.99 5.18-.99 1.86 0 3.82 1.01 5.22 2.76-4.6 2.52-3.85 9.09 1.56 11.15z"/></svg>
+                  Pay with Apple Pay
+                </>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.75h3.57c2.08-1.92 3.28-4.74 3.28-8.07z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.75c-.99.66-2.26 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.12c-.22-.66-.35-1.36-.35-2.12s.13-1.46.35-2.12V7.04H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.96l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.04l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>
+                  Pay with Google Pay
+                </>
+              )}
+            </button>
+            <div className="mt-3 flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+              <span className="h-px flex-1 bg-border" /> or pay with card <span className="h-px flex-1 bg-border" />
+            </div>
+          </section>
+        )}
+
         {/* Payment form (placeholder; mirrors current booking flow) */}
         <section className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center justify-between">
