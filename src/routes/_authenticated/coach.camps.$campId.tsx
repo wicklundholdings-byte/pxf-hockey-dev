@@ -925,64 +925,92 @@ function CampStaffSection({ campId }: { campId: string }) {
   }
 
   const assignedTeam = team.filter((m) => assigned.some((a) => a.team_member_id === m.id));
+  const unassignedTeam = team.filter((m) => !assigned.some((a) => a.team_member_id === m.id));
 
   return (
-    <section className="space-y-2">
+    <section className="rounded-2xl border border-teal/30 bg-teal/5 p-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-[10px] font-bold uppercase tracking-wider text-foreground">Staff</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Staff</h2>
+          {assignedTeam.length > 0 && (
+            <span className="rounded-full bg-teal/20 px-2 py-0.5 text-[10px] font-bold text-teal">
+              {assignedTeam.length}
+            </span>
+          )}
+        </div>
         <button onClick={() => setPicking((v) => !v)} className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 py-1 text-[10px] font-bold text-foreground">
           <Plus size={10} /> {picking ? "Done" : "Assign Staff"}
         </button>
       </div>
+
       {assignedTeam.length === 0 && !picking && (
-        <button onClick={() => setPicking(true)} className="w-full rounded-2xl border border-dashed border-border bg-card p-4 text-center text-[11px] font-semibold text-muted-foreground">
+        <button onClick={() => setPicking(true)} className="mt-3 w-full rounded-2xl border border-dashed border-border bg-card p-4 text-center text-[11px] font-semibold text-muted-foreground">
           No staff assigned yet. Tap to assign a coach.
         </button>
       )}
-      {assignedTeam.length > 0 && (
-        <ul className="space-y-1.5">
+
+      {assignedTeam.length > 0 && !picking && (
+        <ul className="mt-3 space-y-2">
           {assignedTeam.map((m) => (
-            <li key={m.id} className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2">
-              <div className="grid h-8 w-8 place-items-center rounded-full bg-teal/15 text-[10px] font-bold text-teal">{m.email.slice(0, 2).toUpperCase()}</div>
+            <li key={m.id} className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5">
+              <div className="grid h-9 w-9 place-items-center rounded-full bg-teal/15 text-[11px] font-bold text-teal">{m.email.slice(0, 2).toUpperCase()}</div>
               <div className="flex-1 min-w-0">
-                <p className="truncate text-xs font-semibold text-foreground">{m.title}</p>
-                <p className="truncate text-[10px] text-muted-foreground">{m.email}</p>
+                <p className="truncate text-sm font-semibold text-foreground">{m.title}</p>
+                <p className="truncate text-[11px] text-muted-foreground">{m.email}</p>
               </div>
-              <span className="rounded-full bg-surface px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{m.permission_level}</span>
+              <span className="rounded-full bg-surface px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{m.permission_level}</span>
               <button
                 onClick={() => toggle(m.id)}
                 title="Remove from camp"
                 className="ml-1 rounded-full bg-destructive/15 p-1.5 text-destructive hover:bg-destructive/25"
               >
-                <X size={12} />
+                <X size={14} />
               </button>
             </li>
           ))}
         </ul>
       )}
+
       {picking && (
-        <div className="space-y-1.5 rounded-2xl border border-border bg-card p-2">
-          {team.length === 0 ? (
-            <p className="px-2 py-3 text-center text-[11px] text-muted-foreground">
-              No team members yet. Invite some from Settings → My Team.
-            </p>
-          ) : (
-            team.map((m) => {
-              const isAssigned = assigned.some((a) => a.team_member_id === m.id);
-              return (
-                <div key={m.id}
-                  className={"flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left " + (isAssigned ? "border-teal bg-teal/10" : "border-border bg-surface")}>
-                  <div className="grid h-8 w-8 place-items-center rounded-full bg-card text-[10px] font-bold text-foreground">{m.email.slice(0, 2).toUpperCase()}</div>
+        <div className="mt-3 space-y-2">
+          {assignedTeam.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Assigned</p>
+              {assignedTeam.map((m) => (
+                <div key={m.id} className="flex items-center gap-3 rounded-xl border border-teal bg-teal/10 px-3 py-2.5">
+                  <div className="grid h-9 w-9 place-items-center rounded-full bg-card text-[11px] font-bold text-foreground">{m.email.slice(0, 2).toUpperCase()}</div>
                   <div className="flex-1 min-w-0">
-                    <p className="truncate text-xs font-semibold text-foreground">{m.title}</p>
-                    <p className="truncate text-[10px] text-muted-foreground">{m.email} · {m.permission_level}</p>
+                    <p className="truncate text-sm font-semibold text-foreground">{m.title}</p>
+                    <p className="truncate text-[11px] text-muted-foreground">{m.email} · {m.permission_level}</p>
                   </div>
-                  <button onClick={() => toggle(m.id)} className={"rounded-full px-3 py-1.5 text-[10px] font-bold " + (isAssigned ? "bg-destructive/15 text-destructive" : "bg-gradient-brand text-primary-foreground")}>
-                    {isAssigned ? "Remove" : "Assign"}
+                  <button onClick={() => toggle(m.id)} className="rounded-full bg-destructive/15 px-3 py-1.5 text-[10px] font-bold text-destructive">
+                    Remove
                   </button>
                 </div>
-              );
-            })
+              ))}
+            </div>
+          )}
+          {unassignedTeam.length > 0 && (
+            <div className="space-y-2">
+              {assignedTeam.length > 0 && <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Available</p>}
+              {unassignedTeam.map((m) => (
+                <div key={m.id} className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5">
+                  <div className="grid h-9 w-9 place-items-center rounded-full bg-surface text-[11px] font-bold text-foreground">{m.email.slice(0, 2).toUpperCase()}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate text-sm font-semibold text-foreground">{m.title}</p>
+                    <p className="truncate text-[11px] text-muted-foreground">{m.email} · {m.permission_level}</p>
+                  </div>
+                  <button onClick={() => toggle(m.id)} className="rounded-full bg-gradient-brand px-3 py-1.5 text-[10px] font-bold text-primary-foreground">
+                    Assign
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {team.length === 0 && (
+            <p className="py-3 text-center text-[11px] text-muted-foreground">
+              No team members yet. Invite some from Settings → My Team.
+            </p>
           )}
         </div>
       )}
