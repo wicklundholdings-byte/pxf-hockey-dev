@@ -2084,6 +2084,10 @@ export type Database = {
         Returns: boolean
       }
       is_parent_of_camp: { Args: { _camp_id: string }; Returns: boolean }
+      is_team_member_visible_to_parent: {
+        Args: { _team_member_id: string }
+        Returns: boolean
+      }
       my_team_membership: {
         Args: never
         Returns: {
