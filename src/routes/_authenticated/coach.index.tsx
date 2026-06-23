@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { DollarSign, TrendingUp, Users, CalendarDays, Activity, BarChart3, ChevronRight, AlertTriangle, Snowflake, CalendarPlus, Layers, Megaphone, Plus } from "lucide-react";
+import { DollarSign, TrendingUp, Users, CalendarDays, Activity, BarChart3, ChevronRight, AlertTriangle, Snowflake, CalendarPlus, Plus } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip, CartesianGrid } from "recharts";
 import { StatusBadge } from "@/components/coach/status-badge";
 import { TodaysAttendanceCard } from "@/components/coach/todays-attendance-card";
@@ -161,25 +161,6 @@ function CoachDashboard() {
             </div>
             <div className={"mt-1 font-display text-xl font-bold " + s.accent}>{s.value}</div>
           </div>
-        ))}
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-4 gap-2">
-        {[
-          { to: "/coach/camps/new", label: "Create Camp", icon: CalendarPlus },
-          { to: "/coach/camps/new", label: "Create Session", icon: Layers },
-          { to: "/coach/ice", label: "Add Ice Time", icon: Snowflake },
-          { to: "/coach/broadcast", label: "Broadcast", icon: Megaphone },
-        ].map((q) => (
-          <Link
-            key={q.label}
-            to={q.to}
-            className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/60 bg-surface px-2 py-3 text-center transition-colors hover:border-teal/40"
-          >
-            <q.icon size={18} className="text-teal" />
-            <span className="text-[10px] font-semibold leading-tight text-foreground">{q.label}</span>
-          </Link>
         ))}
       </div>
 
