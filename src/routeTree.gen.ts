@@ -81,6 +81,7 @@ import { Route as CampsSlugRegisterRouteImport } from './routes/camps.$slug.regi
 import { Route as CampsSlugPaymentRouteImport } from './routes/camps.$slug.payment'
 import { Route as CampsSlugHealthRouteImport } from './routes/camps.$slug.health'
 import { Route as CampsSlugConfirmedRouteImport } from './routes/camps.$slug.confirmed'
+import { Route as AuthenticatedParentUpdatesRouteImport } from './routes/_authenticated/parent.updates'
 import { Route as AuthenticatedHomeCoachSessionsRouteImport } from './routes/_authenticated/home-coach.sessions'
 import { Route as AuthenticatedHomeCoachProfileRouteImport } from './routes/_authenticated/home-coach.profile'
 import { Route as AuthenticatedHomeCoachInboxRouteImport } from './routes/_authenticated/home-coach.inbox'
@@ -497,6 +498,12 @@ const CampsSlugConfirmedRoute = CampsSlugConfirmedRouteImport.update({
   path: '/confirmed',
   getParentRoute: () => CampsSlugRoute,
 } as any)
+const AuthenticatedParentUpdatesRoute =
+  AuthenticatedParentUpdatesRouteImport.update({
+    id: '/parent/updates',
+    path: '/parent/updates',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedHomeCoachSessionsRoute =
   AuthenticatedHomeCoachSessionsRouteImport.update({
     id: '/sessions',
@@ -904,6 +911,7 @@ export interface FileRoutesByFullPath {
   '/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
   '/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
+  '/parent/updates': typeof AuthenticatedParentUpdatesRoute
   '/camps/$slug/confirmed': typeof CampsSlugConfirmedRoute
   '/camps/$slug/health': typeof CampsSlugHealthRoute
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
@@ -1026,6 +1034,7 @@ export interface FileRoutesByTo {
   '/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
   '/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
+  '/parent/updates': typeof AuthenticatedParentUpdatesRoute
   '/camps/$slug/confirmed': typeof CampsSlugConfirmedRoute
   '/camps/$slug/health': typeof CampsSlugHealthRoute
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
@@ -1155,6 +1164,7 @@ export interface FileRoutesById {
   '/_authenticated/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
   '/_authenticated/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/_authenticated/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
+  '/_authenticated/parent/updates': typeof AuthenticatedParentUpdatesRoute
   '/camps/$slug/confirmed': typeof CampsSlugConfirmedRoute
   '/camps/$slug/health': typeof CampsSlugHealthRoute
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
@@ -1285,6 +1295,7 @@ export interface FileRouteTypes {
     | '/home-coach/inbox'
     | '/home-coach/profile'
     | '/home-coach/sessions'
+    | '/parent/updates'
     | '/camps/$slug/confirmed'
     | '/camps/$slug/health'
     | '/camps/$slug/payment'
@@ -1407,6 +1418,7 @@ export interface FileRouteTypes {
     | '/home-coach/inbox'
     | '/home-coach/profile'
     | '/home-coach/sessions'
+    | '/parent/updates'
     | '/camps/$slug/confirmed'
     | '/camps/$slug/health'
     | '/camps/$slug/payment'
@@ -1535,6 +1547,7 @@ export interface FileRouteTypes {
     | '/_authenticated/home-coach/inbox'
     | '/_authenticated/home-coach/profile'
     | '/_authenticated/home-coach/sessions'
+    | '/_authenticated/parent/updates'
     | '/camps/$slug/confirmed'
     | '/camps/$slug/health'
     | '/camps/$slug/payment'
@@ -2136,6 +2149,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/camps/$slug/confirmed'
       preLoaderRoute: typeof CampsSlugConfirmedRouteImport
       parentRoute: typeof CampsSlugRoute
+    }
+    '/_authenticated/parent/updates': {
+      id: '/_authenticated/parent/updates'
+      path: '/parent/updates'
+      fullPath: '/parent/updates'
+      preLoaderRoute: typeof AuthenticatedParentUpdatesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/home-coach/sessions': {
       id: '/_authenticated/home-coach/sessions'
@@ -2773,12 +2793,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedCoachRoute: typeof AuthenticatedCoachRouteWithChildren
   AuthenticatedHomeCoachRoute: typeof AuthenticatedHomeCoachRouteWithChildren
+  AuthenticatedParentUpdatesRoute: typeof AuthenticatedParentUpdatesRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedCoachRoute: AuthenticatedCoachRouteWithChildren,
   AuthenticatedHomeCoachRoute: AuthenticatedHomeCoachRouteWithChildren,
+  AuthenticatedParentUpdatesRoute: AuthenticatedParentUpdatesRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
