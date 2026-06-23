@@ -2,6 +2,7 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X, ListChecks, BookOpen, ListPlus, ShieldCheck, QrCode, Bell, ChevronDown, ChevronRight, ClipboardList, MessageSquare, Camera, Hourglass, Star, Wallet, Lock, PlayCircle, Check } from "lucide-react";
+import { VenueMap } from "@/components/venue-map";
 import { StatusBadge } from "@/components/coach/status-badge";
 import { QRScannerModal } from "@/components/coach/qr-scanner";
 import { ApplyCampTemplate } from "@/components/coach/apply-camp-template";
@@ -260,6 +261,10 @@ function CampDetailPage() {
         <Stat label="Pending" value={String(stats.pending)} tone="amber" />
         <Stat label="Revenue" value={`$${(stats.revenue / 100).toLocaleString()}`} tone="teal" />
       </div>
+
+      {(camp.venue_name || camp.address) && camp.location_type !== "online" && (
+        <VenueMap venueName={camp.venue_name} address={camp.address} />
+      )}
 
       {/* Primary actions */}
       <div className="grid grid-cols-2 gap-2">
