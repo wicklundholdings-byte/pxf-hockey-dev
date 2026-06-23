@@ -71,6 +71,7 @@ import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as ParentConversationConversationIdRouteImport } from './routes/parent.conversation.$conversationId'
 import { Route as ParentCampCampIdRouteImport } from './routes/parent.camp.$campId'
+import { Route as CombineShareTokenRouteImport } from './routes/combine.share.$token'
 import { Route as CampsSlugWaiverRouteImport } from './routes/camps.$slug.waiver'
 import { Route as CampsSlugRegisterRouteImport } from './routes/camps.$slug.register'
 import { Route as CampsSlugPaymentRouteImport } from './routes/camps.$slug.payment'
@@ -422,6 +423,11 @@ const ParentCampCampIdRoute = ParentCampCampIdRouteImport.update({
   path: '/camp/$campId',
   getParentRoute: () => ParentRoute,
 } as any)
+const CombineShareTokenRoute = CombineShareTokenRouteImport.update({
+  id: '/combine/share/$token',
+  path: '/combine/share/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CampsSlugWaiverRoute = CampsSlugWaiverRouteImport.update({
   id: '/waiver',
   path: '/waiver',
@@ -739,6 +745,7 @@ export interface FileRoutesByFullPath {
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
+  '/combine/share/$token': typeof CombineShareTokenRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -837,6 +844,7 @@ export interface FileRoutesByTo {
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
+  '/combine/share/$token': typeof CombineShareTokenRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -942,6 +950,7 @@ export interface FileRoutesById {
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
+  '/combine/share/$token': typeof CombineShareTokenRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -1047,6 +1056,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/payment'
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
+    | '/combine/share/$token'
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
     | '/admin/'
@@ -1145,6 +1155,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/payment'
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
+    | '/combine/share/$token'
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
     | '/admin'
@@ -1249,6 +1260,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/payment'
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
+    | '/combine/share/$token'
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
     | '/_authenticated/admin/'
@@ -1316,6 +1328,7 @@ export interface RootRouteChildren {
   StoreCartRoute: typeof StoreCartRoute
   CampsIndexRoute: typeof CampsIndexRoute
   StoreIndexRoute: typeof StoreIndexRoute
+  CombineShareTokenRoute: typeof CombineShareTokenRoute
   ApiPublicHooksRsvpRemindersRoute: typeof ApiPublicHooksRsvpRemindersRoute
 }
 
@@ -1754,6 +1767,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/parent/camp/$campId'
       preLoaderRoute: typeof ParentCampCampIdRouteImport
       parentRoute: typeof ParentRoute
+    }
+    '/combine/share/$token': {
+      id: '/combine/share/$token'
+      path: '/combine/share/$token'
+      fullPath: '/combine/share/$token'
+      preLoaderRoute: typeof CombineShareTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/camps/$slug/waiver': {
       id: '/camps/$slug/waiver'
@@ -2310,6 +2330,7 @@ const rootRouteChildren: RootRouteChildren = {
   StoreCartRoute: StoreCartRoute,
   CampsIndexRoute: CampsIndexRoute,
   StoreIndexRoute: StoreIndexRoute,
+  CombineShareTokenRoute: CombineShareTokenRoute,
   ApiPublicHooksRsvpRemindersRoute: ApiPublicHooksRsvpRemindersRoute,
 }
 export const routeTree = rootRouteImport
