@@ -33,21 +33,12 @@ function PublicCombineShare() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data: sh } = await (supabase as any)
-        .from("combine_public_shares")
-        .select("athlete_id")
-        .eq("token", token)
-        .is("revoked_at", null)
-        .maybeSingle();
-      const share = sh as Share | null;
-      if (!share) { if (!cancelled) setLoading(false); return; }
-      const [{ data: s }, { data: a }] = await Promise.all([
-        (supabase as any).from("combine_scores").select("category, score, percentile, global_rank").eq("athlete_id", share.athlete_id),
-        supabase.from("attendees").select("full_name, age_group, position").eq("id", share.athlete_id).maybeSingle(),
-      ]);
+      const { data } = await (supabase as any).rpc("get_combine_share", { _token: token });
       if (cancelled) return;
-      setScores((s as Score[]) ?? []);
-      setAthlete(a as Athlete | null);
+      if (data) {
+        setAthlete(data.athlete as Athlete);
+        setScores((data.scores ?? []) as Score[]);
+      }
       setLoading(false);
     })();
     return () => { cancelled = true; };
