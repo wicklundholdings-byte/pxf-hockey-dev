@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounting_connections: {
+        Row: {
+          access_token: string | null
+          account_name: string | null
+          created_at: string
+          id: string
+          last_synced_at: string | null
+          owner_id: string
+          provider: Database["public"]["Enums"]["accounting_provider"]
+          realm_id: string | null
+          refresh_token: string | null
+          status: string
+          tenant_id: string | null
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          account_name?: string | null
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          owner_id: string
+          provider: Database["public"]["Enums"]["accounting_provider"]
+          realm_id?: string | null
+          refresh_token?: string | null
+          status?: string
+          tenant_id?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          account_name?: string | null
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          owner_id?: string
+          provider?: Database["public"]["Enums"]["accounting_provider"]
+          realm_id?: string | null
+          refresh_token?: string | null
+          status?: string
+          tenant_id?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       attendance: {
         Row: {
           id: string
@@ -2102,6 +2150,7 @@ export type Database = {
       }
     }
     Enums: {
+      accounting_provider: "quickbooks" | "xero"
       app_role: "admin" | "user"
       camp_format: "camp" | "session"
       camp_status: "draft" | "live" | "ended"
@@ -2258,6 +2307,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      accounting_provider: ["quickbooks", "xero"],
       app_role: ["admin", "user"],
       camp_format: ["camp", "session"],
       camp_status: ["draft", "live", "ended"],
