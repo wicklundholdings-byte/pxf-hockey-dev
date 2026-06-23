@@ -140,12 +140,14 @@ export function getTier(id: TierId): Tier {
 
 // Feature gate keys → minimum tier required.
 export const FEATURE_MIN_TIER: Record<string, TierId> = {
-  campManagement: "elite",
-  publicRegistration: "elite",
+  campManagement: "team",          // private camps available on Team+; full mgmt on Elite+
+  publicRegistration: "elite",     // public registration links only on Elite+
   stripePayouts: "elite",
-  privateBooking: "team",
+  privateSessionBooking: "team",   // 1-on-1 bookings available Team+
   teamManagement: "association",
   drillLibrary: "association",
+  staffManagement: "elite",        // multi-staff on Elite+
+  academyFeatures: "academy",      // org-wide analytics, multi-coach dashboard
   multipleCoaches: "academy",
 };
 
@@ -154,14 +156,31 @@ export function gateMessage(feature: keyof typeof FEATURE_MIN_TIER): string {
   const tier = getTier(min);
   switch (feature) {
     case "campManagement":
+      return "Camp management is available on Team Coach and above";
     case "publicRegistration":
+      return "Public camp registration is available on Elite Coach";
     case "stripePayouts":
-      return `${tier.name === "Elite Coach" ? "This feature" : tier.name} is available on ${tier.name} and above`;
-    case "privateBooking":
+      return "Stripe payouts are available on Elite Coach";
+    case "privateSessionBooking":
       return "Private session booking is available on Team Coach and above";
+    case "staffManagement":
+      return "Staff management is available on Elite Coach and above";
+    case "academyFeatures":
     case "multipleCoaches":
       return "Multi-coach organizations are available on Academy";
     default:
       return `Available on ${tier.name} and above`;
   }
+}
+
+// Map subscriptions.plan_name (stored in DB) → TierId. Case-insensitive.
+export function tierFromPlanName(planName?: string | null): TierId | null {
+  if (!planName) return null;
+  const p = planName.toLowerCase();
+  if (p.includes("academy")) return "academy";
+  if (p.includes("elite")) return "elite";
+  if (p.includes("team")) return "team";
+  if (p.includes("association")) return "association";
+  if (p.includes("parent")) return "parent";
+  return null;
 }
