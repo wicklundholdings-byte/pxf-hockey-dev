@@ -3,10 +3,19 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { DollarSign, TrendingUp, Wallet, Tag, Plus, X, Copy, CheckCircle2, BarChart3, Percent, Download } from "lucide-react";
+import { TierGate } from "@/components/tier-gate";
 
 export const Route = createFileRoute("/_authenticated/coach/financials")({
-  component: FinancialsPage,
+  component: GatedFinancials,
 });
+
+function GatedFinancials() {
+  return (
+    <TierGate feature="stripePayouts">
+      <FinancialsPage />
+    </TierGate>
+  );
+}
 
 type Reg = {
   id: string;
