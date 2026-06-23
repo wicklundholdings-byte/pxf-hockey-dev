@@ -248,8 +248,8 @@ function GamePlanTab({ teamId, eventId }: { teamId: string; eventId: string }) {
     (async () => {
       const p = await supabase.from("team_players").select("id,display_name,jersey_number").eq("team_id", teamId).order("display_name");
       setPlayers((p.data ?? []) as Player[]);
-      const d = await supabase.from("drills").select("id,name").order("name").limit(200);
-      setDrills((d.data ?? []) as Drill[]);
+      const d = await supabase.from("drills").select("id,title").order("title").limit(200);
+      setDrills(((d.data ?? []) as Array<{ id: string; title: string }>).map((x) => ({ id: x.id, name: x.title })));
       const gp = await supabase.from("game_plans").select("*").eq("event_id", eventId).maybeSingle();
       if (gp.data) {
         setOpponentNotes(gp.data.opponent_notes ?? "");
