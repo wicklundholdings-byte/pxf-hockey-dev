@@ -118,6 +118,69 @@ export type Database = {
           },
         ]
       }
+      athlete_media: {
+        Row: {
+          annotation_status: Database["public"]["Enums"]["media_annotation_status"]
+          athlete_id: string
+          caption: string | null
+          coach_id: string
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          is_shared: boolean
+          recorded_at: string
+          session_id: string | null
+          thumbnail_url: string | null
+          updated_at: string
+          video_url: string
+        }
+        Insert: {
+          annotation_status?: Database["public"]["Enums"]["media_annotation_status"]
+          athlete_id: string
+          caption?: string | null
+          coach_id: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          is_shared?: boolean
+          recorded_at?: string
+          session_id?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          video_url: string
+        }
+        Update: {
+          annotation_status?: Database["public"]["Enums"]["media_annotation_status"]
+          athlete_id?: string
+          caption?: string | null
+          coach_id?: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          is_shared?: boolean
+          recorded_at?: string
+          session_id?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_media_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_media_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "camp_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance: {
         Row: {
           id: string
@@ -2407,6 +2470,47 @@ export type Database = {
         }
         Relationships: []
       }
+      video_annotations: {
+        Row: {
+          annotation_data: Json | null
+          annotation_type: string
+          created_at: string
+          created_by: string
+          frame_timestamp: number | null
+          id: string
+          media_id: string
+          voiceover_url: string | null
+        }
+        Insert: {
+          annotation_data?: Json | null
+          annotation_type: string
+          created_at?: string
+          created_by: string
+          frame_timestamp?: number | null
+          id?: string
+          media_id: string
+          voiceover_url?: string | null
+        }
+        Update: {
+          annotation_data?: Json | null
+          annotation_type?: string
+          created_at?: string
+          created_by?: string
+          frame_timestamp?: number | null
+          id?: string
+          media_id?: string
+          voiceover_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_annotations_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "athlete_media"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       waitlist_entries: {
         Row: {
           attendee_id: string | null
@@ -2659,6 +2763,7 @@ export type Database = {
       email_campaign_status: "draft" | "scheduled" | "sent"
       email_marketing_provider: "mailchimp" | "klaviyo"
       location_type: "venue" | "online" | "tba"
+      media_annotation_status: "raw" | "reviewed" | "annotated"
       order_status: "pending" | "paid" | "refunded" | "failed"
       payment_plan: "none" | "two" | "three"
       registration_status:
@@ -2831,6 +2936,7 @@ export const Constants = {
       email_campaign_status: ["draft", "scheduled", "sent"],
       email_marketing_provider: ["mailchimp", "klaviyo"],
       location_type: ["venue", "online", "tba"],
+      media_annotation_status: ["raw", "reviewed", "annotated"],
       order_status: ["pending", "paid", "refunded", "failed"],
       payment_plan: ["none", "two", "three"],
       registration_status: [

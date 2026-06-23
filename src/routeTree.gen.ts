@@ -106,6 +106,7 @@ import { Route as AuthenticatedCoachContactsContactIdRouteImport } from './route
 import { Route as AuthenticatedCoachCampsNewRouteImport } from './routes/_authenticated/coach.camps.new'
 import { Route as AuthenticatedCoachCampsCampIdRouteImport } from './routes/_authenticated/coach.camps.$campId'
 import { Route as AuthenticatedCoachAttendeesAthleteIdRouteImport } from './routes/_authenticated/coach.attendees.$athleteId'
+import { Route as AuthenticatedCoachSessionsSessionIdReviewRouteImport } from './routes/_authenticated/coach.sessions.$sessionId.review'
 import { Route as AuthenticatedCoachCampsCampIdSessionPlansRouteImport } from './routes/_authenticated/coach.camps.$campId.session-plans'
 import { Route as AuthenticatedCoachCampsCampIdReviewsRouteImport } from './routes/_authenticated/coach.camps.$campId.reviews'
 import { Route as AuthenticatedCoachCampsCampIdPhotosRouteImport } from './routes/_authenticated/coach.camps.$campId.photos'
@@ -624,6 +625,12 @@ const AuthenticatedCoachAttendeesAthleteIdRoute =
     path: '/$athleteId',
     getParentRoute: () => AuthenticatedCoachAttendeesRoute,
   } as any)
+const AuthenticatedCoachSessionsSessionIdReviewRoute =
+  AuthenticatedCoachSessionsSessionIdReviewRouteImport.update({
+    id: '/sessions/$sessionId/review',
+    path: '/sessions/$sessionId/review',
+    getParentRoute: () => AuthenticatedCoachRoute,
+  } as any)
 const AuthenticatedCoachCampsCampIdSessionPlansRoute =
   AuthenticatedCoachCampsCampIdSessionPlansRouteImport.update({
     id: '/session-plans',
@@ -770,6 +777,7 @@ export interface FileRoutesByFullPath {
   '/coach/camps/$campId/photos': typeof AuthenticatedCoachCampsCampIdPhotosRoute
   '/coach/camps/$campId/reviews': typeof AuthenticatedCoachCampsCampIdReviewsRoute
   '/coach/camps/$campId/session-plans': typeof AuthenticatedCoachCampsCampIdSessionPlansRoute
+  '/coach/sessions/$sessionId/review': typeof AuthenticatedCoachSessionsSessionIdReviewRoute
   '/coach/camps/$campId/evaluations/$athleteId': typeof AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute
 }
 export interface FileRoutesByTo {
@@ -870,6 +878,7 @@ export interface FileRoutesByTo {
   '/coach/camps/$campId/photos': typeof AuthenticatedCoachCampsCampIdPhotosRoute
   '/coach/camps/$campId/reviews': typeof AuthenticatedCoachCampsCampIdReviewsRoute
   '/coach/camps/$campId/session-plans': typeof AuthenticatedCoachCampsCampIdSessionPlansRoute
+  '/coach/sessions/$sessionId/review': typeof AuthenticatedCoachSessionsSessionIdReviewRoute
   '/coach/camps/$campId/evaluations/$athleteId': typeof AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute
 }
 export interface FileRoutesById {
@@ -977,6 +986,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/camps/$campId/photos': typeof AuthenticatedCoachCampsCampIdPhotosRoute
   '/_authenticated/coach/camps/$campId/reviews': typeof AuthenticatedCoachCampsCampIdReviewsRoute
   '/_authenticated/coach/camps/$campId/session-plans': typeof AuthenticatedCoachCampsCampIdSessionPlansRoute
+  '/_authenticated/coach/sessions/$sessionId/review': typeof AuthenticatedCoachSessionsSessionIdReviewRoute
   '/_authenticated/coach/camps/$campId/evaluations/$athleteId': typeof AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute
 }
 export interface FileRouteTypes {
@@ -1084,6 +1094,7 @@ export interface FileRouteTypes {
     | '/coach/camps/$campId/photos'
     | '/coach/camps/$campId/reviews'
     | '/coach/camps/$campId/session-plans'
+    | '/coach/sessions/$sessionId/review'
     | '/coach/camps/$campId/evaluations/$athleteId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1184,6 +1195,7 @@ export interface FileRouteTypes {
     | '/coach/camps/$campId/photos'
     | '/coach/camps/$campId/reviews'
     | '/coach/camps/$campId/session-plans'
+    | '/coach/sessions/$sessionId/review'
     | '/coach/camps/$campId/evaluations/$athleteId'
   id:
     | '__root__'
@@ -1290,6 +1302,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach/camps/$campId/photos'
     | '/_authenticated/coach/camps/$campId/reviews'
     | '/_authenticated/coach/camps/$campId/session-plans'
+    | '/_authenticated/coach/sessions/$sessionId/review'
     | '/_authenticated/coach/camps/$campId/evaluations/$athleteId'
   fileRoutesById: FileRoutesById
 }
@@ -2025,6 +2038,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachAttendeesAthleteIdRouteImport
       parentRoute: typeof AuthenticatedCoachAttendeesRoute
     }
+    '/_authenticated/coach/sessions/$sessionId/review': {
+      id: '/_authenticated/coach/sessions/$sessionId/review'
+      path: '/sessions/$sessionId/review'
+      fullPath: '/coach/sessions/$sessionId/review'
+      preLoaderRoute: typeof AuthenticatedCoachSessionsSessionIdReviewRouteImport
+      parentRoute: typeof AuthenticatedCoachRoute
+    }
     '/_authenticated/coach/camps/$campId/session-plans': {
       id: '/_authenticated/coach/camps/$campId/session-plans'
       path: '/session-plans'
@@ -2181,6 +2201,7 @@ interface AuthenticatedCoachRouteChildren {
   AuthenticatedCoachCampsCampIdRoute: typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   AuthenticatedCoachCampsNewRoute: typeof AuthenticatedCoachCampsNewRoute
   AuthenticatedCoachCampsIndexRoute: typeof AuthenticatedCoachCampsIndexRoute
+  AuthenticatedCoachSessionsSessionIdReviewRoute: typeof AuthenticatedCoachSessionsSessionIdReviewRoute
 }
 
 const AuthenticatedCoachRouteChildren: AuthenticatedCoachRouteChildren = {
@@ -2207,6 +2228,8 @@ const AuthenticatedCoachRouteChildren: AuthenticatedCoachRouteChildren = {
     AuthenticatedCoachCampsCampIdRouteWithChildren,
   AuthenticatedCoachCampsNewRoute: AuthenticatedCoachCampsNewRoute,
   AuthenticatedCoachCampsIndexRoute: AuthenticatedCoachCampsIndexRoute,
+  AuthenticatedCoachSessionsSessionIdReviewRoute:
+    AuthenticatedCoachSessionsSessionIdReviewRoute,
 }
 
 const AuthenticatedCoachRouteWithChildren =
@@ -2357,13 +2380,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
