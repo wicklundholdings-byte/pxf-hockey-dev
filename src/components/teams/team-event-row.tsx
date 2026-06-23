@@ -44,7 +44,7 @@ export function TeamEventRow({ event, counts }: {
             <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-emerald-400">{counts.yes} IN</span>
             <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-amber-400">{counts.maybe} MAYBE</span>
             <span className="rounded-full bg-red-500/15 px-1.5 py-0.5 text-red-400">{counts.no} OUT</span>
-            {counts.none > 0 && <span className="rounded-full bg-surface-2 px-1.5 py-0.5 text-muted-foreground">{counts.none} —</span>}
+            <span className="rounded-full bg-surface-2 px-1.5 py-0.5 text-muted-foreground">{counts.none} NO REPLY</span>
           </div>
         )}
       </div>
