@@ -170,6 +170,15 @@ function CoachDashboard() {
         ))}
       </div>
 
+      {/* Full-width Athletes button */}
+      <Link
+        to="/coach/attendees"
+        className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-brand py-3 text-center text-primary-foreground transition-opacity hover:opacity-90"
+      >
+        <Users size={18} />
+        <span className="text-xs font-semibold">Athletes</span>
+      </Link>
+
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {statCards.map((s) => (
