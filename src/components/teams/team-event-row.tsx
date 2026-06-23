@@ -7,7 +7,7 @@ const TYPE_META: Record<string, { label: string; color: string; bg: string; icon
   camp: { label: "Camp", color: "text-teal", bg: "bg-teal/15", icon: CalendarDays },
 };
 
-export function TeamEventRow({ event }: {
+export function TeamEventRow({ event, counts }: {
   event: {
     event_type: string;
     title?: string | null;
@@ -17,6 +17,7 @@ export function TeamEventRow({ event }: {
     start_time?: string | null;
     team_name?: string | null;
   };
+  counts?: { yes: number; no: number; maybe: number; none: number };
 }) {
   const meta = TYPE_META[event.event_type] || TYPE_META.team_event;
   const Icon = meta.icon;
@@ -38,6 +39,14 @@ export function TeamEventRow({ event }: {
         <p className="text-[11px] text-muted-foreground">
           {fmtDate(event.event_date)}{event.start_time ? " · " + fmtTime(event.start_time) : ""}{event.venue ? " · " + event.venue : ""}
         </p>
+        {counts && (
+          <div className="mt-1.5 flex items-center gap-1.5 text-[10px] font-bold">
+            <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-emerald-400">{counts.yes} IN</span>
+            <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-amber-400">{counts.maybe} MAYBE</span>
+            <span className="rounded-full bg-red-500/15 px-1.5 py-0.5 text-red-400">{counts.no} OUT</span>
+            {counts.none > 0 && <span className="rounded-full bg-surface-2 px-1.5 py-0.5 text-muted-foreground">{counts.none} —</span>}
+          </div>
+        )}
       </div>
     </div>
   );
