@@ -19,7 +19,7 @@ export const listAthleteMedia = createServerFn({ method: "GET" })
 export const createAthleteMedia = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: {
-    athlete_id: string;
+    athlete_id?: string | null;
     session_id?: string | null;
     video_url: string;
     thumbnail_url?: string | null;
@@ -29,7 +29,81 @@ export const createAthleteMedia = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: row, error } = await context.supabase
       .from("athlete_media")
-      .insert({ ...data, coach_id: context.userId })
+      .insert({ ...data, athlete_id: data.athlete_id ?? null, coach_id: context.userId })
+      .select()
+      .single();
+    if (error) throw error;
+    return row;
+  });
+
+export const listCoachMedia = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { filter?: "all" | "unreviewed" | "untagged" } = {}) => input)
+  .handler(async ({ data, context }) => {
+    let q = context.supabase
+      .from("athlete_media")
+      .select("*")
+      .eq("coach_id", context.userId)
+      .order("recorded_at", { ascending: false });
+    if (data.filter === "unreviewed") q = q.eq("annotation_status", "raw");
+    if (data.filter === "untagged") q = q.is("athlete_id", null);
+    const { data: rows, error } = await q;
+    if (error) throw error;
+    const ids = Array.from(new Set((rows ?? []).map((r: any) => r.athlete_id).filter(Boolean)));
+    let names: Record<string, string> = {};
+    if (ids.length) {
+      const { data: ath } = await context.supabase
+        .from("attendees")
+        .select("id, full_name")
+        .in("id", ids as string[]);
+      names = Object.fromEntries((ath ?? []).map((a: any) => [a.id, a.full_name]));
+    }
+    return (rows ?? []).map((r: any) => ({ ...r, athlete_name: r.athlete_id ? names[r.athlete_id] ?? null : null }));
+  });
+
+export const listCoachRoster = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("attendees")
+      .select("id, full_name")
+      .eq("owner_id", context.userId)
+      .order("full_name");
+    if (error) throw error;
+    return data ?? [];
+  });
+
+export const listCoachSessions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: camps } = await context.supabase
+      .from("camps")
+      .select("id, name")
+      .eq("owner_id", context.userId);
+    const campIds = (camps ?? []).map((c: any) => c.id);
+    if (!campIds.length) return [];
+    const campNames = Object.fromEntries((camps ?? []).map((c: any) => [c.id, c.name]));
+    const { data: sessions, error } = await context.supabase
+      .from("camp_sessions")
+      .select("id, camp_id, session_date, start_time")
+      .in("camp_id", campIds)
+      .order("session_date", { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    return (sessions ?? []).map((s: any) => ({
+      id: s.id,
+      label: `${campNames[s.camp_id] ?? "Camp"} — ${s.session_date}${s.start_time ? " " + s.start_time : ""}`,
+    }));
+  });
+
+export const tagMediaAthlete = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string; athlete_id: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { data: row, error } = await context.supabase
+      .from("athlete_media")
+      .update({ athlete_id: data.athlete_id })
+      .eq("id", data.id)
       .select()
       .single();
     if (error) throw error;
