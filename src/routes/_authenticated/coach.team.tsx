@@ -44,6 +44,7 @@ function TeamPage() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [assignFor, setAssignFor] = useState<Member | null>(null);
   const [view, setView] = useState<"roster" | "schedule">("roster");
+  const [bufferMin, setBufferMin] = useState<number>(30);
 
   async function load() {
     setLoading(true);
@@ -67,6 +68,12 @@ function TeamPage() {
     setMembers((data ?? []) as Member[]);
     setCamps((c ?? []) as Camp[]);
     setAssignments((a ?? []) as Assignment[]);
+    const { data: prof } = await (supabase as any)
+      .from("profiles")
+      .select("min_buffer_minutes")
+      .eq("id", u.user.id)
+      .maybeSingle();
+    if (prof?.min_buffer_minutes != null) setBufferMin(prof.min_buffer_minutes);
     setLoading(false);
   }
 
@@ -143,6 +150,20 @@ function TeamPage() {
     if (conflict) {
       alert(`⛔ Conflict — this coach is already assigned to “${conflict.name}” at an overlapping time. Assignment blocked.`);
       return;
+    }
+    // Soft buffer warning — gap below min_buffer_minutes
+    if (target) {
+      const member = members.find((m) => m.id === memberId);
+      const tight = otherAssigned
+        .map((c) => gapMinutes(c, target))
+        .filter((g): g is { other: Camp; gap: number } => g !== null)
+        .sort((a, b) => a.gap - b.gap)[0];
+      if (tight && tight.gap < bufferMin) {
+        const ok = confirm(
+          `⚠️ Tight schedule — ${member?.title ?? "Coach"} ends "${tight.other.name}" with only ${tight.gap} min before "${target.name}" starts. Your buffer is ${bufferMin} min. Continue anyway?`,
+        );
+        if (!ok) return;
+      }
     }
     const { data } = await (supabase as any)
       .from("camp_staff")
