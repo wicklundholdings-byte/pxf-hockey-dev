@@ -183,7 +183,7 @@ function PaymentScreen() {
 
   return (
     <div className="min-h-screen bg-background pb-32 text-foreground">
-      <RegistrationStepper slug={slug} active={3} backTo={{ to: "/camps/$slug/waiver", params: { slug } }} />
+      <RegistrationStepper slug={slug} active={4} backTo={{ to: "/camps/$slug/health", params: { slug } }} />
       <div className="mx-auto max-w-[480px] space-y-4 px-5 pt-5">
         <header>
           <h1 className="font-display text-2xl font-bold">Review & pay</h1>
