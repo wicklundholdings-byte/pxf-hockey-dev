@@ -337,3 +337,103 @@ function PickupSheet({ reg, caregivers, onClose }: { reg: Reg; caregivers: Careg
     </div>
   );
 }
+
+function MedicalSheet({
+  reg, profile, onClose,
+}: {
+  reg: Reg;
+  profile: HealthProfileRow | null;
+  onClose: () => void;
+}) {
+  const name = reg.attendees?.full_name ?? reg.contacts?.full_name ?? "Athlete";
+  const allergyCats = (profile?.allergies?.categories ?? []).filter((c) => c !== "none");
+  const allergyNotes = profile?.allergies?.notes ?? "";
+  const emergency = profile?.emergency_contacts ?? [];
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-[480px] rounded-t-3xl border-t border-red-500/40 bg-background p-5 pb-8">
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-border" />
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-red-500/15 text-red-400">
+              <HeartPulse size={16} />
+            </span>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-red-400">Medical alert</p>
+              <h2 className="font-display text-lg font-bold text-foreground">{name}</h2>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-muted-foreground"><X size={18} /></button>
+        </div>
+
+        {!profile ? (
+          <p className="mt-4 rounded-xl border border-border bg-card p-3 text-xs text-muted-foreground">
+            No health profile on file.
+          </p>
+        ) : (
+          <div className="mt-4 space-y-3">
+            <Section title="Allergies">
+              {allergyCats.length === 0 && !allergyNotes ? (
+                <p className="text-xs text-muted-foreground">None reported</p>
+              ) : (
+                <>
+                  <div className="flex flex-wrap gap-1.5">
+                    {allergyCats.map((c) => (
+                      <span key={c} className="rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-400">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                  {allergyNotes && <p className="mt-2 text-xs text-foreground">{allergyNotes}</p>}
+                </>
+              )}
+            </Section>
+
+            {profile.medications && (
+              <Section title="Medications">
+                <p className="text-xs text-foreground whitespace-pre-line">{profile.medications}</p>
+              </Section>
+            )}
+
+            {profile.conditions && (
+              <Section title="Conditions">
+                <p className="text-xs text-foreground whitespace-pre-line">{profile.conditions}</p>
+              </Section>
+            )}
+
+            <Section title="Emergency contacts">
+              {emergency.length === 0 ? (
+                <p className="text-xs text-muted-foreground">None on file</p>
+              ) : (
+                <ul className="space-y-2">
+                  {emergency.map((ec, i) => (
+                    <li key={i} className="flex items-center gap-3 rounded-xl border border-border bg-card p-2.5">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-semibold text-foreground">{ec.name || "—"}</p>
+                        <p className="truncate text-[10px] text-muted-foreground">{ec.relationship || "Contact"}</p>
+                      </div>
+                      {ec.phone && (
+                        <a href={`tel:${ec.phone}`} className="flex items-center gap-1 rounded-lg bg-red-500/15 px-2.5 py-1.5 text-[11px] font-bold text-red-400">
+                          <Phone size={11} /> {ec.phone}
+                        </a>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Section>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</p>
+      {children}
+    </div>
+  );
+}
