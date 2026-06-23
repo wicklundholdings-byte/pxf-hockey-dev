@@ -6,7 +6,7 @@ import { createEvent } from "@/lib/teams.functions";
 import { Plus, X } from "lucide-react";
 import { TeamEventRow } from "@/components/teams/team-event-row";
 
-export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedule")({
+export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedule/")({
   component: Schedule,
 });
 
