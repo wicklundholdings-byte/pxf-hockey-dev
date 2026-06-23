@@ -3,9 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { saveGameLineup, saveGamePlan, saveCoachGameNotes } from "@/lib/teams.functions";
-import { ArrowLeft, Share2, Plus, X, Lock, Users2, ClipboardList, NotebookPen, FileText, Image as ImageIcon } from "lucide-react";
-import { GameMediaTab } from "@/components/teams/game-media-tab";
-import { useAuth } from "@/hooks/use-auth";
+import { ArrowLeft, Share2, Plus, X, Lock, Users2, ClipboardList, NotebookPen, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedule/$eventId/game-prep")({
   component: GamePrep,
@@ -22,8 +20,7 @@ const D_POS = ["LD", "RD"] as const;
 
 function GamePrep() {
   const { teamId, eventId } = Route.useParams();
-  const [tab, setTab] = useState<"lines" | "plan" | "notes" | "media">("lines");
-  const { user } = useAuth();
+  const [tab, setTab] = useState<"lines" | "plan" | "notes">("lines");
 
   return (
     <div>
@@ -37,18 +34,16 @@ function GamePrep() {
       </div>
       <h3 className="mt-2 font-display text-lg font-bold">Game Preparation</h3>
 
-      <div className="mt-3 grid grid-cols-4 gap-1 rounded-full border border-border bg-surface p-1 text-[11px] font-bold">
+      <div className="mt-3 grid grid-cols-3 gap-1 rounded-full border border-border bg-surface p-1 text-[11px] font-bold">
         <TabBtn active={tab === "lines"} onClick={() => setTab("lines")} icon={<Users2 size={12} />} label="Lines" />
         <TabBtn active={tab === "plan"} onClick={() => setTab("plan")} icon={<ClipboardList size={12} />} label="Plan" />
         <TabBtn active={tab === "notes"} onClick={() => setTab("notes")} icon={<NotebookPen size={12} />} label="Notes" />
-        <TabBtn active={tab === "media"} onClick={() => setTab("media")} icon={<ImageIcon size={12} />} label="Media" />
       </div>
 
       <div className="mt-4">
         {tab === "lines" && <LinesTab teamId={teamId} eventId={eventId} />}
         {tab === "plan" && <GamePlanTab teamId={teamId} eventId={eventId} />}
         {tab === "notes" && <CoachNotesTab teamId={teamId} eventId={eventId} />}
-        {tab === "media" && <GameMediaTab teamId={teamId} eventId={eventId} isCoach currentUserId={user?.id ?? null} />}
       </div>
     </div>
   );

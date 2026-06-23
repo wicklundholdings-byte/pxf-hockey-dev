@@ -4,6 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { markAttendance, recordGameStats } from "@/lib/teams.functions";
 import { ArrowLeft, CheckCircle2, XCircle, Clock, ClipboardList, Trophy } from "lucide-react";
+import { GameMediaTab } from "@/components/teams/game-media-tab";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedule/$eventId/")({
   component: EventDetail,
@@ -17,6 +19,7 @@ type Att = { team_player_id: string; status: string };
 function EventDetail() {
   const { teamId, eventId } = Route.useParams();
   const mark = useServerFn(markAttendance);
+  const { user } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [rsvps, setRsvps] = useState<Record<string, string>>({});
@@ -105,6 +108,15 @@ function EventDetail() {
       </div>
 
       {event.event_type === "game" && <GameStats teamId={teamId} players={players} />}
+
+      {(event.event_type === "game" || event.event_type === "practice") && (
+        <>
+          <h4 className="mt-4 text-xs font-bold">Media</h4>
+          <div className="mt-2">
+            <GameMediaTab teamId={teamId} eventId={eventId} isCoach currentUserId={user?.id ?? null} />
+          </div>
+        </>
+      )}
     </div>
   );
 }
