@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { saveGameLineup, saveGamePlan, saveCoachGameNotes } from "@/lib/teams.functions";
-import { ArrowLeft, Share2, Plus, X, Lock, Users2, ClipboardList, NotebookPen } from "lucide-react";
+import { ArrowLeft, Share2, Plus, X, Lock, Users2, ClipboardList, NotebookPen, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedule/$eventId/game-prep")({
   component: GamePrep,
@@ -24,9 +24,14 @@ function GamePrep() {
 
   return (
     <div>
-      <Link to="/coach/teams/$teamId/schedule/$eventId" params={{ teamId, eventId }} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-        <ArrowLeft size={14} /> Back
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link to="/coach/teams/$teamId/schedule/$eventId" params={{ teamId, eventId }} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+          <ArrowLeft size={14} /> Back
+        </Link>
+        <Link to="/coach/teams/$teamId/schedule/$eventId/game-summary" params={{ teamId, eventId }} className="inline-flex items-center gap-1 rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-primary-foreground shadow-glow-teal">
+          <FileText size={12} /> Summary
+        </Link>
+      </div>
       <h3 className="mt-2 font-display text-lg font-bold">Game Preparation</h3>
 
       <div className="mt-3 grid grid-cols-3 gap-1 rounded-full border border-border bg-surface p-1 text-[11px] font-bold">
