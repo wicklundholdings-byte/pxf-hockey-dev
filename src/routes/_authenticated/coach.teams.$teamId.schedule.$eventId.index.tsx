@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { markAttendance, recordGameStats } from "@/lib/teams.functions";
-import { ArrowLeft, CheckCircle2, XCircle, Clock, ClipboardList, Users2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, Clock, ClipboardList, Trophy } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedule/$eventId/")({
   component: EventDetail,
@@ -77,8 +77,8 @@ function EventDetail() {
           </Link>
           )}
           {event.event_type === "game" && (
-            <Link to="/coach/teams/$teamId/schedule/$eventId/lineup" params={{ teamId, eventId }} className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold">
-              <Users2 size={14} /> Lineup
+            <Link to="/coach/teams/$teamId/schedule/$eventId/game-prep" params={{ teamId, eventId }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-brand px-3 py-2 text-xs font-bold text-primary-foreground shadow-glow-teal">
+              <Trophy size={14} /> Game Prep
             </Link>
           )}
         </div>
