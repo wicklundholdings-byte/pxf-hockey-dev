@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { savePracticePlan } from "@/lib/teams.functions";
-import { ArrowLeft, Plus, X, GripVertical, Dumbbell, StickyNote } from "lucide-react";
+import { ArrowLeft, Plus, X, GripVertical, Dumbbell, StickyNote, Library } from "lucide-react";
+import { DRILLS } from "@/data/pxf";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedule/$eventId/practice-plan")({
   component: PracticePlan,
@@ -11,6 +12,9 @@ export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedu
 
 type Item = { id: string; itemType: "drill" | "note"; drillId?: string; drillName?: string; noteText?: string; durationMinutes: number };
 type Drill = { id: string; title: string };
+type SavedBlock = { uid: string; drillId: string; mins: number };
+type SavedSession = { id: string; name: string; date: string; totalMins: number; blocks: SavedBlock[] };
+const SESSIONS_KEY = "pxf:sessions:v2";
 
 function PracticePlan() {
   const { teamId, eventId } = Route.useParams();
@@ -18,13 +22,31 @@ function PracticePlan() {
   const [items, setItems] = useState<Item[]>([]);
   const [picking, setPicking] = useState(false);
   const [drills, setDrills] = useState<Drill[]>([]);
+  const [loadingSession, setLoadingSession] = useState(false);
+  const [sessions, setSessions] = useState<SavedSession[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     supabase.from("drills").select("id,title").order("title").limit(200).then(({ data }) => setDrills((data ?? []) as Drill[]));
+    if (typeof window !== "undefined") {
+      try { setSessions(JSON.parse(window.localStorage.getItem(SESSIONS_KEY) ?? "[]")); } catch { /* ignore */ }
+    }
   }, []);
 
   function add(item: Item) { setItems([...items, item]); }
+  function loadSession(s: SavedSession) {
+    const next: Item[] = s.blocks.map((b) => {
+      const d = DRILLS.find((x) => x.id === b.drillId);
+      return {
+        id: crypto.randomUUID(),
+        itemType: "note" as const,
+        noteText: d?.name ?? "Drill",
+        durationMinutes: b.mins,
+      };
+    });
+    setItems([...items, ...next]);
+    setLoadingSession(false);
+  }
   function remove(id: string) { setItems(items.filter((i) => i.id !== id)); }
   function move(id: string, dir: -1 | 1) {
     const idx = items.findIndex((i) => i.id === id); const next = idx + dir;
@@ -65,7 +87,8 @@ function PracticePlan() {
           </div>
         ))}
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2">
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        <button onClick={() => setLoadingSession(true)} className="inline-flex items-center justify-center gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold"><Library size={12} /> Full session</button>
         <button onClick={() => setPicking(true)} className="inline-flex items-center justify-center gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold"><Plus size={12} /> Add drill</button>
         <button onClick={() => add({ id: crypto.randomUUID(), itemType: "note", noteText: "Water break", durationMinutes: 5 })} className="inline-flex items-center justify-center gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold"><Plus size={12} /> Add note</button>
       </div>
@@ -82,6 +105,29 @@ function PracticePlan() {
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-left text-sm">{d.title}</button>
               ))}
               {drills.length === 0 && <p className="text-xs text-muted-foreground">No drills in your library yet.</p>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {loadingSession && (
+        <div className="fixed inset-0 z-50 flex items-end bg-background/70 backdrop-blur-sm" onClick={() => setLoadingSession(false)}>
+          <div className="mx-auto max-h-[70vh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl border-t border-border bg-surface p-4" onClick={(e) => e.stopPropagation()}>
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border" />
+            <p className="text-xs font-bold">Load full session</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">Pulls blocks from a saved session into this practice plan.</p>
+            <div className="mt-3 space-y-1.5">
+              {sessions.map((s) => (
+                <button key={s.id} onClick={() => loadSession(s)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-left">
+                  <p className="text-sm font-semibold">{s.name || "Untitled session"}</p>
+                  <p className="text-[10px] text-muted-foreground">{s.blocks.length} blocks · {s.totalMins} min</p>
+                </button>
+              ))}
+              {sessions.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  No saved sessions yet. Build one in the Sessions builder first.
+                </p>
+              )}
             </div>
           </div>
         </div>
