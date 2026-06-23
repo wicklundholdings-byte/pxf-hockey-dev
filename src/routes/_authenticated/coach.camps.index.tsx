@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Search, List, Calendar as CalendarIcon, MapPin } from "lucide-react";
+import { Plus, Search, List, Calendar as CalendarIcon, MapPin, AlertTriangle } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/")({
@@ -38,15 +38,17 @@ function fmtDay(d: string | null) {
 function CampsPage() {
   const [camps, setCamps] = useState<Camp[]>([]);
   const [regCounts, setRegCounts] = useState<Map<string, { count: number; revenue: number }>>(new Map());
+  const [staffedCampIds, setStaffedCampIds] = useState<Set<string>>(new Set());
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"all" | "live" | "draft" | "ended">("all");
   const [view, setView] = useState<"list" | "calendar">("list");
 
   useEffect(() => {
     (async () => {
-      const [c, r] = await Promise.all([
+      const [c, r, st] = await Promise.all([
         supabase.from("camps").select("*").order("start_date", { ascending: true }),
         supabase.from("registrations").select("camp_id,status,amount_cents").eq("status", "paid"),
+        (supabase as any).from("camp_staff").select("camp_id"),
       ]);
       setCamps((c.data ?? []) as Camp[]);
       const m = new Map<string, { count: number; revenue: number }>();
@@ -55,6 +57,7 @@ function CampsPage() {
         m.set(row.camp_id, { count: prev.count + 1, revenue: prev.revenue + (row.amount_cents ?? 0) });
       });
       setRegCounts(m);
+      setStaffedCampIds(new Set(((st.data as any[]) ?? []).map((row) => row.camp_id as string)));
     })();
   }, []);
 
@@ -151,6 +154,11 @@ function CampsPage() {
                       <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-muted-foreground">
                         <MapPin size={10} /> {c.venue_name ?? (c.location_type === "online" ? "Online" : "TBA")}
                       </p>
+                      {!staffedCampIds.has(c.id) && c.status !== "ended" && (
+                        <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-orange-500/15 px-2 py-0.5 text-[9px] font-bold uppercase text-orange-500">
+                          <AlertTriangle size={9} /> No coach assigned
+                        </p>
+                      )}
                       <div className="mt-2 flex items-center justify-between gap-2 text-[11px]">
                         <span className="text-muted-foreground">
                           {stats.count}/{c.capacity} spots

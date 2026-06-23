@@ -70,7 +70,7 @@ function CampDetailPage() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [c, r, s, w, m] = await Promise.all([
+      const [c, r, s, w, m, ps] = await Promise.all([
         supabase.from("camps").select("*").eq("id", campId).maybeSingle(),
         supabase
           .from("registrations")
@@ -84,10 +84,16 @@ function CampDetailPage() {
           .eq("camp_id", campId)
           .order("position"),
         supabase.from("camp_media").select("*").eq("camp_id", campId).order("created_at", { ascending: false }),
+        (supabase as any).from("attendee_payment_status").select("registration_id, payment_status").eq("camp_id", campId),
       ]);
       const campRow = (c.data ?? null) as Camp | null;
       setCamp(campRow);
-      setRegs((r.data ?? []) as unknown as Reg[]);
+      const statusMap = new Map<string, "paid" | "pending" | "overdue">();
+      ((ps as { data: { registration_id: string; payment_status: "paid" | "pending" | "overdue" }[] | null }).data ?? []).forEach((row) => {
+        statusMap.set(row.registration_id, row.payment_status);
+      });
+      const regsWithPay = ((r.data ?? []) as unknown as Reg[]).map((reg: any) => ({ ...reg, payment_status: statusMap.get(reg.id) ?? reg.status }));
+      setRegs(regsWithPay as unknown as Reg[]);
       let sess = (s.data ?? []) as Session[];
       // Backfill: if no camp_sessions exist but the camp has a date range, create one per day.
       if (sess.length === 0 && campRow?.start_date && campRow?.end_date) {
