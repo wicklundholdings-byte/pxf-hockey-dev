@@ -118,6 +118,62 @@ export type Database = {
           },
         ]
       }
+      athlete_health_profiles: {
+        Row: {
+          allergies: Json
+          athlete_id: string
+          clearance_doc_url: string | null
+          conditions: string | null
+          created_at: string
+          emergency_contacts: Json
+          id: string
+          insurance_info: Json | null
+          medications: string | null
+          needs_encryption: boolean
+          physician_name: string | null
+          physician_phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          allergies?: Json
+          athlete_id: string
+          clearance_doc_url?: string | null
+          conditions?: string | null
+          created_at?: string
+          emergency_contacts?: Json
+          id?: string
+          insurance_info?: Json | null
+          medications?: string | null
+          needs_encryption?: boolean
+          physician_name?: string | null
+          physician_phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          allergies?: Json
+          athlete_id?: string
+          clearance_doc_url?: string | null
+          conditions?: string | null
+          created_at?: string
+          emergency_contacts?: Json
+          id?: string
+          insurance_info?: Json | null
+          medications?: string | null
+          needs_encryption?: boolean
+          physician_name?: string | null
+          physician_phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_health_profiles_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: true
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       athlete_media: {
         Row: {
           annotation_status: Database["public"]["Enums"]["media_annotation_status"]
