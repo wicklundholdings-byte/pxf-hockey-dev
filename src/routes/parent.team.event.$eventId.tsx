@@ -4,6 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { submitRsvp } from "@/lib/teams.functions";
 import { ArrowLeft, Check, X, HelpCircle } from "lucide-react";
+import { GameMediaTab } from "@/components/teams/game-media-tab";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/parent/team/event/$eventId")({
   component: ParentEvent,
@@ -15,6 +17,7 @@ type Player = { id: string; display_name: string };
 function ParentEvent() {
   const { eventId } = Route.useParams();
   const rsvp = useServerFn(submitRsvp);
+  const { user } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [responses, setResponses] = useState<Record<string, string>>({});
@@ -72,6 +75,21 @@ function ParentEvent() {
           </div>
         ))}
       </div>
+
+      {(event.event_type === "game" || event.event_type === "practice") && (
+        <>
+          <h3 className="mt-5 text-xs font-bold">Media</h3>
+          <div className="mt-2">
+            <GameMediaTab
+              teamId={event.team_id}
+              eventId={eventId}
+              isCoach={false}
+              currentUserId={user?.id ?? null}
+              currentPlayerId={players[0]?.id ?? null}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }
