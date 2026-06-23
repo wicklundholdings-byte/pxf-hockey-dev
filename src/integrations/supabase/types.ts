@@ -177,7 +177,7 @@ export type Database = {
       athlete_media: {
         Row: {
           annotation_status: Database["public"]["Enums"]["media_annotation_status"]
-          athlete_id: string
+          athlete_id: string | null
           caption: string | null
           coach_id: string
           created_at: string
@@ -192,7 +192,7 @@ export type Database = {
         }
         Insert: {
           annotation_status?: Database["public"]["Enums"]["media_annotation_status"]
-          athlete_id: string
+          athlete_id?: string | null
           caption?: string | null
           coach_id: string
           created_at?: string
@@ -207,7 +207,7 @@ export type Database = {
         }
         Update: {
           annotation_status?: Database["public"]["Enums"]["media_annotation_status"]
-          athlete_id?: string
+          athlete_id?: string | null
           caption?: string | null
           coach_id?: string
           created_at?: string
