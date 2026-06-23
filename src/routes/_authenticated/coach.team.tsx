@@ -2,10 +2,19 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { UserCog, Plus, Mail, Phone, Trash2, X, Check, Clock, Shield, CalendarDays, MapPin, AlertTriangle, LayoutGrid, CalendarRange } from "lucide-react";
+import { TierGate } from "@/components/tier-gate";
 
 export const Route = createFileRoute("/_authenticated/coach/team")({
-  component: TeamPage,
+  component: GatedTeam,
 });
+
+function GatedTeam() {
+  return (
+    <TierGate feature="staffManagement">
+      <TeamPage />
+    </TierGate>
+  );
+}
 
 type Role = "owner" | "manager" | "coach" | "assistant" | "content_creator";
 
