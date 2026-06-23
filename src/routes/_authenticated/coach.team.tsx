@@ -176,6 +176,27 @@ function TeamPage() {
         <KPI label="Pending" value={invited.length} />
       </div>
 
+      <div className="flex gap-1.5 rounded-full bg-surface p-1">
+        <button
+          onClick={() => setView("roster")}
+          className={"flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-[11px] font-bold " + (view === "roster" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground")}
+        >
+          <LayoutGrid size={12} /> Roster
+        </button>
+        <button
+          onClick={() => setView("schedule")}
+          className={"flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-[11px] font-bold " + (view === "schedule" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground")}
+        >
+          <CalendarRange size={12} /> Schedule
+        </button>
+      </div>
+
+      {view === "schedule" && !loading && (
+        <ScheduleOverview members={active} camps={camps} assignments={assignments} />
+      )}
+
+      {view === "roster" && (
+      <>
       {loading ? (
         <div className="rounded-2xl border border-border/60 bg-surface p-8 text-center text-xs text-muted-foreground">
           Loading…
