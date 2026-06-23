@@ -47,23 +47,25 @@ export function UpcomingSevenDays() {
   if (rows.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
-      <p className="text-[11px] font-bold tracking-[0.3em] text-muted-foreground">NEXT 7 DAYS</p>
-      <div className="mt-3 space-y-2">
-        {rows.map((r) => {
-          if (r.kind === "team") {
+    <div className="rounded-2xl bg-gradient-brand p-[2px]">
+      <div className="rounded-[calc(1rem-1px)] bg-card p-4">
+        <p className="text-[11px] font-bold tracking-[0.3em] text-muted-foreground">NEXT 7 DAYS</p>
+        <div className="mt-3 space-y-2">
+          {rows.map((r) => {
+            if (r.kind === "team") {
+              return (
+                <Link key={`t-${r.id}`} to="/coach/teams" className="block">
+                  <TeamEventRow event={{ ...r, team_name: r.team_name }} />
+                </Link>
+              );
+            }
             return (
-              <Link key={`t-${r.id}`} to="/coach/teams" className="block">
-                <TeamEventRow event={{ ...r, team_name: r.team_name }} />
+              <Link key={`c-${r.id}`} to="/coach/camps/$campId" params={{ campId: r.id }} className="block">
+                <TeamEventRow event={{ event_type: "camp", title: r.title, event_date: r.event_date }} />
               </Link>
             );
-          }
-          return (
-            <Link key={`c-${r.id}`} to="/coach/camps/$campId" params={{ campId: r.id }} className="block">
-              <TeamEventRow event={{ event_type: "camp", title: r.title, event_date: r.event_date }} />
-            </Link>
-          );
-        })}
+          })}
+        </div>
       </div>
     </div>
   );
