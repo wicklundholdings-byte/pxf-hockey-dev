@@ -52,3 +52,19 @@ export const recommendProgram = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const bulkRecommendProgram = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { athleteIds: string[]; programId: string; message?: string }) => d)
+  .handler(async ({ data, context }) => {
+    if (!data.athleteIds.length) return { ok: true, count: 0 };
+    const rows = data.athleteIds.map((athleteId) => ({
+      coach_id: context.userId,
+      athlete_id: athleteId,
+      program_id: data.programId,
+      message: data.message ?? null,
+    }));
+    const { error } = await context.supabase.from("program_recommendations").insert(rows);
+    if (error) throw new Error(error.message);
+    return { ok: true, count: rows.length };
+  });
