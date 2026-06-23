@@ -58,6 +58,7 @@ import { Route as ParentCampsRouteImport } from './routes/parent.camps'
 import { Route as OnboardingParentRouteImport } from './routes/onboarding.parent'
 import { Route as OnboardingCoachRouteImport } from './routes/onboarding.coach'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
+import { Route as CombineAthleteIdRouteImport } from './routes/combine.$athleteId'
 import { Route as CoachesSlugRouteImport } from './routes/coaches.$slug'
 import { Route as CampsBrowseRouteImport } from './routes/camps.browse'
 import { Route as CampsSlugRouteImport } from './routes/camps.$slug'
@@ -70,6 +71,7 @@ import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as ParentConversationConversationIdRouteImport } from './routes/parent.conversation.$conversationId'
 import { Route as ParentCampCampIdRouteImport } from './routes/parent.camp.$campId'
+import { Route as CombineShareTokenRouteImport } from './routes/combine.share.$token'
 import { Route as CampsSlugWaiverRouteImport } from './routes/camps.$slug.waiver'
 import { Route as CampsSlugRegisterRouteImport } from './routes/camps.$slug.register'
 import { Route as CampsSlugPaymentRouteImport } from './routes/camps.$slug.payment'
@@ -355,6 +357,11 @@ const DrillDetailDrillIdRoute = DrillDetailDrillIdRouteImport.update({
   path: '/drill-detail/$drillId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CombineAthleteIdRoute = CombineAthleteIdRouteImport.update({
+  id: '/combine/$athleteId',
+  path: '/combine/$athleteId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CoachesSlugRoute = CoachesSlugRouteImport.update({
   id: '/coaches/$slug',
   path: '/coaches/$slug',
@@ -415,6 +422,11 @@ const ParentCampCampIdRoute = ParentCampCampIdRouteImport.update({
   id: '/camp/$campId',
   path: '/camp/$campId',
   getParentRoute: () => ParentRoute,
+} as any)
+const CombineShareTokenRoute = CombineShareTokenRouteImport.update({
+  id: '/combine/share/$token',
+  path: '/combine/share/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CampsSlugWaiverRoute = CampsSlugWaiverRouteImport.update({
   id: '/waiver',
@@ -682,6 +694,7 @@ export interface FileRoutesByFullPath {
   '/camps/$slug': typeof CampsSlugRouteWithChildren
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
+  '/combine/$athleteId': typeof CombineAthleteIdRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/onboarding/coach': typeof OnboardingCoachRoute
   '/onboarding/parent': typeof OnboardingParentRoute
@@ -732,6 +745,7 @@ export interface FileRoutesByFullPath {
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
+  '/combine/share/$token': typeof CombineShareTokenRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -779,6 +793,7 @@ export interface FileRoutesByTo {
   '/book/$slug': typeof BookSlugRoute
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
+  '/combine/$athleteId': typeof CombineAthleteIdRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/onboarding/coach': typeof OnboardingCoachRoute
   '/onboarding/parent': typeof OnboardingParentRoute
@@ -829,6 +844,7 @@ export interface FileRoutesByTo {
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
+  '/combine/share/$token': typeof CombineShareTokenRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -883,6 +899,7 @@ export interface FileRoutesById {
   '/camps/$slug': typeof CampsSlugRouteWithChildren
   '/camps/browse': typeof CampsBrowseRoute
   '/coaches/$slug': typeof CoachesSlugRoute
+  '/combine/$athleteId': typeof CombineAthleteIdRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/onboarding/coach': typeof OnboardingCoachRoute
   '/onboarding/parent': typeof OnboardingParentRoute
@@ -933,6 +950,7 @@ export interface FileRoutesById {
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
+  '/combine/share/$token': typeof CombineShareTokenRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -987,6 +1005,7 @@ export interface FileRouteTypes {
     | '/camps/$slug'
     | '/camps/browse'
     | '/coaches/$slug'
+    | '/combine/$athleteId'
     | '/drill-detail/$drillId'
     | '/onboarding/coach'
     | '/onboarding/parent'
@@ -1037,6 +1056,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/payment'
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
+    | '/combine/share/$token'
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
     | '/admin/'
@@ -1084,6 +1104,7 @@ export interface FileRouteTypes {
     | '/book/$slug'
     | '/camps/browse'
     | '/coaches/$slug'
+    | '/combine/$athleteId'
     | '/drill-detail/$drillId'
     | '/onboarding/coach'
     | '/onboarding/parent'
@@ -1134,6 +1155,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/payment'
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
+    | '/combine/share/$token'
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
     | '/admin'
@@ -1187,6 +1209,7 @@ export interface FileRouteTypes {
     | '/camps/$slug'
     | '/camps/browse'
     | '/coaches/$slug'
+    | '/combine/$athleteId'
     | '/drill-detail/$drillId'
     | '/onboarding/coach'
     | '/onboarding/parent'
@@ -1237,6 +1260,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/payment'
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
+    | '/combine/share/$token'
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
     | '/_authenticated/admin/'
@@ -1288,6 +1312,7 @@ export interface RootRouteChildren {
   CampsSlugRoute: typeof CampsSlugRouteWithChildren
   CampsBrowseRoute: typeof CampsBrowseRoute
   CoachesSlugRoute: typeof CoachesSlugRoute
+  CombineAthleteIdRoute: typeof CombineAthleteIdRoute
   DrillDetailDrillIdRoute: typeof DrillDetailDrillIdRoute
   PaymentsCheckoutRoute: typeof PaymentsCheckoutRoute
   PaymentsConfirmationRoute: typeof PaymentsConfirmationRoute
@@ -1303,6 +1328,7 @@ export interface RootRouteChildren {
   StoreCartRoute: typeof StoreCartRoute
   CampsIndexRoute: typeof CampsIndexRoute
   StoreIndexRoute: typeof StoreIndexRoute
+  CombineShareTokenRoute: typeof CombineShareTokenRoute
   ApiPublicHooksRsvpRemindersRoute: typeof ApiPublicHooksRsvpRemindersRoute
 }
 
@@ -1651,6 +1677,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DrillDetailDrillIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/combine/$athleteId': {
+      id: '/combine/$athleteId'
+      path: '/combine/$athleteId'
+      fullPath: '/combine/$athleteId'
+      preLoaderRoute: typeof CombineAthleteIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/coaches/$slug': {
       id: '/coaches/$slug'
       path: '/coaches/$slug'
@@ -1734,6 +1767,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/parent/camp/$campId'
       preLoaderRoute: typeof ParentCampCampIdRouteImport
       parentRoute: typeof ParentRoute
+    }
+    '/combine/share/$token': {
+      id: '/combine/share/$token'
+      path: '/combine/share/$token'
+      fullPath: '/combine/share/$token'
+      preLoaderRoute: typeof CombineShareTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/camps/$slug/waiver': {
       id: '/camps/$slug/waiver'
@@ -2274,6 +2314,7 @@ const rootRouteChildren: RootRouteChildren = {
   CampsSlugRoute: CampsSlugRouteWithChildren,
   CampsBrowseRoute: CampsBrowseRoute,
   CoachesSlugRoute: CoachesSlugRoute,
+  CombineAthleteIdRoute: CombineAthleteIdRoute,
   DrillDetailDrillIdRoute: DrillDetailDrillIdRoute,
   PaymentsCheckoutRoute: PaymentsCheckoutRoute,
   PaymentsConfirmationRoute: PaymentsConfirmationRoute,
@@ -2289,6 +2330,7 @@ const rootRouteChildren: RootRouteChildren = {
   StoreCartRoute: StoreCartRoute,
   CampsIndexRoute: CampsIndexRoute,
   StoreIndexRoute: StoreIndexRoute,
+  CombineShareTokenRoute: CombineShareTokenRoute,
   ApiPublicHooksRsvpRemindersRoute: ApiPublicHooksRsvpRemindersRoute,
 }
 export const routeTree = rootRouteImport

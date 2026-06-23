@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, CalendarPlus, Download, ArrowRight } from "lucide-react";
 import { CalendarSyncButton } from "@/components/calendar-sync-button";
+import { MetaPixel } from "@/components/meta-pixel";
 
 export const Route = createFileRoute("/camps/$slug/confirmed")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -21,14 +22,14 @@ function dollars(c: number) {
 function ConfirmedScreen() {
   const { slug } = useParams({ from: "/camps/$slug/confirmed" });
   const { kind, amount } = useSearch({ from: "/camps/$slug/confirmed" });
-  const [camp, setCamp] = useState<{ id: string; name: string; start_date: string | null; end_date: string | null; venue_name: string | null } | null>(null);
+  const [camp, setCamp] = useState<{ id: string; name: string; start_date: string | null; end_date: string | null; venue_name: string | null; owner_id: string | null } | null>(null);
   const [sessions, setSessions] = useState<Array<{ session_date: string; start_time: string | null; end_time: string | null }>>([]);
 
   useEffect(() => {
     (async () => {
       const { data: c } = await supabase
         .from("camps")
-        .select("id, name, start_date, end_date, venue_name")
+        .select("id, name, start_date, end_date, venue_name, owner_id")
         .eq("slug", slug)
         .maybeSingle();
       setCamp(c ?? null);
@@ -57,6 +58,9 @@ function ConfirmedScreen() {
 
   return (
     <div className="min-h-screen bg-background px-5 pt-10 pb-16 text-foreground">
+      {camp && kind === "registered" && (
+        <MetaPixel coachId={camp.owner_id} campName={camp.name} amountCents={amount} />
+      )}
       <div className="mx-auto max-w-[480px] space-y-6 text-center">
         <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-teal/15 shadow-glow-teal animate-in zoom-in duration-500">
           <CheckCircle2 className="h-12 w-12 text-teal" strokeWidth={2.4} />
