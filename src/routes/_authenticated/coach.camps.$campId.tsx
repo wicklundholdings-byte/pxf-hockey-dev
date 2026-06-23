@@ -30,6 +30,7 @@ type Camp = {
 type Reg = {
   id: string; camp_id: string; attendee_id: string | null; contact_id: string | null;
   status: string; amount_cents: number | null; created_at: string;
+  payment_status?: "paid" | "pending" | "overdue";
   attendees?: { full_name: string | null; position: string | null; skill_level: string | null } | null;
   contacts?: { full_name: string | null; email: string | null; phone: string | null } | null;
 };
@@ -1205,9 +1206,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function RosterTab({ regs }: { regs: Reg[] }) {
   const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<"all" | "paid" | "pending" | "refunded">("all");
+  const [filter, setFilter] = useState<"all" | "paid" | "pending" | "overdue">("all");
   const filtered = regs.filter((r) => {
-    if (filter !== "all" && r.status !== filter) return false;
+    const ps = r.payment_status ?? (r.status === "paid" ? "paid" : "pending");
+    if (filter !== "all" && ps !== filter) return false;
     if (!q) return true;
     const name = r.attendees?.full_name ?? r.contacts?.full_name ?? "";
     return name.toLowerCase().includes(q.toLowerCase());
@@ -1261,16 +1263,17 @@ function RosterTab({ regs }: { regs: Reg[] }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="truncate text-sm font-semibold text-foreground">{name}</p>
-                    <span className={
-                      "rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase " +
-                      (r.status === "paid"
+                    {(() => {
+                      const ps = r.payment_status ?? (r.status === "paid" ? "paid" : "pending");
+                      const cls = ps === "paid"
                         ? "bg-emerald-400/15 text-emerald-400"
-                        : r.status === "pending"
-                          ? "bg-amber-400/15 text-amber-400"
-                          : "bg-muted text-muted-foreground")
-                    }>
-                      {r.status}
-                    </span>
+                        : ps === "overdue"
+                          ? "bg-red-500/15 text-red-500"
+                          : "bg-amber-400/15 text-amber-400";
+                      return (
+                        <span className={"rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase " + cls}>{ps}</span>
+                      );
+                    })()}
                   </div>
                   <p className="truncate text-[10px] text-muted-foreground">
                     {r.attendees?.position ?? "—"} · {r.attendees?.skill_level ?? "—"} · {r.contacts?.email ?? r.contacts?.phone ?? ""}
