@@ -64,16 +64,14 @@ function ParentCampDetail() {
       // Load staff: head coach (camp owner) + assigned team members with linked accounts
       const staffList: Array<{ user_id: string; name: string; role: string; subtitle?: string }> = [];
       if (c?.owner_id) {
-        const { data: ownerProfile } = await supabase
-          .from("profiles")
-          .select("full_name, email")
-          .eq("id", c.owner_id)
-          .maybeSingle();
+        const { data: ownerProfiles } = await (supabase as any).rpc("get_profile_names", {
+          _ids: [c.owner_id],
+        });
+        const ownerName = (ownerProfiles ?? [])[0]?.full_name ?? "Head Coach";
         staffList.push({
           user_id: c.owner_id,
-          name: ownerProfile?.full_name || ownerProfile?.email || "Head Coach",
+          name: ownerName,
           role: "Head Coach",
-          subtitle: ownerProfile?.email ?? undefined,
         });
       }
       const { data: cs } = await (supabase as any)
