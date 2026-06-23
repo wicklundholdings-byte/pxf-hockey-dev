@@ -111,6 +111,7 @@ import { Route as AuthenticatedCoachCampsIndexRouteImport } from './routes/_auth
 import { Route as ParentTrainSessionSessionIdRouteImport } from './routes/parent.train.session.$sessionId'
 import { Route as ApiPublicHooksRsvpRemindersRouteImport } from './routes/api/public/hooks/rsvp-reminders'
 import { Route as AuthenticatedCoachTeamsNewRouteImport } from './routes/_authenticated/coach.teams.new'
+import { Route as AuthenticatedCoachTeamsTeamIdRouteImport } from './routes/_authenticated/coach.teams.$teamId'
 import { Route as AuthenticatedCoachContactsContactIdRouteImport } from './routes/_authenticated/coach.contacts.$contactId'
 import { Route as AuthenticatedCoachCampsNewRouteImport } from './routes/_authenticated/coach.camps.new'
 import { Route as AuthenticatedCoachCampsCampIdRouteImport } from './routes/_authenticated/coach.camps.$campId'
@@ -659,6 +660,12 @@ const AuthenticatedCoachTeamsNewRoute =
     path: '/new',
     getParentRoute: () => AuthenticatedCoachTeamsRoute,
   } as any)
+const AuthenticatedCoachTeamsTeamIdRoute =
+  AuthenticatedCoachTeamsTeamIdRouteImport.update({
+    id: '/$teamId',
+    path: '/$teamId',
+    getParentRoute: () => AuthenticatedCoachTeamsRoute,
+  } as any)
 const AuthenticatedCoachContactsContactIdRoute =
   AuthenticatedCoachContactsContactIdRouteImport.update({
     id: '/$contactId',
@@ -839,6 +846,7 @@ export interface FileRoutesByFullPath {
   '/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
   '/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
+  '/coach/teams/$teamId': typeof AuthenticatedCoachTeamsTeamIdRoute
   '/coach/teams/new': typeof AuthenticatedCoachTeamsNewRoute
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
@@ -949,6 +957,7 @@ export interface FileRoutesByTo {
   '/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
   '/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
+  '/coach/teams/$teamId': typeof AuthenticatedCoachTeamsTeamIdRoute
   '/coach/teams/new': typeof AuthenticatedCoachTeamsNewRoute
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
@@ -1067,6 +1076,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/_authenticated/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
   '/_authenticated/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
+  '/_authenticated/coach/teams/$teamId': typeof AuthenticatedCoachTeamsTeamIdRoute
   '/_authenticated/coach/teams/new': typeof AuthenticatedCoachTeamsNewRoute
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
@@ -1185,6 +1195,7 @@ export interface FileRouteTypes {
     | '/coach/camps/$campId'
     | '/coach/camps/new'
     | '/coach/contacts/$contactId'
+    | '/coach/teams/$teamId'
     | '/coach/teams/new'
     | '/api/public/hooks/rsvp-reminders'
     | '/parent/train/session/$sessionId'
@@ -1295,6 +1306,7 @@ export interface FileRouteTypes {
     | '/coach/camps/$campId'
     | '/coach/camps/new'
     | '/coach/contacts/$contactId'
+    | '/coach/teams/$teamId'
     | '/coach/teams/new'
     | '/api/public/hooks/rsvp-reminders'
     | '/parent/train/session/$sessionId'
@@ -1412,6 +1424,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach/camps/$campId'
     | '/_authenticated/coach/camps/new'
     | '/_authenticated/coach/contacts/$contactId'
+    | '/_authenticated/coach/teams/$teamId'
     | '/_authenticated/coach/teams/new'
     | '/api/public/hooks/rsvp-reminders'
     | '/parent/train/session/$sessionId'
@@ -2195,6 +2208,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachTeamsNewRouteImport
       parentRoute: typeof AuthenticatedCoachTeamsRoute
     }
+    '/_authenticated/coach/teams/$teamId': {
+      id: '/_authenticated/coach/teams/$teamId'
+      path: '/$teamId'
+      fullPath: '/coach/teams/$teamId'
+      preLoaderRoute: typeof AuthenticatedCoachTeamsTeamIdRouteImport
+      parentRoute: typeof AuthenticatedCoachTeamsRoute
+    }
     '/_authenticated/coach/contacts/$contactId': {
       id: '/_authenticated/coach/contacts/$contactId'
       path: '/$contactId'
@@ -2339,12 +2359,14 @@ const AuthenticatedCoachContactsRouteWithChildren =
   )
 
 interface AuthenticatedCoachTeamsRouteChildren {
+  AuthenticatedCoachTeamsTeamIdRoute: typeof AuthenticatedCoachTeamsTeamIdRoute
   AuthenticatedCoachTeamsNewRoute: typeof AuthenticatedCoachTeamsNewRoute
   AuthenticatedCoachTeamsIndexRoute: typeof AuthenticatedCoachTeamsIndexRoute
 }
 
 const AuthenticatedCoachTeamsRouteChildren: AuthenticatedCoachTeamsRouteChildren =
   {
+    AuthenticatedCoachTeamsTeamIdRoute: AuthenticatedCoachTeamsTeamIdRoute,
     AuthenticatedCoachTeamsNewRoute: AuthenticatedCoachTeamsNewRoute,
     AuthenticatedCoachTeamsIndexRoute: AuthenticatedCoachTeamsIndexRoute,
   }
