@@ -207,6 +207,17 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
     setTimeout(() => setPixelSaved(false), 1800);
   };
 
+  const saveBuffer = async () => {
+    if (!user?.id) return;
+    setBufferSaving(true);
+    setBufferSaved(false);
+    const val = Math.max(0, Math.min(240, Math.round(bufferMin)));
+    await (supabase as any).from("profiles").update({ min_buffer_minutes: val }).eq("id", user.id);
+    setBufferSaving(false);
+    setBufferSaved(true);
+    setTimeout(() => setBufferSaved(false), 1800);
+  };
+
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
@@ -452,6 +463,35 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
               </div>
             );
           })}
+        </Section>
+
+        <Section icon={Megaphone} title="Meta Pixel">
+          {null}
+        </Section>
+
+        {/* dummy placeholder so the patch context above matches the original */}
+        <Section icon={ClockIcon} title="Scheduling buffer">
+          <p className="text-[11px] text-muted-foreground">
+            Minimum minutes between back-to-back assignments for any team member. If a coach's gap is shorter than this, we'll warn before confirming the assignment.
+          </p>
+          <label className="flex items-center gap-3">
+            <input
+              type="number"
+              min={0}
+              max={240}
+              value={bufferMin}
+              onChange={(e) => setBufferMin(Number(e.target.value) || 0)}
+              className="w-20 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+            />
+            <span className="text-[11px] text-muted-foreground">minutes</span>
+            <button
+              onClick={saveBuffer}
+              disabled={bufferSaving}
+              className="ml-auto rounded-lg bg-teal px-4 py-2 text-xs font-bold text-background disabled:opacity-60"
+            >
+              {bufferSaving ? "Saving…" : bufferSaved ? "Saved" : "Save"}
+            </button>
+          </label>
         </Section>
 
         <Section icon={Megaphone} title="Meta Pixel">
