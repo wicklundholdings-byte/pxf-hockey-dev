@@ -442,6 +442,63 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
           })}
         </Section>
 
+        <Section icon={Megaphone} title="Meta Pixel">
+          <p className="text-[11px] text-muted-foreground">
+            Paste your Facebook / Instagram Pixel ID to track ad conversions. We'll fire a Purchase event with the camp name and amount whenever a registration completes.
+          </p>
+          <label className="block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pixel ID</span>
+            <input
+              value={pixelId}
+              onChange={(e) => setPixelId(e.target.value)}
+              placeholder="e.g. 1234567890123456"
+              inputMode="numeric"
+              maxLength={32}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-sm tracking-wider"
+            />
+          </label>
+          <button
+            onClick={savePixel}
+            disabled={pixelSaving}
+            className="rounded-lg bg-teal px-4 py-2 text-xs font-bold text-background disabled:opacity-60"
+          >
+            {pixelSaving ? "Saving…" : pixelSaved ? "Saved" : "Save Pixel ID"}
+          </button>
+        </Section>
+
+        <Section icon={Mail} title="Email Marketing">
+          <p className="text-[11px] text-muted-foreground">
+            Auto-add new registrants to your email list. Pick a provider, then choose which list new parents should join.
+          </p>
+          {([
+            { id: "mailchimp", label: "Mailchimp", tint: "from-yellow-500/20 to-yellow-700/10", badge: "MC" },
+            { id: "klaviyo", label: "Klaviyo", tint: "from-fuchsia-500/20 to-fuchsia-700/10", badge: "K" },
+          ] as const).map((p) => {
+            const conn = emailMarketing[p.id];
+            const connected = conn?.status === "connected";
+            return (
+              <div key={p.id} className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                <div className="flex items-center gap-3">
+                  <div className={`grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br ${p.tint} text-[10px] font-bold`}>{p.badge}</div>
+                  <div>
+                    <p className="font-semibold">{p.label}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {connected
+                        ? `Syncing to ${conn?.list_name ?? "selected list"}`
+                        : "Connect with API key, then pick a list"}
+                    </p>
+                  </div>
+                </div>
+                {connected ? (
+                  <span className="flex items-center gap-1 rounded-full bg-volt/15 px-2 py-1 text-[10px] font-bold text-volt"><Check size={10} /> Connected</span>
+                ) : (
+                  <button className="rounded-lg border border-border px-3 py-1 text-[10px]">Connect</button>
+                )}
+              </div>
+            );
+          })}
+        </Section>
+
         <Section icon={CreditCard} title="Subscription">
           <div className="rounded-xl border border-volt/40 bg-volt/5 p-4">
             <p className="text-[10px] font-bold uppercase tracking-wider text-volt">Current plan</p>
