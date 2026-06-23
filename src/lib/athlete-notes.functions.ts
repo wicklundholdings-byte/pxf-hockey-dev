@@ -86,7 +86,14 @@ export const updateAthleteNote = createServerFn({ method: "POST" })
     isShared?: boolean;
   }) => d)
   .handler(async ({ data, context }) => {
-    const patch: Record<string, unknown> = {};
+    const patch: {
+      note_date?: string;
+      written_notes?: string | null;
+      drill_ids?: string[];
+      drill_freetext?: string[];
+      session_rating?: number | null;
+      is_shared?: boolean;
+    } = {};
     if (data.noteDate !== undefined) patch.note_date = data.noteDate;
     if (data.writtenNotes !== undefined) patch.written_notes = data.writtenNotes;
     if (data.drillIds !== undefined) patch.drill_ids = data.drillIds;
