@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, Mail, Phone, Calendar, TrendingUp, CheckCircle2, XCircle, Activity } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Calendar, TrendingUp, CheckCircle2, XCircle, Activity, Film } from "lucide-react";
+import { AthleteMediaTab } from "@/components/athlete-media-tab";
 
 export const Route = createFileRoute("/_authenticated/coach/attendees/$athleteId")({
   component: AthleteProfile,
@@ -7,6 +9,7 @@ export const Route = createFileRoute("/_authenticated/coach/attendees/$athleteId
 
 function AthleteProfile() {
   const { athleteId } = useParams({ from: "/_authenticated/coach/attendees/$athleteId" });
+  const [tab, setTab] = useState<"overview" | "media">("overview");
   const athlete = {
     name: "Jordan Walsh", birthday: "2014-03-12", age: 11, position: "Forward",
     skill: "Intermediate", gender: "M",
@@ -44,6 +47,27 @@ function AthleteProfile() {
         <span className="flex items-center gap-2"><Activity size={14} /> View PXF Combine profile</span>
         <span>→</span>
       </Link>
+
+      <div className="flex gap-1 rounded-xl border border-border bg-surface p-1">
+        <button
+          onClick={() => setTab("overview")}
+          className={"flex-1 rounded-lg py-1.5 text-[11px] font-bold " + (tab === "overview" ? "bg-gradient-brand text-primary-foreground" : "text-muted-foreground")}
+        >
+          Overview
+        </button>
+        <button
+          onClick={() => setTab("media")}
+          className={"flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-bold " + (tab === "media" ? "bg-gradient-brand text-primary-foreground" : "text-muted-foreground")}
+        >
+          <Film size={12} /> Media
+        </button>
+      </div>
+
+      {tab === "media" && (
+        <AthleteMediaTab athleteId={athleteId} athleteName={athlete.name} />
+      )}
+
+      {tab === "overview" && (<>
 
       <div className="rounded-2xl border border-border bg-card p-4">
         <div className="flex items-start gap-3">
@@ -132,6 +156,7 @@ function AthleteProfile() {
           Overall: <span className="font-bold text-foreground">4 of 5 days</span> · 80% attendance
         </p>
       </Section>
+      </>)}
     </div>
   );
 }
