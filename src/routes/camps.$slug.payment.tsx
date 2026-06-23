@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { submitBooking, previewCoupon } from "@/lib/booking.functions";
 import { useRegistrationDraft } from "@/hooks/useRegistrationDraft";
 import { RegistrationStepper } from "@/components/parent/registration-stepper";
-import { Tag, Loader2, CreditCard, Lock, ChevronDown } from "lucide-react";
+import { Tag, Loader2, CreditCard, Lock, ChevronDown, Smartphone } from "lucide-react";
 
 export const Route = createFileRoute("/camps/$slug/payment")({
   head: () => ({ meta: [{ title: "Payment — PXF Hockey" }] }),
@@ -47,6 +47,19 @@ function PaymentScreen() {
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const submittedRef = useRef(false);
+  const [walletKind, setWalletKind] = useState<"apple" | "google" | null>(null);
+
+  useEffect(() => {
+    if (typeof navigator === "undefined") return;
+    const ua = navigator.userAgent || "";
+    if (/iPhone|iPad|iPod|Macintosh/i.test(ua) && /Safari/i.test(ua) && !/CriOS|FxiOS/i.test(ua)) {
+      setWalletKind("apple");
+    } else if (/Android/i.test(ua)) {
+      setWalletKind("google");
+    } else {
+      setWalletKind(null);
+    }
+  }, []);
 
   useEffect(() => {
     (async () => {
