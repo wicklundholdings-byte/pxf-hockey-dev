@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare, LogOut, ShieldCheck, ChevronRight, UserCog } from "lucide-react";
+import { User, Building2, Bell, Lock, Link2, CreditCard, Trash2, Camera, Check, Palette, Image as ImageIcon, MessageSquare, LogOut, ShieldCheck, ChevronRight, UserCog, Calculator } from "lucide-react";
 import { LayoutDashboard, CalendarDays, BookOpen, MessageSquare as InboxIcon, Users, Flag, MessageCircle } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { useAuth, useHasCoachAccess, useUserAppRole } from "@/hooks/use-auth";
@@ -125,6 +125,29 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
   const verified = useCoachVerified(user?.id);
   const [marketplaceOn, setMarketplaceOn] = useState(false);
   const [marketplaceLoaded, setMarketplaceLoaded] = useState(false);
+  const [accounting, setAccounting] = useState<Record<string, { status: string; account_name: string | null; last_synced_at: string | null }>>({});
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    supabase
+      .from("accounting_connections")
+      .select("provider, status, account_name, last_synced_at")
+      .eq("owner_id", user.id)
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        const map: Record<string, { status: string; account_name: string | null; last_synced_at: string | null }> = {};
+        for (const row of data) {
+          map[row.provider as string] = {
+            status: row.status,
+            account_name: row.account_name,
+            last_synced_at: row.last_synced_at,
+          };
+        }
+        setAccounting(map);
+      });
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -338,6 +361,39 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
             <p className="font-semibold">Google Calendar</p>
             <button className="rounded-lg border border-border px-3 py-1 text-[10px]">Connect</button>
           </div>
+        </Section>
+
+        <Section icon={Calculator} title="Connect Accounting">
+          <p className="text-[11px] text-muted-foreground">
+            Sync every camp registration payment to your accounting software. Each transaction posts with the camp name, parent name, amount, and date.
+          </p>
+          {([
+            { id: "quickbooks", label: "QuickBooks", tint: "from-emerald-500/20 to-emerald-700/10", badge: "QB" },
+            { id: "xero", label: "Xero", tint: "from-sky-500/20 to-sky-700/10", badge: "X" },
+          ] as const).map((p) => {
+            const conn = accounting[p.id];
+            const connected = conn?.status === "connected";
+            return (
+              <div key={p.id} className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                <div className="flex items-center gap-3">
+                  <div className={`grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br ${p.tint} text-[10px] font-bold`}>{p.badge}</div>
+                  <div>
+                    <p className="font-semibold">{p.label}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {connected
+                        ? `Connected${conn?.account_name ? ` · ${conn.account_name}` : ""}`
+                        : "Auto-post payments as sales receipts"}
+                    </p>
+                  </div>
+                </div>
+                {connected ? (
+                  <span className="flex items-center gap-1 rounded-full bg-volt/15 px-2 py-1 text-[10px] font-bold text-volt"><Check size={10} /> Connected</span>
+                ) : (
+                  <button className="rounded-lg border border-border px-3 py-1 text-[10px]">Connect</button>
+                )}
+              </div>
+            );
+          })}
         </Section>
 
         <Section icon={CreditCard} title="Subscription">
