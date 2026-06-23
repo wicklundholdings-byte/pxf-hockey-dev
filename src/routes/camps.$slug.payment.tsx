@@ -149,6 +149,19 @@ function PaymentScreen() {
           campId: camp.id,
           parent: { full_name: draft.parent.full_name, email: draft.parent.email, phone: draft.parent.phone || null },
           attendees: attendeesList,
+          healthProfiles: draft.healthProfiles.map((h) => ({
+            allergies: { categories: h.allergyCategories, notes: h.allergyNotes },
+            medications: h.medications || null,
+            conditions: h.conditions || null,
+            physician_name: h.physician_name || null,
+            physician_phone: h.physician_phone || null,
+            emergency_contacts: h.emergency_contacts.filter((c) => c.name.trim() || c.phone.trim()),
+            insurance_info:
+              h.insurance_provider || h.insurance_policy_number
+                ? { provider: h.insurance_provider, policy_number: h.insurance_policy_number }
+                : null,
+            clearance_doc_url: h.clearance_doc_url,
+          })),
           couponCode: draft.couponCode || null,
           paymentPlan: draft.paymentPlan,
           waiver: camp.waiver_required && draft.waiver
