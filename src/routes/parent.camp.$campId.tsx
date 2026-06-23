@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { CalendarDays, MapPin, Users, MessageCircle, Info, ChevronLeft, Clock, Check, X, Shield } from "lucide-react";
+import { VenueMap } from "@/components/venue-map";
 import { CalendarSyncButton } from "@/components/calendar-sync-button";
 
 export const Route = createFileRoute("/parent/camp/$campId")({
@@ -360,7 +361,11 @@ function ParentCampDetail() {
 
           {tab === "info" && (
             <div className="space-y-3">
-              <InfoRow icon={MapPin} title="Venue" body={camp?.venue_name ?? "TBA"} sub={camp?.address ?? undefined} />
+              {(camp?.venue_name || camp?.address) ? (
+                <VenueMap venueName={camp?.venue_name} address={camp?.address} />
+              ) : (
+                <InfoRow icon={MapPin} title="Venue" body="TBA" />
+              )}
               <div className="rounded-2xl border border-border bg-card p-4">
                 <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider"><Info size={12} className="text-teal" /> What to bring</h3>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
