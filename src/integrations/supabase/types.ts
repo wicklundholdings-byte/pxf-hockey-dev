@@ -1127,6 +1127,57 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_game_notes: {
+        Row: {
+          created_at: string
+          created_by: string
+          event_id: string
+          id: string
+          pep_talk: string | null
+          period_notes: Json
+          post_game_notes: string | null
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          event_id: string
+          id?: string
+          pep_talk?: string | null
+          period_notes?: Json
+          post_game_notes?: string | null
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          event_id?: string
+          id?: string
+          pep_talk?: string | null
+          period_notes?: Json
+          post_game_notes?: string | null
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_game_notes_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "team_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_game_notes_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coach_marketing_settings: {
         Row: {
           coach_id: string
@@ -2184,6 +2235,123 @@ export type Database = {
             columns: ["registration_id"]
             isOneToOne: true
             referencedRelation: "registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_lineups: {
+        Row: {
+          created_at: string
+          created_by: string
+          event_id: string | null
+          id: string
+          is_shared: boolean
+          pk_units: Json
+          positions: Json
+          pp_units: Json
+          scratches: Json
+          team_id: string
+          template_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          event_id?: string | null
+          id?: string
+          is_shared?: boolean
+          pk_units?: Json
+          positions?: Json
+          pp_units?: Json
+          scratches?: Json
+          team_id: string
+          template_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          event_id?: string | null
+          id?: string
+          is_shared?: boolean
+          pk_units?: Json
+          positions?: Json
+          pp_units?: Json
+          scratches?: Json
+          team_id?: string
+          template_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_lineups_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "team_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_lineups_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_plans: {
+        Row: {
+          created_at: string
+          created_by: string
+          drill_ids: Json
+          event_id: string
+          id: string
+          matchups: Json
+          opponent_notes: string | null
+          our_gameplan: string | null
+          team_id: string
+          updated_at: string
+          video_clip_ids: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          drill_ids?: Json
+          event_id: string
+          id?: string
+          matchups?: Json
+          opponent_notes?: string | null
+          our_gameplan?: string | null
+          team_id: string
+          updated_at?: string
+          video_clip_ids?: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          drill_ids?: Json
+          event_id?: string
+          id?: string
+          matchups?: Json
+          opponent_notes?: string | null
+          our_gameplan?: string | null
+          team_id?: string
+          updated_at?: string
+          video_clip_ids?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_plans_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "team_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_plans_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
