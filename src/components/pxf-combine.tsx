@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Zap, Dumbbell, Target, Repeat, Activity, Snowflake, Lock, Globe2, MapPin, ChevronRight } from "lucide-react";
+import { RecoveryCard } from "@/components/recovery-card";
 
 type StatKey = "speed" | "power" | "shot" | "agility" | "explosiveness" | "skating";
 
@@ -44,7 +45,7 @@ const OVERALL: number | null = 74;
 const OVERALL_WORLD = 1247;
 const OVERALL_PROVINCE = 23;
 
-export function PxfCombine() {
+export function PxfCombine({ athleteId }: { athleteId?: string | null }) {
   return (
     <section className="mt-7">
       <div className="flex items-baseline justify-between">
@@ -60,6 +61,8 @@ export function PxfCombine() {
           <StatCard key={s.key} stat={s} data={SCORES[s.key] ?? null} />
         ))}
       </div>
+
+      <RecoveryCard athleteId={athleteId} />
     </section>
   );
 }
