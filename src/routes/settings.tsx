@@ -159,12 +159,12 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
-    supabase
-      .from("profiles")
+    (supabase as any)
+      .from("coach_marketing_settings")
       .select("meta_pixel_id")
-      .eq("id", user.id)
+      .eq("coach_id", user.id)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data }: { data: { meta_pixel_id: string | null } | null }) => {
         if (cancelled) return;
         setPixelId(data?.meta_pixel_id ?? "");
       });
@@ -201,7 +201,12 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
     setPixelSaving(true);
     setPixelSaved(false);
     const trimmed = pixelId.trim();
-    await supabase.from("profiles").update({ meta_pixel_id: trimmed || null }).eq("id", user.id);
+    await (supabase as any)
+      .from("coach_marketing_settings")
+      .upsert(
+        { coach_id: user.id, meta_pixel_id: trimmed || null },
+        { onConflict: "coach_id" },
+      );
     setPixelSaving(false);
     setPixelSaved(true);
     setTimeout(() => setPixelSaved(false), 1800);
