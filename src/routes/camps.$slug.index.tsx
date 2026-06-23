@@ -2,6 +2,7 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getPublicCamp } from "@/lib/camps-public.functions";
 import { CalendarDays, MapPin, Clock, Users, Share2, ChevronRight, Loader2, Shield } from "lucide-react";
+import { VenueMap } from "@/components/venue-map";
 import { VerifiedBadge, useCoachVerified } from "@/components/verified-badge";
 
 export const Route = createFileRoute("/camps/$slug/")({
@@ -128,6 +129,12 @@ function CampPublicPage() {
             highlight={spotsLeft != null && spotsLeft <= 5}
           />
         </div>
+
+        {(camp.venue_name || camp.address) && (
+          <div className="mt-3">
+            <VenueMap venueName={camp.venue_name} address={camp.address} />
+          </div>
+        )}
 
         {/* Price */}
         <div className="mt-4 flex items-baseline justify-between rounded-2xl border border-border bg-card p-4">
