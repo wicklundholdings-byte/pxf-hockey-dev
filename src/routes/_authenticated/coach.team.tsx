@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { UserCog, Plus, Mail, Phone, Trash2, X, Check, Clock, Shield, CalendarDays, MapPin, AlertTriangle } from "lucide-react";
+import { UserCog, Plus, Mail, Phone, Trash2, X, Check, Clock, Shield, CalendarDays, MapPin, AlertTriangle, LayoutGrid, CalendarRange } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/team")({
   component: TeamPage,
@@ -43,6 +43,7 @@ function TeamPage() {
   const [camps, setCamps] = useState<Camp[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [assignFor, setAssignFor] = useState<Member | null>(null);
+  const [view, setView] = useState<"roster" | "schedule">("roster");
 
   async function load() {
     setLoading(true);
