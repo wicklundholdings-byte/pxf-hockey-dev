@@ -5,7 +5,9 @@ import {
   Layers, Cone, Disc, Users, ShieldCheck, Goal, Cpu, Sparkles,
   MousePointer2, Square, Slash, Spline, Undo2, Plus, X, Check, Heart,
 } from "lucide-react";
+import { Instagram } from "lucide-react";
 import { CATEGORIES } from "@/data/pxf";
+import { SocialImportSheet, SocialImportThumb, type SocialImport } from "@/components/social-import-sheet";
 
 export const Route = createFileRoute("/drill-builder")({
   head: () => ({
@@ -143,6 +145,7 @@ function DrillBuilder() {
   const [showDetails, setShowDetails] = useState(false);
   const [showSave, setShowSave] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [socialImport, setSocialImport] = useState<SocialImport | null>(null);
 
   // details
   const [name, setName] = useState("Untitled Drill");
@@ -328,10 +331,31 @@ function DrillBuilder() {
         <button onClick={() => setShowDetails(true)} className="grid h-9 w-9 place-items-center rounded-full border border-border/60 bg-surface-2 text-foreground" aria-label="Details">
           <Layers size={15} />
         </button>
+        <SocialImportSheet
+          trigger={
+            <button className="grid h-9 w-9 place-items-center rounded-full border border-border/60 bg-surface-2 text-foreground" aria-label="Import from social">
+              <Instagram size={15} />
+            </button>
+          }
+          onImport={(data) => {
+            setSocialImport(data);
+            setToast("Video import queued");
+            setTimeout(() => setToast(null), 1800);
+          }}
+        />
         <button onClick={() => setShowSave(true)} className="flex h-9 items-center gap-1.5 rounded-full bg-gradient-brand px-3 text-[12px] font-bold text-primary-foreground shadow-glow-teal">
           <Save size={14} /> SAVE
         </button>
       </header>
+
+      {socialImport && (
+        <div className="border-b border-border/60 bg-surface/60 px-3 py-2">
+          <SocialImportThumb url={socialImport.source_url} />
+          {socialImport.source_credit && (
+            <p className="mt-1 text-[10px] text-muted-foreground">Credit: {socialImport.source_credit}</p>
+          )}
+        </div>
+      )}
 
       {/* Template row */}
       <div className="flex gap-1.5 overflow-x-auto border-b border-border/60 bg-surface/60 px-3 py-2">
