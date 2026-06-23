@@ -108,7 +108,7 @@ function PracticePlan() {
         }
       }
       await save({ data: { teamId, eventId, items: flat } });
-      alert("Practice plan saved");
+      alert("Practice Plan saved");
     } catch (e: any) { alert(e?.message); } finally { setSaving(false); }
   }
 
