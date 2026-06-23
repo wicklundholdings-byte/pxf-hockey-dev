@@ -15,7 +15,7 @@ type Item =
   | { id: string; itemType: "drill"; drillId?: string; drillName: string; durationMinutes: number }
   | { id: string; itemType: "note"; noteText: string; durationMinutes: number }
   | { id: string; itemType: "session"; sessionName: string; children: SessionChild[] };
-type Drill = { id: string; title: string; category?: string | null; default_duration_min?: number | null };
+type Drill = { id: string; title: string; category?: string | null; duration_minutes?: number | null };
 type SavedBlock = { uid: string; drillId: string; mins: number };
 type SavedSession = { id: string; name: string; date: string; totalMins: number; blocks: SavedBlock[] };
 const SESSIONS_KEY = "pxf:sessions:v2";
@@ -36,10 +36,19 @@ function PracticePlan() {
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
-  const [catFilter, setCatFilter] = useState<Category | "All">("All");
+  const [catFilter, setCatFilter] = useState<string>("All");
+  const [dbCategories, setDbCategories] = useState<string[]>([]);
 
   useEffect(() => {
-    supabase.from("drills").select("id,title,category,default_duration_min").order("title").limit(500).then(({ data }) => setDrills((data ?? []) as Drill[]));
+    (async () => {
+      const { data: cats } = await supabase.from("drill_categories").select("id,name").order("sort_order");
+      const catMap = new Map<string, string>((cats ?? []).map((c: { id: string; name: string }) => [c.id, c.name]));
+      setDbCategories((cats ?? []).map((c: { name: string }) => c.name));
+      const { data: rows } = await supabase.from("drills").select("id,title,category_id,duration_minutes").order("title").limit(500);
+      setDrills(((rows ?? []) as Array<{ id: string; title: string; category_id: string | null; duration_minutes: number | null }>).map((r) => ({
+        id: r.id, title: r.title, category: r.category_id ? (catMap.get(r.category_id) ?? null) : null, duration_minutes: r.duration_minutes,
+      })));
+    })();
     if (typeof window !== "undefined") {
       try { setSessions(JSON.parse(window.localStorage.getItem(SESSIONS_KEY) ?? "[]")); } catch { /* ignore */ }
     }
@@ -52,7 +61,7 @@ function PracticePlan() {
       itemType: "drill",
       drillId: d.id,
       drillName: d.title,
-      durationMinutes: d.default_duration_min ?? 10,
+      durationMinutes: d.duration_minutes ?? 10,
     });
   }
   function addSession(s: SavedSession) {
@@ -194,7 +203,7 @@ function PracticePlan() {
                 <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search drills…" className="flex-1 bg-transparent text-sm outline-none" />
               </div>
               <div className="mt-2 flex gap-1 overflow-x-auto pb-1">
-                {(["All", ...CATEGORIES.map((c) => c.name)] as Array<Category | "All">).map((c) => (
+                {(["All", ...(dbCategories.length ? dbCategories : CATEGORIES.map((c) => c.name))]).map((c) => (
                   <button key={c} onClick={() => setCatFilter(c)} className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold ${catFilter === c ? "bg-gradient-brand text-primary-foreground" : "border border-border bg-background text-muted-foreground"}`}>{c}</button>
                 ))}
               </div>
