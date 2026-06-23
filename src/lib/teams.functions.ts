@@ -65,7 +65,10 @@ export const addPlayerWithInvite = createServerFn({ method: "POST" })
       .single();
     if (pErr) throw new Error(pErr.message);
 
-    const { data: invite, error: iErr } = await context.supabase
+    // invite_token is a privileged column that anon/authenticated cannot read
+    // via the Data API; use the service-role client to safely return it once.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: invite, error: iErr } = await supabaseAdmin
       .from("team_invites")
       .insert({
         team_id: data.teamId,

@@ -140,8 +140,10 @@ function ParentDashboard() {
         const coachIds = Array.from(new Set(regRows.map((r) => r.camps?.owner_id).filter(Boolean) as string[]));
         const coachMap = new Map<string, string>();
         if (coachIds.length) {
-          const { data: coaches } = await supabase.from("profiles").select("id, full_name").in("id", coachIds);
-          (coaches ?? []).forEach((c) => coachMap.set(c.id, c.full_name ?? "Coach"));
+          const { data: coaches } = await (supabase as any).rpc("get_profile_names", { _ids: coachIds });
+          ((coaches ?? []) as Array<{ id: string; full_name: string | null }>).forEach((c) =>
+            coachMap.set(c.id, c.full_name ?? "Coach"),
+          );
         }
         const built: RegCamp[] = regRows
           .filter((r) => r.camps)
@@ -228,8 +230,10 @@ function ParentDashboard() {
         const senderIds = Array.from(new Set(Array.from(latestByConv.values()).map((m) => m.sender_id).filter(Boolean)));
         const senderMap = new Map<string, string>();
         if (senderIds.length) {
-          const { data: senders } = await supabase.from("profiles").select("id, full_name").in("id", senderIds);
-          (senders ?? []).forEach((s) => senderMap.set(s.id, s.full_name ?? "Coach"));
+          const { data: senders } = await (supabase as any).rpc("get_profile_names", { _ids: senderIds });
+          ((senders ?? []) as Array<{ id: string; full_name: string | null }>).forEach((s) =>
+            senderMap.set(s.id, s.full_name ?? "Coach"),
+          );
         }
         const convCampMap = new Map<string, string | null>();
         (convs ?? []).forEach((c: any) => convCampMap.set(c.id, c.camps?.name ?? null));
