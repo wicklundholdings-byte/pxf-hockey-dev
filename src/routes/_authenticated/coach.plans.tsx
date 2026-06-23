@@ -1,40 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, ArrowLeft, Sparkles } from "lucide-react";
+import { Check, ArrowLeft, Sparkles, Flame } from "lucide-react";
+import { COACH_TIERS, FOUNDING_MEMBER_END } from "@/lib/tiers";
 
 export const Route = createFileRoute("/_authenticated/coach/plans")({
   component: PlansPage,
 });
-
-const plans = [
-  {
-    id: "home",
-    name: "Home Coach",
-    price: "$9",
-    period: "/month",
-    desc: "Drill library + session builder for parents training their own kid.",
-    features: ["Full drill library", "Session builder", "Save & reuse sessions"],
-    trial: "14-day free trial",
-  },
-  {
-    id: "elite",
-    name: "Elite Coach",
-    price: "$49",
-    period: "/month",
-    desc: "Run camps, take registrations, message parents.",
-    features: ["Everything in Home", "Camp registrations + Stripe payouts", "Roster, attendance, evaluations", "Direct & group messaging", "Email broadcasts"],
-    trial: "30-day free trial",
-    highlight: true,
-  },
-  {
-    id: "platinum",
-    name: "Platinum Coach",
-    price: "$99",
-    period: "/month",
-    desc: "For programs with branding, analytics, and partner channels.",
-    features: ["Everything in Elite", "Custom branding (logo, colors)", "Advanced analytics", "Partner channels", "Priority support"],
-    trial: "30-day free trial",
-  },
-];
 
 function PlansPage() {
   return (
@@ -42,31 +12,36 @@ function PlansPage() {
       <Link to="/coach" className="flex items-center gap-1 text-xs text-muted-foreground">
         <ArrowLeft size={14} /> Back
       </Link>
-      <div className="mt-3 text-center">
+      <div className="mt-3 rounded-2xl border border-teal/40 bg-gradient-to-r from-teal/15 to-volt/10 p-3">
+        <p className="flex items-center gap-2 text-xs font-bold text-teal">
+          <Flame size={14} /> Founding Member — Free until {FOUNDING_MEMBER_END}
+        </p>
+      </div>
+      <div className="mt-4 text-center">
         <Sparkles size={22} className="mx-auto text-teal" />
-        <h1 className="mt-2 font-display text-2xl font-bold">Choose your plan</h1>
-        <p className="mt-1 text-xs text-muted-foreground">Start free. Cancel anytime.</p>
+        <h1 className="mt-2 font-display text-2xl font-bold">Choose your coach plan</h1>
+        <p className="mt-1 text-xs text-muted-foreground">14-day free trial on every coach tier.</p>
       </div>
       <div className="mt-6 space-y-3">
-        {plans.map((p) => (
+        {COACH_TIERS.map((p) => (
           <div
             key={p.id}
             className={
               "rounded-2xl border p-4 " +
-              (p.highlight ? "border-teal bg-teal/5" : "border-border bg-card")
+              (p.popular ? "border-teal bg-teal/5" : "border-border bg-card")
             }
           >
             <div className="flex items-baseline justify-between">
               <div>
                 <p className="font-display text-lg font-bold">{p.name}</p>
-                {p.highlight && <span className="text-[10px] font-bold text-teal">MOST POPULAR</span>}
+                {p.popular && <span className="text-[10px] font-bold text-teal">MOST POPULAR</span>}
               </div>
               <div>
-                <span className="font-display text-2xl font-bold">{p.price}</span>
-                <span className="text-xs text-muted-foreground">{p.period}</span>
+                <span className="font-display text-2xl font-bold">${p.price}</span>
+                <span className="text-xs text-muted-foreground">/mo</span>
               </div>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">{p.desc}</p>
+            <p className="mt-2 text-xs text-muted-foreground">{p.tagline}</p>
             <ul className="mt-3 space-y-1.5">
               {p.features.map((f) => (
                 <li key={f} className="flex items-start gap-2 text-xs">
@@ -75,8 +50,8 @@ function PlansPage() {
                 </li>
               ))}
             </ul>
-            <button className={"mt-4 w-full rounded-full py-2.5 text-xs font-bold " + (p.highlight ? "bg-gradient-brand text-primary-foreground" : "border border-border bg-surface text-foreground")}>
-              Start {p.trial}
+            <button className={"mt-4 w-full rounded-full py-2.5 text-xs font-bold " + (p.popular ? "bg-gradient-brand text-primary-foreground" : "border border-border bg-surface text-foreground")}>
+              Start {p.trialDays}-day free trial
             </button>
           </div>
         ))}
