@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { LayoutDashboard, Flag, MessageCircle, User } from "lucide-react";
+import { LayoutDashboard, Flag, Dumbbell, MessageCircle, User } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserAppRole } from "@/lib/user-role";
@@ -24,6 +24,7 @@ function ParentLayout() {
         items={[
           { to: "/parent", label: "Dashboard", icon: LayoutDashboard, exact: true },
           { to: "/parent/camps", label: "Camps", icon: Flag },
+          { to: "/parent/train", label: "Train", icon: Dumbbell },
           { to: "/parent/inbox", label: "Inbox", icon: MessageCircle },
           { to: "/parent/profile", label: "Profile", icon: User },
         ]}

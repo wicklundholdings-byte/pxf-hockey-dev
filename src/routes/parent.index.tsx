@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, MapPin, Star, MessageCircle, ChevronRight, ChevronDown, Cpu, Calendar, Clock } from "lucide-react";
+import { Bell, MapPin, Star, MessageCircle, ChevronRight, ChevronDown, Cpu, Calendar, Clock, Dumbbell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -87,6 +87,7 @@ function ParentDashboard() {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [rsvps, setRsvps] = useState<RsvpPrompt[]>([]);
+  const [hasActiveDryland, setHasActiveDryland] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -103,6 +104,17 @@ function ParentDashboard() {
         .order("created_at");
       const kidList = (kidsRows ?? []) as Kid[];
       setKids(kidList);
+
+      if (kidList.length > 0) {
+        const { count } = await supabase
+          .from("athlete_program_enrollments")
+          .select("id", { count: "exact", head: true })
+          .in("athlete_id", kidList.map((k) => k.id))
+          .eq("status", "active");
+        setHasActiveDryland((count ?? 0) > 0);
+      } else {
+        setHasActiveDryland(false);
+      }
 
       // Look up registrations made via the public booking flow: those
       // attach to coach-side contact/attendee rows keyed by the parent's
@@ -418,6 +430,21 @@ function ParentDashboard() {
       {/* RSVP prompt */}
       {/* Next Session */}
       <section className="mt-6">
+        {hasActiveDryland === false && (
+          <Link
+            to="/parent/train"
+            className="mb-3 flex items-center gap-3 rounded-2xl border border-volt/40 bg-volt/10 p-3"
+          >
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-volt/20">
+              <Dumbbell size={18} className="text-volt" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-foreground">No training program scheduled</p>
+              <p className="text-[11px] text-muted-foreground">Browse free dryland programs to keep training between camps.</p>
+            </div>
+            <ChevronRight size={16} className="text-volt" />
+          </Link>
+        )}
         <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Next Session</h2>
         <div className="mt-2 space-y-2">
           {nextSessions.map((ns) => {

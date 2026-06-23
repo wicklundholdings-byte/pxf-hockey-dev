@@ -51,6 +51,7 @@ import { Route as PaymentsCouponRouteImport } from './routes/payments.coupon'
 import { Route as PaymentsConnectRouteImport } from './routes/payments.connect'
 import { Route as PaymentsConfirmationRouteImport } from './routes/payments.confirmation'
 import { Route as PaymentsCheckoutRouteImport } from './routes/payments.checkout'
+import { Route as ParentTrainRouteImport } from './routes/parent.train'
 import { Route as ParentScheduleRouteImport } from './routes/parent.schedule'
 import { Route as ParentProfileRouteImport } from './routes/parent.profile'
 import { Route as ParentInboxRouteImport } from './routes/parent.inbox'
@@ -69,6 +70,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as CampsSlugIndexRouteImport } from './routes/camps.$slug.index'
 import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authenticated/coach.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as ParentTrainProgramIdRouteImport } from './routes/parent.train.$programId'
 import { Route as ParentConversationConversationIdRouteImport } from './routes/parent.conversation.$conversationId'
 import { Route as ParentCampCampIdRouteImport } from './routes/parent.camp.$campId'
 import { Route as CombineShareTokenRouteImport } from './routes/combine.share.$token'
@@ -103,6 +105,7 @@ import { Route as AuthenticatedAdminProgramsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminDrillsRouteImport } from './routes/_authenticated/admin.drills'
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 import { Route as AuthenticatedCoachCampsIndexRouteImport } from './routes/_authenticated/coach.camps.index'
+import { Route as ParentTrainSessionSessionIdRouteImport } from './routes/parent.train.session.$sessionId'
 import { Route as ApiPublicHooksRsvpRemindersRouteImport } from './routes/api/public/hooks/rsvp-reminders'
 import { Route as AuthenticatedCoachContactsContactIdRouteImport } from './routes/_authenticated/coach.contacts.$contactId'
 import { Route as AuthenticatedCoachCampsNewRouteImport } from './routes/_authenticated/coach.camps.new'
@@ -327,6 +330,11 @@ const PaymentsCheckoutRoute = PaymentsCheckoutRouteImport.update({
   path: '/payments/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ParentTrainRoute = ParentTrainRouteImport.update({
+  id: '/train',
+  path: '/train',
+  getParentRoute: () => ParentRoute,
+} as any)
 const ParentScheduleRoute = ParentScheduleRouteImport.update({
   id: '/schedule',
   path: '/schedule',
@@ -416,6 +424,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const ParentTrainProgramIdRoute = ParentTrainProgramIdRouteImport.update({
+  id: '/$programId',
+  path: '/$programId',
+  getParentRoute: () => ParentTrainRoute,
 } as any)
 const ParentConversationConversationIdRoute =
   ParentConversationConversationIdRouteImport.update({
@@ -608,6 +621,12 @@ const AuthenticatedCoachCampsIndexRoute =
     path: '/camps/',
     getParentRoute: () => AuthenticatedCoachRoute,
   } as any)
+const ParentTrainSessionSessionIdRoute =
+  ParentTrainSessionSessionIdRouteImport.update({
+    id: '/session/$sessionId',
+    path: '/session/$sessionId',
+    getParentRoute: () => ParentTrainRoute,
+  } as any)
 const ApiPublicHooksRsvpRemindersRoute =
   ApiPublicHooksRsvpRemindersRouteImport.update({
     id: '/api/public/hooks/rsvp-reminders',
@@ -734,6 +753,7 @@ export interface FileRoutesByFullPath {
   '/parent/inbox': typeof ParentInboxRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
+  '/parent/train': typeof ParentTrainRouteWithChildren
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
@@ -783,6 +803,7 @@ export interface FileRoutesByFullPath {
   '/combine/share/$token': typeof CombineShareTokenRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
+  '/parent/train/$programId': typeof ParentTrainProgramIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/coach/': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug/': typeof CampsSlugIndexRoute
@@ -791,6 +812,7 @@ export interface FileRoutesByFullPath {
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
   '/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
+  '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
   '/coach/camps/': typeof AuthenticatedCoachCampsIndexRoute
   '/coach/camps/$campId/attendance': typeof AuthenticatedCoachCampsCampIdAttendanceRoute
   '/coach/camps/$campId/checkin': typeof AuthenticatedCoachCampsCampIdCheckinRoute
@@ -838,6 +860,7 @@ export interface FileRoutesByTo {
   '/parent/inbox': typeof ParentInboxRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
+  '/parent/train': typeof ParentTrainRouteWithChildren
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
@@ -887,6 +910,7 @@ export interface FileRoutesByTo {
   '/combine/share/$token': typeof CombineShareTokenRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
+  '/parent/train/$programId': typeof ParentTrainProgramIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/coach': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug': typeof CampsSlugIndexRoute
@@ -895,6 +919,7 @@ export interface FileRoutesByTo {
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
   '/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
+  '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
   '/coach/camps': typeof AuthenticatedCoachCampsIndexRoute
   '/coach/camps/$campId/attendance': typeof AuthenticatedCoachCampsCampIdAttendanceRoute
   '/coach/camps/$campId/checkin': typeof AuthenticatedCoachCampsCampIdCheckinRoute
@@ -949,6 +974,7 @@ export interface FileRoutesById {
   '/parent/inbox': typeof ParentInboxRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
+  '/parent/train': typeof ParentTrainRouteWithChildren
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
@@ -998,6 +1024,7 @@ export interface FileRoutesById {
   '/combine/share/$token': typeof CombineShareTokenRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
+  '/parent/train/$programId': typeof ParentTrainProgramIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/coach/': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug/': typeof CampsSlugIndexRoute
@@ -1006,6 +1033,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
   '/_authenticated/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
+  '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
   '/_authenticated/coach/camps/': typeof AuthenticatedCoachCampsIndexRoute
   '/_authenticated/coach/camps/$campId/attendance': typeof AuthenticatedCoachCampsCampIdAttendanceRoute
   '/_authenticated/coach/camps/$campId/checkin': typeof AuthenticatedCoachCampsCampIdCheckinRoute
@@ -1060,6 +1088,7 @@ export interface FileRouteTypes {
     | '/parent/inbox'
     | '/parent/profile'
     | '/parent/schedule'
+    | '/parent/train'
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
@@ -1109,6 +1138,7 @@ export interface FileRouteTypes {
     | '/combine/share/$token'
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
+    | '/parent/train/$programId'
     | '/admin/'
     | '/coach/'
     | '/camps/$slug/'
@@ -1117,6 +1147,7 @@ export interface FileRouteTypes {
     | '/coach/camps/new'
     | '/coach/contacts/$contactId'
     | '/api/public/hooks/rsvp-reminders'
+    | '/parent/train/session/$sessionId'
     | '/coach/camps/'
     | '/coach/camps/$campId/attendance'
     | '/coach/camps/$campId/checkin'
@@ -1164,6 +1195,7 @@ export interface FileRouteTypes {
     | '/parent/inbox'
     | '/parent/profile'
     | '/parent/schedule'
+    | '/parent/train'
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
@@ -1213,6 +1245,7 @@ export interface FileRouteTypes {
     | '/combine/share/$token'
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
+    | '/parent/train/$programId'
     | '/admin'
     | '/coach'
     | '/camps/$slug'
@@ -1221,6 +1254,7 @@ export interface FileRouteTypes {
     | '/coach/camps/new'
     | '/coach/contacts/$contactId'
     | '/api/public/hooks/rsvp-reminders'
+    | '/parent/train/session/$sessionId'
     | '/coach/camps'
     | '/coach/camps/$campId/attendance'
     | '/coach/camps/$campId/checkin'
@@ -1274,6 +1308,7 @@ export interface FileRouteTypes {
     | '/parent/inbox'
     | '/parent/profile'
     | '/parent/schedule'
+    | '/parent/train'
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
@@ -1323,6 +1358,7 @@ export interface FileRouteTypes {
     | '/combine/share/$token'
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
+    | '/parent/train/$programId'
     | '/_authenticated/admin/'
     | '/_authenticated/coach/'
     | '/camps/$slug/'
@@ -1331,6 +1367,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach/camps/new'
     | '/_authenticated/coach/contacts/$contactId'
     | '/api/public/hooks/rsvp-reminders'
+    | '/parent/train/session/$sessionId'
     | '/_authenticated/coach/camps/'
     | '/_authenticated/coach/camps/$campId/attendance'
     | '/_authenticated/coach/camps/$campId/checkin'
@@ -1690,6 +1727,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PaymentsCheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/parent/train': {
+      id: '/parent/train'
+      path: '/train'
+      fullPath: '/parent/train'
+      preLoaderRoute: typeof ParentTrainRouteImport
+      parentRoute: typeof ParentRoute
+    }
     '/parent/schedule': {
       id: '/parent/schedule'
       path: '/schedule'
@@ -1815,6 +1859,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/parent/train/$programId': {
+      id: '/parent/train/$programId'
+      path: '/$programId'
+      fullPath: '/parent/train/$programId'
+      preLoaderRoute: typeof ParentTrainProgramIdRouteImport
+      parentRoute: typeof ParentTrainRoute
     }
     '/parent/conversation/$conversationId': {
       id: '/parent/conversation/$conversationId'
@@ -2053,6 +2104,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/coach/camps/'
       preLoaderRoute: typeof AuthenticatedCoachCampsIndexRouteImport
       parentRoute: typeof AuthenticatedCoachRoute
+    }
+    '/parent/train/session/$sessionId': {
+      id: '/parent/train/session/$sessionId'
+      path: '/session/$sessionId'
+      fullPath: '/parent/train/session/$sessionId'
+      preLoaderRoute: typeof ParentTrainSessionSessionIdRouteImport
+      parentRoute: typeof ParentTrainRoute
     }
     '/api/public/hooks/rsvp-reminders': {
       id: '/api/public/hooks/rsvp-reminders'
@@ -2347,11 +2405,26 @@ const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
   OnboardingRouteChildren,
 )
 
+interface ParentTrainRouteChildren {
+  ParentTrainProgramIdRoute: typeof ParentTrainProgramIdRoute
+  ParentTrainSessionSessionIdRoute: typeof ParentTrainSessionSessionIdRoute
+}
+
+const ParentTrainRouteChildren: ParentTrainRouteChildren = {
+  ParentTrainProgramIdRoute: ParentTrainProgramIdRoute,
+  ParentTrainSessionSessionIdRoute: ParentTrainSessionSessionIdRoute,
+}
+
+const ParentTrainRouteWithChildren = ParentTrainRoute._addFileChildren(
+  ParentTrainRouteChildren,
+)
+
 interface ParentRouteChildren {
   ParentCampsRoute: typeof ParentCampsRoute
   ParentInboxRoute: typeof ParentInboxRoute
   ParentProfileRoute: typeof ParentProfileRoute
   ParentScheduleRoute: typeof ParentScheduleRoute
+  ParentTrainRoute: typeof ParentTrainRouteWithChildren
   ParentIndexRoute: typeof ParentIndexRoute
   ParentCampCampIdRoute: typeof ParentCampCampIdRoute
   ParentConversationConversationIdRoute: typeof ParentConversationConversationIdRoute
@@ -2362,6 +2435,7 @@ const ParentRouteChildren: ParentRouteChildren = {
   ParentInboxRoute: ParentInboxRoute,
   ParentProfileRoute: ParentProfileRoute,
   ParentScheduleRoute: ParentScheduleRoute,
+  ParentTrainRoute: ParentTrainRouteWithChildren,
   ParentIndexRoute: ParentIndexRoute,
   ParentCampCampIdRoute: ParentCampCampIdRoute,
   ParentConversationConversationIdRoute: ParentConversationConversationIdRoute,
