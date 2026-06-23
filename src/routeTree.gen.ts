@@ -39,6 +39,7 @@ import { Route as StoreIndexRouteImport } from './routes/store.index'
 import { Route as ParentIndexRouteImport } from './routes/parent.index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding.index'
 import { Route as CampsIndexRouteImport } from './routes/camps.index'
+import { Route as TeamInviteTokenRouteImport } from './routes/team-invite.$token'
 import { Route as StoreCartRouteImport } from './routes/store.cart'
 import { Route as StoreProductIdRouteImport } from './routes/store.$productId'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
@@ -285,6 +286,11 @@ const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
 const CampsIndexRoute = CampsIndexRouteImport.update({
   id: '/camps/',
   path: '/camps/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamInviteTokenRoute = TeamInviteTokenRouteImport.update({
+  id: '/team-invite/$token',
+  path: '/team-invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StoreCartRoute = StoreCartRouteImport.update({
@@ -880,6 +886,7 @@ export interface FileRoutesByFullPath {
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
+  '/team-invite/$token': typeof TeamInviteTokenRoute
   '/camps/': typeof CampsIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
   '/parent/': typeof ParentIndexRoute
@@ -1004,6 +1011,7 @@ export interface FileRoutesByTo {
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
+  '/team-invite/$token': typeof TeamInviteTokenRoute
   '/camps': typeof CampsIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
   '/parent': typeof ParentIndexRoute
@@ -1133,6 +1141,7 @@ export interface FileRoutesById {
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
+  '/team-invite/$token': typeof TeamInviteTokenRoute
   '/camps/': typeof CampsIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
   '/parent/': typeof ParentIndexRoute
@@ -1264,6 +1273,7 @@ export interface FileRouteTypes {
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
+    | '/team-invite/$token'
     | '/camps/'
     | '/onboarding/'
     | '/parent/'
@@ -1388,6 +1398,7 @@ export interface FileRouteTypes {
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
+    | '/team-invite/$token'
     | '/camps'
     | '/onboarding'
     | '/parent'
@@ -1516,6 +1527,7 @@ export interface FileRouteTypes {
     | '/session-detail/$sessionId'
     | '/store/$productId'
     | '/store/cart'
+    | '/team-invite/$token'
     | '/camps/'
     | '/onboarding/'
     | '/parent/'
@@ -1636,6 +1648,7 @@ export interface RootRouteChildren {
   SessionDetailSessionIdRoute: typeof SessionDetailSessionIdRoute
   StoreProductIdRoute: typeof StoreProductIdRoute
   StoreCartRoute: typeof StoreCartRoute
+  TeamInviteTokenRoute: typeof TeamInviteTokenRoute
   CampsIndexRoute: typeof CampsIndexRoute
   StoreIndexRoute: typeof StoreIndexRoute
   CombineShareTokenRoute: typeof CombineShareTokenRoute
@@ -1853,6 +1866,13 @@ declare module '@tanstack/react-router' {
       path: '/camps'
       fullPath: '/camps/'
       preLoaderRoute: typeof CampsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/team-invite/$token': {
+      id: '/team-invite/$token'
+      path: '/team-invite/$token'
+      fullPath: '/team-invite/$token'
+      preLoaderRoute: typeof TeamInviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/store/cart': {
@@ -2931,6 +2951,7 @@ const rootRouteChildren: RootRouteChildren = {
   SessionDetailSessionIdRoute: SessionDetailSessionIdRoute,
   StoreProductIdRoute: StoreProductIdRoute,
   StoreCartRoute: StoreCartRoute,
+  TeamInviteTokenRoute: TeamInviteTokenRoute,
   CampsIndexRoute: CampsIndexRoute,
   StoreIndexRoute: StoreIndexRoute,
   CombineShareTokenRoute: CombineShareTokenRoute,

@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { addPlayer } from "@/lib/teams.functions";
-import { Plus, X, UserCircle2 } from "lucide-react";
+import { addPlayerWithInvite } from "@/lib/teams.functions";
+import { Plus, X, UserCircle2, Copy, Check } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/roster")({
   component: Roster,
@@ -48,21 +48,53 @@ function Roster() {
 }
 
 function AddPlayer({ teamId, onClose, onSaved }: { teamId: string; onClose: () => void; onSaved: () => void }) {
-  const add = useServerFn(addPlayer);
-  const [form, setForm] = useState({ displayName: "", jerseyNumber: "", position: "" });
+  const add = useServerFn(addPlayerWithInvite);
+  const [form, setForm] = useState({ displayName: "", jerseyNumber: "", position: "", parentEmail: "", parentName: "" });
   const [saving, setSaving] = useState(false);
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.displayName.trim()) return;
+    if (!form.displayName.trim() || !form.parentEmail.trim()) return;
     setSaving(true);
-    try { await add({ data: { teamId, ...form } }); onSaved(); }
-    catch (err: any) { alert(err?.message || "Failed"); } finally { setSaving(false); }
+    try {
+      const res = await add({ data: { teamId, ...form } });
+      const url = `${window.location.origin}/team-invite/${res.inviteToken}`;
+      setInviteUrl(url);
+    } catch (err: any) { alert(err?.message || "Failed"); }
+    finally { setSaving(false); }
+  }
+  function copyLink() {
+    if (!inviteUrl) return;
+    navigator.clipboard.writeText(inviteUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   }
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-background/70 backdrop-blur-sm" onClick={onClose}>
       <div className="mx-auto w-full max-w-[480px] rounded-t-3xl border-t border-border bg-surface px-5 pt-4 pb-[max(env(safe-area-inset-bottom),1rem)]" onClick={(e) => e.stopPropagation()}>
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border" />
-        <div className="flex items-center justify-between"><h3 className="font-bold">Add player</h3><button onClick={onClose}><X size={16} /></button></div>
+        <div className="flex items-center justify-between"><h3 className="font-bold">{inviteUrl ? "Invite ready" : "Add player"}</h3><button onClick={inviteUrl ? onSaved : onClose}><X size={16} /></button></div>
+        {inviteUrl ? (
+          <div className="mt-4 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Player added. Share this link with <span className="text-foreground font-semibold">{form.parentEmail}</span> — they'll complete the athlete profile, phone, and emergency contacts.
+            </p>
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-background p-2">
+              <code className="flex-1 truncate text-[11px]">{inviteUrl}</code>
+              <button onClick={copyLink} className="grid h-8 w-8 place-items-center rounded-lg bg-teal text-background">
+                {copied ? <Check size={14} /> : <Copy size={14} />}
+              </button>
+            </div>
+            <a
+              href={`mailto:${encodeURIComponent(form.parentEmail)}?subject=${encodeURIComponent("You're invited to join our team")}&body=${encodeURIComponent(`Hi${form.parentName ? " " + form.parentName : ""},\n\nPlease complete your athlete's profile here:\n${inviteUrl}\n\nThanks!`)}`}
+              className="block w-full rounded-full bg-gradient-brand py-2.5 text-center text-sm font-bold text-primary-foreground"
+            >
+              Open email to send
+            </a>
+            <button onClick={onSaved} className="w-full rounded-full border border-border py-2 text-xs font-semibold">Done</button>
+          </div>
+        ) : (
         <form onSubmit={submit} className="mt-3 space-y-3">
           <label className="block">
             <span className="text-[10px] font-bold tracking-wider text-muted-foreground">PLAYER NAME</span>
@@ -78,8 +110,18 @@ function AddPlayer({ teamId, onClose, onSaved }: { teamId: string; onClose: () =
               <input value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} placeholder="F / D / G" className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
             </label>
           </div>
-          <button disabled={saving} className="w-full rounded-full bg-gradient-brand py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50">{saving ? "Saving…" : "Add"}</button>
+          <label className="block">
+            <span className="text-[10px] font-bold tracking-wider text-muted-foreground">PARENT NAME (OPTIONAL)</span>
+            <input value={form.parentName} onChange={(e) => setForm({ ...form, parentName: e.target.value })} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+          </label>
+          <label className="block">
+            <span className="text-[10px] font-bold tracking-wider text-muted-foreground">PARENT EMAIL</span>
+            <input type="email" required value={form.parentEmail} onChange={(e) => setForm({ ...form, parentEmail: e.target.value })} placeholder="parent@example.com" className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+            <span className="mt-1 block text-[10px] text-muted-foreground">Parent receives a link to complete athlete profile, phone, and emergency contacts.</span>
+          </label>
+          <button disabled={saving} className="w-full rounded-full bg-gradient-brand py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50">{saving ? "Sending…" : "Add and Invite"}</button>
         </form>
+        )}
       </div>
     </div>
   );

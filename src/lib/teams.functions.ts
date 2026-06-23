@@ -37,6 +37,52 @@ export const addPlayer = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const addPlayerWithInvite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: {
+    teamId: string;
+    displayName: string;
+    jerseyNumber?: string;
+    position?: string;
+    parentEmail: string;
+    parentName?: string;
+  }) => d)
+  .handler(async ({ data, context }) => {
+    const parts = data.displayName.trim().split(/\s+/);
+    const firstName = parts[0] ?? data.displayName;
+    const lastName = parts.slice(1).join(" ") || "—";
+
+    const { data: player, error: pErr } = await context.supabase
+      .from("team_players")
+      .insert({
+        team_id: data.teamId,
+        display_name: data.displayName,
+        jersey_number: data.jerseyNumber ?? null,
+        position: data.position ?? null,
+        added_by: context.userId,
+      })
+      .select("id")
+      .single();
+    if (pErr) throw new Error(pErr.message);
+
+    const { data: invite, error: iErr } = await context.supabase
+      .from("team_invites")
+      .insert({
+        team_id: data.teamId,
+        athlete_first_name: firstName,
+        athlete_last_name: lastName,
+        position: data.position ?? null,
+        jersey_number: data.jerseyNumber ?? null,
+        parent1_name: data.parentName ?? null,
+        parent1_email: data.parentEmail,
+      })
+      .select("invite_token")
+      .single();
+    if (iErr) throw new Error(iErr.message);
+
+    return { playerId: player.id, inviteToken: invite.invite_token };
+  });
+
 export const createEvent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: {
