@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, Mail, Phone, Calendar, TrendingUp, CheckCircle2, XCircle, Activity, Film } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Calendar, TrendingUp, CheckCircle2, XCircle, Activity, Film, NotebookPen } from "lucide-react";
 import { AthleteMediaTab } from "@/components/athlete-media-tab";
 import { DrylandCoachPanel } from "@/components/dryland-coach-panel";
+import { NotesTab } from "@/components/athlete-notes/notes-tab";
 
 export const Route = createFileRoute("/_authenticated/coach/attendees/$athleteId")({
   component: AthleteProfile,
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/coach/attendees/$athleteId
 
 function AthleteProfile() {
   const { athleteId } = useParams({ from: "/_authenticated/coach/attendees/$athleteId" });
-  const [tab, setTab] = useState<"overview" | "media">("overview");
+  const [tab, setTab] = useState<"overview" | "media" | "notes">("overview");
   const athlete = {
     name: "Jordan Walsh", birthday: "2014-03-12", age: 11, position: "Forward",
     skill: "Intermediate", gender: "M",
@@ -57,6 +58,12 @@ function AthleteProfile() {
           Overview
         </button>
         <button
+          onClick={() => setTab("notes")}
+          className={"flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-bold " + (tab === "notes" ? "bg-gradient-brand text-primary-foreground" : "text-muted-foreground")}
+        >
+          <NotebookPen size={12} /> Notes
+        </button>
+        <button
           onClick={() => setTab("media")}
           className={"flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-bold " + (tab === "media" ? "bg-gradient-brand text-primary-foreground" : "text-muted-foreground")}
         >
@@ -66,6 +73,10 @@ function AthleteProfile() {
 
       {tab === "media" && (
         <AthleteMediaTab athleteId={athleteId} athleteName={athlete.name} />
+      )}
+
+      {tab === "notes" && (
+        <NotesTab athleteId={athleteId} />
       )}
 
       {tab === "overview" && (<>

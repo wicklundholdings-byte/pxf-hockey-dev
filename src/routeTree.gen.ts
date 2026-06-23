@@ -51,6 +51,7 @@ import { Route as PaymentsCouponRouteImport } from './routes/payments.coupon'
 import { Route as PaymentsConnectRouteImport } from './routes/payments.connect'
 import { Route as PaymentsConfirmationRouteImport } from './routes/payments.confirmation'
 import { Route as PaymentsCheckoutRouteImport } from './routes/payments.checkout'
+import { Route as ParentUpdatesRouteImport } from './routes/parent.updates'
 import { Route as ParentTrainRouteImport } from './routes/parent.train'
 import { Route as ParentScheduleRouteImport } from './routes/parent.schedule'
 import { Route as ParentProfileRouteImport } from './routes/parent.profile'
@@ -345,6 +346,11 @@ const PaymentsCheckoutRoute = PaymentsCheckoutRouteImport.update({
   id: '/payments/checkout',
   path: '/payments/checkout',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ParentUpdatesRoute = ParentUpdatesRouteImport.update({
+  id: '/updates',
+  path: '/updates',
+  getParentRoute: () => ParentRoute,
 } as any)
 const ParentTrainRoute = ParentTrainRouteImport.update({
   id: '/train',
@@ -861,6 +867,7 @@ export interface FileRoutesByFullPath {
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
   '/parent/train': typeof ParentTrainRouteWithChildren
+  '/parent/updates': typeof ParentUpdatesRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
@@ -984,6 +991,7 @@ export interface FileRoutesByTo {
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
   '/parent/train': typeof ParentTrainRouteWithChildren
+  '/parent/updates': typeof ParentUpdatesRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
@@ -1112,6 +1120,7 @@ export interface FileRoutesById {
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
   '/parent/train': typeof ParentTrainRouteWithChildren
+  '/parent/updates': typeof ParentUpdatesRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
   '/payments/connect': typeof PaymentsConnectRoute
@@ -1242,6 +1251,7 @@ export interface FileRouteTypes {
     | '/parent/profile'
     | '/parent/schedule'
     | '/parent/train'
+    | '/parent/updates'
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
@@ -1365,6 +1375,7 @@ export interface FileRouteTypes {
     | '/parent/profile'
     | '/parent/schedule'
     | '/parent/train'
+    | '/parent/updates'
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
@@ -1492,6 +1503,7 @@ export interface FileRouteTypes {
     | '/parent/profile'
     | '/parent/schedule'
     | '/parent/train'
+    | '/parent/updates'
     | '/payments/checkout'
     | '/payments/confirmation'
     | '/payments/connect'
@@ -1926,6 +1938,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/payments/checkout'
       preLoaderRoute: typeof PaymentsCheckoutRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/parent/updates': {
+      id: '/parent/updates'
+      path: '/updates'
+      fullPath: '/parent/updates'
+      preLoaderRoute: typeof ParentUpdatesRouteImport
+      parentRoute: typeof ParentRoute
     }
     '/parent/train': {
       id: '/parent/train'
@@ -2820,6 +2839,7 @@ interface ParentRouteChildren {
   ParentProfileRoute: typeof ParentProfileRoute
   ParentScheduleRoute: typeof ParentScheduleRoute
   ParentTrainRoute: typeof ParentTrainRouteWithChildren
+  ParentUpdatesRoute: typeof ParentUpdatesRoute
   ParentIndexRoute: typeof ParentIndexRoute
   ParentCampCampIdRoute: typeof ParentCampCampIdRoute
   ParentConversationConversationIdRoute: typeof ParentConversationConversationIdRoute
@@ -2833,6 +2853,7 @@ const ParentRouteChildren: ParentRouteChildren = {
   ParentProfileRoute: ParentProfileRoute,
   ParentScheduleRoute: ParentScheduleRoute,
   ParentTrainRoute: ParentTrainRouteWithChildren,
+  ParentUpdatesRoute: ParentUpdatesRoute,
   ParentIndexRoute: ParentIndexRoute,
   ParentCampCampIdRoute: ParentCampCampIdRoute,
   ParentConversationConversationIdRoute: ParentConversationConversationIdRoute,
