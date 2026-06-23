@@ -1,11 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { UserCog, Plus, Mail, Phone, Trash2, X, Check, Clock, Shield, CalendarDays } from "lucide-react";
+import { UserCog, Plus, Mail, Phone, Trash2, X, Check, Clock, Shield, CalendarDays, MapPin, AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/team")({
   component: TeamPage,
 });
+
+type Role = "owner" | "manager" | "coach" | "assistant" | "content_creator";
+
+const ROLES: { id: Exclude<Role, "owner">; label: string; desc: string }[] = [
+  { id: "manager", label: "Manager", desc: "All camps, staff, messaging — no financials" },
+  { id: "coach", label: "Coach", desc: "Assigned camps + Playbook, messages own camps" },
+  { id: "assistant", label: "Assistant", desc: "View + check-in on assigned camps only" },
+  { id: "content_creator", label: "Content Creator", desc: "Playbook only, no camp access" },
+];
 
 type Member = {
   id: string;
@@ -16,10 +25,11 @@ type Member = {
   email: string;
   phone: string | null;
   created_at: string;
-  permission_level: "owner" | "coach" | "assistant";
+  permission_level: Role;
+  home_area_label: string | null;
 };
 
-type Camp = { id: string; name: string; start_date: string | null; status: "draft" | "live" | "ended" };
+type Camp = { id: string; name: string; start_date: string | null; end_date: string | null; start_time: string | null; end_time: string | null; status: "draft" | "live" | "ended" };
 type Assignment = { id: string; camp_id: string; team_member_id: string };
 
 function TeamPage() {
@@ -27,7 +37,7 @@ function TeamPage() {
   const [loading, setLoading] = useState(true);
   const [showInvite, setShowInvite] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [form, setForm] = useState<{ email: string; title: string; phone: string; permission_level: "coach" | "assistant" }>({ email: "", title: "Assistant Coach", phone: "", permission_level: "coach" });
+  const [form, setForm] = useState<{ email: string; title: string; phone: string; permission_level: Exclude<Role, "owner"> }>({ email: "", title: "Assistant Coach", phone: "", permission_level: "coach" });
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [camps, setCamps] = useState<Camp[]>([]);
@@ -47,7 +57,7 @@ function TeamPage() {
         .order("created_at", { ascending: false }),
       supabase
         .from("camps")
-        .select("id, name, start_date, status")
+        .select("id, name, start_date, end_date, start_time, end_time, status")
         .eq("owner_id", u.user.id)
         .neq("status", "ended")
         .order("start_date", { ascending: false }),
@@ -96,9 +106,23 @@ function TeamPage() {
     load();
   }
 
-  async function setPermission(id: string, level: "coach" | "assistant") {
+  async function setPermission(id: string, level: Exclude<Role, "owner">) {
     setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, permission_level: level } : m)));
     await (supabase as any).from("team_members").update({ permission_level: level }).eq("id", id);
+  }
+
+  async function setHomeArea(id: string, label: string) {
+    setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, home_area_label: label } : m)));
+    await (supabase as any).from("team_members").update({ home_area_label: label || null }).eq("id", id);
+  }
+
+  function overlaps(a: Camp, b: Camp): boolean {
+    if (!a.start_date || !b.start_date) return false;
+    const aS = new Date(`${a.start_date}T${a.start_time ?? "00:00"}`);
+    const aE = new Date(`${a.end_date ?? a.start_date}T${a.end_time ?? "23:59"}`);
+    const bS = new Date(`${b.start_date}T${b.start_time ?? "00:00"}`);
+    const bE = new Date(`${b.end_date ?? b.start_date}T${b.end_time ?? "23:59"}`);
+    return aS < bE && bS < aE;
   }
 
   async function toggleAssignment(memberId: string, campId: string) {
@@ -106,14 +130,25 @@ function TeamPage() {
     if (existing) {
       setAssignments((prev) => prev.filter((a) => a.id !== existing.id));
       await (supabase as any).from("camp_staff").delete().eq("id", existing.id);
-    } else {
-      const { data } = await (supabase as any)
-        .from("camp_staff")
-        .insert({ camp_id: campId, team_member_id: memberId })
-        .select("id, camp_id, team_member_id")
-        .maybeSingle();
-      if (data) setAssignments((prev) => [...prev, data as Assignment]);
+      return;
     }
+    // Hard conflict check: overlapping assignment for this member
+    const target = camps.find((c) => c.id === campId);
+    const otherAssigned = assignments
+      .filter((a) => a.team_member_id === memberId)
+      .map((a) => camps.find((c) => c.id === a.camp_id))
+      .filter(Boolean) as Camp[];
+    const conflict = target ? otherAssigned.find((c) => overlaps(c, target)) : null;
+    if (conflict) {
+      alert(`⛔ Conflict — this coach is already assigned to “${conflict.name}” at an overlapping time. Assignment blocked.`);
+      return;
+    }
+    const { data } = await (supabase as any)
+      .from("camp_staff")
+      .insert({ camp_id: campId, team_member_id: memberId })
+      .select("id, camp_id, team_member_id")
+      .maybeSingle();
+    if (data) setAssignments((prev) => [...prev, data as Assignment]);
   }
 
   const active = members.filter((m) => m.status === "active");
@@ -155,17 +190,19 @@ function TeamPage() {
           {invited.length > 0 && (
             <Section title="Pending invites" count={invited.length}>
               {invited.map((m) => (
-                <Row key={m.id} m={m} assignedCamps={camps.filter((c) => assignments.some((a) => a.team_member_id === m.id && a.camp_id === c.id))} onActivate={() => activate(m.id)} onRemove={() => remove(m.id)} onPermission={setPermission} onAssign={() => setAssignFor(m)} />
+                <Row key={m.id} m={m} assignedCamps={camps.filter((c) => assignments.some((a) => a.team_member_id === m.id && a.camp_id === c.id))} onActivate={() => activate(m.id)} onRemove={() => remove(m.id)} onPermission={setPermission} onHomeArea={setHomeArea} onAssign={() => setAssignFor(m)} />
               ))}
             </Section>
           )}
           {active.length > 0 && (
             <Section title="Active" count={active.length}>
               {active.map((m) => (
-                <Row key={m.id} m={m} assignedCamps={camps.filter((c) => assignments.some((a) => a.team_member_id === m.id && a.camp_id === c.id))} onRemove={() => remove(m.id)} onPermission={setPermission} onAssign={() => setAssignFor(m)} />
+                <Row key={m.id} m={m} assignedCamps={camps.filter((c) => assignments.some((a) => a.team_member_id === m.id && a.camp_id === c.id))} onRemove={() => remove(m.id)} onPermission={setPermission} onHomeArea={setHomeArea} onAssign={() => setAssignFor(m)} />
               ))}
             </Section>
           )}
+
+          <UnassignedCampsCard camps={camps} assignments={assignments} />
         </>
       )}
 
@@ -208,12 +245,12 @@ function TeamPage() {
                 />
               </Field>
               <Field label="Permission level">
-                <div className="grid grid-cols-2 gap-2">
-                  {(["coach","assistant"] as const).map((p) => (
-                    <button key={p} type="button" onClick={() => setForm({ ...form, permission_level: p })}
-                      className={"rounded-xl border px-3 py-2 text-left text-xs " + (form.permission_level === p ? "border-teal bg-teal/15 text-foreground" : "border-border bg-surface text-muted-foreground")}>
-                      <p className="font-bold capitalize">{p}</p>
-                      <p className="text-[10px] text-muted-foreground">{p === "coach" ? "Run assigned camps" : "View + check-in only"}</p>
+                <div className="grid grid-cols-1 gap-2">
+                  {ROLES.map((r) => (
+                    <button key={r.id} type="button" onClick={() => setForm({ ...form, permission_level: r.id })}
+                      className={"rounded-xl border px-3 py-2 text-left text-xs " + (form.permission_level === r.id ? "border-teal bg-teal/15 text-foreground" : "border-border bg-surface text-muted-foreground")}>
+                      <p className="font-bold">{r.label}</p>
+                      <p className="text-[10px] text-muted-foreground">{r.desc}</p>
                     </button>
                   ))}
                 </div>
@@ -294,13 +331,15 @@ function Row({
   onActivate,
   onRemove,
   onPermission,
+  onHomeArea,
   onAssign,
 }: {
   m: Member;
   assignedCamps: Camp[];
   onActivate?: () => void;
   onRemove: () => void;
-  onPermission: (id: string, level: "coach" | "assistant") => void;
+  onPermission: (id: string, level: Exclude<Role, "owner">) => void;
+  onHomeArea?: (id: string, label: string) => void;
   onAssign: () => void;
 }) {
   const initials = m.email.slice(0, 2).toUpperCase();
@@ -355,20 +394,28 @@ function Row({
       </div>
       </div>
       <div className="flex flex-wrap items-center gap-1.5 border-t border-border pt-2">
-        <div className="flex items-center gap-1 rounded-full bg-card p-0.5">
-          {(["coach","assistant"] as const).map((p) => (
-            <button key={p} onClick={() => onPermission(m.id, p)}
-              className={"flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold capitalize " + (m.permission_level === p ? "bg-gradient-brand text-primary-foreground" : "text-muted-foreground")}>
-              <Shield size={9} /> {p}
-            </button>
-          ))}
-        </div>
+        <select
+          value={m.permission_level === "owner" ? "coach" : m.permission_level}
+          onChange={(e) => onPermission(m.id, e.target.value as Exclude<Role, "owner">)}
+          className="rounded-full border border-border bg-card px-2 py-1 text-[10px] font-bold text-foreground"
+        >
+          {ROLES.map((r) => (<option key={r.id} value={r.id}>{r.label}</option>))}
+        </select>
         <p className="min-w-0 flex-1 truncate text-[10px] text-muted-foreground" title={campsLabel}>
           {campsLabel}
         </p>
         <button onClick={onAssign} className="flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-[10px] font-bold text-foreground">
           <CalendarDays size={10} /> Assign to Camp
         </button>
+      </div>
+      <div className="flex items-center gap-2 border-t border-border pt-2">
+        <MapPin size={11} className="text-muted-foreground" />
+        <input
+          defaultValue={m.home_area_label ?? ""}
+          onBlur={(e) => { if (onHomeArea && (e.target.value || "") !== (m.home_area_label ?? "")) onHomeArea(m.id, e.target.value); }}
+          placeholder="Home area (e.g. Toronto, North York)"
+          className="flex-1 rounded-md bg-card px-2 py-1 text-[11px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+        />
       </div>
     </div>
   );
@@ -381,6 +428,27 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
         {label}
       </label>
       {children}
+    </div>
+  );
+}
+
+function UnassignedCampsCard({ camps, assignments }: { camps: Camp[]; assignments: Assignment[] }) {
+  const unassigned = camps.filter((c) => !assignments.some((a) => a.camp_id === c.id));
+  if (unassigned.length === 0) return null;
+  return (
+    <div className="rounded-2xl border border-orange-500/40 bg-orange-500/5 p-3">
+      <div className="mb-2 flex items-center gap-2">
+        <AlertTriangle size={14} className="text-orange-500" />
+        <p className="text-xs font-bold text-foreground">{unassigned.length} unassigned camp{unassigned.length === 1 ? "" : "s"}</p>
+      </div>
+      <ul className="space-y-1">
+        {unassigned.slice(0, 6).map((c) => (
+          <li key={c.id} className="flex items-center justify-between text-[11px]">
+            <span className="truncate text-foreground">{c.name}</span>
+            <span className="text-muted-foreground">{c.start_date ?? "TBA"}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -92,6 +92,13 @@ export type Database = {
             foreignKeyName: "attendance_registration_id_fkey"
             columns: ["registration_id"]
             isOneToOne: false
+            referencedRelation: "attendee_payment_status"
+            referencedColumns: ["registration_id"]
+          },
+          {
+            foreignKeyName: "attendance_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
             referencedRelation: "registrations"
             referencedColumns: ["id"]
           },
@@ -918,6 +925,13 @@ export type Database = {
             foreignKeyName: "daily_rsvps_registration_id_fkey"
             columns: ["registration_id"]
             isOneToOne: false
+            referencedRelation: "attendee_payment_status"
+            referencedColumns: ["registration_id"]
+          },
+          {
+            foreignKeyName: "daily_rsvps_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
             referencedRelation: "registrations"
             referencedColumns: ["id"]
           },
@@ -1337,6 +1351,13 @@ export type Database = {
             foreignKeyName: "evaluations_registration_id_fkey"
             columns: ["registration_id"]
             isOneToOne: true
+            referencedRelation: "attendee_payment_status"
+            referencedColumns: ["registration_id"]
+          },
+          {
+            foreignKeyName: "evaluations_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: true
             referencedRelation: "registrations"
             referencedColumns: ["id"]
           },
@@ -1429,6 +1450,13 @@ export type Database = {
             foreignKeyName: "orders_registration_id_fkey"
             columns: ["registration_id"]
             isOneToOne: false
+            referencedRelation: "attendee_payment_status"
+            referencedColumns: ["registration_id"]
+          },
+          {
+            foreignKeyName: "orders_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
             referencedRelation: "registrations"
             referencedColumns: ["id"]
           },
@@ -1472,6 +1500,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "payment_installments_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "attendee_payment_status"
+            referencedColumns: ["registration_id"]
+          },
           {
             foreignKeyName: "payment_installments_registration_id_fkey"
             columns: ["registration_id"]
@@ -1551,6 +1586,7 @@ export type Database = {
           id: string
           marketplace_visible: boolean
           meta_pixel_id: string | null
+          min_buffer_minutes: number
           postal_code: string | null
           slug: string | null
           sms_provider: string
@@ -1569,6 +1605,7 @@ export type Database = {
           id: string
           marketplace_visible?: boolean
           meta_pixel_id?: string | null
+          min_buffer_minutes?: number
           postal_code?: string | null
           slug?: string | null
           sms_provider?: string
@@ -1587,6 +1624,7 @@ export type Database = {
           id?: string
           marketplace_visible?: boolean
           meta_pixel_id?: string | null
+          min_buffer_minutes?: number
           postal_code?: string | null
           slug?: string | null
           sms_provider?: string
@@ -1778,6 +1816,13 @@ export type Database = {
             foreignKeyName: "scheduled_messages_registration_id_fkey"
             columns: ["registration_id"]
             isOneToOne: false
+            referencedRelation: "attendee_payment_status"
+            referencedColumns: ["registration_id"]
+          },
+          {
+            foreignKeyName: "scheduled_messages_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
             referencedRelation: "registrations"
             referencedColumns: ["id"]
           },
@@ -1841,6 +1886,13 @@ export type Database = {
             foreignKeyName: "sms_logs_registration_id_fkey"
             columns: ["registration_id"]
             isOneToOne: false
+            referencedRelation: "attendee_payment_status"
+            referencedColumns: ["registration_id"]
+          },
+          {
+            foreignKeyName: "sms_logs_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
             referencedRelation: "registrations"
             referencedColumns: ["id"]
           },
@@ -1880,6 +1932,9 @@ export type Database = {
         Row: {
           created_at: string
           email: string
+          home_area_label: string | null
+          home_area_lat: number | null
+          home_area_lng: number | null
           id: string
           member_user_id: string | null
           owner_id: string
@@ -1891,6 +1946,9 @@ export type Database = {
         Insert: {
           created_at?: string
           email: string
+          home_area_label?: string | null
+          home_area_lat?: number | null
+          home_area_lng?: number | null
           id?: string
           member_user_id?: string | null
           owner_id: string
@@ -1902,6 +1960,9 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string
+          home_area_label?: string | null
+          home_area_lat?: number | null
+          home_area_lng?: number | null
           id?: string
           member_user_id?: string | null
           owner_id?: string
@@ -2127,6 +2188,13 @@ export type Database = {
             foreignKeyName: "waiver_signatures_registration_id_fkey"
             columns: ["registration_id"]
             isOneToOne: false
+            referencedRelation: "attendee_payment_status"
+            referencedColumns: ["registration_id"]
+          },
+          {
+            foreignKeyName: "waiver_signatures_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
             referencedRelation: "registrations"
             referencedColumns: ["id"]
           },
@@ -2134,6 +2202,41 @@ export type Database = {
       }
     }
     Views: {
+      attendee_payment_status: {
+        Row: {
+          attendee_id: string | null
+          camp_id: string | null
+          contact_id: string | null
+          created_at: string | null
+          paid_cents: number | null
+          payment_status: string | null
+          registration_id: string | null
+          total_cents: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registrations_attendee_id_fkey"
+            columns: ["attendee_id"]
+            isOneToOne: false
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "registrations_camp_id_fkey"
+            columns: ["camp_id"]
+            isOneToOne: false
+            referencedRelation: "camps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "registrations_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_marketplace_profiles: {
         Row: {
           bio: string | null
@@ -2222,7 +2325,12 @@ export type Database = {
         | "past_due"
         | "canceled"
       team_member_status: "active" | "invited"
-      team_permission: "owner" | "coach" | "assistant"
+      team_permission:
+        | "owner"
+        | "coach"
+        | "assistant"
+        | "manager"
+        | "content_creator"
       waitlist_status:
         | "waiting"
         | "offered"
@@ -2382,7 +2490,13 @@ export const Constants = {
         "canceled",
       ],
       team_member_status: ["active", "invited"],
-      team_permission: ["owner", "coach", "assistant"],
+      team_permission: [
+        "owner",
+        "coach",
+        "assistant",
+        "manager",
+        "content_creator",
+      ],
       waitlist_status: ["waiting", "offered", "claimed", "expired", "released"],
     },
   },

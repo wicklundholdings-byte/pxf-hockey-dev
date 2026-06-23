@@ -30,6 +30,7 @@ type Camp = {
 type Reg = {
   id: string; camp_id: string; attendee_id: string | null; contact_id: string | null;
   status: string; amount_cents: number | null; created_at: string;
+  payment_status?: "paid" | "pending" | "overdue";
   attendees?: { full_name: string | null; position: string | null; skill_level: string | null } | null;
   contacts?: { full_name: string | null; email: string | null; phone: string | null } | null;
 };
@@ -70,7 +71,7 @@ function CampDetailPage() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [c, r, s, w, m] = await Promise.all([
+      const [c, r, s, w, m, ps] = await Promise.all([
         supabase.from("camps").select("*").eq("id", campId).maybeSingle(),
         supabase
           .from("registrations")
@@ -84,10 +85,16 @@ function CampDetailPage() {
           .eq("camp_id", campId)
           .order("position"),
         supabase.from("camp_media").select("*").eq("camp_id", campId).order("created_at", { ascending: false }),
+        (supabase as any).from("attendee_payment_status").select("registration_id, payment_status").eq("camp_id", campId),
       ]);
       const campRow = (c.data ?? null) as Camp | null;
       setCamp(campRow);
-      setRegs((r.data ?? []) as unknown as Reg[]);
+      const statusMap = new Map<string, "paid" | "pending" | "overdue">();
+      ((ps as { data: { registration_id: string; payment_status: "paid" | "pending" | "overdue" }[] | null }).data ?? []).forEach((row) => {
+        statusMap.set(row.registration_id, row.payment_status);
+      });
+      const regsWithPay = ((r.data ?? []) as unknown as Reg[]).map((reg: any) => ({ ...reg, payment_status: statusMap.get(reg.id) ?? reg.status }));
+      setRegs(regsWithPay as unknown as Reg[]);
       let sess = (s.data ?? []) as Session[];
       // Backfill: if no camp_sessions exist but the camp has a date range, create one per day.
       if (sess.length === 0 && campRow?.start_date && campRow?.end_date) {
@@ -1199,9 +1206,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function RosterTab({ regs }: { regs: Reg[] }) {
   const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<"all" | "paid" | "pending" | "refunded">("all");
+  const [filter, setFilter] = useState<"all" | "paid" | "pending" | "overdue">("all");
   const filtered = regs.filter((r) => {
-    if (filter !== "all" && r.status !== filter) return false;
+    const ps = r.payment_status ?? (r.status === "paid" ? "paid" : "pending");
+    if (filter !== "all" && ps !== filter) return false;
     if (!q) return true;
     const name = r.attendees?.full_name ?? r.contacts?.full_name ?? "";
     return name.toLowerCase().includes(q.toLowerCase());
@@ -1224,7 +1232,7 @@ function RosterTab({ regs }: { regs: Reg[] }) {
         </button>
       </div>
       <div className="flex flex-wrap gap-2">
-        {(["all", "paid", "pending", "refunded"] as const).map((f) => (
+        {(["all", "paid", "pending", "overdue"] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -1255,16 +1263,17 @@ function RosterTab({ regs }: { regs: Reg[] }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="truncate text-sm font-semibold text-foreground">{name}</p>
-                    <span className={
-                      "rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase " +
-                      (r.status === "paid"
+                    {(() => {
+                      const ps = r.payment_status ?? (r.status === "paid" ? "paid" : "pending");
+                      const cls = ps === "paid"
                         ? "bg-emerald-400/15 text-emerald-400"
-                        : r.status === "pending"
-                          ? "bg-amber-400/15 text-amber-400"
-                          : "bg-muted text-muted-foreground")
-                    }>
-                      {r.status}
-                    </span>
+                        : ps === "overdue"
+                          ? "bg-red-500/15 text-red-500"
+                          : "bg-amber-400/15 text-amber-400";
+                      return (
+                        <span className={"rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase " + cls}>{ps}</span>
+                      );
+                    })()}
                   </div>
                   <p className="truncate text-[10px] text-muted-foreground">
                     {r.attendees?.position ?? "—"} · {r.attendees?.skill_level ?? "—"} · {r.contacts?.email ?? r.contacts?.phone ?? ""}
