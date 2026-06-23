@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { DollarSign, TrendingUp, Users, CalendarDays, Activity, Wallet, Repeat, BarChart3, ChevronRight, UserSquare2, ClipboardCheck, UserCog } from "lucide-react";
+import { DollarSign, TrendingUp, Users, CalendarDays, Activity, Wallet, Repeat, BarChart3, ChevronRight, UserSquare2, ClipboardCheck, UserCog, AlertTriangle } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip, CartesianGrid } from "recharts";
 import { StatusBadge } from "@/components/coach/status-badge";
 import { TodaysAttendanceCard } from "@/components/coach/todays-attendance-card";
@@ -22,17 +22,25 @@ function CoachDashboard() {
   const [camps, setCamps] = useState<Camp[]>([]);
   const [regs, setRegs] = useState<Reg[]>([]);
   const [contactCount, setContactCount] = useState(0);
+  const [unassignedCampIds, setUnassignedCampIds] = useState<string[]>([]);
+  const [outstandingCount, setOutstandingCount] = useState(0);
 
   useEffect(() => {
     (async () => {
-      const [c, r, ct] = await Promise.all([
+      const [c, r, ct, st, ps] = await Promise.all([
         supabase.from("camps").select("id,name,slug,capacity,status,start_date,price_cents").order("start_date", { ascending: true }),
         supabase.from("registrations").select("id,status,amount_cents,created_at,camp_id,attendee_id,contact_id").order("created_at", { ascending: false }),
         supabase.from("contacts").select("*", { count: "exact", head: true }),
+        (supabase as any).from("camp_staff").select("camp_id"),
+        (supabase as any).from("attendee_payment_status").select("registration_id, payment_status").in("payment_status", ["pending", "overdue"]),
       ]);
       setCamps((c.data ?? []) as Camp[]);
       setRegs((r.data ?? []) as Reg[]);
       setContactCount(ct.count ?? 0);
+      const staffed = new Set(((st.data as any[]) ?? []).map((row) => row.camp_id as string));
+      const upcomingCamps = ((c.data ?? []) as Camp[]).filter((cc) => cc.status !== "ended");
+      setUnassignedCampIds(upcomingCamps.filter((cc) => !staffed.has(cc.id)).map((cc) => cc.id));
+      setOutstandingCount(((ps.data as any[]) ?? []).length);
     })();
   }, []);
 
@@ -85,6 +93,30 @@ function CoachDashboard() {
   return (
     <div className="space-y-5">
       <TodaysAttendanceCard />
+      {(unassignedCampIds.length > 0 || outstandingCount > 0) && (
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {unassignedCampIds.length > 0 && (
+            <Link to="/coach/team" className="flex items-center gap-3 rounded-2xl border border-orange-500/40 bg-orange-500/5 p-3">
+              <AlertTriangle size={18} className="text-orange-500" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-foreground">{unassignedCampIds.length} camp{unassignedCampIds.length === 1 ? "" : "s"} have no assigned coach</p>
+                <p className="text-[10px] text-muted-foreground">Tap to quick-assign</p>
+              </div>
+              <ChevronRight size={14} className="text-muted-foreground" />
+            </Link>
+          )}
+          {outstandingCount > 0 && (
+            <Link to="/coach/financials" className="flex items-center gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/5 p-3">
+              <DollarSign size={18} className="text-amber-500" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-foreground">{outstandingCount} attendee{outstandingCount === 1 ? "" : "s"} have outstanding payments</p>
+                <p className="text-[10px] text-muted-foreground">Review pending & overdue</p>
+              </div>
+              <ChevronRight size={14} className="text-muted-foreground" />
+            </Link>
+          )}
+        </div>
+      )}
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {statCards.map((s) => (
