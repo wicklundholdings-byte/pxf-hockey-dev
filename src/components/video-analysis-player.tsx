@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Pause, Play, Circle, Minus, Eraser, Mic, Send, Camera, PencilLine } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { saveAnnotation } from "@/lib/athlete-media.functions";
+import { saveAnnotation, sendMediaToAthlete } from "@/lib/athlete-media.functions";
 
 type Tool = "freehand" | "line" | "circle" | null;
 const COLORS = ["#ef4444", "#facc15", "#ffffff"] as const;
@@ -35,6 +35,8 @@ export function VideoAnalysisPlayer({
   const mediaRec = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
   const saveAnno = useServerFn(saveAnnotation);
+  const sendToAthlete = useServerFn(sendMediaToAthlete);
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     const v = videoRef.current;
@@ -280,12 +282,25 @@ export function VideoAnalysisPlayer({
         <button onClick={saveFrame} className="flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-[10px]">
           <Camera size={12} /> Save frame
         </button>
-        {onSendToAthlete && (
+        {mediaId && (
           <button
-            onClick={onSendToAthlete}
-            className="ml-auto flex items-center gap-1 rounded-md bg-gradient-brand px-3 py-1 text-[10px] font-bold text-primary-foreground"
+            disabled={sending}
+            onClick={async () => {
+              if (!mediaId) return;
+              setSending(true);
+              try {
+                await sendToAthlete({ data: { media_id: mediaId } });
+                onSendToAthlete?.();
+                alert("Sent to parent inbox.");
+              } catch (e: any) {
+                alert(e?.message ?? "Failed to send");
+              } finally {
+                setSending(false);
+              }
+            }}
+            className="ml-auto flex items-center gap-1 rounded-md bg-gradient-brand px-3 py-1 text-[10px] font-bold text-primary-foreground disabled:opacity-50"
           >
-            <Send size={12} /> Send to athlete
+            <Send size={12} /> {sending ? "Sending…" : "Send to athlete"}
           </button>
         )}
       </div>
