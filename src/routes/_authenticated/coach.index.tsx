@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { DollarSign, TrendingUp, Users, CalendarDays, Activity, BarChart3, ChevronRight, AlertTriangle, Snowflake, CalendarPlus, Layers, Megaphone, Clock, Crown, Plus } from "lucide-react";
+import { DollarSign, TrendingUp, Users, CalendarDays, Activity, BarChart3, ChevronRight, AlertTriangle, Snowflake, CalendarPlus, Layers, Megaphone, Plus } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip, CartesianGrid } from "recharts";
 import { StatusBadge } from "@/components/coach/status-badge";
 import { TodaysAttendanceCard } from "@/components/coach/todays-attendance-card";
