@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { DollarSign, TrendingUp, Users, CalendarDays, Activity, Wallet, Repeat, BarChart3, ChevronRight, UserSquare2, ClipboardCheck, UserCog, AlertTriangle, Snowflake } from "lucide-react";
+import { DollarSign, TrendingUp, Users, CalendarDays, Activity, Wallet, Repeat, BarChart3, ChevronRight, UserSquare2, ClipboardCheck, UserCog, AlertTriangle, Snowflake, Plus } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip, CartesianGrid } from "recharts";
 import { StatusBadge } from "@/components/coach/status-badge";
 import { TodaysAttendanceCard } from "@/components/coach/todays-attendance-card";
@@ -152,14 +152,23 @@ function CoachDashboard() {
         ))}
       </div>
 
-      {/* Add Ice Times — primary action */}
-      <Link
-        to="/coach/ice"
-        className="flex items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-teal/10 py-3 text-sm font-bold text-teal hover:bg-teal/20 transition-colors"
-      >
-        <Snowflake size={18} />
-        Add Ice times
-      </Link>
+      {/* Primary action row */}
+      <div className="grid grid-cols-2 gap-2">
+        <Link
+          to="/coach/ice"
+          className="flex items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-teal/10 py-3 text-sm font-bold text-teal hover:bg-teal/20 transition-colors"
+        >
+          <Snowflake size={18} />
+          Add Ice times
+        </Link>
+        <Link
+          to="/coach/camps/new"
+          className="flex items-center justify-center gap-2 rounded-2xl border border-volt/40 bg-volt/10 py-3 text-sm font-bold text-volt hover:bg-volt/20 transition-colors"
+        >
+          <Plus size={18} />
+          New Session/Camp
+        </Link>
+      </div>
 
       {/* Quick access */}
       <div className="grid grid-cols-2 gap-2">
