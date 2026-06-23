@@ -120,7 +120,7 @@ function CoachDashboard() {
             </Link>
           )}
           {unassignedCampIds.length > 0 && (
-            <Link to="/coach/team" className="flex items-center gap-3 rounded-2xl border border-orange-500/40 bg-orange-500/5 p-3">
+            <Link to="/coach/teams" className="flex items-center gap-3 rounded-2xl border border-orange-500/40 bg-orange-500/5 p-3">
               <AlertTriangle size={18} className="text-orange-500" />
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-bold text-foreground">{unassignedCampIds.length} camp{unassignedCampIds.length === 1 ? "" : "s"} have no assigned coach</p>
@@ -181,7 +181,7 @@ function CoachDashboard() {
           { to: "/coach/analytics", label: "Analytics", icon: BarChart3, accent: "text-emerald-400" },
           { to: "/coach/attendees", label: "Attendees", icon: UserSquare2, accent: "text-foreground" },
           { to: "/coach/roster", label: "Roster", icon: ClipboardCheck, accent: "text-foreground" },
-          { to: "/coach/team", label: "Team", icon: UserCog, accent: "text-foreground" },
+          { to: "/coach/teams", label: "Teams", icon: UserCog, accent: "text-foreground" },
         ].map((q) => (
           <Link
             key={q.to}
