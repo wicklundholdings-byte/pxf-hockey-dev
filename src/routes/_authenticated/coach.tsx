@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, redirect, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, CalendarDays, MessageSquare, Bell, Megaphone, Settings, BookOpen, Heart, Video } from "lucide-react";
+import { LayoutDashboard, CalendarDays, MessageSquare, Bell, Megaphone, Settings, BookOpen, Heart, Users } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { TrialBanner } from "@/components/trial-banner";
 import { getUserAppRole } from "@/lib/user-role";
@@ -22,9 +22,9 @@ function CoachLayout() {
   const navItems = [
     { to: "/coach", label: "Dashboard", icon: LayoutDashboard, exact: true, match: ["/coach"] },
     { to: "/coach/camps", label: "Events", icon: CalendarDays, match: ["/coach/camps", "/coach/bookings"] },
+    { to: "/coach/teams", label: "Teams", icon: Users, match: ["/coach/teams"] },
     { to: "/coach/playbook", label: "Playbook", icon: BookOpen, match: ["/coach/playbook"] },
     { to: "/coach/inbox", label: "Inbox", icon: MessageSquare, match: ["/coach/inbox", "/coach/broadcast"] },
-    { to: "/coach/film", label: "Film", icon: Video, match: ["/coach/film"] },
   ];
   const hideChrome = pathname === "/coach/plans";
 

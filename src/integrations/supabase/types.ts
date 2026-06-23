@@ -2429,6 +2429,96 @@ export type Database = {
         }
         Relationships: []
       }
+      practice_plan_items: {
+        Row: {
+          display_order: number
+          drill_id: string | null
+          duration_minutes: number | null
+          id: string
+          item_type: Database["public"]["Enums"]["practice_item_type"]
+          note_text: string | null
+          plan_id: string
+          session_id: string | null
+        }
+        Insert: {
+          display_order?: number
+          drill_id?: string | null
+          duration_minutes?: number | null
+          id?: string
+          item_type: Database["public"]["Enums"]["practice_item_type"]
+          note_text?: string | null
+          plan_id: string
+          session_id?: string | null
+        }
+        Update: {
+          display_order?: number
+          drill_id?: string | null
+          duration_minutes?: number | null
+          id?: string
+          item_type?: Database["public"]["Enums"]["practice_item_type"]
+          note_text?: string | null
+          plan_id?: string
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practice_plan_items_drill_id_fkey"
+            columns: ["drill_id"]
+            isOneToOne: false
+            referencedRelation: "drills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practice_plan_items_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "practice_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      practice_plans: {
+        Row: {
+          coach_id: string
+          created_at: string
+          event_id: string | null
+          id: string
+          team_id: string
+          template_name: string | null
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          team_id: string
+          template_name?: string | null
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          team_id?: string
+          template_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practice_plans_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "team_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practice_plans_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           bio: string | null
@@ -2856,6 +2946,315 @@ export type Database = {
         }
         Relationships: []
       }
+      team_duties: {
+        Row: {
+          assigned_to_parent_id: string | null
+          created_at: string
+          duty_type: string
+          event_id: string
+          id: string
+          is_open_signup: boolean
+          notes: string | null
+        }
+        Insert: {
+          assigned_to_parent_id?: string | null
+          created_at?: string
+          duty_type: string
+          event_id: string
+          id?: string
+          is_open_signup?: boolean
+          notes?: string | null
+        }
+        Update: {
+          assigned_to_parent_id?: string | null
+          created_at?: string
+          duty_type?: string
+          event_id?: string
+          id?: string
+          is_open_signup?: boolean
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_duties_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "team_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_event_attendance: {
+        Row: {
+          event_id: string
+          id: string
+          marked_at: string
+          marked_by: string | null
+          status: Database["public"]["Enums"]["team_attendance_status"]
+          team_player_id: string
+        }
+        Insert: {
+          event_id: string
+          id?: string
+          marked_at?: string
+          marked_by?: string | null
+          status: Database["public"]["Enums"]["team_attendance_status"]
+          team_player_id: string
+        }
+        Update: {
+          event_id?: string
+          id?: string
+          marked_at?: string
+          marked_by?: string | null
+          status?: Database["public"]["Enums"]["team_attendance_status"]
+          team_player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_event_attendance_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "team_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_event_attendance_team_player_id_fkey"
+            columns: ["team_player_id"]
+            isOneToOne: false
+            referencedRelation: "team_players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_event_rsvps: {
+        Row: {
+          event_id: string
+          id: string
+          note: string | null
+          parent_user_id: string | null
+          responded_at: string
+          response: Database["public"]["Enums"]["team_rsvp_response"]
+          rsvp_token: string
+          team_player_id: string
+        }
+        Insert: {
+          event_id: string
+          id?: string
+          note?: string | null
+          parent_user_id?: string | null
+          responded_at?: string
+          response: Database["public"]["Enums"]["team_rsvp_response"]
+          rsvp_token?: string
+          team_player_id: string
+        }
+        Update: {
+          event_id?: string
+          id?: string
+          note?: string | null
+          parent_user_id?: string | null
+          responded_at?: string
+          response?: Database["public"]["Enums"]["team_rsvp_response"]
+          rsvp_token?: string
+          team_player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_event_rsvps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "team_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_event_rsvps_team_player_id_fkey"
+            columns: ["team_player_id"]
+            isOneToOne: false
+            referencedRelation: "team_players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          end_time: string | null
+          event_date: string
+          event_type: Database["public"]["Enums"]["team_event_type"]
+          home_away: Database["public"]["Enums"]["team_home_away"] | null
+          id: string
+          lineup_shared: boolean
+          notes: string | null
+          opponent_name: string | null
+          rsvp_lock_minutes: number
+          start_time: string | null
+          team_id: string
+          title: string | null
+          updated_at: string
+          venue: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          end_time?: string | null
+          event_date: string
+          event_type: Database["public"]["Enums"]["team_event_type"]
+          home_away?: Database["public"]["Enums"]["team_home_away"] | null
+          id?: string
+          lineup_shared?: boolean
+          notes?: string | null
+          opponent_name?: string | null
+          rsvp_lock_minutes?: number
+          start_time?: string | null
+          team_id: string
+          title?: string | null
+          updated_at?: string
+          venue?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          end_time?: string | null
+          event_date?: string
+          event_type?: Database["public"]["Enums"]["team_event_type"]
+          home_away?: Database["public"]["Enums"]["team_home_away"] | null
+          id?: string
+          lineup_shared?: boolean
+          notes?: string | null
+          opponent_name?: string | null
+          rsvp_lock_minutes?: number
+          start_time?: string | null
+          team_id?: string
+          title?: string | null
+          updated_at?: string
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_events_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_invites: {
+        Row: {
+          athlete_dob: string | null
+          athlete_first_name: string
+          athlete_last_name: string
+          id: string
+          invite_token: string
+          invited_at: string
+          jersey_number: string | null
+          joined_at: string | null
+          parent1_email: string | null
+          parent1_name: string | null
+          parent1_phone: string | null
+          parent2_email: string | null
+          parent2_name: string | null
+          position: string | null
+          status: Database["public"]["Enums"]["team_invite_status"]
+          team_id: string
+        }
+        Insert: {
+          athlete_dob?: string | null
+          athlete_first_name: string
+          athlete_last_name: string
+          id?: string
+          invite_token?: string
+          invited_at?: string
+          jersey_number?: string | null
+          joined_at?: string | null
+          parent1_email?: string | null
+          parent1_name?: string | null
+          parent1_phone?: string | null
+          parent2_email?: string | null
+          parent2_name?: string | null
+          position?: string | null
+          status?: Database["public"]["Enums"]["team_invite_status"]
+          team_id: string
+        }
+        Update: {
+          athlete_dob?: string | null
+          athlete_first_name?: string
+          athlete_last_name?: string
+          id?: string
+          invite_token?: string
+          invited_at?: string
+          jersey_number?: string | null
+          joined_at?: string | null
+          parent1_email?: string | null
+          parent1_name?: string | null
+          parent1_phone?: string | null
+          parent2_email?: string | null
+          parent2_name?: string | null
+          position?: string | null
+          status?: Database["public"]["Enums"]["team_invite_status"]
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invites_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_lineups: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          event_id: string | null
+          id: string
+          positions: Json
+          shared: boolean
+          team_id: string
+          template_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          positions?: Json
+          shared?: boolean
+          team_id: string
+          template_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          positions?: Json
+          shared?: boolean
+          team_id?: string
+          template_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_lineups_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "team_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_lineups_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_members: {
         Row: {
           created_at: string
@@ -2898,6 +3297,160 @@ export type Database = {
           phone?: string | null
           status?: Database["public"]["Enums"]["team_member_status"]
           title?: string
+        }
+        Relationships: []
+      }
+      team_players: {
+        Row: {
+          added_by: string | null
+          athlete_id: string | null
+          created_at: string
+          display_name: string
+          id: string
+          jersey_number: string | null
+          parent_contact_id: string | null
+          position: string | null
+          team_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          athlete_id?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          jersey_number?: string | null
+          parent_contact_id?: string | null
+          position?: string | null
+          team_id: string
+        }
+        Update: {
+          added_by?: string | null
+          athlete_id?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          jersey_number?: string | null
+          parent_contact_id?: string | null
+          position?: string | null
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_players_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_players_parent_contact_id_fkey"
+            columns: ["parent_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_players_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_stats: {
+        Row: {
+          assists: number
+          games_played: number
+          goals: number
+          id: string
+          penalty_minutes: number
+          season: string | null
+          team_id: string
+          team_player_id: string
+          updated_at: string
+        }
+        Insert: {
+          assists?: number
+          games_played?: number
+          goals?: number
+          id?: string
+          penalty_minutes?: number
+          season?: string | null
+          team_id: string
+          team_player_id: string
+          updated_at?: string
+        }
+        Update: {
+          assists?: number
+          games_played?: number
+          goals?: number
+          id?: string
+          penalty_minutes?: number
+          season?: string | null
+          team_id?: string
+          team_player_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_stats_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_stats_team_player_id_fkey"
+            columns: ["team_player_id"]
+            isOneToOne: false
+            referencedRelation: "team_players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          age_group: string | null
+          association_name: string | null
+          coach_id: string
+          created_at: string
+          division: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          primary_color: string | null
+          season: string | null
+          secondary_color: string | null
+          updated_at: string
+        }
+        Insert: {
+          age_group?: string | null
+          association_name?: string | null
+          coach_id: string
+          created_at?: string
+          division?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          primary_color?: string | null
+          season?: string | null
+          secondary_color?: string | null
+          updated_at?: string
+        }
+        Update: {
+          age_group?: string | null
+          association_name?: string | null
+          coach_id?: string
+          created_at?: string
+          division?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          primary_color?: string | null
+          season?: string | null
+          secondary_color?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -3240,6 +3793,7 @@ export type Database = {
       effective_owner_id: { Args: never; Returns: string }
       get_combine_share: { Args: { _token: string }; Returns: Json }
       get_rsvp_by_token: { Args: { _token: string }; Returns: Json }
+      get_team_rsvp_by_token: { Args: { _token: string }; Returns: Json }
       has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -3254,10 +3808,12 @@ export type Database = {
         Returns: boolean
       }
       is_parent_of_camp: { Args: { _camp_id: string }; Returns: boolean }
+      is_team_coach: { Args: { _team_id: string }; Returns: boolean }
       is_team_member_visible_to_parent: {
         Args: { _team_member_id: string }
         Returns: boolean
       }
+      is_team_parent: { Args: { _team_id: string }; Returns: boolean }
       my_team_membership: {
         Args: never
         Returns: {
@@ -3268,6 +3824,10 @@ export type Database = {
       }
       respond_to_rsvp: {
         Args: { _reason?: string; _status: string; _token: string }
+        Returns: Json
+      }
+      respond_to_team_rsvp: {
+        Args: { _note?: string; _response: string; _token: string }
         Returns: Json
       }
     }
@@ -3298,6 +3858,7 @@ export type Database = {
       media_annotation_status: "raw" | "reviewed" | "annotated"
       order_status: "pending" | "paid" | "refunded" | "failed"
       payment_plan: "none" | "two" | "three"
+      practice_item_type: "session" | "drill" | "note"
       recommendation_status: "pending" | "accepted" | "dismissed"
       registration_status:
         | "paid"
@@ -3311,6 +3872,10 @@ export type Database = {
         | "active"
         | "past_due"
         | "canceled"
+      team_attendance_status: "present" | "absent" | "late"
+      team_event_type: "game" | "practice" | "team_event"
+      team_home_away: "home" | "away" | "neutral"
+      team_invite_status: "pending" | "joined" | "resent"
       team_member_status: "active" | "invited"
       team_permission:
         | "owner"
@@ -3318,6 +3883,7 @@ export type Database = {
         | "assistant"
         | "manager"
         | "content_creator"
+      team_rsvp_response: "yes" | "no" | "maybe"
       waitlist_status:
         | "waiting"
         | "offered"
@@ -3478,6 +4044,7 @@ export const Constants = {
       media_annotation_status: ["raw", "reviewed", "annotated"],
       order_status: ["pending", "paid", "refunded", "failed"],
       payment_plan: ["none", "two", "three"],
+      practice_item_type: ["session", "drill", "note"],
       recommendation_status: ["pending", "accepted", "dismissed"],
       registration_status: [
         "paid",
@@ -3493,6 +4060,10 @@ export const Constants = {
         "past_due",
         "canceled",
       ],
+      team_attendance_status: ["present", "absent", "late"],
+      team_event_type: ["game", "practice", "team_event"],
+      team_home_away: ["home", "away", "neutral"],
+      team_invite_status: ["pending", "joined", "resent"],
       team_member_status: ["active", "invited"],
       team_permission: [
         "owner",
@@ -3501,6 +4072,7 @@ export const Constants = {
         "manager",
         "content_creator",
       ],
+      team_rsvp_response: ["yes", "no", "maybe"],
       waitlist_status: ["waiting", "offered", "claimed", "expired", "released"],
     },
   },

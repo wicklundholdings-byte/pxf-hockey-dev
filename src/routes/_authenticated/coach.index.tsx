@@ -5,6 +5,7 @@ import { DollarSign, TrendingUp, Users, CalendarDays, Activity, Wallet, Repeat, 
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip, CartesianGrid } from "recharts";
 import { StatusBadge } from "@/components/coach/status-badge";
 import { TodaysAttendanceCard } from "@/components/coach/todays-attendance-card";
+import { UpcomingSevenDays } from "@/components/teams/upcoming-7-days";
 
 export const Route = createFileRoute("/_authenticated/coach/")({
   component: CoachDashboard,
@@ -105,6 +106,7 @@ function CoachDashboard() {
   return (
     <div className="space-y-5">
       <TodaysAttendanceCard />
+      <UpcomingSevenDays />
       {(unassignedCampIds.length > 0 || outstandingCount > 0 || unscheduledIce > 0) && (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {unscheduledIce > 0 && (
