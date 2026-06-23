@@ -1099,6 +1099,51 @@ export type Database = {
         }
         Relationships: []
       }
+      email_marketing_connections: {
+        Row: {
+          account_name: string | null
+          api_key: string | null
+          api_server: string | null
+          created_at: string
+          id: string
+          last_synced_at: string | null
+          list_id: string | null
+          list_name: string | null
+          owner_id: string
+          provider: Database["public"]["Enums"]["email_marketing_provider"]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          account_name?: string | null
+          api_key?: string | null
+          api_server?: string | null
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          list_id?: string | null
+          list_name?: string | null
+          owner_id: string
+          provider: Database["public"]["Enums"]["email_marketing_provider"]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string | null
+          api_key?: string | null
+          api_server?: string | null
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          list_id?: string | null
+          list_name?: string | null
+          owner_id?: string
+          provider?: Database["public"]["Enums"]["email_marketing_provider"]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_sequence_enrollments: {
         Row: {
           completed_at: string | null
@@ -1505,6 +1550,7 @@ export type Database = {
           full_name: string | null
           id: string
           marketplace_visible: boolean
+          meta_pixel_id: string | null
           postal_code: string | null
           slug: string | null
           sms_provider: string
@@ -1522,6 +1568,7 @@ export type Database = {
           full_name?: string | null
           id: string
           marketplace_visible?: boolean
+          meta_pixel_id?: string | null
           postal_code?: string | null
           slug?: string | null
           sms_provider?: string
@@ -1539,6 +1586,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           marketplace_visible?: boolean
+          meta_pixel_id?: string | null
           postal_code?: string | null
           slug?: string | null
           sms_provider?: string
@@ -2157,6 +2205,7 @@ export type Database = {
       conversation_type: "camp_group" | "dm"
       difficulty_level: "beginner" | "intermediate" | "advanced" | "elite"
       email_campaign_status: "draft" | "scheduled" | "sent"
+      email_marketing_provider: "mailchimp" | "klaviyo"
       location_type: "venue" | "online" | "tba"
       order_status: "pending" | "paid" | "refunded" | "failed"
       payment_plan: "none" | "two" | "three"
@@ -2314,6 +2363,7 @@ export const Constants = {
       conversation_type: ["camp_group", "dm"],
       difficulty_level: ["beginner", "intermediate", "advanced", "elite"],
       email_campaign_status: ["draft", "scheduled", "sent"],
+      email_marketing_provider: ["mailchimp", "klaviyo"],
       location_type: ["venue", "online", "tba"],
       order_status: ["pending", "paid", "refunded", "failed"],
       payment_plan: ["none", "two", "three"],
