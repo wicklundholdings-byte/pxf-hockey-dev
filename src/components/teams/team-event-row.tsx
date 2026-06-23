@@ -7,7 +7,7 @@ const TYPE_META: Record<string, { label: string; color: string; bg: string; icon
   camp: { label: "Camp", color: "text-teal", bg: "bg-teal/15", icon: CalendarDays },
 };
 
-export function TeamEventRow({ event, counts }: {
+export function TeamEventRow({ event, counts, hasMedia }: {
   event: {
     event_type: string;
     title?: string | null;
@@ -35,7 +35,7 @@ export function TeamEventRow({ event, counts }: {
         <div className="flex items-center gap-2">
           <span className={"rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider " + meta.bg + " " + meta.color}>{meta.label.toUpperCase()}</span>
           {event.team_name && <span className="truncate text-[10px] text-muted-foreground">{event.team_name}</span>}
-          {arguments[0]?.hasMedia && <ImageIcon size={11} className="text-teal" aria-label="Has media" />}
+          {hasMedia && <ImageIcon size={11} className="text-teal" aria-label="Has media" />}
         </div>
         <p className="mt-0.5 truncate text-sm font-semibold">{label}</p>
         <p className="text-[11px] text-muted-foreground">
