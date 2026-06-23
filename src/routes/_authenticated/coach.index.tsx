@@ -154,45 +154,41 @@ function CoachDashboard() {
         ))}
       </div>
 
-      {/* Primary action row */}
-      <div className="grid grid-cols-2 gap-2">
-        <Link
-          to="/coach/ice"
-          className="flex items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-teal/10 py-3 text-sm font-bold text-teal hover:bg-teal/20 transition-colors"
-        >
-          <Snowflake size={18} />
-          Add Ice times
-        </Link>
-        <Link
-          to="/coach/camps/new"
-          className="flex items-center justify-center gap-2 rounded-2xl border border-volt/40 bg-volt/10 py-3 text-sm font-bold text-volt hover:bg-volt/20 transition-colors"
-        >
-          <Plus size={18} />
-          Create Session
-        </Link>
+      {/* Quick Actions */}
+      <div className="grid grid-cols-4 gap-2">
+        {[
+          { to: "/coach/camps/new", label: "Create Camp", icon: CalendarPlus },
+          { to: "/coach/camps/new", label: "Create Session", icon: Layers },
+          { to: "/coach/ice", label: "Add Ice Time", icon: Snowflake },
+          { to: "/coach/broadcast", label: "Broadcast", icon: Megaphone },
+        ].map((q) => (
+          <Link
+            key={q.label}
+            to={q.to}
+            className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/60 bg-surface px-2 py-3 text-center transition-colors hover:border-teal/40"
+          >
+            <q.icon size={18} className="text-teal" />
+            <span className="text-[10px] font-semibold leading-tight text-foreground">{q.label}</span>
+          </Link>
+        ))}
       </div>
 
-      {/* Quick access */}
-      <div className="grid grid-cols-2 gap-2">
+      {/* Quick Access */}
+      <div className="grid grid-cols-2 gap-3">
         {[
-          { to: "/coach/ice", label: "Ice Times", icon: Snowflake, accent: "text-teal" },
-          { to: "/coach/financials", label: "Financials", icon: Wallet, accent: "text-teal" },
-          { to: "/coach/memberships", label: "Memberships", icon: Repeat, accent: "text-volt" },
-          { to: "/coach/analytics", label: "Analytics", icon: BarChart3, accent: "text-emerald-400" },
-          { to: "/coach/attendees", label: "Attendees", icon: UserSquare2, accent: "text-foreground" },
-          { to: "/coach/roster", label: "Roster", icon: ClipboardCheck, accent: "text-foreground" },
-          { to: "/coach/teams", label: "Teams", icon: UserCog, accent: "text-foreground" },
+          { to: "/coach/ice", label: "Ice Times", icon: Clock },
+          { to: "/coach/financials", label: "Financials", icon: DollarSign },
+          { to: "/coach/memberships", label: "Memberships", icon: Crown },
+          { to: "/coach/analytics", label: "Analytics", icon: BarChart3 },
+          { to: "/coach/roster", label: "Roster", icon: Users },
         ].map((q) => (
           <Link
             key={q.to}
             to={q.to}
-            className="flex items-center justify-between rounded-2xl border border-border bg-card px-3 py-2.5"
+            className="group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/60 bg-surface p-2 transition-all hover:border-teal/40 hover:bg-surface-2"
           >
-            <div className="flex items-center gap-2">
-              <q.icon size={14} className={q.accent} />
-              <span className="text-xs font-semibold text-foreground">{q.label}</span>
-            </div>
-            <ChevronRight size={14} className="text-muted-foreground" />
+            <q.icon size={22} strokeWidth={1.6} className="text-teal" />
+            <span className="text-center text-[9.5px] font-semibold leading-tight text-foreground">{q.label}</span>
           </Link>
         ))}
       </div>
