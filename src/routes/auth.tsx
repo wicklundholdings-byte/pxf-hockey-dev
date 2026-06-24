@@ -161,6 +161,17 @@ function AuthPage() {
           {isSignup ? "Sign in" : "Create one"}
         </Link>
       </p>
+
+      {import.meta.env.DEV && (
+        <button
+          type="button"
+          onClick={() => setDevOpen(true)}
+          className="fixed bottom-4 right-4 z-50 rounded-full border border-teal/40 bg-card/95 px-3 py-1.5 text-[10px] font-bold tracking-widest text-teal shadow-lg backdrop-blur"
+        >
+          DEV
+        </button>
+      )}
+      {devOpen && <DevPanel onClose={() => setDevOpen(false)} />}
     </div>
   );
 }
