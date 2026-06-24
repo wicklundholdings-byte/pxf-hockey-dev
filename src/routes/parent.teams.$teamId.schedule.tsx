@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { submitRsvp } from "@/lib/teams.functions";
 import { Check, X, HelpCircle, Swords, Dumbbell, Star, ClipboardList } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/parent/teams/$teamId/schedule")({
   component: ParentTeamSchedule,
@@ -43,6 +44,7 @@ function mapsUrl(venue: string) {
 function ParentTeamSchedule() {
   const { teamId } = Route.useParams();
   const rsvp = useServerFn(submitRsvp);
+  const { user } = useAuth();
   const [events, setEvents] = useState<EventRow[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [responses, setResponses] = useState<Record<string, Record<string, string>>>({}); // eventId -> playerId -> resp
@@ -84,14 +86,17 @@ function ParentTeamSchedule() {
           setResponses(map);
         }
 
-        const { data: dt } = await supabase
-          .from("team_duties")
-          .select("id,event_id,duty_type,notes,assignee_contact_id")
-          .in("assignee_contact_id", contactIds);
-        setDuties((((dt ?? []) as any[]).map((d) => ({ id: d.id, event_id: d.event_id, duty_type: d.duty_type, notes: d.notes }))) as Duty[]);
+        if (user?.id && evList.length) {
+          const { data: dt } = await supabase
+            .from("team_duties")
+            .select("id,event_id,duty_type,notes")
+            .eq("assigned_to_parent_id", user.id)
+            .in("event_id", evList.map((e) => e.id));
+          setDuties((dt ?? []) as Duty[]);
+        }
       }
     })();
-  }, [teamId]);
+  }, [teamId, user?.id]);
 
   async function respond(eventId: string, playerId: string, r: "yes" | "no" | "maybe") {
     setResponses((prev) => ({ ...prev, [eventId]: { ...(prev[eventId] ?? {}), [playerId]: r } }));
