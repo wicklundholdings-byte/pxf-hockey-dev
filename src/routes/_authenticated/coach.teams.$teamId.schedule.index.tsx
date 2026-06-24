@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createEvent } from "@/lib/teams.functions";
 import { Plus, X } from "lucide-react";
 import { TeamEventRow } from "@/components/teams/team-event-row";
+import { maskName } from "@/lib/team-stats";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedule/")({
   component: Schedule,
@@ -12,11 +13,13 @@ export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedu
 
 type EventRow = { id: string; event_type: "game" | "practice" | "team_event"; title: string | null; opponent_name: string | null; venue: string | null; event_date: string; start_time: string | null };
 type RsvpCounts = { yes: number; no: number; maybe: number; none: number };
+type ResultRow = { team_score: number; opponent_score: number; result: string | null; leader: { name: string; g: number; a: number; pts: number } | null; shutout: { name: string; svpct: string } | null };
 
 function Schedule() {
   const { teamId } = Route.useParams();
   const [events, setEvents] = useState<EventRow[]>([]);
   const [counts, setCounts] = useState<Record<string, RsvpCounts>>({});
+  const [results, setResults] = useState<Record<string, ResultRow>>({});
   const [adding, setAdding] = useState(false);
 
   async function refresh() {
@@ -44,8 +47,43 @@ function Schedule() {
         c.none = Math.max(0, c.none - 1);
       }
       setCounts(map);
+      const gameIds = evs.filter((e) => e.event_type === "game").map((e) => e.id);
+      if (gameIds.length) {
+        const [{ data: gr }, { data: ps }, { data: gs }, { data: tp }] = await Promise.all([
+          supabase.from("game_results").select("event_id,team_score,opponent_score,result").in("event_id", gameIds),
+          supabase.from("game_player_stats").select("event_id,team_player_id,goals,assists,points").in("event_id", gameIds),
+          supabase.from("game_goalie_stats").select("event_id,team_player_id,shutout,saves,goals_against").in("event_id", gameIds),
+          supabase.from("team_players").select("id,display_name").eq("team_id", teamId),
+        ]);
+        const nameMap = new Map(((tp ?? []) as any[]).map((p) => [p.id, p.display_name as string]));
+        const rmap: Record<string, ResultRow> = {};
+        for (const r of (gr ?? []) as any[]) {
+          rmap[r.event_id] = { team_score: r.team_score, opponent_score: r.opponent_score, result: r.result, leader: null, shutout: null };
+        }
+        // leaders
+        const perGame: Record<string, any[]> = {};
+        for (const s of (ps ?? []) as any[]) (perGame[s.event_id] ??= []).push(s);
+        for (const [eid, rows] of Object.entries(perGame)) {
+          if (!rmap[eid]) continue;
+          const top = rows.sort((a: any, b: any) => (b.points ?? b.goals + b.assists) - (a.points ?? a.goals + a.assists))[0];
+          if (top && (top.points ?? top.goals + top.assists) > 0) {
+            const name = maskName(nameMap.get(top.team_player_id) ?? "");
+            rmap[eid].leader = { name, g: top.goals, a: top.assists, pts: top.points ?? top.goals + top.assists };
+          }
+        }
+        for (const g of (gs ?? []) as any[]) {
+          if (!g.shutout || !rmap[g.event_id]) continue;
+          const shots = (g.saves ?? 0) + (g.goals_against ?? 0);
+          const pct = shots ? "." + Math.round((g.saves / shots) * 1000).toString().padStart(3, "0") : "—";
+          rmap[g.event_id].shutout = { name: maskName(nameMap.get(g.team_player_id) ?? ""), svpct: pct };
+        }
+        setResults(rmap);
+      } else {
+        setResults({});
+      }
     } else {
       setCounts({});
+      setResults({});
     }
   }
   useEffect(() => { refresh(); }, [teamId]);
@@ -64,7 +102,7 @@ function Schedule() {
         )}
         {events.map((e) => (
           <Link key={e.id} to="/coach/teams/$teamId/schedule/$eventId" params={{ teamId, eventId: e.id }}>
-            <TeamEventRow event={e} counts={counts[e.id]} />
+            <TeamEventRow event={e} counts={counts[e.id]} result={results[e.id] ?? null} />
           </Link>
         ))}
       </div>

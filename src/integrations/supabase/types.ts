@@ -2449,6 +2449,77 @@ export type Database = {
           },
         ]
       }
+      game_goalie_stats: {
+        Row: {
+          athlete_id: string | null
+          created_at: string
+          decision: string | null
+          event_id: string
+          goals_against: number
+          id: string
+          saves: number
+          shutout: boolean
+          team_id: string
+          team_player_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          athlete_id?: string | null
+          created_at?: string
+          decision?: string | null
+          event_id: string
+          goals_against?: number
+          id?: string
+          saves?: number
+          shutout?: boolean
+          team_id: string
+          team_player_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          athlete_id?: string | null
+          created_at?: string
+          decision?: string | null
+          event_id?: string
+          goals_against?: number
+          id?: string
+          saves?: number
+          shutout?: boolean
+          team_id?: string
+          team_player_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_goalie_stats_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_goalie_stats_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "team_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_goalie_stats_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_goalie_stats_team_player_id_fkey"
+            columns: ["team_player_id"]
+            isOneToOne: false
+            referencedRelation: "team_players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_highlight_reels: {
         Row: {
           clip_ids: Json
@@ -2736,6 +2807,137 @@ export type Database = {
           },
           {
             foreignKeyName: "game_plans_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_player_stats: {
+        Row: {
+          assists: number
+          athlete_id: string | null
+          created_at: string
+          event_id: string
+          goals: number
+          id: string
+          penalty_minutes: number
+          plus_minus: number
+          points: number | null
+          shots_on_goal: number
+          team_id: string
+          team_player_id: string | null
+          toi: string | null
+          updated_at: string
+        }
+        Insert: {
+          assists?: number
+          athlete_id?: string | null
+          created_at?: string
+          event_id: string
+          goals?: number
+          id?: string
+          penalty_minutes?: number
+          plus_minus?: number
+          points?: number | null
+          shots_on_goal?: number
+          team_id: string
+          team_player_id?: string | null
+          toi?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assists?: number
+          athlete_id?: string | null
+          created_at?: string
+          event_id?: string
+          goals?: number
+          id?: string
+          penalty_minutes?: number
+          plus_minus?: number
+          points?: number | null
+          shots_on_goal?: number
+          team_id?: string
+          team_player_id?: string | null
+          toi?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_player_stats_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_player_stats_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "team_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_player_stats_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_player_stats_team_player_id_fkey"
+            columns: ["team_player_id"]
+            isOneToOne: false
+            referencedRelation: "team_players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_results: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          event_id: string
+          id: string
+          opponent_score: number
+          result: Database["public"]["Enums"]["game_result_type"] | null
+          team_id: string
+          team_score: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          event_id: string
+          id?: string
+          opponent_score?: number
+          result?: Database["public"]["Enums"]["game_result_type"] | null
+          team_id: string
+          team_score?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          event_id?: string
+          id?: string
+          opponent_score?: number
+          result?: Database["public"]["Enums"]["game_result_type"] | null
+          team_id?: string
+          team_score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_results_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "team_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_results_team_id_fkey"
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
@@ -4556,6 +4758,13 @@ export type Database = {
         | "warmup"
         | "other"
       game_media_type: "photo" | "video"
+      game_result_type:
+        | "win"
+        | "loss"
+        | "ot_win"
+        | "ot_loss"
+        | "so_win"
+        | "so_loss"
       location_type: "venue" | "online" | "tba"
       media_annotation_status: "raw" | "reviewed" | "annotated"
       order_status: "pending" | "paid" | "refunded" | "failed"
@@ -4762,6 +4971,14 @@ export const Constants = {
         "other",
       ],
       game_media_type: ["photo", "video"],
+      game_result_type: [
+        "win",
+        "loss",
+        "ot_win",
+        "ot_loss",
+        "so_win",
+        "so_loss",
+      ],
       location_type: ["venue", "online", "tba"],
       media_annotation_status: ["raw", "reviewed", "annotated"],
       order_status: ["pending", "paid", "refunded", "failed"],

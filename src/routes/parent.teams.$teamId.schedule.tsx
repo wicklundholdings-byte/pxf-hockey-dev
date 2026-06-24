@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { submitRsvp } from "@/lib/teams.functions";
 import { Check, X, HelpCircle, Swords, Dumbbell, Star, ClipboardList } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { maskName } from "@/lib/team-stats";
 
 export const Route = createFileRoute("/parent/teams/$teamId/schedule")({
   component: ParentTeamSchedule,
@@ -22,6 +23,7 @@ type EventRow = {
 };
 type Player = { id: string; display_name: string };
 type Duty = { id: string; event_id: string; duty_type: string; notes: string | null };
+type GameRes = { team_score: number; opponent_score: number; result: string | null; leader: { name: string; g: number; a: number; pts: number } | null; shutout: { name: string; svpct: string } | null };
 
 const TYPE_META: Record<string, { label: string; icon: typeof Swords; bg: string; color: string }> = {
   game: { label: "GAME", icon: Swords, bg: "bg-red-500/15", color: "text-red-400" },
@@ -49,18 +51,48 @@ function ParentTeamSchedule() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [responses, setResponses] = useState<Record<string, Record<string, string>>>({}); // eventId -> playerId -> resp
   const [duties, setDuties] = useState<Duty[]>([]);
+  const [results, setResults] = useState<Record<string, GameRes>>({});
 
   useEffect(() => {
     (async () => {
-      const today = new Date().toISOString().slice(0, 10);
       const { data: evs } = await supabase
         .from("team_events")
         .select("id,event_type,title,opponent_name,home_away,venue,event_date,start_time")
         .eq("team_id", teamId)
-        .gte("event_date", today)
         .order("event_date");
       const evList = (evs ?? []) as EventRow[];
       setEvents(evList);
+
+      const gameIds = evList.filter((e) => e.event_type === "game").map((e) => e.id);
+      if (gameIds.length) {
+        const [{ data: gr }, { data: ps }, { data: gs }, { data: tp }] = await Promise.all([
+          supabase.from("game_results").select("event_id,team_score,opponent_score,result").in("event_id", gameIds),
+          supabase.from("game_player_stats").select("event_id,team_player_id,goals,assists,points").in("event_id", gameIds),
+          supabase.from("game_goalie_stats").select("event_id,team_player_id,shutout,saves,goals_against").in("event_id", gameIds),
+          supabase.from("team_players").select("id,display_name").eq("team_id", teamId),
+        ]);
+        const nameMap = new Map(((tp ?? []) as any[]).map((p) => [p.id, p.display_name as string]));
+        const rmap: Record<string, GameRes> = {};
+        for (const r of (gr ?? []) as any[]) {
+          rmap[r.event_id] = { team_score: r.team_score, opponent_score: r.opponent_score, result: r.result, leader: null, shutout: null };
+        }
+        const perGame: Record<string, any[]> = {};
+        for (const s of (ps ?? []) as any[]) (perGame[s.event_id] ??= []).push(s);
+        for (const [eid, rows] of Object.entries(perGame)) {
+          if (!rmap[eid]) continue;
+          const top = rows.sort((a: any, b: any) => (b.points ?? b.goals + b.assists) - (a.points ?? a.goals + a.assists))[0];
+          if (top && (top.points ?? top.goals + top.assists) > 0) {
+            rmap[eid].leader = { name: maskName(nameMap.get(top.team_player_id) ?? ""), g: top.goals, a: top.assists, pts: top.points ?? top.goals + top.assists };
+          }
+        }
+        for (const g of (gs ?? []) as any[]) {
+          if (!g.shutout || !rmap[g.event_id]) continue;
+          const shots = (g.saves ?? 0) + (g.goals_against ?? 0);
+          const pct = shots ? "." + Math.round((g.saves / shots) * 1000).toString().padStart(3, "0") : "—";
+          rmap[g.event_id].shutout = { name: maskName(nameMap.get(g.team_player_id) ?? ""), svpct: pct };
+        }
+        setResults(rmap);
+      }
 
       const ids = await (supabase as any).rpc("current_user_contact_ids");
       const contactIds = (ids.data ?? []) as string[];
@@ -116,6 +148,7 @@ function ParentTeamSchedule() {
         {events.map((e) => {
           const meta = TYPE_META[e.event_type] ?? TYPE_META.team_event;
           const Icon = meta.icon;
+          const res = results[e.id];
           const label = e.event_type === "game"
             ? `${e.home_away === "away" ? "@" : "vs"} ${e.opponent_name || "TBD"}`
             : e.title || meta.label;
@@ -142,8 +175,28 @@ function ParentTeamSchedule() {
                     <Icon size={16} className={meta.color} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className={"rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider " + meta.bg + " " + meta.color}>{meta.label}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={"rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider " + meta.bg + " " + meta.color}>{meta.label}</span>
+                      {res?.result && (
+                        <span className={"rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider " +
+                          (res.result === "win" ? "bg-emerald-500/15 text-emerald-400"
+                            : res.result === "loss" ? "bg-red-500/15 text-red-400"
+                            : res.result.startsWith("ot") ? "bg-teal/15 text-teal"
+                            : "bg-surface-2 text-muted-foreground")}>
+                          {res.result.toUpperCase().replace("_"," ")}
+                        </span>
+                      )}
+                    </div>
                     <p className="mt-1 truncate text-sm font-semibold">{label}</p>
+                    {res && (
+                      <p className="text-[11px] font-bold">Final: {res.team_score} — {res.opponent_score}</p>
+                    )}
+                    {res?.leader && (
+                      <p className="truncate text-[10px] text-amber-400">⭐ {res.leader.name} — {res.leader.g}G {res.leader.a}A {res.leader.pts}PTS</p>
+                    )}
+                    {res?.shutout && (
+                      <p className="truncate text-[10px] text-teal">🥅 Shutout — {res.shutout.name} {res.shutout.svpct}</p>
+                    )}
                     <p className="text-[11px] text-muted-foreground">
                       {fmtDate(e.event_date)}{e.start_time ? " · " + fmtTime(e.start_time) : ""}{e.venue ? " · " + e.venue : ""}
                     </p>
