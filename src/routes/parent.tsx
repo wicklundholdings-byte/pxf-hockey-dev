@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Flag, Dumbbell, MessageCircle, Users, Bell } from "lucide-react";
+import { Home, Flag, Dumbbell, MessageCircle, Users, Bell } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserAppRole } from "@/lib/user-role";
@@ -62,7 +62,7 @@ function ParentLayout() {
       <Outlet />
       <BottomNav
         items={[
-          { to: "/parent", label: "Dashboard", icon: LayoutDashboard, exact: true },
+          { to: "/parent", label: "Home", icon: Home, exact: true },
           { to: "/parent/camps", label: "Camps", icon: Flag },
           { to: "/parent/teams", label: "Teams", icon: Users },
           { to: "/parent/train", label: "Train", icon: Dumbbell },
