@@ -89,6 +89,7 @@ function ParentDashboard() {
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [rsvps, setRsvps] = useState<RsvpPrompt[]>([]);
   const [hasActiveDryland, setHasActiveDryland] = useState<boolean | null>(null);
+  const [teams, setTeams] = useState<TeamCard[]>([]);
 
   useEffect(() => {
     if (!user?.id) return;
