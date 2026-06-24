@@ -53,7 +53,6 @@ import { Route as PaymentsConnectRouteImport } from './routes/payments.connect'
 import { Route as PaymentsConfirmationRouteImport } from './routes/payments.confirmation'
 import { Route as PaymentsCheckoutRouteImport } from './routes/payments.checkout'
 import { Route as ParentUpdatesRouteImport } from './routes/parent.updates'
-import { Route as ParentTrainRouteImport } from './routes/parent.train'
 import { Route as ParentScheduleRouteImport } from './routes/parent.schedule'
 import { Route as ParentProfileRouteImport } from './routes/parent.profile'
 import { Route as ParentInboxRouteImport } from './routes/parent.inbox'
@@ -361,11 +360,6 @@ const ParentUpdatesRoute = ParentUpdatesRouteImport.update({
   path: '/updates',
   getParentRoute: () => ParentRoute,
 } as any)
-const ParentTrainRoute = ParentTrainRouteImport.update({
-  id: '/train',
-  path: '/train',
-  getParentRoute: () => ParentRoute,
-} as any)
 const ParentScheduleRoute = ParentScheduleRouteImport.update({
   id: '/schedule',
   path: '/schedule',
@@ -462,9 +456,9 @@ const RsvpTeamTokenRoute = RsvpTeamTokenRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const ParentTrainProgramIdRoute = ParentTrainProgramIdRouteImport.update({
-  id: '/$programId',
-  path: '/$programId',
-  getParentRoute: () => ParentTrainRoute,
+  id: '/train/$programId',
+  path: '/train/$programId',
+  getParentRoute: () => ParentRoute,
 } as any)
 const ParentTeamTeamIdRoute = ParentTeamTeamIdRouteImport.update({
   id: '/team/$teamId',
@@ -680,9 +674,9 @@ const AuthenticatedCoachCampsIndexRoute =
   } as any)
 const ParentTrainSessionSessionIdRoute =
   ParentTrainSessionSessionIdRouteImport.update({
-    id: '/session/$sessionId',
-    path: '/session/$sessionId',
-    getParentRoute: () => ParentTrainRoute,
+    id: '/train/session/$sessionId',
+    path: '/train/session/$sessionId',
+    getParentRoute: () => ParentRoute,
   } as any)
 const ParentTeamEventEventIdRoute = ParentTeamEventEventIdRouteImport.update({
   id: '/team/event/$eventId',
@@ -893,7 +887,6 @@ export interface FileRoutesByFullPath {
   '/parent/inbox': typeof ParentInboxRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
-  '/parent/train': typeof ParentTrainRouteWithChildren
   '/parent/updates': typeof ParentUpdatesRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
@@ -1021,7 +1014,6 @@ export interface FileRoutesByTo {
   '/parent/inbox': typeof ParentInboxRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
-  '/parent/train': typeof ParentTrainRouteWithChildren
   '/parent/updates': typeof ParentUpdatesRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
@@ -1152,7 +1144,6 @@ export interface FileRoutesById {
   '/parent/inbox': typeof ParentInboxRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
-  '/parent/train': typeof ParentTrainRouteWithChildren
   '/parent/updates': typeof ParentUpdatesRoute
   '/payments/checkout': typeof PaymentsCheckoutRoute
   '/payments/confirmation': typeof PaymentsConfirmationRoute
@@ -1287,7 +1278,6 @@ export interface FileRouteTypes {
     | '/parent/inbox'
     | '/parent/profile'
     | '/parent/schedule'
-    | '/parent/train'
     | '/parent/updates'
     | '/payments/checkout'
     | '/payments/confirmation'
@@ -1415,7 +1405,6 @@ export interface FileRouteTypes {
     | '/parent/inbox'
     | '/parent/profile'
     | '/parent/schedule'
-    | '/parent/train'
     | '/parent/updates'
     | '/payments/checkout'
     | '/payments/confirmation'
@@ -1545,7 +1534,6 @@ export interface FileRouteTypes {
     | '/parent/inbox'
     | '/parent/profile'
     | '/parent/schedule'
-    | '/parent/train'
     | '/parent/updates'
     | '/payments/checkout'
     | '/payments/confirmation'
@@ -2001,13 +1989,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParentUpdatesRouteImport
       parentRoute: typeof ParentRoute
     }
-    '/parent/train': {
-      id: '/parent/train'
-      path: '/train'
-      fullPath: '/parent/train'
-      preLoaderRoute: typeof ParentTrainRouteImport
-      parentRoute: typeof ParentRoute
-    }
     '/parent/schedule': {
       id: '/parent/schedule'
       path: '/schedule'
@@ -2143,10 +2124,10 @@ declare module '@tanstack/react-router' {
     }
     '/parent/train/$programId': {
       id: '/parent/train/$programId'
-      path: '/$programId'
+      path: '/train/$programId'
       fullPath: '/parent/train/$programId'
       preLoaderRoute: typeof ParentTrainProgramIdRouteImport
-      parentRoute: typeof ParentTrainRoute
+      parentRoute: typeof ParentRoute
     }
     '/parent/team/$teamId': {
       id: '/parent/team/$teamId'
@@ -2416,10 +2397,10 @@ declare module '@tanstack/react-router' {
     }
     '/parent/train/session/$sessionId': {
       id: '/parent/train/session/$sessionId'
-      path: '/session/$sessionId'
+      path: '/train/session/$sessionId'
       fullPath: '/parent/train/session/$sessionId'
       preLoaderRoute: typeof ParentTrainSessionSessionIdRouteImport
-      parentRoute: typeof ParentTrainRoute
+      parentRoute: typeof ParentRoute
     }
     '/parent/team/event/$eventId': {
       id: '/parent/team/event/$eventId'
@@ -2904,32 +2885,19 @@ const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
   OnboardingRouteChildren,
 )
 
-interface ParentTrainRouteChildren {
-  ParentTrainProgramIdRoute: typeof ParentTrainProgramIdRoute
-  ParentTrainSessionSessionIdRoute: typeof ParentTrainSessionSessionIdRoute
-}
-
-const ParentTrainRouteChildren: ParentTrainRouteChildren = {
-  ParentTrainProgramIdRoute: ParentTrainProgramIdRoute,
-  ParentTrainSessionSessionIdRoute: ParentTrainSessionSessionIdRoute,
-}
-
-const ParentTrainRouteWithChildren = ParentTrainRoute._addFileChildren(
-  ParentTrainRouteChildren,
-)
-
 interface ParentRouteChildren {
   ParentCampsRoute: typeof ParentCampsRoute
   ParentInboxRoute: typeof ParentInboxRoute
   ParentProfileRoute: typeof ParentProfileRoute
   ParentScheduleRoute: typeof ParentScheduleRoute
-  ParentTrainRoute: typeof ParentTrainRouteWithChildren
   ParentUpdatesRoute: typeof ParentUpdatesRoute
   ParentIndexRoute: typeof ParentIndexRoute
   ParentCampCampIdRoute: typeof ParentCampCampIdRoute
   ParentConversationConversationIdRoute: typeof ParentConversationConversationIdRoute
   ParentTeamTeamIdRoute: typeof ParentTeamTeamIdRoute
+  ParentTrainProgramIdRoute: typeof ParentTrainProgramIdRoute
   ParentTeamEventEventIdRoute: typeof ParentTeamEventEventIdRoute
+  ParentTrainSessionSessionIdRoute: typeof ParentTrainSessionSessionIdRoute
 }
 
 const ParentRouteChildren: ParentRouteChildren = {
@@ -2937,13 +2905,14 @@ const ParentRouteChildren: ParentRouteChildren = {
   ParentInboxRoute: ParentInboxRoute,
   ParentProfileRoute: ParentProfileRoute,
   ParentScheduleRoute: ParentScheduleRoute,
-  ParentTrainRoute: ParentTrainRouteWithChildren,
   ParentUpdatesRoute: ParentUpdatesRoute,
   ParentIndexRoute: ParentIndexRoute,
   ParentCampCampIdRoute: ParentCampCampIdRoute,
   ParentConversationConversationIdRoute: ParentConversationConversationIdRoute,
   ParentTeamTeamIdRoute: ParentTeamTeamIdRoute,
+  ParentTrainProgramIdRoute: ParentTrainProgramIdRoute,
   ParentTeamEventEventIdRoute: ParentTeamEventEventIdRoute,
+  ParentTrainSessionSessionIdRoute: ParentTrainSessionSessionIdRoute,
 }
 
 const ParentRouteWithChildren =
