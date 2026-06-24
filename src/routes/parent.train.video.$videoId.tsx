@@ -33,6 +33,9 @@ function VideoPlayer() {
   const [athleteId, setAthleteId] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
   const [watchedSeconds, setWatchedSeconds] = useState(0);
+  const [totalSeconds, setTotalSeconds] = useState(0);
+  const lastTimeRef = useRef(0);
+  const watchedRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const saveTimer = useRef<number | null>(null);
 
@@ -40,6 +43,8 @@ function VideoPlayer() {
     (async () => {
       const { data: v } = await supabase.from("dryland_videos").select("*").eq("id", videoId).maybeSingle();
       setVideo((v ?? null) as Video | null);
+      const ts = (v as any)?.total_seconds ?? ((v as any)?.duration_minutes ?? 0) * 60;
+      setTotalSeconds(ts || 0);
 
       if (v) {
         const { data: more } = await supabase
@@ -74,7 +79,9 @@ function VideoPlayer() {
           .eq("video_id", videoId)
           .maybeSingle();
         if (prog) {
-          setWatchedSeconds(prog.watched_seconds ?? 0);
+          const w = prog.watched_seconds ?? 0;
+          setWatchedSeconds(w);
+          watchedRef.current = w;
           setCompleted(!!prog.completed);
         }
       }
@@ -96,15 +103,38 @@ function VideoPlayer() {
   };
 
   const onTimeUpdate = () => {
-    const t = videoRef.current?.currentTime ?? 0;
-    setWatchedSeconds(t);
-    if (saveTimer.current) window.clearTimeout(saveTimer.current);
-    saveTimer.current = window.setTimeout(() => save(t, false), 1500);
+    const el = videoRef.current;
+    if (!el) return;
+    const t = el.currentTime;
+    const delta = t - lastTimeRef.current;
+    // Only count forward, contiguous playback (small step).
+    if (delta > 0 && delta < 2) {
+      watchedRef.current += delta;
+      setWatchedSeconds(watchedRef.current);
+      if (saveTimer.current) window.clearTimeout(saveTimer.current);
+      saveTimer.current = window.setTimeout(() => save(watchedRef.current, false), 1500);
+    }
+    lastTimeRef.current = t;
   };
 
+  const onSeeking = () => {
+    const el = videoRef.current;
+    if (!el) return;
+    // Block scrubbing ahead of where the athlete has actually watched.
+    const maxAllowed = Math.max(watchedRef.current, lastTimeRef.current) + 1;
+    if (el.currentTime > maxAllowed) {
+      el.currentTime = maxAllowed;
+    }
+    lastTimeRef.current = el.currentTime;
+  };
+
+  const threshold = totalSeconds > 0 ? totalSeconds * 0.9 : Infinity;
+  const canComplete = watchedSeconds >= threshold;
+
   const markComplete = async () => {
+    if (!canComplete) return;
     setCompleted(true);
-    await save(watchedSeconds, true);
+    await save(watchedRef.current, true);
   };
 
   if (!video) return <div className="px-5 pt-6 text-sm text-muted-foreground">Loading…</div>;
@@ -134,6 +164,7 @@ function VideoPlayer() {
               controls
               playsInline
               onTimeUpdate={onTimeUpdate}
+              onSeeking={onSeeking}
               onEnded={markComplete}
               className="h-full w-full object-cover"
             />
@@ -204,10 +235,15 @@ function VideoPlayer() {
       <div className="fixed bottom-0 left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 border-t border-border bg-background/95 p-4 backdrop-blur-xl pb-[max(env(safe-area-inset-bottom),1rem)]">
         <button
           onClick={markComplete}
-          disabled={completed}
+          disabled={completed || !canComplete}
           className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 text-sm font-bold text-primary-foreground disabled:opacity-60"
         >
-          <CheckCircle2 size={16} /> {completed ? "Completed" : "Mark complete"}
+          <CheckCircle2 size={16} />{" "}
+          {completed
+            ? "Completed"
+            : canComplete
+              ? "Mark complete"
+              : `Watch ${Math.max(0, Math.ceil(threshold - watchedSeconds))}s more to unlock`}
         </button>
       </div>
     </div>
