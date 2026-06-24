@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { X, LogIn, RefreshCw } from "lucide-react";
@@ -16,26 +16,30 @@ export function DevPanel({ onClose }: { onClose: () => void }) {
   const [seeding, setSeeding] = useState(false);
   const [seeded, setSeeded] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const autoRan = useRef(false);
 
-  async function loginAs(email: string) {
-    setErr(null);
-    setBusy(email);
-    let { error } = await supabase.auth.signInWithPassword({ email, password: DEV_PASSWORD });
-    if (error) {
-      // First-run: accounts don't exist yet. Seed and retry.
+  // Auto-seed on first open so "Login as" works immediately. Seeding 5
+  // accounts + mock data takes ~30-60s; we block the login buttons until
+  // it finishes so users don't tap into invalid_credentials.
+  useEffect(() => {
+    if (autoRan.current) return;
+    autoRan.current = true;
+    (async () => {
       setSeeding(true);
       try {
         await seed({});
         setSeeded(true);
       } catch (e) {
-        setSeeding(false);
-        setBusy(null);
         setErr(e instanceof Error ? e.message : "Seeding failed");
-        return;
       }
       setSeeding(false);
-      ({ error } = await supabase.auth.signInWithPassword({ email, password: DEV_PASSWORD }));
-    }
+    })();
+  }, [seed]);
+
+  async function loginAs(email: string) {
+    setErr(null);
+    setBusy(email);
+    const { error } = await supabase.auth.signInWithPassword({ email, password: DEV_PASSWORD });
     setBusy(null);
     if (error) {
       setErr(error.message);
