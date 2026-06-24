@@ -28,6 +28,7 @@ type Evaluation = {
   hockey_sense: number | null;
 };
 type RsvpPrompt = { id: string; child_name: string; camp_name: string; session_date: string };
+type TeamCard = { id: string; name: string; season: string | null; logo_url: string | null; primary_color: string | null; coach_name: string | null; player_count: number };
 type NextSession = {
   camp_id: string;
   child_name: string;
