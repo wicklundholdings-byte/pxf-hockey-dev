@@ -7,7 +7,7 @@ const TYPE_META: Record<string, { label: string; color: string; bg: string; icon
   camp: { label: "Camp", color: "text-teal", bg: "bg-teal/15", icon: CalendarDays },
 };
 
-export function TeamEventRow({ event, counts, hasMedia }: {
+export function TeamEventRow({ event, counts, hasMedia, result }: {
   event: {
     event_type: string;
     title?: string | null;
@@ -33,7 +33,7 @@ export function TeamEventRow({ event, counts, hasMedia }: {
     event.event_type === "game"
       ? `vs ${event.opponent_name || "TBD"}`
       : event.title || meta.label;
-  const r = arguments[0]?.result as any;
+  const r = result;
   const badgeMap: Record<string, { label: string; cls: string }> = {
     win: { label: "WIN", cls: "bg-emerald-500/15 text-emerald-400" },
     loss: { label: "LOSS", cls: "bg-red-500/15 text-red-400" },
