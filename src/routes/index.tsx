@@ -4,6 +4,7 @@ import { useAuth, useHasCoachAccess } from "@/hooks/use-auth";
 import {
   Flame,
   ChevronRight,
+  ChevronLeft,
   Play,
   Brain,
   Layers,
@@ -68,6 +69,17 @@ function Home() {
 
   return (
     <div className="px-5 pt-4">
+      <button
+        onClick={() => {
+          if (window.history.length > 1) window.history.back();
+          else navigate({ to: "/auth" });
+        }}
+        className="mb-3 inline-flex items-center gap-1 rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
+        aria-label="Go back"
+      >
+        <ChevronLeft size={14} />
+        Back
+      </button>
       <section className="flex items-end justify-between">
         <div>
           <p className="text-[11px] font-semibold tracking-[0.3em] text-muted-foreground">WELCOME BACK</p>
