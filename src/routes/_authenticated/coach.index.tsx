@@ -6,6 +6,7 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip, CartesianGrid } f
 import { StatusBadge } from "@/components/coach/status-badge";
 import { TodaysAttendanceCard } from "@/components/coach/todays-attendance-card";
 import { UpcomingSevenDays } from "@/components/teams/upcoming-7-days";
+import { DrylandActivityCard } from "@/components/coach/dryland-activity-card";
 
 export const Route = createFileRoute("/_authenticated/coach/")({
   component: CoachDashboard,
@@ -107,6 +108,7 @@ function CoachDashboard() {
     <div className="space-y-5">
       <TodaysAttendanceCard />
       <UpcomingSevenDays />
+      <DrylandActivityCard />
       {(unassignedCampIds.length > 0 || outstandingCount > 0 || unscheduledIce > 0) && (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {unscheduledIce > 0 && (
