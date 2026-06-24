@@ -465,6 +465,41 @@ function ParentDashboard() {
         )}
       </section>
 
+      {/* My Teams */}
+      <section className="mt-6">
+        <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">My Teams</h2>
+        <div className="mt-2 space-y-2">
+          {displayTeams.map((t) => (
+            <Link
+              key={t.id}
+              to="/parent/teams/$teamId"
+              params={{ teamId: t.id }}
+              className="flex items-center justify-between rounded-2xl border border-border bg-card p-3"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                {t.logo_url ? (
+                  <img src={t.logo_url} alt="" className="h-11 w-11 rounded-xl object-cover" />
+                ) : (
+                  <div
+                    className="grid h-11 w-11 place-items-center rounded-xl text-xs font-bold text-background"
+                    style={{ background: t.primary_color || "var(--color-teal)" }}
+                  >
+                    {t.name.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{t.name}</p>
+                  <p className="truncate text-[11px] text-muted-foreground">
+                    {[t.season, t.coach_name ? `Coach ${t.coach_name}` : null, `${t.player_count} players`].filter(Boolean).join(" · ")}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-muted-foreground" />
+            </Link>
+          ))}
+        </div>
+      </section>
+
       {/* RSVP prompt */}
       {/* Next Session */}
       <section className="mt-6">
