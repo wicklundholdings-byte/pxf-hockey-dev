@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { ChevronRight, Flame, Medal, Shield, User } from "lucide-react";
+import { ArrowLeft, ChevronRight, Flame, Medal, Shield, User } from "lucide-react";
 
 export const Route = createFileRoute("/parent/teams/$teamId/leaderboard")({
   head: () => ({ meta: [{ title: "Dryland Leaderboard — PXF Hockey" }] }),
@@ -79,7 +79,14 @@ function TeamLeaderboard() {
 
   return (
     <div className="px-5 pb-28 pt-2">
-      <h2 className="font-display text-xl font-bold">Dryland Leaderboard</h2>
+      <Link
+        to="/parent/teams/$teamId"
+        params={{ teamId }}
+        className="inline-flex items-center gap-1 text-xs text-muted-foreground"
+      >
+        <ArrowLeft size={14} /> Back to team
+      </Link>
+      <h2 className="mt-2 font-display text-xl font-bold">Dryland Leaderboard</h2>
       <div className="mt-3 flex gap-1 rounded-full border border-border bg-surface p-1">
         {([
           ["week", "This Week"],
