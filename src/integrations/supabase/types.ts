@@ -4209,6 +4209,10 @@ export type Database = {
         Args: { _note?: string; _response: string; _token: string }
         Returns: Json
       }
+      seed_dev_account: {
+        Args: { p_tier: string; p_user_id: string }
+        Returns: undefined
+      }
       submit_team_invite: {
         Args: {
           _athlete_dob: string
