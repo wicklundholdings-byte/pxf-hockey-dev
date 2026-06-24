@@ -386,3 +386,39 @@ export const recordGameStats = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const saveGameParentPublish = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: {
+    teamId: string; eventId: string;
+    shareLineup: boolean;
+    shareGameplan: boolean;
+    shareSystems: boolean;
+    shareMessage: boolean;
+    publicGameplanText?: string | null;
+    publicSystemsText?: string | null;
+    coachMessage?: string | null;
+  }) => d)
+  .handler(async ({ data, context }) => {
+    const anyOn = data.shareLineup || data.shareGameplan || data.shareSystems || data.shareMessage;
+    const { data: existing } = await context.supabase
+      .from("game_parent_publish").select("id,published_at").eq("event_id", data.eventId).maybeSingle();
+    const payload: any = {
+      team_id: data.teamId,
+      event_id: data.eventId,
+      share_lineup: data.shareLineup,
+      share_gameplan: data.shareGameplan,
+      share_systems: data.shareSystems,
+      share_message: data.shareMessage,
+      public_gameplan_text: data.publicGameplanText ?? null,
+      public_systems_text: data.publicSystemsText ?? null,
+      coach_message: data.coachMessage ?? null,
+      created_by: context.userId,
+    };
+    if (anyOn && !existing?.published_at) payload.published_at = new Date().toISOString();
+    const { error } = await context.supabase
+      .from("game_parent_publish")
+      .upsert(payload, { onConflict: "event_id" });
+    if (error) throw new Error(error.message);
+    return { ok: true, firstPublish: anyOn && !existing?.published_at };
+  });
