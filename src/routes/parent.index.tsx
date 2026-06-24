@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, MapPin, Star, MessageCircle, ChevronRight, ChevronDown, Cpu, Calendar, Clock, Dumbbell } from "lucide-react";
+import { Bell, MapPin, Star, MessageCircle, ChevronRight, ChevronDown, Cpu, Calendar, Clock, Dumbbell, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
