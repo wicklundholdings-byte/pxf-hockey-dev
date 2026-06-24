@@ -19,6 +19,13 @@ export function TeamEventRow({ event, counts, hasMedia }: {
   };
   counts?: { yes: number; no: number; maybe: number; none: number };
   hasMedia?: boolean;
+  result?: {
+    team_score: number;
+    opponent_score: number;
+    result: string | null;
+    leader?: { name: string; g: number; a: number; pts: number } | null;
+    shutout?: { name: string; svpct: string } | null;
+  } | null;
 }) {
   const meta = TYPE_META[event.event_type] || TYPE_META.team_event;
   const Icon = meta.icon;
@@ -26,6 +33,16 @@ export function TeamEventRow({ event, counts, hasMedia }: {
     event.event_type === "game"
       ? `vs ${event.opponent_name || "TBD"}`
       : event.title || meta.label;
+  const r = arguments[0]?.result as any;
+  const badgeMap: Record<string, { label: string; cls: string }> = {
+    win: { label: "WIN", cls: "bg-emerald-500/15 text-emerald-400" },
+    loss: { label: "LOSS", cls: "bg-red-500/15 text-red-400" },
+    ot_win: { label: "OT WIN", cls: "bg-teal/15 text-teal" },
+    ot_loss: { label: "OT LOSS", cls: "bg-surface-2 text-muted-foreground" },
+    so_win: { label: "SO WIN", cls: "bg-teal/15 text-teal" },
+    so_loss: { label: "SO LOSS", cls: "bg-surface-2 text-muted-foreground" },
+  };
+  const badge = r?.result ? badgeMap[r.result as string] : null;
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3">
       <div className={"grid h-10 w-10 place-items-center rounded-xl " + meta.bg}>
@@ -36,8 +53,20 @@ export function TeamEventRow({ event, counts, hasMedia }: {
           <span className={"rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider " + meta.bg + " " + meta.color}>{meta.label.toUpperCase()}</span>
           {event.team_name && <span className="truncate text-[10px] text-muted-foreground">{event.team_name}</span>}
           {hasMedia && <ImageIcon size={11} className="text-teal" aria-label="Has media" />}
+          {badge && <span className={"rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider " + badge.cls}>{badge.label}</span>}
         </div>
         <p className="mt-0.5 truncate text-sm font-semibold">{label}</p>
+        {r && (
+          <p className="text-[11px] font-bold">
+            Final: {r.team_score} — {r.opponent_score}
+          </p>
+        )}
+        {r?.leader && (
+          <p className="truncate text-[10px] text-amber-400">⭐ {r.leader.name} — {r.leader.g}G {r.leader.a}A {r.leader.pts}PTS</p>
+        )}
+        {r?.shutout && (
+          <p className="truncate text-[10px] text-teal">🥅 Shutout — {r.shutout.name} {r.shutout.svpct}</p>
+        )}
         <p className="text-[11px] text-muted-foreground">
           {fmtDate(event.event_date)}{event.start_time ? " · " + fmtTime(event.start_time) : ""}{event.venue ? " · " + event.venue : ""}
         </p>
