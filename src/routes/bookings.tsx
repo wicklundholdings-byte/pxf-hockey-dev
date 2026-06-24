@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { CalendarDays, MapPin, X, Receipt, Mail } from "lucide-react";
+import { CalendarDays, MapPin, X, Receipt, Mail, ChevronLeft } from "lucide-react";
 
 export const Route = createFileRoute("/bookings")({
   head: () => ({ meta: [{ title: "My Bookings — PXF Hockey" }] }),
@@ -27,9 +27,16 @@ const tone: Record<Status, string> = {
 
 function BookingsScreen() {
   const [open, setOpen] = useState<Booking | null>(null);
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background px-5 pt-4 pb-24 text-foreground">
+      <button
+        onClick={() => navigate({ to: "/" })}
+        className="mb-3 flex items-center gap-1 text-xs text-muted-foreground"
+      >
+        <ChevronLeft size={14} /> Back
+      </button>
       <h1 className="font-display text-2xl font-bold">My Bookings</h1>
       <p className="text-xs text-muted-foreground">All camps you've registered Jake for.</p>
 
