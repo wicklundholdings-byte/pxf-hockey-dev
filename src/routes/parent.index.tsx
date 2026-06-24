@@ -118,6 +118,34 @@ function ParentDashboard() {
         setHasActiveDryland(false);
       }
 
+      // Teams for this parent's athletes
+      try {
+        const ids = await (supabase as any).rpc("current_user_contact_ids");
+        const contactIds = (ids.data ?? []) as string[];
+        if (contactIds.length) {
+          const { data: tps } = await supabase.from("team_players").select("team_id").in("parent_contact_id", contactIds);
+          const teamIds = Array.from(new Set(((tps ?? []) as { team_id: string }[]).map((r) => r.team_id)));
+          if (teamIds.length) {
+            const { data: ts } = await supabase.from("teams").select("id,name,season,logo_url,primary_color,coach_id").in("id", teamIds);
+            const rows = (ts ?? []) as { id: string; name: string; season: string | null; logo_url: string | null; primary_color: string | null; coach_id: string }[];
+            const coachIds = Array.from(new Set(rows.map((r) => r.coach_id)));
+            const [{ data: coaches }, { data: counts }] = await Promise.all([
+              coachIds.length ? supabase.from("profiles").select("id,full_name").in("id", coachIds) : Promise.resolve({ data: [] as { id: string; full_name: string | null }[] }),
+              supabase.from("team_players").select("team_id").in("team_id", teamIds),
+            ]);
+            const coachMap = new Map(((coaches ?? []) as { id: string; full_name: string | null }[]).map((c) => [c.id, c.full_name]));
+            const countMap = new Map<string, number>();
+            ((counts ?? []) as { team_id: string }[]).forEach((r) => { countMap.set(r.team_id, (countMap.get(r.team_id) ?? 0) + 1); });
+            setTeams(rows.map((r) => ({
+              id: r.id, name: r.name, season: r.season, logo_url: r.logo_url, primary_color: r.primary_color,
+              coach_name: coachMap.get(r.coach_id) ?? null, player_count: countMap.get(r.id) ?? 0,
+            })));
+          }
+        }
+      } catch {
+        setTeams([]);
+      }
+
       // Look up registrations made via the public booking flow: those
       // attach to coach-side contact/attendee rows keyed by the parent's
       // email, NOT the parent's own attendee ids.
