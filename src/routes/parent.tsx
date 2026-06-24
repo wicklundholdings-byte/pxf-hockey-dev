@@ -3,6 +3,7 @@ import { LayoutDashboard, Flag, Dumbbell, MessageCircle, User } from "lucide-rea
 import { BottomNav } from "@/components/bottom-nav";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserAppRole } from "@/lib/user-role";
+import { DevTierSwitcher } from "@/components/tier-gate";
 
 export const Route = createFileRoute("/parent")({
   ssr: false,
@@ -29,6 +30,7 @@ function ParentLayout() {
           { to: "/parent/profile", label: "Profile", icon: User },
         ]}
       />
+      <DevTierSwitcher />
     </div>
   );
 }
