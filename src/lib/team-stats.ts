@@ -107,9 +107,9 @@ export async function loadTeamSeasonStats(teamId: string, filter: GameFilter = "
     const r = (results ?? []).find((rr: any) => rr.event_id === g.event_id);
     if (r) {
       const sameGameGoalies = (gStats ?? []).filter((gg: any) => gg.event_id === g.event_id);
-      if (sameGameGoalies.length === 1) {
-        if (["win","ot_win","so_win"].includes(r.result)) row.w++;
-        else if (["loss","ot_loss","so_loss"].includes(r.result)) row.l++;
+      if (sameGameGoalies.length === 1 && r.result) {
+        if (["win","ot_win","so_win"].includes(r.result as string)) row.w++;
+        else if (["loss","ot_loss","so_loss"].includes(r.result as string)) row.l++;
       }
     }
   }
