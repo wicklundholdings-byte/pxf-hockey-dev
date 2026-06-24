@@ -132,7 +132,10 @@ function ParentTeamSchedule() {
                   <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[9px] font-bold text-amber-300">REMINDER</span>
                 </div>
               ))}
-              <Link to="/parent/team/event/$eventId" params={{ eventId: e.id }}
+              <Link
+                {...(e.event_type === "game"
+                  ? { to: "/parent/teams/$teamId/game/$eventId" as const, params: { teamId, eventId: e.id } }
+                  : { to: "/parent/team/event/$eventId" as const, params: { eventId: e.id } })}
                 className="block rounded-2xl border border-border bg-surface p-3">
                 <div className="flex items-center gap-3">
                   <div className={"grid h-10 w-10 place-items-center rounded-xl " + meta.bg}>
