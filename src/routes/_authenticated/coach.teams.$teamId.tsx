@@ -24,6 +24,7 @@ function TeamLayout() {
   const tabs = [
     { to: "/coach/teams/$teamId/schedule", label: "Schedule" },
     { to: "/coach/teams/$teamId/roster", label: "Roster" },
+    { to: "/coach/teams/$teamId/dryland", label: "Dryland" },
     { to: "/coach/teams/$teamId/playbook", label: "Playbook" },
     { to: "/coach/teams/$teamId/messages", label: "Messages" },
   ];
@@ -45,7 +46,7 @@ function TeamLayout() {
             <p className="text-[11px] text-muted-foreground">{team?.season || ""}</p>
           </div>
         </div>
-        <div className="mt-3 grid grid-cols-4 gap-1 rounded-full border border-border bg-surface p-1">
+        <div className="mt-3 grid grid-cols-5 gap-1 rounded-full border border-border bg-surface p-1">
           {tabs.map((t) => {
             const path = t.to.replace("$teamId", teamId);
             const active = pathname === path || pathname.startsWith(path + "/") || (isOverview && t.label === "Schedule");
