@@ -42,12 +42,22 @@ function maskName(full: string) {
   return (parts[0] ?? "") + (parts[1]?.[0] ? ` ${parts[1][0]}.` : "");
 }
 
+type TeamInfo = { id: string; name: string };
+
 function TeamLeaderboard() {
   const { teamId } = Route.useParams();
   const { user } = useAuth();
   const [filter, setFilter] = useState<Filter>("month");
   const [rows, setRows] = useState<Row[]>([]);
   const [myAthleteIds, setMyAthleteIds] = useState<string[]>([]);
+  const [team, setTeam] = useState<TeamInfo | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("teams").select("id,name").eq("id", teamId).maybeSingle();
+      setTeam((data as TeamInfo) ?? null);
+    })();
+  }, [teamId]);
 
   useEffect(() => {
     (async () => {
