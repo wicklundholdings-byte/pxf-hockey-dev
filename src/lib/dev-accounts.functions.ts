@@ -8,9 +8,11 @@ export type DevAccount = {
 };
 
 export const DEV_ACCOUNTS: DevAccount[] = [
+  // Team coach is seeded BEFORE parent so the parent seeder can attach the
+  // parent's kids to the team coach's "Lightning U14" roster.
+  { tier: "team",        email: "team.dev@pxf.local",        label: "Team Coach — $24.99",        role: "admin" },
   { tier: "parent",      email: "parent.dev@pxf.local",      label: "Parent — $7.99",            role: "user"  },
   { tier: "association", email: "association.dev@pxf.local", label: "Association Coach — $14.99", role: "admin" },
-  { tier: "team",        email: "team.dev@pxf.local",        label: "Team Coach — $24.99",        role: "admin" },
   { tier: "elite",       email: "elite.dev@pxf.local",       label: "Elite Coach — $49.99",       role: "admin" },
   { tier: "academy",     email: "academy.dev@pxf.local",     label: "Academy — $99",              role: "admin" },
 ];
