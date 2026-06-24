@@ -77,6 +77,7 @@ function TeamLayout() {
     { to: "/parent/teams/$teamId/schedule", label: "Schedule" },
     { to: "/parent/teams/$teamId/roster", label: "Roster" },
     { to: "/parent/teams/$teamId/media", label: "Media" },
+    { to: "/parent/teams/$teamId/stats", label: "Stats" },
     { to: "/parent/teams/$teamId/messages", label: "Messages" },
   ];
   const base = `/parent/teams/${teamId}`;
@@ -171,7 +172,7 @@ function TeamLayout() {
           </div>
         )}
 
-        <div className="mt-3 grid grid-cols-4 gap-1 rounded-full border border-border bg-surface p-1">
+        <div className="mt-3 grid grid-cols-5 gap-1 rounded-full border border-border bg-surface p-1">
           {tabs.map((t) => {
             const path = t.to.replace("$teamId", teamId);
             const active = pathname === path || pathname.startsWith(path + "/") || (isOverview && t.label === "Schedule");
