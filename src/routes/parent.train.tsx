@@ -315,10 +315,6 @@ function TrainScreen() {
   );
 }
 
-function lockedHref(locked: boolean, videoId: string) {
-  return locked ? "#locked" : undefined;
-}
-
 function FeaturedCard({ video, locked }: { video: Video; locked: boolean }) {
   const inner = (
     <div className="relative mt-5 overflow-hidden rounded-3xl bg-surface" style={{ aspectRatio: "16/9" }}>
