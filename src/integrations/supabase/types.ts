@@ -1995,6 +1995,44 @@ export type Database = {
           },
         ]
       }
+      dryland_streaks: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          current_streak_weeks: number
+          id: string
+          last_active_week: string | null
+          longest_streak_weeks: number
+          updated_at: string
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          current_streak_weeks?: number
+          id?: string
+          last_active_week?: string | null
+          longest_streak_weeks?: number
+          updated_at?: string
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          current_streak_weeks?: number
+          id?: string
+          last_active_week?: string | null
+          longest_streak_weeks?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dryland_streaks_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: true
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dryland_videos: {
         Row: {
           age_group: string | null
@@ -2010,6 +2048,7 @@ export type Database = {
           published_at: string
           thumbnail_url: string | null
           title: string
+          total_seconds: number
           updated_at: string
           video_url: string | null
         }
@@ -2027,6 +2066,7 @@ export type Database = {
           published_at?: string
           thumbnail_url?: string | null
           title: string
+          total_seconds?: number
           updated_at?: string
           video_url?: string | null
         }
@@ -2044,6 +2084,7 @@ export type Database = {
           published_at?: string
           thumbnail_url?: string | null
           title?: string
+          total_seconds?: number
           updated_at?: string
           video_url?: string | null
         }
@@ -2056,6 +2097,7 @@ export type Database = {
           created_at: string
           id: string
           last_watched_at: string
+          team_id: string | null
           updated_at: string
           video_id: string
           watched_seconds: number
@@ -2066,6 +2108,7 @@ export type Database = {
           created_at?: string
           id?: string
           last_watched_at?: string
+          team_id?: string | null
           updated_at?: string
           video_id: string
           watched_seconds?: number
@@ -2076,6 +2119,7 @@ export type Database = {
           created_at?: string
           id?: string
           last_watched_at?: string
+          team_id?: string | null
           updated_at?: string
           video_id?: string
           watched_seconds?: number
@@ -2086,6 +2130,13 @@ export type Database = {
             columns: ["athlete_id"]
             isOneToOne: false
             referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dryland_watch_progress_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
           {
@@ -4330,6 +4381,18 @@ export type Database = {
         }[]
       }
       get_rsvp_by_token: { Args: { _token: string }; Returns: Json }
+      get_team_dryland_leaderboard: {
+        Args: { _since: string; _team_id: string }
+        Returns: {
+          athlete_id: string
+          athlete_position: Database["public"]["Enums"]["dryland_position"]
+          current_streak_weeks: number
+          full_name: string
+          longest_streak_weeks: number
+          sessions_all_time: number
+          sessions_in_window: number
+        }[]
+      }
       get_team_invite_by_token: { Args: { _token: string }; Returns: Json }
       get_team_rsvp_by_token: { Args: { _token: string }; Returns: Json }
       has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
