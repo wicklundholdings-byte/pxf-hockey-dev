@@ -112,6 +112,7 @@ import { Route as AuthenticatedAdminDrillsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 import { Route as AuthenticatedCoachTeamsIndexRouteImport } from './routes/_authenticated/coach.teams.index'
 import { Route as AuthenticatedCoachCampsIndexRouteImport } from './routes/_authenticated/coach.camps.index'
+import { Route as ParentTrainVideoVideoIdRouteImport } from './routes/parent.train.video.$videoId'
 import { Route as ParentTrainSessionSessionIdRouteImport } from './routes/parent.train.session.$sessionId'
 import { Route as ParentTeamEventEventIdRouteImport } from './routes/parent.team.event.$eventId'
 import { Route as ApiPublicHooksRsvpRemindersRouteImport } from './routes/api/public/hooks/rsvp-reminders'
@@ -678,6 +679,11 @@ const AuthenticatedCoachCampsIndexRoute =
     path: '/camps/',
     getParentRoute: () => AuthenticatedCoachRoute,
   } as any)
+const ParentTrainVideoVideoIdRoute = ParentTrainVideoVideoIdRouteImport.update({
+  id: '/video/$videoId',
+  path: '/video/$videoId',
+  getParentRoute: () => ParentTrainRoute,
+} as any)
 const ParentTrainSessionSessionIdRoute =
   ParentTrainSessionSessionIdRouteImport.update({
     id: '/session/$sessionId',
@@ -962,6 +968,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/parent/team/event/$eventId': typeof ParentTeamEventEventIdRoute
   '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
+  '/parent/train/video/$videoId': typeof ParentTrainVideoVideoIdRoute
   '/coach/camps/': typeof AuthenticatedCoachCampsIndexRoute
   '/coach/teams/': typeof AuthenticatedCoachTeamsIndexRoute
   '/coach/camps/$campId/attendance': typeof AuthenticatedCoachCampsCampIdAttendanceRoute
@@ -1088,6 +1095,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/parent/team/event/$eventId': typeof ParentTeamEventEventIdRoute
   '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
+  '/parent/train/video/$videoId': typeof ParentTrainVideoVideoIdRoute
   '/coach/camps': typeof AuthenticatedCoachCampsIndexRoute
   '/coach/teams': typeof AuthenticatedCoachTeamsIndexRoute
   '/coach/camps/$campId/attendance': typeof AuthenticatedCoachCampsCampIdAttendanceRoute
@@ -1221,6 +1229,7 @@ export interface FileRoutesById {
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/parent/team/event/$eventId': typeof ParentTeamEventEventIdRoute
   '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
+  '/parent/train/video/$videoId': typeof ParentTrainVideoVideoIdRoute
   '/_authenticated/coach/camps/': typeof AuthenticatedCoachCampsIndexRoute
   '/_authenticated/coach/teams/': typeof AuthenticatedCoachTeamsIndexRoute
   '/_authenticated/coach/camps/$campId/attendance': typeof AuthenticatedCoachCampsCampIdAttendanceRoute
@@ -1356,6 +1365,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/rsvp-reminders'
     | '/parent/team/event/$eventId'
     | '/parent/train/session/$sessionId'
+    | '/parent/train/video/$videoId'
     | '/coach/camps/'
     | '/coach/teams/'
     | '/coach/camps/$campId/attendance'
@@ -1482,6 +1492,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/rsvp-reminders'
     | '/parent/team/event/$eventId'
     | '/parent/train/session/$sessionId'
+    | '/parent/train/video/$videoId'
     | '/coach/camps'
     | '/coach/teams'
     | '/coach/camps/$campId/attendance'
@@ -1614,6 +1625,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/rsvp-reminders'
     | '/parent/team/event/$eventId'
     | '/parent/train/session/$sessionId'
+    | '/parent/train/video/$videoId'
     | '/_authenticated/coach/camps/'
     | '/_authenticated/coach/teams/'
     | '/_authenticated/coach/camps/$campId/attendance'
@@ -2414,6 +2426,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachCampsIndexRouteImport
       parentRoute: typeof AuthenticatedCoachRoute
     }
+    '/parent/train/video/$videoId': {
+      id: '/parent/train/video/$videoId'
+      path: '/video/$videoId'
+      fullPath: '/parent/train/video/$videoId'
+      preLoaderRoute: typeof ParentTrainVideoVideoIdRouteImport
+      parentRoute: typeof ParentTrainRoute
+    }
     '/parent/train/session/$sessionId': {
       id: '/parent/train/session/$sessionId'
       path: '/session/$sessionId'
@@ -2907,11 +2926,13 @@ const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
 interface ParentTrainRouteChildren {
   ParentTrainProgramIdRoute: typeof ParentTrainProgramIdRoute
   ParentTrainSessionSessionIdRoute: typeof ParentTrainSessionSessionIdRoute
+  ParentTrainVideoVideoIdRoute: typeof ParentTrainVideoVideoIdRoute
 }
 
 const ParentTrainRouteChildren: ParentTrainRouteChildren = {
   ParentTrainProgramIdRoute: ParentTrainProgramIdRoute,
   ParentTrainSessionSessionIdRoute: ParentTrainSessionSessionIdRoute,
+  ParentTrainVideoVideoIdRoute: ParentTrainVideoVideoIdRoute,
 }
 
 const ParentTrainRouteWithChildren = ParentTrainRoute._addFileChildren(
