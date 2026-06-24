@@ -127,6 +127,7 @@ import { Route as AuthenticatedCoachTeamsTeamIdScheduleRouteImport } from './rou
 import { Route as AuthenticatedCoachTeamsTeamIdRosterRouteImport } from './routes/_authenticated/coach.teams.$teamId.roster'
 import { Route as AuthenticatedCoachTeamsTeamIdPlaybookRouteImport } from './routes/_authenticated/coach.teams.$teamId.playbook'
 import { Route as AuthenticatedCoachTeamsTeamIdMessagesRouteImport } from './routes/_authenticated/coach.teams.$teamId.messages'
+import { Route as AuthenticatedCoachTeamsTeamIdDrylandRouteImport } from './routes/_authenticated/coach.teams.$teamId.dryland'
 import { Route as AuthenticatedCoachSessionsSessionIdReviewRouteImport } from './routes/_authenticated/coach.sessions.$sessionId.review'
 import { Route as AuthenticatedCoachCampsCampIdUpdatesRouteImport } from './routes/_authenticated/coach.camps.$campId.updates'
 import { Route as AuthenticatedCoachCampsCampIdSessionPlansRouteImport } from './routes/_authenticated/coach.camps.$campId.session-plans'
@@ -767,6 +768,12 @@ const AuthenticatedCoachTeamsTeamIdMessagesRoute =
     path: '/messages',
     getParentRoute: () => AuthenticatedCoachTeamsTeamIdRoute,
   } as any)
+const AuthenticatedCoachTeamsTeamIdDrylandRoute =
+  AuthenticatedCoachTeamsTeamIdDrylandRouteImport.update({
+    id: '/dryland',
+    path: '/dryland',
+    getParentRoute: () => AuthenticatedCoachTeamsTeamIdRoute,
+  } as any)
 const AuthenticatedCoachSessionsSessionIdReviewRoute =
   AuthenticatedCoachSessionsSessionIdReviewRouteImport.update({
     id: '/sessions/$sessionId/review',
@@ -979,6 +986,7 @@ export interface FileRoutesByFullPath {
   '/coach/camps/$campId/session-plans': typeof AuthenticatedCoachCampsCampIdSessionPlansRoute
   '/coach/camps/$campId/updates': typeof AuthenticatedCoachCampsCampIdUpdatesRoute
   '/coach/sessions/$sessionId/review': typeof AuthenticatedCoachSessionsSessionIdReviewRoute
+  '/coach/teams/$teamId/dryland': typeof AuthenticatedCoachTeamsTeamIdDrylandRoute
   '/coach/teams/$teamId/messages': typeof AuthenticatedCoachTeamsTeamIdMessagesRoute
   '/coach/teams/$teamId/playbook': typeof AuthenticatedCoachTeamsTeamIdPlaybookRoute
   '/coach/teams/$teamId/roster': typeof AuthenticatedCoachTeamsTeamIdRosterRoute
@@ -1106,6 +1114,7 @@ export interface FileRoutesByTo {
   '/coach/camps/$campId/session-plans': typeof AuthenticatedCoachCampsCampIdSessionPlansRoute
   '/coach/camps/$campId/updates': typeof AuthenticatedCoachCampsCampIdUpdatesRoute
   '/coach/sessions/$sessionId/review': typeof AuthenticatedCoachSessionsSessionIdReviewRoute
+  '/coach/teams/$teamId/dryland': typeof AuthenticatedCoachTeamsTeamIdDrylandRoute
   '/coach/teams/$teamId/messages': typeof AuthenticatedCoachTeamsTeamIdMessagesRoute
   '/coach/teams/$teamId/playbook': typeof AuthenticatedCoachTeamsTeamIdPlaybookRoute
   '/coach/teams/$teamId/roster': typeof AuthenticatedCoachTeamsTeamIdRosterRoute
@@ -1240,6 +1249,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/camps/$campId/session-plans': typeof AuthenticatedCoachCampsCampIdSessionPlansRoute
   '/_authenticated/coach/camps/$campId/updates': typeof AuthenticatedCoachCampsCampIdUpdatesRoute
   '/_authenticated/coach/sessions/$sessionId/review': typeof AuthenticatedCoachSessionsSessionIdReviewRoute
+  '/_authenticated/coach/teams/$teamId/dryland': typeof AuthenticatedCoachTeamsTeamIdDrylandRoute
   '/_authenticated/coach/teams/$teamId/messages': typeof AuthenticatedCoachTeamsTeamIdMessagesRoute
   '/_authenticated/coach/teams/$teamId/playbook': typeof AuthenticatedCoachTeamsTeamIdPlaybookRoute
   '/_authenticated/coach/teams/$teamId/roster': typeof AuthenticatedCoachTeamsTeamIdRosterRoute
@@ -1376,6 +1386,7 @@ export interface FileRouteTypes {
     | '/coach/camps/$campId/session-plans'
     | '/coach/camps/$campId/updates'
     | '/coach/sessions/$sessionId/review'
+    | '/coach/teams/$teamId/dryland'
     | '/coach/teams/$teamId/messages'
     | '/coach/teams/$teamId/playbook'
     | '/coach/teams/$teamId/roster'
@@ -1503,6 +1514,7 @@ export interface FileRouteTypes {
     | '/coach/camps/$campId/session-plans'
     | '/coach/camps/$campId/updates'
     | '/coach/sessions/$sessionId/review'
+    | '/coach/teams/$teamId/dryland'
     | '/coach/teams/$teamId/messages'
     | '/coach/teams/$teamId/playbook'
     | '/coach/teams/$teamId/roster'
@@ -1636,6 +1648,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach/camps/$campId/session-plans'
     | '/_authenticated/coach/camps/$campId/updates'
     | '/_authenticated/coach/sessions/$sessionId/review'
+    | '/_authenticated/coach/teams/$teamId/dryland'
     | '/_authenticated/coach/teams/$teamId/messages'
     | '/_authenticated/coach/teams/$teamId/playbook'
     | '/_authenticated/coach/teams/$teamId/roster'
@@ -2531,6 +2544,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachTeamsTeamIdMessagesRouteImport
       parentRoute: typeof AuthenticatedCoachTeamsTeamIdRoute
     }
+    '/_authenticated/coach/teams/$teamId/dryland': {
+      id: '/_authenticated/coach/teams/$teamId/dryland'
+      path: '/dryland'
+      fullPath: '/coach/teams/$teamId/dryland'
+      preLoaderRoute: typeof AuthenticatedCoachTeamsTeamIdDrylandRouteImport
+      parentRoute: typeof AuthenticatedCoachTeamsTeamIdRoute
+    }
     '/_authenticated/coach/sessions/$sessionId/review': {
       id: '/_authenticated/coach/sessions/$sessionId/review'
       path: '/sessions/$sessionId/review'
@@ -2731,6 +2751,7 @@ const AuthenticatedCoachTeamsTeamIdScheduleRouteWithChildren =
   )
 
 interface AuthenticatedCoachTeamsTeamIdRouteChildren {
+  AuthenticatedCoachTeamsTeamIdDrylandRoute: typeof AuthenticatedCoachTeamsTeamIdDrylandRoute
   AuthenticatedCoachTeamsTeamIdMessagesRoute: typeof AuthenticatedCoachTeamsTeamIdMessagesRoute
   AuthenticatedCoachTeamsTeamIdPlaybookRoute: typeof AuthenticatedCoachTeamsTeamIdPlaybookRoute
   AuthenticatedCoachTeamsTeamIdRosterRoute: typeof AuthenticatedCoachTeamsTeamIdRosterRoute
@@ -2740,6 +2761,8 @@ interface AuthenticatedCoachTeamsTeamIdRouteChildren {
 
 const AuthenticatedCoachTeamsTeamIdRouteChildren: AuthenticatedCoachTeamsTeamIdRouteChildren =
   {
+    AuthenticatedCoachTeamsTeamIdDrylandRoute:
+      AuthenticatedCoachTeamsTeamIdDrylandRoute,
     AuthenticatedCoachTeamsTeamIdMessagesRoute:
       AuthenticatedCoachTeamsTeamIdMessagesRoute,
     AuthenticatedCoachTeamsTeamIdPlaybookRoute:
