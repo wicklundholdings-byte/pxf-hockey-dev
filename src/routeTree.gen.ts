@@ -69,6 +69,7 @@ import { Route as BookSlugRouteImport } from './routes/book.$slug'
 import { Route as AuthenticatedHomeCoachRouteImport } from './routes/_authenticated/home-coach'
 import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ParentTeamsIndexRouteImport } from './routes/parent.teams.index'
 import { Route as CampsSlugIndexRouteImport } from './routes/camps.$slug.index'
 import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authenticated/coach.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -442,6 +443,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ParentTeamsIndexRoute = ParentTeamsIndexRouteImport.update({
+  id: '/teams/',
+  path: '/teams/',
+  getParentRoute: () => ParentRoute,
 } as any)
 const CampsSlugIndexRoute = CampsSlugIndexRouteImport.update({
   id: '/',
@@ -966,6 +972,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/coach/': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug/': typeof CampsSlugIndexRoute
+  '/parent/teams/': typeof ParentTeamsIndexRoute
   '/coach/attendees/$athleteId': typeof AuthenticatedCoachAttendeesAthleteIdRoute
   '/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
@@ -1095,6 +1102,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/coach': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug': typeof CampsSlugIndexRoute
+  '/parent/teams': typeof ParentTeamsIndexRoute
   '/coach/attendees/$athleteId': typeof AuthenticatedCoachAttendeesAthleteIdRoute
   '/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
@@ -1229,6 +1237,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/coach/': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug/': typeof CampsSlugIndexRoute
+  '/parent/teams/': typeof ParentTeamsIndexRoute
   '/_authenticated/coach/attendees/$athleteId': typeof AuthenticatedCoachAttendeesAthleteIdRoute
   '/_authenticated/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/_authenticated/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
@@ -1366,6 +1375,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/coach/'
     | '/camps/$slug/'
+    | '/parent/teams/'
     | '/coach/attendees/$athleteId'
     | '/coach/camps/$campId'
     | '/coach/camps/new'
@@ -1495,6 +1505,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/coach'
     | '/camps/$slug'
+    | '/parent/teams'
     | '/coach/attendees/$athleteId'
     | '/coach/camps/$campId'
     | '/coach/camps/new'
@@ -1628,6 +1639,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/coach/'
     | '/camps/$slug/'
+    | '/parent/teams/'
     | '/_authenticated/coach/attendees/$athleteId'
     | '/_authenticated/coach/camps/$campId'
     | '/_authenticated/coach/camps/new'
@@ -2137,6 +2149,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/parent/teams/': {
+      id: '/parent/teams/'
+      path: '/teams'
+      fullPath: '/parent/teams/'
+      preLoaderRoute: typeof ParentTeamsIndexRouteImport
+      parentRoute: typeof ParentRoute
     }
     '/camps/$slug/': {
       id: '/camps/$slug/'
@@ -2973,6 +2992,7 @@ interface ParentRouteChildren {
   ParentCampCampIdRoute: typeof ParentCampCampIdRoute
   ParentConversationConversationIdRoute: typeof ParentConversationConversationIdRoute
   ParentTeamTeamIdRoute: typeof ParentTeamTeamIdRoute
+  ParentTeamsIndexRoute: typeof ParentTeamsIndexRoute
   ParentTeamEventEventIdRoute: typeof ParentTeamEventEventIdRoute
 }
 
@@ -2987,6 +3007,7 @@ const ParentRouteChildren: ParentRouteChildren = {
   ParentCampCampIdRoute: ParentCampCampIdRoute,
   ParentConversationConversationIdRoute: ParentConversationConversationIdRoute,
   ParentTeamTeamIdRoute: ParentTeamTeamIdRoute,
+  ParentTeamsIndexRoute: ParentTeamsIndexRoute,
   ParentTeamEventEventIdRoute: ParentTeamEventEventIdRoute,
 }
 
