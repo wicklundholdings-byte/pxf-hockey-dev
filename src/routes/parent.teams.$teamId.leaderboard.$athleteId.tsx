@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Flame, Shield, User, Trophy, Clock } from "lucide-react";
+import { ArrowLeft, Shield, User, Trophy, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/parent/teams/$teamId/leaderboard/$athleteId")({
   head: () => ({ meta: [{ title: "Athlete Dryland Activity — PXF Hockey" }] }),
@@ -236,6 +236,3 @@ function Tag({ children, className }: { children: React.ReactNode; className?: s
     </span>
   );
 }
-
-// keep Flame import used to satisfy linter when extending later
-void Flame;

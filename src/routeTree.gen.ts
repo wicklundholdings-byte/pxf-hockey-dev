@@ -131,6 +131,7 @@ import { Route as AuthenticatedCoachCampsNewRouteImport } from './routes/_authen
 import { Route as AuthenticatedCoachCampsCampIdRouteImport } from './routes/_authenticated/coach.camps.$campId'
 import { Route as AuthenticatedCoachAttendeesAthleteIdRouteImport } from './routes/_authenticated/coach.attendees.$athleteId'
 import { Route as AuthenticatedCoachTeamsTeamIdIndexRouteImport } from './routes/_authenticated/coach.teams.$teamId.index'
+import { Route as ParentTeamsTeamIdLeaderboardAthleteIdRouteImport } from './routes/parent.teams.$teamId.leaderboard.$athleteId'
 import { Route as ParentTeamsTeamIdGameEventIdRouteImport } from './routes/parent.teams.$teamId.game.$eventId'
 import { Route as AuthenticatedCoachTeamsTeamIdScheduleRouteImport } from './routes/_authenticated/coach.teams.$teamId.schedule'
 import { Route as AuthenticatedCoachTeamsTeamIdRosterRouteImport } from './routes/_authenticated/coach.teams.$teamId.roster'
@@ -796,6 +797,12 @@ const AuthenticatedCoachTeamsTeamIdIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedCoachTeamsTeamIdRoute,
   } as any)
+const ParentTeamsTeamIdLeaderboardAthleteIdRoute =
+  ParentTeamsTeamIdLeaderboardAthleteIdRouteImport.update({
+    id: '/$athleteId',
+    path: '/$athleteId',
+    getParentRoute: () => ParentTeamsTeamIdLeaderboardRoute,
+  } as any)
 const ParentTeamsTeamIdGameEventIdRoute =
   ParentTeamsTeamIdGameEventIdRouteImport.update({
     id: '/game/$eventId',
@@ -1034,7 +1041,7 @@ export interface FileRoutesByFullPath {
   '/coach/teams/new': typeof AuthenticatedCoachTeamsNewRoute
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/parent/team/event/$eventId': typeof ParentTeamEventEventIdRoute
-  '/parent/teams/$teamId/leaderboard': typeof ParentTeamsTeamIdLeaderboardRoute
+  '/parent/teams/$teamId/leaderboard': typeof ParentTeamsTeamIdLeaderboardRouteWithChildren
   '/parent/teams/$teamId/media': typeof ParentTeamsTeamIdMediaRoute
   '/parent/teams/$teamId/messages': typeof ParentTeamsTeamIdMessagesRoute
   '/parent/teams/$teamId/roster': typeof ParentTeamsTeamIdRosterRoute
@@ -1058,6 +1065,7 @@ export interface FileRoutesByFullPath {
   '/coach/teams/$teamId/roster': typeof AuthenticatedCoachTeamsTeamIdRosterRoute
   '/coach/teams/$teamId/schedule': typeof AuthenticatedCoachTeamsTeamIdScheduleRouteWithChildren
   '/parent/teams/$teamId/game/$eventId': typeof ParentTeamsTeamIdGameEventIdRoute
+  '/parent/teams/$teamId/leaderboard/$athleteId': typeof ParentTeamsTeamIdLeaderboardAthleteIdRoute
   '/coach/teams/$teamId/': typeof AuthenticatedCoachTeamsTeamIdIndexRoute
   '/coach/camps/$campId/evaluations/$athleteId': typeof AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute
   '/coach/teams/$teamId/schedule/$eventId': typeof AuthenticatedCoachTeamsTeamIdScheduleEventIdRouteWithChildren
@@ -1170,7 +1178,7 @@ export interface FileRoutesByTo {
   '/coach/teams/new': typeof AuthenticatedCoachTeamsNewRoute
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/parent/team/event/$eventId': typeof ParentTeamEventEventIdRoute
-  '/parent/teams/$teamId/leaderboard': typeof ParentTeamsTeamIdLeaderboardRoute
+  '/parent/teams/$teamId/leaderboard': typeof ParentTeamsTeamIdLeaderboardRouteWithChildren
   '/parent/teams/$teamId/media': typeof ParentTeamsTeamIdMediaRoute
   '/parent/teams/$teamId/messages': typeof ParentTeamsTeamIdMessagesRoute
   '/parent/teams/$teamId/roster': typeof ParentTeamsTeamIdRosterRoute
@@ -1193,6 +1201,7 @@ export interface FileRoutesByTo {
   '/coach/teams/$teamId/playbook': typeof AuthenticatedCoachTeamsTeamIdPlaybookRoute
   '/coach/teams/$teamId/roster': typeof AuthenticatedCoachTeamsTeamIdRosterRoute
   '/parent/teams/$teamId/game/$eventId': typeof ParentTeamsTeamIdGameEventIdRoute
+  '/parent/teams/$teamId/leaderboard/$athleteId': typeof ParentTeamsTeamIdLeaderboardAthleteIdRoute
   '/coach/teams/$teamId': typeof AuthenticatedCoachTeamsTeamIdIndexRoute
   '/coach/camps/$campId/evaluations/$athleteId': typeof AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute
   '/coach/teams/$teamId/schedule': typeof AuthenticatedCoachTeamsTeamIdScheduleIndexRoute
@@ -1314,7 +1323,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/teams/new': typeof AuthenticatedCoachTeamsNewRoute
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/parent/team/event/$eventId': typeof ParentTeamEventEventIdRoute
-  '/parent/teams/$teamId/leaderboard': typeof ParentTeamsTeamIdLeaderboardRoute
+  '/parent/teams/$teamId/leaderboard': typeof ParentTeamsTeamIdLeaderboardRouteWithChildren
   '/parent/teams/$teamId/media': typeof ParentTeamsTeamIdMediaRoute
   '/parent/teams/$teamId/messages': typeof ParentTeamsTeamIdMessagesRoute
   '/parent/teams/$teamId/roster': typeof ParentTeamsTeamIdRosterRoute
@@ -1338,6 +1347,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/teams/$teamId/roster': typeof AuthenticatedCoachTeamsTeamIdRosterRoute
   '/_authenticated/coach/teams/$teamId/schedule': typeof AuthenticatedCoachTeamsTeamIdScheduleRouteWithChildren
   '/parent/teams/$teamId/game/$eventId': typeof ParentTeamsTeamIdGameEventIdRoute
+  '/parent/teams/$teamId/leaderboard/$athleteId': typeof ParentTeamsTeamIdLeaderboardAthleteIdRoute
   '/_authenticated/coach/teams/$teamId/': typeof AuthenticatedCoachTeamsTeamIdIndexRoute
   '/_authenticated/coach/camps/$campId/evaluations/$athleteId': typeof AuthenticatedCoachCampsCampIdEvaluationsAthleteIdRoute
   '/_authenticated/coach/teams/$teamId/schedule/$eventId': typeof AuthenticatedCoachTeamsTeamIdScheduleEventIdRouteWithChildren
@@ -1484,6 +1494,7 @@ export interface FileRouteTypes {
     | '/coach/teams/$teamId/roster'
     | '/coach/teams/$teamId/schedule'
     | '/parent/teams/$teamId/game/$eventId'
+    | '/parent/teams/$teamId/leaderboard/$athleteId'
     | '/coach/teams/$teamId/'
     | '/coach/camps/$campId/evaluations/$athleteId'
     | '/coach/teams/$teamId/schedule/$eventId'
@@ -1619,6 +1630,7 @@ export interface FileRouteTypes {
     | '/coach/teams/$teamId/playbook'
     | '/coach/teams/$teamId/roster'
     | '/parent/teams/$teamId/game/$eventId'
+    | '/parent/teams/$teamId/leaderboard/$athleteId'
     | '/coach/teams/$teamId'
     | '/coach/camps/$campId/evaluations/$athleteId'
     | '/coach/teams/$teamId/schedule'
@@ -1763,6 +1775,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach/teams/$teamId/roster'
     | '/_authenticated/coach/teams/$teamId/schedule'
     | '/parent/teams/$teamId/game/$eventId'
+    | '/parent/teams/$teamId/leaderboard/$athleteId'
     | '/_authenticated/coach/teams/$teamId/'
     | '/_authenticated/coach/camps/$campId/evaluations/$athleteId'
     | '/_authenticated/coach/teams/$teamId/schedule/$eventId'
@@ -2682,6 +2695,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachTeamsTeamIdIndexRouteImport
       parentRoute: typeof AuthenticatedCoachTeamsTeamIdRoute
     }
+    '/parent/teams/$teamId/leaderboard/$athleteId': {
+      id: '/parent/teams/$teamId/leaderboard/$athleteId'
+      path: '/$athleteId'
+      fullPath: '/parent/teams/$teamId/leaderboard/$athleteId'
+      preLoaderRoute: typeof ParentTeamsTeamIdLeaderboardAthleteIdRouteImport
+      parentRoute: typeof ParentTeamsTeamIdLeaderboardRoute
+    }
     '/parent/teams/$teamId/game/$eventId': {
       id: '/parent/teams/$teamId/game/$eventId'
       path: '/game/$eventId'
@@ -3135,8 +3155,23 @@ const ParentTrainRouteWithChildren = ParentTrainRoute._addFileChildren(
   ParentTrainRouteChildren,
 )
 
+interface ParentTeamsTeamIdLeaderboardRouteChildren {
+  ParentTeamsTeamIdLeaderboardAthleteIdRoute: typeof ParentTeamsTeamIdLeaderboardAthleteIdRoute
+}
+
+const ParentTeamsTeamIdLeaderboardRouteChildren: ParentTeamsTeamIdLeaderboardRouteChildren =
+  {
+    ParentTeamsTeamIdLeaderboardAthleteIdRoute:
+      ParentTeamsTeamIdLeaderboardAthleteIdRoute,
+  }
+
+const ParentTeamsTeamIdLeaderboardRouteWithChildren =
+  ParentTeamsTeamIdLeaderboardRoute._addFileChildren(
+    ParentTeamsTeamIdLeaderboardRouteChildren,
+  )
+
 interface ParentTeamsTeamIdRouteChildren {
-  ParentTeamsTeamIdLeaderboardRoute: typeof ParentTeamsTeamIdLeaderboardRoute
+  ParentTeamsTeamIdLeaderboardRoute: typeof ParentTeamsTeamIdLeaderboardRouteWithChildren
   ParentTeamsTeamIdMediaRoute: typeof ParentTeamsTeamIdMediaRoute
   ParentTeamsTeamIdMessagesRoute: typeof ParentTeamsTeamIdMessagesRoute
   ParentTeamsTeamIdRosterRoute: typeof ParentTeamsTeamIdRosterRoute
@@ -3146,7 +3181,8 @@ interface ParentTeamsTeamIdRouteChildren {
 }
 
 const ParentTeamsTeamIdRouteChildren: ParentTeamsTeamIdRouteChildren = {
-  ParentTeamsTeamIdLeaderboardRoute: ParentTeamsTeamIdLeaderboardRoute,
+  ParentTeamsTeamIdLeaderboardRoute:
+    ParentTeamsTeamIdLeaderboardRouteWithChildren,
   ParentTeamsTeamIdMediaRoute: ParentTeamsTeamIdMediaRoute,
   ParentTeamsTeamIdMessagesRoute: ParentTeamsTeamIdMessagesRoute,
   ParentTeamsTeamIdRosterRoute: ParentTeamsTeamIdRosterRoute,
