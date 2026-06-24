@@ -11,6 +11,9 @@ import {
   Clock,
   ChevronRight,
   Sparkles,
+  UserPlus,
+  Check,
+  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -40,6 +43,15 @@ type Video = {
 
 type Athlete = { id: string; full_name: string; preferred_position: Position };
 type Progress = { video_id: string; watched_seconds: number; completed: boolean; last_watched_at: string };
+type Teammate = {
+  id: string; // team_players.id
+  athlete_id: string | null;
+  display_name: string;
+  position: string | null;
+  jersey_number: string | null;
+  team_id: string;
+  team_name: string;
+};
 
 const PLAYER_CATS: { id: VideoCategory; label: string; icon: typeof Dumbbell }[] = [
   { id: "stickhandling", label: "Stickhandling", icon: Target },
@@ -66,12 +78,17 @@ function TrainScreen() {
   const subscribed = !!tier && !tierLoading;
 
   const [athletes, setAthletes] = useState<Athlete[]>([]);
-  const [athleteId, setAthleteId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [teammates, setTeammates] = useState<Teammate[]>([]);
+  const [selectedTeammateIds, setSelectedTeammateIds] = useState<string[]>([]);
+  const [teammatePickerOpen, setTeammatePickerOpen] = useState(false);
   const [position, setPosition] = useState<Position>("player");
   const [age, setAge] = useState<string | null>(null);
   const [dur, setDur] = useState<number | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
   const [progress, setProgress] = useState<Progress[]>([]);
+
+  const athleteId = selectedIds[0] ?? null;
 
   // Load roster + remember position from active athlete
   useEffect(() => {
@@ -85,11 +102,44 @@ function TrainScreen() {
       const rows = (data ?? []) as Athlete[];
       setAthletes(rows);
       if (rows[0]) {
-        setAthleteId(rows[0].id);
+        setSelectedIds([rows[0].id]);
         setPosition(rows[0].preferred_position ?? "player");
       }
     })();
   }, [user?.id]);
+
+  // Load teammates from teams my athletes are on
+  useEffect(() => {
+    if (athletes.length === 0) return;
+    (async () => {
+      const myAthleteIds = athletes.map((a) => a.id);
+      const { data: mine } = await supabase
+        .from("team_players")
+        .select("team_id")
+        .in("athlete_id", myAthleteIds);
+      const teamIds = Array.from(new Set((mine ?? []).map((r) => r.team_id)));
+      if (teamIds.length === 0) {
+        setTeammates([]);
+        return;
+      }
+      const { data: rows } = await supabase
+        .from("team_players")
+        .select("id, athlete_id, display_name, position, jersey_number, team_id, teams(name)")
+        .in("team_id", teamIds);
+      const list: Teammate[] = (rows ?? [])
+        .filter((r: any) => !r.athlete_id || !myAthleteIds.includes(r.athlete_id))
+        .map((r: any) => ({
+          id: r.id,
+          athlete_id: r.athlete_id,
+          display_name: r.display_name,
+          position: r.position,
+          jersey_number: r.jersey_number,
+          team_id: r.team_id,
+          team_name: r.teams?.name ?? "Team",
+        }));
+      setTeammates(list);
+    })();
+  }, [athletes]);
 
   // Load videos
   useEffect(() => {
@@ -122,6 +172,37 @@ function TrainScreen() {
       await supabase.from("attendees").update({ preferred_position: p }).eq("id", athleteId);
     }
   };
+
+  const toggleAthlete = (a: Athlete) => {
+    setSelectedIds((prev) => {
+      const has = prev.includes(a.id);
+      // Don't allow deselecting the last one
+      if (has && prev.length === 1) return prev;
+      const next = has ? prev.filter((x) => x !== a.id) : [...prev, a.id];
+      // When switching to a new primary, sync position
+      if (!has && prev.length === 0) setPosition(a.preferred_position ?? "player");
+      return next;
+    });
+  };
+
+  const toggleTeammate = (id: string) => {
+    setSelectedTeammateIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  const teammatesByTeam = useMemo(() => {
+    const map = new Map<string, { team_name: string; players: Teammate[] }>();
+    for (const t of teammates) {
+      if (!map.has(t.team_id)) map.set(t.team_id, { team_name: t.team_name, players: [] });
+      map.get(t.team_id)!.players.push(t);
+    }
+    for (const g of map.values()) g.players.sort((a, b) => a.display_name.localeCompare(b.display_name));
+    return Array.from(map.values());
+  }, [teammates]);
+
+  const selectedTeammates = teammates.filter((t) => selectedTeammateIds.includes(t.id));
+  const totalSelected = selectedIds.length + selectedTeammateIds.length;
 
   const cats = position === "player" ? PLAYER_CATS : GOALIE_CATS;
 
@@ -160,25 +241,58 @@ function TrainScreen() {
       <p className="text-[11px] font-semibold tracking-[0.3em] text-muted-foreground">DRYLAND TRAINING</p>
       <h1 className="mt-1 text-3xl font-bold text-foreground">Train</h1>
 
-      {/* Athlete selector (if multiple kids) */}
-      {athletes.length > 1 && (
-        <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1">
-          {athletes.map((a) => (
-            <button
-              key={a.id}
-              onClick={() => {
-                setAthleteId(a.id);
-                setPosition(a.preferred_position ?? "player");
-              }}
-              className={
-                "shrink-0 rounded-full px-3 py-1 text-[11px] font-bold " +
-                (a.id === athleteId ? "bg-foreground text-background" : "bg-surface text-muted-foreground")
-              }
-            >
-              {a.full_name}
-            </button>
-          ))}
-        </div>
+      {/* Athlete selector — multi-select */}
+      {athletes.length > 0 && (
+        <>
+          <div className="mt-3 flex flex-wrap items-center gap-1.5 pb-1">
+            {athletes.map((a) => {
+              const on = selectedIds.includes(a.id);
+              return (
+                <button
+                  key={a.id}
+                  onClick={() => toggleAthlete(a)}
+                  className={
+                    "flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold transition-colors " +
+                    (on ? "bg-foreground text-background" : "bg-surface text-muted-foreground")
+                  }
+                >
+                  {on && <Check size={11} />}
+                  {a.full_name}
+                </button>
+              );
+            })}
+            {selectedTeammates.map((t) => (
+              <span
+                key={t.id}
+                className="flex shrink-0 items-center gap-1 rounded-full bg-teal/15 px-3 py-1 text-[11px] font-bold text-teal"
+              >
+                {t.display_name}
+                <button
+                  type="button"
+                  onClick={() => toggleTeammate(t.id)}
+                  aria-label={`Remove ${t.display_name}`}
+                  className="grid h-3.5 w-3.5 place-items-center rounded-full bg-teal/30"
+                >
+                  <X size={9} />
+                </button>
+              </span>
+            ))}
+            {teammates.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setTeammatePickerOpen(true)}
+                className="flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-[11px] font-bold text-muted-foreground hover:text-foreground"
+              >
+                <UserPlus size={11} /> Add Teammates
+              </button>
+            )}
+          </div>
+          {totalSelected > 1 && (
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-teal">
+              Training together · {totalSelected} athletes
+            </p>
+          )}
+        </>
       )}
 
       {/* Player / Goalie toggle */}
@@ -310,6 +424,107 @@ function TrainScreen() {
         {filtered.length === 0 && (
           <p className="py-10 text-center text-xs text-muted-foreground">No sessions match those filters.</p>
         )}
+      </div>
+
+      {teammatePickerOpen && (
+        <TeammatePicker
+          groups={teammatesByTeam}
+          selectedIds={selectedTeammateIds}
+          onToggle={toggleTeammate}
+          onClose={() => setTeammatePickerOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function TeammatePicker({
+  groups,
+  selectedIds,
+  onToggle,
+  onClose,
+}: {
+  groups: { team_name: string; players: Teammate[] }[];
+  selectedIds: string[];
+  onToggle: (id: string) => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
+      <div
+        className="max-h-[75vh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl bg-background p-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border" />
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-bold text-foreground">Add teammates</h3>
+          <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-full bg-surface">
+            <X size={14} />
+          </button>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Select teammates training with your athletes today.
+        </p>
+        {groups.length === 0 ? (
+          <p className="mt-6 text-center text-xs text-muted-foreground">No teammates available.</p>
+        ) : (
+          <div className="mt-4 space-y-5">
+            {groups.map((g) => (
+              <div key={g.team_name}>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  {g.team_name}
+                </p>
+                <div className="mt-2 space-y-1.5">
+                  {g.players.map((p) => {
+                    const on = selectedIds.includes(p.id);
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => onToggle(p.id)}
+                        className={
+                          "flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left transition-colors " +
+                          (on
+                            ? "border-teal bg-teal/10"
+                            : "border-border/60 bg-surface hover:border-border")
+                        }
+                      >
+                        <div className="flex items-center gap-2">
+                          {p.jersey_number && (
+                            <span className="grid h-6 w-6 place-items-center rounded-full bg-surface-2 text-[10px] font-bold text-foreground">
+                              #{p.jersey_number}
+                            </span>
+                          )}
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">{p.display_name}</p>
+                            {p.position && (
+                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                                {p.position}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <span
+                          className={
+                            "grid h-5 w-5 place-items-center rounded-full " +
+                            (on ? "bg-teal text-background" : "bg-surface-2 text-muted-foreground")
+                          }
+                        >
+                          {on && <Check size={12} />}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <button
+          onClick={onClose}
+          className="mt-5 w-full rounded-full bg-gradient-brand py-3 text-sm font-bold text-primary-foreground"
+        >
+          Done
+        </button>
       </div>
     </div>
   );
