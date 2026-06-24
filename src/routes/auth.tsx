@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PxfLogo } from "@/components/app-shell";
 import { Users } from "lucide-react";
 import { getUserAppRole, roleHome } from "@/lib/user-role";
+import { DevPanel } from "@/components/dev-panel";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -28,6 +29,20 @@ function AuthPage() {
   const [role, setRole] = useState<"parent" | "coach">("parent");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [devOpen, setDevOpen] = useState(false);
+  const [logoTaps, setLogoTaps] = useState(0);
+
+  const handleLogoTap = () => {
+    const next = logoTaps + 1;
+    if (next >= 5) {
+      setLogoTaps(0);
+      setDevOpen(true);
+    } else {
+      setLogoTaps(next);
+      // Reset the tap counter after 1.5s of inactivity.
+      window.setTimeout(() => setLogoTaps((n) => (n === next ? 0 : n)), 1500);
+    }
+  };
 
   const isSignup = mode === "signup";
 
@@ -78,7 +93,16 @@ function AuthPage() {
 
   return (
     <div className="px-5 pt-10">
-      <div className="flex justify-center"><PxfLogo /></div>
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={handleLogoTap}
+          aria-label="PXF Hockey"
+          className="rounded-md focus:outline-none"
+        >
+          <PxfLogo />
+        </button>
+      </div>
       <h1 className="mt-8 text-center font-display text-2xl font-bold text-foreground">
         {isSignup ? "Create your account" : "Welcome back"}
       </h1>
@@ -137,6 +161,17 @@ function AuthPage() {
           {isSignup ? "Sign in" : "Create one"}
         </Link>
       </p>
+
+      {import.meta.env.DEV && (
+        <button
+          type="button"
+          onClick={() => setDevOpen(true)}
+          className="fixed bottom-4 right-4 z-50 rounded-full border border-teal/40 bg-card/95 px-3 py-1.5 text-[10px] font-bold tracking-widest text-teal shadow-lg backdrop-blur"
+        >
+          DEV
+        </button>
+      )}
+      {devOpen && <DevPanel onClose={() => setDevOpen(false)} />}
     </div>
   );
 }
