@@ -354,6 +354,10 @@ function ParentDashboard() {
     },
   ];
 
+  const displayTeams: TeamCard[] = teams.length > 0 ? teams : [
+    { id: "mock-team-1", name: "Spring Selects", season: "2025", logo_url: null, primary_color: null, coach_name: "Coach Park", player_count: 14 },
+  ];
+
   // Next session per child — earliest upcoming (or currently-live) camp for each registered athlete.
   const nextSessions: NextSession[] = (() => {
     const todayYmd = ymd(today);
