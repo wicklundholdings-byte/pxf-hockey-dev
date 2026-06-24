@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { CalendarDays, MapPin, X, Receipt, Mail } from "lucide-react";
+import { CalendarDays, MapPin, X, Receipt, Mail, ChevronLeft } from "lucide-react";
 
 export const Route = createFileRoute("/bookings")({
   head: () => ({ meta: [{ title: "My Bookings — PXF Hockey" }] }),
