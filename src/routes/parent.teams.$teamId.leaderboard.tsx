@@ -90,11 +90,11 @@ function TeamLeaderboard() {
   return (
     <div className="px-5 pb-28 pt-2">
       <Link
-        to="/parent/teams/$teamId"
+        to="/parent/teams/$teamId/schedule"
         params={{ teamId }}
         className="inline-flex items-center gap-1 text-xs text-muted-foreground"
       >
-        <ArrowLeft size={14} /> Back to team
+        <ArrowLeft size={14} /> Back to {team?.name || "team"}
       </Link>
       <h2 className="mt-2 font-display text-xl font-bold">Dryland Leaderboard</h2>
       <div className="mt-3 flex gap-1 rounded-full border border-border bg-surface p-1">
