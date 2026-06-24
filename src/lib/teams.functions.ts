@@ -422,3 +422,78 @@ export const saveGameParentPublish = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true, firstPublish: anyOn && !existing?.published_at };
   });
+
+type SkaterStatInput = {
+  teamPlayerId: string;
+  athleteId?: string | null;
+  goals: number;
+  assists: number;
+  penaltyMinutes: number;
+  plusMinus: number;
+  shotsOnGoal: number;
+  toi?: string | null;
+};
+type GoalieStatInput = {
+  teamPlayerId: string;
+  athleteId?: string | null;
+  saves: number;
+  goalsAgainst: number;
+  shutout: boolean;
+};
+
+export const saveFullGameStats = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: {
+    teamId: string;
+    eventId: string;
+    teamScore: number;
+    opponentScore: number;
+    result: "win" | "loss" | "ot_win" | "ot_loss" | "so_win" | "so_loss" | null;
+    skaters: SkaterStatInput[];
+    goalies: GoalieStatInput[];
+  }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { error: rErr } = await supabase.from("game_results").upsert({
+      event_id: data.eventId,
+      team_id: data.teamId,
+      team_score: data.teamScore,
+      opponent_score: data.opponentScore,
+      result: data.result,
+      created_by: context.userId,
+    }, { onConflict: "event_id" });
+    if (rErr) throw new Error(rErr.message);
+
+    if (data.skaters.length) {
+      const rows = data.skaters.map((s) => ({
+        event_id: data.eventId,
+        team_id: data.teamId,
+        team_player_id: s.teamPlayerId,
+        athlete_id: s.athleteId ?? null,
+        goals: s.goals,
+        assists: s.assists,
+        penalty_minutes: s.penaltyMinutes,
+        plus_minus: s.plusMinus,
+        shots_on_goal: s.shotsOnGoal,
+        toi: s.toi ?? null,
+      }));
+      const { error } = await supabase.from("game_player_stats").upsert(rows, { onConflict: "event_id,team_player_id" });
+      if (error) throw new Error(error.message);
+    }
+
+    if (data.goalies.length) {
+      const rows = data.goalies.map((g) => ({
+        event_id: data.eventId,
+        team_id: data.teamId,
+        team_player_id: g.teamPlayerId,
+        athlete_id: g.athleteId ?? null,
+        saves: g.saves,
+        goals_against: g.goalsAgainst,
+        shutout: g.shutout,
+      }));
+      const { error } = await supabase.from("game_goalie_stats").upsert(rows, { onConflict: "event_id,team_player_id" });
+      if (error) throw new Error(error.message);
+    }
+
+    return { ok: true };
+  });
