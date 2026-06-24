@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createEvent } from "@/lib/teams.functions";
 import { Plus, X } from "lucide-react";
 import { TeamEventRow } from "@/components/teams/team-event-row";
+import { maskName } from "@/lib/team-stats";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedule/")({
   component: Schedule,
