@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, MapPin, Star, MessageCircle, ChevronRight, ChevronDown, Cpu, Calendar, Clock, Dumbbell } from "lucide-react";
+import { Bell, MapPin, Star, MessageCircle, ChevronRight, ChevronDown, Cpu, Calendar, Clock, Dumbbell, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -28,6 +28,7 @@ type Evaluation = {
   hockey_sense: number | null;
 };
 type RsvpPrompt = { id: string; child_name: string; camp_name: string; session_date: string };
+type TeamCard = { id: string; name: string; season: string | null; logo_url: string | null; primary_color: string | null; coach_name: string | null; player_count: number };
 type NextSession = {
   camp_id: string;
   child_name: string;
@@ -88,6 +89,7 @@ function ParentDashboard() {
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [rsvps, setRsvps] = useState<RsvpPrompt[]>([]);
   const [hasActiveDryland, setHasActiveDryland] = useState<boolean | null>(null);
+  const [teams, setTeams] = useState<TeamCard[]>([]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -114,6 +116,34 @@ function ParentDashboard() {
         setHasActiveDryland((count ?? 0) > 0);
       } else {
         setHasActiveDryland(false);
+      }
+
+      // Teams for this parent's athletes
+      try {
+        const ids = await (supabase as any).rpc("current_user_contact_ids");
+        const contactIds = (ids.data ?? []) as string[];
+        if (contactIds.length) {
+          const { data: tps } = await supabase.from("team_players").select("team_id").in("parent_contact_id", contactIds);
+          const teamIds = Array.from(new Set(((tps ?? []) as { team_id: string }[]).map((r) => r.team_id)));
+          if (teamIds.length) {
+            const { data: ts } = await supabase.from("teams").select("id,name,season,logo_url,primary_color,coach_id").in("id", teamIds);
+            const rows = (ts ?? []) as { id: string; name: string; season: string | null; logo_url: string | null; primary_color: string | null; coach_id: string }[];
+            const coachIds = Array.from(new Set(rows.map((r) => r.coach_id)));
+            const [{ data: coaches }, { data: counts }] = await Promise.all([
+              coachIds.length ? supabase.from("profiles").select("id,full_name").in("id", coachIds) : Promise.resolve({ data: [] as { id: string; full_name: string | null }[] }),
+              supabase.from("team_players").select("team_id").in("team_id", teamIds),
+            ]);
+            const coachMap = new Map(((coaches ?? []) as { id: string; full_name: string | null }[]).map((c) => [c.id, c.full_name]));
+            const countMap = new Map<string, number>();
+            ((counts ?? []) as { team_id: string }[]).forEach((r) => { countMap.set(r.team_id, (countMap.get(r.team_id) ?? 0) + 1); });
+            setTeams(rows.map((r) => ({
+              id: r.id, name: r.name, season: r.season, logo_url: r.logo_url, primary_color: r.primary_color,
+              coach_name: coachMap.get(r.coach_id) ?? null, player_count: countMap.get(r.id) ?? 0,
+            })));
+          }
+        }
+      } catch {
+        setTeams([]);
       }
 
       // Look up registrations made via the public booking flow: those
@@ -324,6 +354,10 @@ function ParentDashboard() {
     },
   ];
 
+  const displayTeams: TeamCard[] = teams.length > 0 ? teams : [
+    { id: "mock-team-1", name: "Spring Selects", season: "2025", logo_url: null, primary_color: null, coach_name: "Coach Park", player_count: 14 },
+  ];
+
   // Next session per child — earliest upcoming (or currently-live) camp for each registered athlete.
   const nextSessions: NextSession[] = (() => {
     const todayYmd = ymd(today);
@@ -429,6 +463,41 @@ function ParentDashboard() {
             })}
           </div>
         )}
+      </section>
+
+      {/* My Teams */}
+      <section className="mt-6">
+        <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">My Teams</h2>
+        <div className="mt-2 space-y-2">
+          {displayTeams.map((t) => (
+            <Link
+              key={t.id}
+              to="/parent/teams/$teamId"
+              params={{ teamId: t.id }}
+              className="flex items-center justify-between rounded-2xl border border-border bg-card p-3"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                {t.logo_url ? (
+                  <img src={t.logo_url} alt="" className="h-11 w-11 rounded-xl object-cover" />
+                ) : (
+                  <div
+                    className="grid h-11 w-11 place-items-center rounded-xl text-xs font-bold text-background"
+                    style={{ background: t.primary_color || "var(--color-teal)" }}
+                  >
+                    {t.name.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{t.name}</p>
+                  <p className="truncate text-[11px] text-muted-foreground">
+                    {[t.season, t.coach_name ? `Coach ${t.coach_name}` : null, `${t.player_count} players`].filter(Boolean).join(" · ")}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-muted-foreground" />
+            </Link>
+          ))}
+        </div>
       </section>
 
       {/* RSVP prompt */}
