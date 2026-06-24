@@ -490,6 +490,7 @@ export type Database = {
           jersey_number: string | null
           owner_id: string
           position: string | null
+          preferred_position: Database["public"]["Enums"]["dryland_position"]
           skill_level: string | null
           updated_at: string
         }
@@ -505,6 +506,7 @@ export type Database = {
           jersey_number?: string | null
           owner_id: string
           position?: string | null
+          preferred_position?: Database["public"]["Enums"]["dryland_position"]
           skill_level?: string | null
           updated_at?: string
         }
@@ -520,6 +522,7 @@ export type Database = {
           jersey_number?: string | null
           owner_id?: string
           position?: string | null
+          preferred_position?: Database["public"]["Enums"]["dryland_position"]
           skill_level?: string | null
           updated_at?: string
         }
@@ -1817,6 +1820,45 @@ export type Database = {
           },
         ]
       }
+      dryland_program_sessions: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          program_id: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          program_id: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          program_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dryland_program_sessions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "dryland_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dryland_program_sessions_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "dryland_videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dryland_program_weeks: {
         Row: {
           created_at: string
@@ -1861,8 +1903,13 @@ export type Database = {
           difficulty: Database["public"]["Enums"]["dryland_difficulty"]
           id: string
           is_published: boolean
+          launch_label: string | null
           name: string
+          position: Database["public"]["Enums"]["dryland_position"] | null
+          season: Database["public"]["Enums"]["dryland_program_season"] | null
           session_count: number
+          status: Database["public"]["Enums"]["dryland_program_status"]
+          thumbnail_url: string | null
           updated_at: string
         }
         Insert: {
@@ -1876,8 +1923,13 @@ export type Database = {
           difficulty: Database["public"]["Enums"]["dryland_difficulty"]
           id?: string
           is_published?: boolean
+          launch_label?: string | null
           name: string
+          position?: Database["public"]["Enums"]["dryland_position"] | null
+          season?: Database["public"]["Enums"]["dryland_program_season"] | null
           session_count?: number
+          status?: Database["public"]["Enums"]["dryland_program_status"]
+          thumbnail_url?: string | null
           updated_at?: string
         }
         Update: {
@@ -1891,8 +1943,13 @@ export type Database = {
           difficulty?: Database["public"]["Enums"]["dryland_difficulty"]
           id?: string
           is_published?: boolean
+          launch_label?: string | null
           name?: string
+          position?: Database["public"]["Enums"]["dryland_position"] | null
+          season?: Database["public"]["Enums"]["dryland_program_season"] | null
           session_count?: number
+          status?: Database["public"]["Enums"]["dryland_program_status"]
+          thumbnail_url?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1934,6 +1991,108 @@ export type Database = {
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "dryland_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dryland_videos: {
+        Row: {
+          age_group: string | null
+          category: Database["public"]["Enums"]["dryland_video_category"]
+          created_at: string
+          difficulty: Database["public"]["Enums"]["dryland_difficulty"]
+          duration_minutes: number
+          id: string
+          instructor_name: string | null
+          is_featured: boolean
+          is_published: boolean
+          position: Database["public"]["Enums"]["dryland_position"]
+          published_at: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          age_group?: string | null
+          category: Database["public"]["Enums"]["dryland_video_category"]
+          created_at?: string
+          difficulty?: Database["public"]["Enums"]["dryland_difficulty"]
+          duration_minutes?: number
+          id?: string
+          instructor_name?: string | null
+          is_featured?: boolean
+          is_published?: boolean
+          position?: Database["public"]["Enums"]["dryland_position"]
+          published_at?: string
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          age_group?: string | null
+          category?: Database["public"]["Enums"]["dryland_video_category"]
+          created_at?: string
+          difficulty?: Database["public"]["Enums"]["dryland_difficulty"]
+          duration_minutes?: number
+          id?: string
+          instructor_name?: string | null
+          is_featured?: boolean
+          is_published?: boolean
+          position?: Database["public"]["Enums"]["dryland_position"]
+          published_at?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
+      dryland_watch_progress: {
+        Row: {
+          athlete_id: string
+          completed: boolean
+          created_at: string
+          id: string
+          last_watched_at: string
+          updated_at: string
+          video_id: string
+          watched_seconds: number
+        }
+        Insert: {
+          athlete_id: string
+          completed?: boolean
+          created_at?: string
+          id?: string
+          last_watched_at?: string
+          updated_at?: string
+          video_id: string
+          watched_seconds?: number
+        }
+        Update: {
+          athlete_id?: string
+          completed?: boolean
+          created_at?: string
+          id?: string
+          last_watched_at?: string
+          updated_at?: string
+          video_id?: string
+          watched_seconds?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dryland_watch_progress_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "attendees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dryland_watch_progress_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "dryland_videos"
             referencedColumns: ["id"]
           },
         ]
@@ -4243,6 +4402,15 @@ export type Database = {
       difficulty_level: "beginner" | "intermediate" | "advanced" | "elite"
       dryland_category: "stick_skills" | "shooting" | "strength_explosiveness"
       dryland_difficulty: "beginner" | "intermediate" | "advanced"
+      dryland_position: "player" | "goalie" | "both"
+      dryland_program_season: "fall_winter" | "spring" | "summer" | "year_round"
+      dryland_program_status: "coming_soon" | "active"
+      dryland_video_category:
+        | "stickhandling"
+        | "shooting"
+        | "strength_fitness"
+        | "synthetic_ice"
+        | "mobility_flexibility"
       email_campaign_status: "draft" | "scheduled" | "sent"
       email_marketing_provider: "mailchimp" | "klaviyo"
       enrollment_role: "parent" | "coach"
@@ -4438,6 +4606,16 @@ export const Constants = {
       difficulty_level: ["beginner", "intermediate", "advanced", "elite"],
       dryland_category: ["stick_skills", "shooting", "strength_explosiveness"],
       dryland_difficulty: ["beginner", "intermediate", "advanced"],
+      dryland_position: ["player", "goalie", "both"],
+      dryland_program_season: ["fall_winter", "spring", "summer", "year_round"],
+      dryland_program_status: ["coming_soon", "active"],
+      dryland_video_category: [
+        "stickhandling",
+        "shooting",
+        "strength_fitness",
+        "synthetic_ice",
+        "mobility_flexibility",
+      ],
       email_campaign_status: ["draft", "scheduled", "sent"],
       email_marketing_provider: ["mailchimp", "klaviyo"],
       enrollment_role: ["parent", "coach"],
