@@ -2617,6 +2617,72 @@ export type Database = {
           },
         ]
       }
+      game_parent_publish: {
+        Row: {
+          coach_message: string | null
+          created_at: string
+          created_by: string | null
+          event_id: string
+          id: string
+          public_gameplan_text: string | null
+          public_systems_text: string | null
+          published_at: string | null
+          share_gameplan: boolean
+          share_lineup: boolean
+          share_message: boolean
+          share_systems: boolean
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          coach_message?: string | null
+          created_at?: string
+          created_by?: string | null
+          event_id: string
+          id?: string
+          public_gameplan_text?: string | null
+          public_systems_text?: string | null
+          published_at?: string | null
+          share_gameplan?: boolean
+          share_lineup?: boolean
+          share_message?: boolean
+          share_systems?: boolean
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          coach_message?: string | null
+          created_at?: string
+          created_by?: string | null
+          event_id?: string
+          id?: string
+          public_gameplan_text?: string | null
+          public_systems_text?: string | null
+          published_at?: string | null
+          share_gameplan?: boolean
+          share_lineup?: boolean
+          share_message?: boolean
+          share_systems?: boolean
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_parent_publish_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "team_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_parent_publish_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_plans: {
         Row: {
           created_at: string
@@ -2624,6 +2690,7 @@ export type Database = {
           drill_ids: Json
           event_id: string
           id: string
+          is_public: boolean
           matchups: Json
           opponent_notes: string | null
           our_gameplan: string | null
@@ -2637,6 +2704,7 @@ export type Database = {
           drill_ids?: Json
           event_id: string
           id?: string
+          is_public?: boolean
           matchups?: Json
           opponent_notes?: string | null
           our_gameplan?: string | null
@@ -2650,6 +2718,7 @@ export type Database = {
           drill_ids?: Json
           event_id?: string
           id?: string
+          is_public?: boolean
           matchups?: Json
           opponent_notes?: string | null
           our_gameplan?: string | null

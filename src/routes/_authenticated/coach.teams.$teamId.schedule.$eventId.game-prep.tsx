@@ -2,8 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { saveGameLineup, saveGamePlan, saveCoachGameNotes } from "@/lib/teams.functions";
-import { ArrowLeft, Share2, Plus, X, Lock, Users2, ClipboardList, NotebookPen, FileText } from "lucide-react";
+import { saveGameLineup, saveGamePlan, saveCoachGameNotes, saveGameParentPublish } from "@/lib/teams.functions";
+import { ArrowLeft, Share2, Plus, X, Lock, Users2, ClipboardList, NotebookPen, FileText, Megaphone } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedule/$eventId/game-prep")({
   component: GamePrep,
@@ -20,7 +20,7 @@ const D_POS = ["LD", "RD"] as const;
 
 function GamePrep() {
   const { teamId, eventId } = Route.useParams();
-  const [tab, setTab] = useState<"lines" | "plan" | "notes">("lines");
+  const [tab, setTab] = useState<"lines" | "plan" | "notes" | "publish">("lines");
 
   return (
     <div>
@@ -34,16 +34,18 @@ function GamePrep() {
       </div>
       <h3 className="mt-2 font-display text-lg font-bold">Game Preparation</h3>
 
-      <div className="mt-3 grid grid-cols-3 gap-1 rounded-full border border-border bg-surface p-1 text-[11px] font-bold">
+      <div className="mt-3 grid grid-cols-4 gap-1 rounded-full border border-border bg-surface p-1 text-[11px] font-bold">
         <TabBtn active={tab === "lines"} onClick={() => setTab("lines")} icon={<Users2 size={12} />} label="Lines" />
         <TabBtn active={tab === "plan"} onClick={() => setTab("plan")} icon={<ClipboardList size={12} />} label="Plan" />
         <TabBtn active={tab === "notes"} onClick={() => setTab("notes")} icon={<NotebookPen size={12} />} label="Notes" />
+        <TabBtn active={tab === "publish"} onClick={() => setTab("publish")} icon={<Megaphone size={12} />} label="Publish" />
       </div>
 
       <div className="mt-4">
         {tab === "lines" && <LinesTab teamId={teamId} eventId={eventId} />}
         {tab === "plan" && <GamePlanTab teamId={teamId} eventId={eventId} />}
         {tab === "notes" && <CoachNotesTab teamId={teamId} eventId={eventId} />}
+        {tab === "publish" && <PublishTab teamId={teamId} eventId={eventId} />}
       </div>
     </div>
   );
@@ -420,4 +422,108 @@ function CoachNotesTab({ teamId, eventId }: { teamId: string; eventId: string })
       </button>
     </div>
   );
+}
+
+/* ===================== PUBLISH TAB ===================== */
+function PublishTab({ teamId, eventId }: { teamId: string; eventId: string }) {
+  const save = useServerFn(saveGameParentPublish);
+  const [shareLineup, setShareLineup] = useState(false);
+  const [shareGameplan, setShareGameplan] = useState(false);
+  const [shareSystems, setShareSystems] = useState(false);
+  const [shareMessage, setShareMessage] = useState(false);
+  const [publicGameplan, setPublicGameplan] = useState("");
+  const [publicSystems, setPublicSystems] = useState("");
+  const [coachMessage, setCoachMessage] = useState("");
+  const [publishedAt, setPublishedAt] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("game_parent_publish").select("*").eq("event_id", eventId).maybeSingle();
+      if (data) {
+        setShareLineup(!!data.share_lineup);
+        setShareGameplan(!!data.share_gameplan);
+        setShareSystems(!!data.share_systems);
+        setShareMessage(!!data.share_message);
+        setPublicGameplan(data.public_gameplan_text ?? "");
+        setPublicSystems(data.public_systems_text ?? "");
+        setCoachMessage(data.coach_message ?? "");
+        setPublishedAt(data.published_at ?? null);
+      }
+    })();
+  }, [eventId]);
+
+  async function persist() {
+    setSaving(true);
+    try {
+      const res = await save({ data: {
+        teamId, eventId,
+        shareLineup, shareGameplan, shareSystems, shareMessage,
+        publicGameplanText: publicGameplan || null,
+        publicSystemsText: publicSystems || null,
+        coachMessage: coachMessage || null,
+      }});
+      if (res?.firstPublish) {
+        setPublishedAt(new Date().toISOString());
+        alert("Published — parents will see Game Day info.");
+      } else {
+        alert("Saved");
+      }
+    } catch (e: any) { alert(e?.message); } finally { setSaving(false); }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl border border-teal/30 bg-teal/10 p-3">
+        <p className="text-[11px] font-semibold text-teal">Share to Parents</p>
+        <p className="mt-1 text-[10px] text-muted-foreground">Toggle any section on to push it to parents' Game Day screen. Your private notes (opponent scouting, between-period adjustments) stay hidden.</p>
+        {publishedAt && (
+          <p className="mt-2 text-[10px] text-muted-foreground">Published {new Date(publishedAt).toLocaleString()}</p>
+        )}
+      </div>
+
+      <ToggleRow label="Share Lineup" desc="Forward lines, defense pairs, starting goalie, PP/PK" checked={shareLineup} onChange={setShareLineup} />
+
+      <div className="rounded-xl border border-border bg-surface p-3 space-y-2">
+        <ToggleRow inline label="Share Game Plan" desc="Parent-facing version — separate from your private notes" checked={shareGameplan} onChange={setShareGameplan} />
+        {shareGameplan && (
+          <textarea value={publicGameplan} onChange={(e) => setPublicGameplan(e.target.value)} rows={4} placeholder="What we're focused on tonight. Key points to watch for. Anything you want parents to know about the opponent." className="w-full rounded-lg bg-background px-2 py-1.5 text-xs" />
+        )}
+      </div>
+
+      <div className="rounded-xl border border-border bg-surface p-3 space-y-2">
+        <ToggleRow inline label="Share Team Systems" desc="Forecheck, D-zone, PP, PK in your own words" checked={shareSystems} onChange={setShareSystems} />
+        {shareSystems && (
+          <textarea value={publicSystems} onChange={(e) => setPublicSystems(e.target.value)} rows={4} placeholder="Forecheck: 1-2-2. D-zone: collapse low. PP: umbrella. PK: diamond." className="w-full rounded-lg bg-background px-2 py-1.5 text-xs" />
+        )}
+      </div>
+
+      <div className="rounded-xl border border-border bg-surface p-3 space-y-2">
+        <ToggleRow inline label="Share Coach Message" desc="A motivational note shown to parents and athletes" checked={shareMessage} onChange={setShareMessage} />
+        {shareMessage && (
+          <textarea value={coachMessage} onChange={(e) => setCoachMessage(e.target.value)} rows={3} placeholder="Compete hard, support your teammates, have fun out there." className="w-full rounded-lg bg-background px-2 py-1.5 text-xs" />
+        )}
+      </div>
+
+      <button onClick={persist} disabled={saving} className="w-full rounded-full bg-gradient-brand py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50">
+        {saving ? "Saving…" : publishedAt ? "Update" : "Publish to Parents"}
+      </button>
+    </div>
+  );
+}
+
+function ToggleRow({ label, desc, checked, onChange, inline }: { label: string; desc: string; checked: boolean; onChange: (v: boolean) => void; inline?: boolean }) {
+  const inner = (
+    <div className="flex items-start gap-3">
+      <div className="flex-1">
+        <p className="text-xs font-bold">{label}</p>
+        <p className="text-[10px] text-muted-foreground">{desc}</p>
+      </div>
+      <button onClick={() => onChange(!checked)} className={"relative h-6 w-11 shrink-0 rounded-full transition " + (checked ? "bg-teal" : "bg-surface-2")}>
+        <span className={"absolute top-0.5 h-5 w-5 rounded-full bg-background transition " + (checked ? "left-[22px]" : "left-0.5")} />
+      </button>
+    </div>
+  );
+  if (inline) return inner;
+  return <div className="rounded-xl border border-border bg-surface p-3">{inner}</div>;
 }
