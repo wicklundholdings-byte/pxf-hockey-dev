@@ -243,21 +243,42 @@ function TeamLayout() {
         )}
 
         {isOverview && (
-        <div className="mt-3 grid grid-cols-5 gap-1 rounded-full border border-border bg-surface p-1">
-          {tabs.map((t) => {
-            const path = t.to.replace("$teamId", teamId);
-            const active = pathname === path || pathname.startsWith(path + "/") || (isOverview && t.label === "Schedule");
-            return (
-              <Link
-                key={t.to}
-                to={t.to}
-                params={{ teamId }}
-                className={"rounded-full py-1.5 text-center text-[11px] font-bold tracking-wide " + (active ? "bg-teal text-background" : "text-muted-foreground")}
-              >
-                {t.label}
-              </Link>
-            );
-          })}
+        <div className="mt-4 rounded-2xl border border-border bg-surface p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Calendar size={14} className="text-teal" />
+              <p className="text-[10px] font-bold tracking-[0.25em] text-teal">UPCOMING</p>
+            </div>
+            <Link to="/parent/teams/$teamId/schedule" params={{ teamId }} className="flex items-center gap-0.5 text-[10px] font-bold text-teal">
+              View all <ChevronRight size={11} />
+            </Link>
+          </div>
+          {upcoming.length === 0 ? (
+            <p className="mt-3 text-center text-[11px] text-muted-foreground">No upcoming events</p>
+          ) : (
+            <div className="mt-3 space-y-2">
+              {upcoming.map((e) => {
+                const meta = EVENT_META[e.event_type] ?? EVENT_META.team_event;
+                const Icon = meta.icon;
+                const title = e.event_type === "game"
+                  ? `${e.home_away === "away" ? "@ " : "vs "}${e.opponent_name ?? "TBD"}`
+                  : e.title || meta.label;
+                return (
+                  <div key={e.id} className="flex items-center gap-3 rounded-xl border border-border bg-surface-2 p-2.5">
+                    <div className={"grid h-9 w-9 place-items-center rounded-lg " + meta.bg}>
+                      <Icon size={16} className={meta.color} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold">{title}</p>
+                      <p className="truncate text-[10px] text-muted-foreground">
+                        {fmtEventDate(e.event_date)}{e.start_time ? ` · ${fmtEventTime(e.start_time)}` : ""}{e.venue ? ` · ${e.venue}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
         )}
       </div>
