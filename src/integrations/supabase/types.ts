@@ -3485,6 +3485,48 @@ export type Database = {
           },
         ]
       }
+      private_sessions: {
+        Row: {
+          athlete_name: string
+          created_at: string
+          duration_minutes: number | null
+          fee_cents: number | null
+          id: string
+          location: string | null
+          notes: string | null
+          owner_id: string
+          session_date: string
+          start_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          athlete_name: string
+          created_at?: string
+          duration_minutes?: number | null
+          fee_cents?: number | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          owner_id: string
+          session_date: string
+          start_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          athlete_name?: string
+          created_at?: string
+          duration_minutes?: number | null
+          fee_cents?: number | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          owner_id?: string
+          session_date?: string
+          start_time?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           bio: string | null
