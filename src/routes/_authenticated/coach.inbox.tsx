@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { MessageSquare, Send, ArrowLeft, Users, Plus, Pin, X, Megaphone, User } from "lucide-react";
-import { listMessageableContacts, type MessageableContact } from "@/lib/messaging.functions";
+import { listTeamMessageableContacts, type TeamContact } from "@/lib/messaging.functions";
 
 export const Route = createFileRoute("/_authenticated/coach/inbox")({
   component: InboxPage,
@@ -307,7 +307,8 @@ function NewConvoSheet({ onClose, onCreated }: { onClose: () => void; onCreated:
   const [audience, setAudience] = useState<"all" | "staff">("all");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [contacts, setContacts] = useState<MessageableContact[]>([]);
+  const [dmTeamId, setDmTeamId] = useState<string>("");
+  const [contacts, setContacts] = useState<TeamContact[]>([]);
   const [contactsLoading, setContactsLoading] = useState(false);
   const [contactId, setContactId] = useState<string>("");
   const [contactSearch, setContactSearch] = useState("");
@@ -319,13 +320,18 @@ function NewConvoSheet({ onClose, onCreated }: { onClose: () => void; onCreated:
   }, []);
 
   useEffect(() => {
-    if (mode !== "dm" || contacts.length > 0) return;
+    if (mode !== "dm" || !dmTeamId) {
+      setContacts([]);
+      setContactId("");
+      return;
+    }
     setContactsLoading(true);
-    listMessageableContacts()
+    setContactId("");
+    listTeamMessageableContacts({ data: { teamId: dmTeamId } })
       .then((rows) => setContacts(rows))
       .catch((e) => setError(e.message ?? "Failed to load contacts"))
       .finally(() => setContactsLoading(false));
-  }, [mode]);
+  }, [mode, dmTeamId]);
 
   async function createGroup() {
     if (!user || !teamId) return;
@@ -361,8 +367,9 @@ function NewConvoSheet({ onClose, onCreated }: { onClose: () => void; onCreated:
     const q = contactSearch.trim().toLowerCase();
     if (!q) return true;
     return (
-      (c.full_name ?? "").toLowerCase().includes(q) ||
-      (c.email ?? "").toLowerCase().includes(q)
+      (c.name ?? "").toLowerCase().includes(q) ||
+      (c.email ?? "").toLowerCase().includes(q) ||
+      (c.player_name ?? "").toLowerCase().includes(q)
     );
   });
 
@@ -436,20 +443,32 @@ function NewConvoSheet({ onClose, onCreated }: { onClose: () => void; onCreated:
         ) : (
           <>
             <p className="mt-3 text-[11px] text-muted-foreground">
-              You can only message parents your role allows. Coaches and assistants see contacts from their assigned camps only.
+              Pick a team, then choose a parent or athlete to message.
             </p>
+            <label className="mt-4 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Team</label>
+            <select
+              value={dmTeamId}
+              onChange={(e) => setDmTeamId(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-foreground"
+            >
+              <option value="">Select a team…</option>
+              {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+            {dmTeamId && (
             <input
               value={contactSearch}
               onChange={(e) => setContactSearch(e.target.value)}
-              placeholder="Search by name or email…"
+              placeholder="Search parents or athletes…"
               className="mt-3 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60"
             />
+            )}
+            {dmTeamId && (
             <div className="mt-2 max-h-64 overflow-y-auto rounded-xl border border-border bg-surface">
               {contactsLoading ? (
                 <p className="p-4 text-center text-xs text-muted-foreground">Loading contacts…</p>
               ) : filteredContacts.length === 0 ? (
                 <p className="p-4 text-center text-xs text-muted-foreground">
-                  {contacts.length === 0 ? "No contacts available with your permission level." : "No matches."}
+                  {contacts.length === 0 ? "No parents or athletes on this team yet." : "No matches."}
                 </p>
               ) : (
                 <ul className="divide-y divide-border">
@@ -459,12 +478,16 @@ function NewConvoSheet({ onClose, onCreated }: { onClose: () => void; onCreated:
                         onClick={() => setContactId(c.id)}
                         className={"flex w-full items-center gap-2 px-3 py-2 text-left " + (contactId === c.id ? "bg-teal/10" : "")}
                       >
-                        <div className="grid h-7 w-7 place-items-center rounded-full bg-teal/15 text-[10px] font-bold text-teal">
-                          {(c.full_name ?? c.email).slice(0, 2).toUpperCase()}
+                        <div className={"grid h-7 w-7 place-items-center rounded-full text-[10px] font-bold " + (c.kind === "athlete" ? "bg-amber-400/15 text-amber-400" : "bg-teal/15 text-teal")}>
+                          {(c.name || "?").slice(0, 2).toUpperCase()}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-xs font-semibold text-foreground">{c.full_name || c.email}</p>
-                          <p className="truncate text-[10px] text-muted-foreground">{c.email}</p>
+                          <p className="truncate text-xs font-semibold text-foreground">{c.name}</p>
+                          <p className="truncate text-[10px] text-muted-foreground">
+                            {c.kind === "parent"
+                              ? `Parent${c.player_name ? ` · ${c.player_name}` : ""}${c.email ? ` · ${c.email}` : ""}`
+                              : `Athlete${c.player_name && c.player_name !== c.name ? ` · ${c.player_name}` : ""}`}
+                          </p>
                         </div>
                       </button>
                     </li>
@@ -472,6 +495,7 @@ function NewConvoSheet({ onClose, onCreated }: { onClose: () => void; onCreated:
                 </ul>
               )}
             </div>
+            )}
             {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
             <button
               disabled={!contactId || creating}
