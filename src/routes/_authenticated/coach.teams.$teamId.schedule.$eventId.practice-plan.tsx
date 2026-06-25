@@ -41,16 +41,33 @@ function PracticePlan() {
   const [dbCategories, setDbCategories] = useState<string[]>([]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    let cancelled = false;
+    (async () => {
+      // 1. Check server-side: did we assign a saved session to this event?
       try {
-        const sid = window.localStorage.getItem(`pxf:event-session:${eventId}`);
-        if (sid) {
-          navigate({ to: "/session-detail/$sessionId", params: { sessionId: sid }, replace: true });
+        const { data: plans } = await supabase
+          .from("practice_plans")
+          .select("template_name")
+          .eq("event_id", eventId)
+          .order("created_at", { ascending: false })
+          .limit(1);
+        const tn = (plans?.[0] as { template_name: string | null } | undefined)?.template_name ?? "";
+        const m = /^__sid:([^|]+)/.exec(tn);
+        if (m) {
+          if (!cancelled) navigate({ to: "/session-detail/$sessionId", params: { sessionId: m[1] }, replace: true });
           return;
         }
       } catch { /* ignore */ }
-    }
-    (async () => {
+      // 2. Fallback to legacy localStorage marker
+      if (typeof window !== "undefined") {
+        try {
+          const sid = window.localStorage.getItem(`pxf:event-session:${eventId}`);
+          if (sid) {
+            if (!cancelled) navigate({ to: "/session-detail/$sessionId", params: { sessionId: sid }, replace: true });
+            return;
+          }
+        } catch { /* ignore */ }
+      }
       const { data: cats } = await supabase.from("drill_categories").select("id,title").order("sort_order");
       const catRows = (cats ?? []) as Array<{ id: string; title: string }>;
       const catMap = new Map<string, string>(catRows.map((c) => [c.id, c.title]));
@@ -63,6 +80,7 @@ function PracticePlan() {
     if (typeof window !== "undefined") {
       try { setSessions(JSON.parse(window.localStorage.getItem(SESSIONS_KEY) ?? "[]")); } catch { /* ignore */ }
     }
+    return () => { cancelled = true; };
   }, []);
 
   function add(item: Item) { setItems((prev) => [...prev, item]); }

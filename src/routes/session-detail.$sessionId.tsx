@@ -805,7 +805,7 @@ function AssignToTeamPractice({ session, onClose, onSaved }: { session: Session;
         }),
       ];
       if (session.notes) items.push({ itemType: "note", noteText: `Notes: ${session.notes}` });
-      await save({ data: { teamId, eventId, templateName: session.name, items } });
+      await save({ data: { teamId, eventId, templateName: `__sid:${session.id}|${session.name}`, items } });
       if (typeof window !== "undefined") {
         try { window.localStorage.setItem(`pxf:event-session:${eventId}`, session.id); } catch { /* ignore */ }
       }
