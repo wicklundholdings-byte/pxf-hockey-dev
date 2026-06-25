@@ -63,8 +63,13 @@ function TeamDashboard() {
 
   useEffect(() => {
     (async () => {
-      const s = await loadTeamSeasonStats(teamId, "all");
-      setRecord(s.record); setSkaters(s.skaters);
+      if (teamId === "48222e0d-ad71-4c54-bc20-99b743ff8816") {
+        setRecord(mockRecord);
+        setSkaters(mockSkaters);
+      } else {
+        const s = await loadTeamSeasonStats(teamId, "all");
+        setRecord(s.record); setSkaters(s.skaters);
+      }
     })();
   }, [teamId]);
 
