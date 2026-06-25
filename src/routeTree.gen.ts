@@ -57,7 +57,6 @@ import { Route as ParentTrainRouteImport } from './routes/parent.train'
 import { Route as ParentScheduleRouteImport } from './routes/parent.schedule'
 import { Route as ParentProfileRouteImport } from './routes/parent.profile'
 import { Route as ParentInboxRouteImport } from './routes/parent.inbox'
-import { Route as ParentCampsRouteImport } from './routes/parent.camps'
 import { Route as OnboardingParentRouteImport } from './routes/onboarding.parent'
 import { Route as OnboardingCoachRouteImport } from './routes/onboarding.coach'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
@@ -394,11 +393,6 @@ const ParentProfileRoute = ParentProfileRouteImport.update({
 const ParentInboxRoute = ParentInboxRouteImport.update({
   id: '/inbox',
   path: '/inbox',
-  getParentRoute: () => ParentRoute,
-} as any)
-const ParentCampsRoute = ParentCampsRouteImport.update({
-  id: '/camps',
-  path: '/camps',
   getParentRoute: () => ParentRoute,
 } as any)
 const OnboardingParentRoute = OnboardingParentRouteImport.update({
@@ -987,7 +981,6 @@ export interface FileRoutesByFullPath {
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/onboarding/coach': typeof OnboardingCoachRoute
   '/onboarding/parent': typeof OnboardingParentRoute
-  '/parent/camps': typeof ParentCampsRoute
   '/parent/inbox': typeof ParentInboxRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
@@ -1130,7 +1123,6 @@ export interface FileRoutesByTo {
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/onboarding/coach': typeof OnboardingCoachRoute
   '/onboarding/parent': typeof OnboardingParentRoute
-  '/parent/camps': typeof ParentCampsRoute
   '/parent/inbox': typeof ParentInboxRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
@@ -1275,7 +1267,6 @@ export interface FileRoutesById {
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
   '/onboarding/coach': typeof OnboardingCoachRoute
   '/onboarding/parent': typeof OnboardingParentRoute
-  '/parent/camps': typeof ParentCampsRoute
   '/parent/inbox': typeof ParentInboxRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
@@ -1425,7 +1416,6 @@ export interface FileRouteTypes {
     | '/drill-detail/$drillId'
     | '/onboarding/coach'
     | '/onboarding/parent'
-    | '/parent/camps'
     | '/parent/inbox'
     | '/parent/profile'
     | '/parent/schedule'
@@ -1568,7 +1558,6 @@ export interface FileRouteTypes {
     | '/drill-detail/$drillId'
     | '/onboarding/coach'
     | '/onboarding/parent'
-    | '/parent/camps'
     | '/parent/inbox'
     | '/parent/profile'
     | '/parent/schedule'
@@ -1712,7 +1701,6 @@ export interface FileRouteTypes {
     | '/drill-detail/$drillId'
     | '/onboarding/coach'
     | '/onboarding/parent'
-    | '/parent/camps'
     | '/parent/inbox'
     | '/parent/profile'
     | '/parent/schedule'
@@ -2213,13 +2201,6 @@ declare module '@tanstack/react-router' {
       path: '/inbox'
       fullPath: '/parent/inbox'
       preLoaderRoute: typeof ParentInboxRouteImport
-      parentRoute: typeof ParentRoute
-    }
-    '/parent/camps': {
-      id: '/parent/camps'
-      path: '/camps'
-      fullPath: '/parent/camps'
-      preLoaderRoute: typeof ParentCampsRouteImport
       parentRoute: typeof ParentRoute
     }
     '/onboarding/parent': {
@@ -3262,7 +3243,6 @@ const ParentTeamsTeamIdRouteWithChildren =
   ParentTeamsTeamIdRoute._addFileChildren(ParentTeamsTeamIdRouteChildren)
 
 interface ParentRouteChildren {
-  ParentCampsRoute: typeof ParentCampsRoute
   ParentInboxRoute: typeof ParentInboxRoute
   ParentProfileRoute: typeof ParentProfileRoute
   ParentScheduleRoute: typeof ParentScheduleRoute
@@ -3278,7 +3258,6 @@ interface ParentRouteChildren {
 }
 
 const ParentRouteChildren: ParentRouteChildren = {
-  ParentCampsRoute: ParentCampsRoute,
   ParentInboxRoute: ParentInboxRoute,
   ParentProfileRoute: ParentProfileRoute,
   ParentScheduleRoute: ParentScheduleRoute,
