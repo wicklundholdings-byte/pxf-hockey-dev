@@ -240,31 +240,10 @@ function TeamDashboard() {
           <p className="text-[10px] font-bold tracking-[0.25em] text-muted-foreground">TEAM STATS</p>
           <Link to="/coach/teams/$teamId/stats" params={{ teamId }} className="text-[11px] font-bold text-teal">View Full Stats ›</Link>
         </div>
-        <div className="mt-2 grid grid-cols-4 gap-1.5">
-          <StatChip label="G" value={totals.g} />
-          <StatChip label="A" value={totals.a} />
-          <StatChip label="PTS" value={totals.pts} highlight />
-          <StatChip label="PIM" value={totals.pim} />
-        </div>
-        <div className="mt-2 space-y-1.5">
-          {scoringLeader ? (
-            <div className="flex items-center justify-between rounded-2xl border border-border bg-surface px-3 py-2">
-              <div className="min-w-0">
-                <p className="text-[9px] font-bold tracking-wider text-amber-400">SCORING LEADER</p>
-                <p className="truncate text-sm font-bold">{scoringLeader.display_name}</p>
-              </div>
-              <p className="shrink-0 text-[11px] font-bold text-muted-foreground">{scoringLeader.g}G · {scoringLeader.a}A · <span className="text-teal">{scoringLeader.pts}PTS</span></p>
-            </div>
-          ) : null}
-          {topGoalie ? (
-            <div className="flex items-center justify-between rounded-2xl border border-border bg-surface px-3 py-2">
-              <div className="min-w-0">
-                <p className="text-[9px] font-bold tracking-wider text-teal">TOP GOALIE</p>
-                <p className="truncate text-sm font-bold">{topGoalie.display_name}</p>
-              </div>
-              <p className="shrink-0 text-[11px] font-bold text-muted-foreground">SV% <span className="text-teal">{svpct(topGoalie.saves, topGoalie.shots)}</span> · {gaa(topGoalie.ga, topGoalie.gp)} GAA</p>
-            </div>
-          ) : null}
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          <LeaderboardColumn title="GOALS" rows={goalsTop3} statKey="g" />
+          <LeaderboardColumn title="ASSISTS" rows={assistsTop3} statKey="a" />
+          <LeaderboardColumn title="POINTS" rows={pointsTop3} statKey="pts" />
         </div>
       </section>
 
