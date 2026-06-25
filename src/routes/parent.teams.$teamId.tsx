@@ -1,8 +1,10 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Flame, Medal, Trophy, ChevronRight, Calendar, Users, BarChart3, Camera, Swords, Dumbbell, Star } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { loadTeamSeasonStats, type TeamRecord, type SkaterAgg } from "@/lib/team-stats";
+import { mockRecord, mockSkaters } from "@/lib/mock-team-stats";
 
 export const Route = createFileRoute("/parent/teams/$teamId")({
   component: TeamLayout,
@@ -60,6 +62,8 @@ function TeamLayout() {
   const [leaders, setLeaders] = useState<LeaderRow[]>([]);
   const [myAthleteIds, setMyAthleteIds] = useState<string[]>([]);
   const [upcoming, setUpcoming] = useState<UpcomingEvent[]>([]);
+  const [record, setRecord] = useState<TeamRecord | null>(null);
+  const [skaters, setSkaters] = useState<SkaterAgg[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -110,6 +114,24 @@ function TeamLayout() {
       setUpcoming(((data ?? []) as UpcomingEvent[]));
     })();
   }, [teamId]);
+
+  useEffect(() => {
+    (async () => {
+      const s = await loadTeamSeasonStats(teamId, "all");
+      const hasStats = s.skaters && s.skaters.length > 0;
+      if (hasStats) {
+        setRecord(s.record);
+        setSkaters(s.skaters);
+      } else {
+        setRecord(mockRecord);
+        setSkaters(mockSkaters);
+      }
+    })();
+  }, [teamId]);
+
+  const goalsTop3 = useMemo(() => [...skaters].sort((a, b) => b.g - a.g || b.pts - a.pts).slice(0, 3), [skaters]);
+  const assistsTop3 = useMemo(() => [...skaters].sort((a, b) => b.a - a.a || b.pts - a.pts).slice(0, 3), [skaters]);
+  const pointsTop3 = useMemo(() => [...skaters].sort((a, b) => b.pts - a.pts || b.g - a.g).slice(0, 3), [skaters]);
 
   const top3 = leaders.slice(0, 3);
   const myRowIdx = leaders.findIndex((l) => myAthleteIds.includes(l.athlete_id));
@@ -167,6 +189,31 @@ function TeamLayout() {
             </Link>
           ))}
         </div>
+        )}
+
+        {isOverview && (
+          <section className="mt-4">
+            <p className="text-[10px] font-bold tracking-[0.25em] text-muted-foreground">SEASON RECORD</p>
+            <div className="mt-2 grid grid-cols-3 gap-2 rounded-2xl border border-border bg-surface p-4">
+              <RecordStat label="Wins" value={record?.w ?? 0} accent="text-emerald-400" />
+              <RecordStat label="Losses" value={record?.l ?? 0} accent="text-red-400" />
+              <RecordStat label="OT" value={(record?.otl ?? 0) + (record?.sol ?? 0) + (record?.otw ?? 0) + (record?.sow ?? 0)} accent="text-teal" />
+            </div>
+          </section>
+        )}
+
+        {isOverview && (
+          <section className="mt-4">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-bold tracking-[0.25em] text-muted-foreground">TEAM STATS</p>
+              <Link to="/parent/teams/$teamId/stats" params={{ teamId }} className="text-[11px] font-bold text-teal">View Full Stats ›</Link>
+            </div>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              <LeaderboardColumn title="GOALS" rows={goalsTop3} statKey="g" />
+              <LeaderboardColumn title="ASSISTS" rows={assistsTop3} statKey="a" />
+              <LeaderboardColumn title="POINTS" rows={pointsTop3} statKey="pts" />
+            </div>
+          </section>
         )}
 
         {isOverview && leaders.length > 0 && (
@@ -277,6 +324,43 @@ function TeamLayout() {
       </div>
       <div id="team-tab-content" className="mt-3 scroll-mt-4">
         <Outlet />
+      </div>
+    </div>
+  );
+}
+
+function RecordStat({ label, value, accent }: { label: string; value: number; accent: string }) {
+  return (
+    <div className="text-center">
+      <p className={"font-display text-3xl font-bold " + accent}>{value}</p>
+      <p className="mt-0.5 text-[10px] font-bold tracking-wider text-muted-foreground">{label.toUpperCase()}</p>
+    </div>
+  );
+}
+
+function LeaderboardColumn({ title, rows, statKey }: { title: string; rows: SkaterAgg[]; statKey: "g" | "a" | "pts" }) {
+  return (
+    <div className="rounded-2xl border border-border bg-surface p-2">
+      <p className="mb-1.5 text-center text-[9px] font-bold tracking-wider text-muted-foreground">{title}</p>
+      <div className="space-y-1">
+        {rows.map((r, i) => {
+          const isFirst = i === 0;
+          const rank = i + 1;
+          const lastName = r.display_name.trim().split(/\s+/).pop() ?? r.display_name;
+          return (
+            <div
+              key={r.team_player_id}
+              className={`flex items-center gap-2 rounded-xl px-2 py-1.5 text-[11px] ${isFirst ? "bg-teal/10" : ""}`}
+            >
+              <span className={`w-4 text-center font-bold ${isFirst ? "text-teal" : "text-muted-foreground"}`}>#{rank}</span>
+              <span className="min-w-0 flex-1 truncate font-bold">{lastName}</span>
+              <span className="shrink-0 font-bold tabular-nums">{r[statKey]}</span>
+            </div>
+          );
+        })}
+        {rows.length === 0 && (
+          <p className="py-2 text-center text-[10px] text-muted-foreground">No data</p>
+        )}
       </div>
     </div>
   );
