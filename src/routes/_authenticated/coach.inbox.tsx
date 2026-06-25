@@ -304,6 +304,7 @@ function NewConvoSheet({ onClose, onCreated }: { onClose: () => void; onCreated:
   const [mode, setMode] = useState<"team" | "dm">("team");
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamId, setTeamId] = useState<string>("");
+  const [audience, setAudience] = useState<"all" | "staff">("all");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [contacts, setContacts] = useState<MessageableContact[]>([]);
@@ -394,6 +395,32 @@ function NewConvoSheet({ onClose, onCreated }: { onClose: () => void; onCreated:
               <option value="">Select a team…</option>
               {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
+            {teamId && (
+              <>
+                <label className="mt-4 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Recipients</label>
+                <div className="mt-1 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAudience("all")}
+                    className={"rounded-xl border py-2 text-xs font-bold " + (audience === "all" ? "border-teal bg-teal/10 text-teal" : "border-border bg-surface text-muted-foreground")}
+                  >
+                    All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAudience("staff")}
+                    className={"rounded-xl border py-2 text-xs font-bold " + (audience === "staff" ? "border-teal bg-teal/10 text-teal" : "border-border bg-surface text-muted-foreground")}
+                  >
+                    Managers / Coaches
+                  </button>
+                </div>
+                <p className="mt-1.5 text-[10px] text-muted-foreground">
+                  {audience === "all"
+                    ? "Everyone on the team — parents, coaches, and managers."
+                    : "Only team coaches and managers (staff-only chat)."}
+                </p>
+              </>
+            )}
             {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
             <button
               disabled={!teamId || creating}
