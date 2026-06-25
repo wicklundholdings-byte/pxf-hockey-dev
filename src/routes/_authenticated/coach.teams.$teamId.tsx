@@ -73,24 +73,6 @@ function TeamLayout() {
           ))}
         </div>
         )}
-        {isOverview && (
-        <div className="mt-3 grid grid-cols-6 gap-1 rounded-full border border-border bg-surface p-1">
-          {tabs.map((t) => {
-            const path = t.to.replace("$teamId", teamId);
-            const active = pathname === path || pathname.startsWith(path + "/") || (isOverview && t.label === "Schedule");
-            return (
-              <Link
-                key={t.to}
-                to={t.to}
-                params={{ teamId }}
-                className={"rounded-full py-1.5 text-center text-[10px] font-bold tracking-wide " + (active ? "bg-teal text-background" : "text-muted-foreground")}
-              >
-                {t.label}
-              </Link>
-            );
-          })}
-        </div>
-        )}
       </div>
       <div id="team-tab-content" className="mt-3 px-5 scroll-mt-4">
         <Outlet />
