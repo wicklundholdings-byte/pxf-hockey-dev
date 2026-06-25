@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Calendar, Users, BarChart3, Camera } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId")({
   component: TeamLayout,
@@ -46,6 +46,24 @@ function TeamLayout() {
             <h2 className="font-display text-lg font-bold leading-tight">{team?.name || "Team"}</h2>
             <p className="text-[11px] text-muted-foreground">{team?.season || ""}</p>
           </div>
+        </div>
+        <div className="mt-3 grid grid-cols-4 gap-2">
+          <Link to="/coach/teams/$teamId/schedule" params={{ teamId }} className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-gradient-brand py-3 shadow-glow-teal">
+            <Calendar size={20} className="text-white" />
+            <span className="text-[10px] font-bold text-white">Schedule</span>
+          </Link>
+          <Link to="/coach/teams/$teamId/roster" params={{ teamId }} className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-gradient-brand py-3 shadow-glow-teal">
+            <Users size={20} className="text-white" />
+            <span className="text-[10px] font-bold text-white">Roster</span>
+          </Link>
+          <Link to="/coach/teams/$teamId/stats" params={{ teamId }} className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-gradient-brand py-3 shadow-glow-teal">
+            <BarChart3 size={20} className="text-white" />
+            <span className="text-[10px] font-bold text-white">Stats</span>
+          </Link>
+          <Link to="/coach/teams/$teamId/playbook" params={{ teamId }} className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-gradient-brand py-3 shadow-glow-teal">
+            <Camera size={20} className="text-white" />
+            <span className="text-[10px] font-bold text-white">Media</span>
+          </Link>
         </div>
         <div className="mt-3 grid grid-cols-6 gap-1 rounded-full border border-border bg-surface p-1">
           {tabs.map((t) => {
