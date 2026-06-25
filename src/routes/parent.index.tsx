@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, MapPin, Star, MessageCircle, ChevronRight, ChevronDown, Cpu, Calendar, Clock, Dumbbell, Users } from "lucide-react";
+import { MapPin, Star, ChevronRight, ChevronDown, Cpu, Calendar, Clock, Dumbbell, Trophy, Image as ImageIcon, Swords } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -29,16 +29,20 @@ type Evaluation = {
 };
 type RsvpPrompt = { id: string; child_name: string; camp_name: string; session_date: string };
 type TeamCard = { id: string; name: string; season: string | null; logo_url: string | null; primary_color: string | null; coach_name: string | null; player_count: number };
-type NextSession = {
-  camp_id: string;
+type NextUpItem = {
+  kind: "camp" | "game" | "practice";
+  link_to: "/parent/camp/$campId" | "/parent/teams/$teamId";
+  link_params: { campId?: string; teamId?: string };
   child_name: string;
-  camp_name: string;
-  session_title: string | null;
-  session_date: string;
+  title: string;
+  subtitle: string | null;
+  date: string;
   start_time: string | null;
   end_time: string | null;
-  venue_name: string | null;
+  venue: string | null;
 };
+type MediaItem = { id: string; thumb_url: string; athlete_name: string | null; kind: "photo" | "video" };
+type DrylandWeek = { done: number; goal: number; team_name: string; rank: number };
 
 function ageFrom(b: string | null) {
   if (!b) return null;
@@ -90,12 +94,37 @@ function ParentDashboard() {
   const [rsvps, setRsvps] = useState<RsvpPrompt[]>([]);
   const [hasActiveDryland, setHasActiveDryland] = useState<boolean | null>(null);
   const [teams, setTeams] = useState<TeamCard[]>([]);
+  const [recentMedia, setRecentMedia] = useState<MediaItem[]>([]);
 
   useEffect(() => {
     if (!user?.id) return;
     (async () => {
       const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
       setParentName(prof?.full_name ?? user.email?.split("@")[0] ?? "Parent");
+
+      // Recent media for this parent's athletes
+      try {
+        const { data: kRows } = await supabase.from("attendees").select("id, full_name").eq("owner_id", user.id);
+        const aIds = ((kRows ?? []) as { id: string; full_name: string }[]);
+        if (aIds.length) {
+          const nameMap = new Map(aIds.map((k) => [k.id, k.full_name]));
+          const { data: media } = await supabase
+            .from("athlete_media")
+            .select("id, thumbnail_url, media_url, media_type, athlete_id, created_at")
+            .in("athlete_id", aIds.map((k) => k.id))
+            .order("created_at", { ascending: false })
+            .limit(3);
+          const items = ((media ?? []) as any[]).map((m) => ({
+            id: m.id,
+            thumb_url: m.thumbnail_url ?? m.media_url,
+            athlete_name: nameMap.get(m.athlete_id) ?? null,
+            kind: (m.media_type === "video" ? "video" : "photo") as "photo" | "video",
+          }));
+          setRecentMedia(items);
+        }
+      } catch {
+        /* keep mock fallback */
+      }
 
       const parentEmail = user.email ?? "";
 
@@ -358,41 +387,63 @@ function ParentDashboard() {
     { id: "mock-team-1", name: "Spring Selects", season: "2025", logo_url: null, primary_color: null, coach_name: "Coach Park", player_count: 14 },
   ];
 
-  // Next session per child — earliest upcoming (or currently-live) camp for each registered athlete.
-  const nextSessions: NextSession[] = (() => {
+  // Next Up — single soonest event across camps + team games/practices.
+  const nextUp: NextUpItem | null = (() => {
     const todayYmd = ymd(today);
-    const byChild = new Map<string, NextSession>();
-    const sorted = [...displayCamps].sort((a, b) => (a.camp.start_date ?? "").localeCompare(b.camp.start_date ?? ""));
-    for (const c of sorted) {
-      if (byChild.has(c.child_name)) continue;
-      const isUpcoming = c.camp.start_date && c.camp.start_date >= todayYmd;
+    const candidates: NextUpItem[] = [];
+    for (const c of displayCamps) {
       const live = isLive(c.camp.start_date, c.camp.end_date);
-      if (!isUpcoming && !live) continue;
-      byChild.set(c.child_name, {
-        camp_id: c.camp.id,
+      const upcoming = c.camp.start_date && c.camp.start_date >= todayYmd;
+      if (!live && !upcoming) continue;
+      candidates.push({
+        kind: "camp",
+        link_to: "/parent/camp/$campId",
+        link_params: { campId: c.camp.id },
         child_name: c.child_name,
-        camp_name: c.camp.name,
-        session_title: live ? "Edge Work & Power Skating" : null,
-        session_date: live ? ymd(today) : c.camp.start_date!,
+        title: c.camp.name,
+        subtitle: live ? "Edge Work & Power Skating" : null,
+        date: live ? ymd(today) : c.camp.start_date!,
         start_time: "16:30",
         end_time: "18:00",
-        venue_name: c.camp.venue_name,
+        venue: c.camp.venue_name,
       });
     }
-    return Array.from(byChild.values()).sort((a, b) => a.session_date.localeCompare(b.session_date));
+    // Mock team game so layout is rich before live team_events data lands.
+    if (displayTeams[0]) {
+      candidates.push({
+        kind: "game",
+        link_to: "/parent/teams/$teamId",
+        link_params: { teamId: displayTeams[0].id },
+        child_name: displayKids[0].full_name,
+        title: `${displayTeams[0].name} vs Northstars`,
+        subtitle: "Regular Season Game",
+        date: addDays(2),
+        start_time: "18:30",
+        end_time: "20:00",
+        venue: "Iceland Arena · Rink 2",
+      });
+    }
+    candidates.sort((a, b) =>
+      (a.date + (a.start_time ?? "")).localeCompare(b.date + (b.start_time ?? "")),
+    );
+    return candidates[0] ?? null;
   })();
+
+  const displayMedia: MediaItem[] = recentMedia.length > 0 ? recentMedia : [
+    { id: "mm1", thumb_url: "https://images.unsplash.com/photo-1515703407324-5f51c2ee0e2a?w=400", athlete_name: displayKids[0].full_name, kind: "photo" },
+    { id: "mm2", thumb_url: "https://images.unsplash.com/photo-1580692475446-c2fabbbe287d?w=400", athlete_name: displayKids[1]?.full_name ?? displayKids[0].full_name, kind: "video" },
+    { id: "mm3", thumb_url: "https://images.unsplash.com/photo-1551269901-5c5e14c25df7?w=400", athlete_name: displayKids[0].full_name, kind: "photo" },
+  ];
+
+  const dryland: DrylandWeek = { done: 2, goal: 3, team_name: displayTeams[0]?.name ?? "Lightning U14", rank: 2 };
+
+  const firstName = (parentName || user?.email?.split("@")[0] || "there").split(/\s+/)[0];
 
   return (
     <div className="min-h-screen bg-background px-5 pt-5 pb-24 text-foreground">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">Welcome back,</p>
-          <h1 className="font-display text-2xl font-bold">{parentName || "Parent"}</h1>
-        </div>
-        <Link to="/notifications" aria-label="Notifications" className="relative grid h-10 w-10 place-items-center rounded-full border border-border bg-card text-foreground">
-          <Bell size={18} />
-          {displayThreads.length > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-teal" />}
-        </Link>
+      <div>
+        <h1 className="font-display text-2xl font-bold leading-tight">Hey {firstName},</h1>
+        <p className="text-base font-light text-muted-foreground">Here's what's happening.</p>
       </div>
 
       {/* My Athletes */}
@@ -465,6 +516,101 @@ function ParentDashboard() {
         )}
       </section>
 
+      {/* Next Up — soonest event across all sources */}
+      {nextUp && (
+        <section className="mt-6">
+          <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Next Up</h2>
+          <Link
+            to={nextUp.link_to}
+            params={nextUp.link_params as any}
+            className="mt-2 block rounded-2xl border border-border bg-card p-4"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-[2px] text-teal">{nextUp.child_name}</p>
+                <p className="mt-0.5 truncate text-sm font-semibold">{nextUp.title}</p>
+                {nextUp.subtitle && (
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">{nextUp.subtitle}</p>
+                )}
+              </div>
+              {(() => {
+                const days = daysUntil(nextUp.date);
+                const label = days === 0 ? "TODAY" : days === 1 ? "TOMORROW" : new Date(nextUp.date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+                return (
+                  <span className={"whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold " + (days != null && days <= 1 ? "bg-teal/15 text-teal" : "bg-surface text-foreground border border-border")}>
+                    {label}
+                  </span>
+                );
+              })()}
+            </div>
+            <div className="mt-3 grid grid-cols-1 gap-1.5 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <Calendar size={11} />
+                {new Date(nextUp.date + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
+              </span>
+              {(nextUp.start_time || nextUp.end_time) && (
+                <span className="flex items-center gap-1.5">
+                  <Clock size={11} />
+                  {[fmtTime(nextUp.start_time), fmtTime(nextUp.end_time)].filter(Boolean).join(" – ")}
+                </span>
+              )}
+              {nextUp.venue && (
+                <span className="flex items-center gap-1.5">
+                  <MapPin size={11} />
+                  {nextUp.venue}
+                </span>
+              )}
+              {nextUp.kind === "game" && (
+                <span className="flex items-center gap-1.5">
+                  <Swords size={11} />
+                  Team Game
+                </span>
+              )}
+            </div>
+          </Link>
+        </section>
+      )}
+
+      {/* Tomorrow's RSVPs — one card per child per camp day */}
+      {displayRsvps.length > 0 && (
+        <section className="mt-6">
+          <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Tomorrow's RSVP</h2>
+          <div className="mt-2 space-y-2">
+            {displayRsvps.map((r) => (
+              <div key={r.id} className="rounded-2xl border border-teal/40 bg-teal/10 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[2px] text-teal">{r.child_name}</p>
+                <p className="mt-1 text-sm font-semibold">Is {r.child_name} attending {r.camp_name} tomorrow?</p>
+                <div className="mt-3 flex gap-2">
+                  <button onClick={() => respondRsvp(r.id, "attending")} className="flex-1 rounded-full bg-teal py-2 text-xs font-bold text-background">Attending</button>
+                  <button onClick={() => respondRsvp(r.id, "not_attending")} className="flex-1 rounded-full border border-border py-2 text-xs font-bold text-foreground">Not Attending</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Dryland This Week */}
+      <section className="mt-6">
+        <Link to="/parent/train" className="block rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Dryland This Week</h2>
+            <Dumbbell size={14} className="text-teal" />
+          </div>
+          <div className="mt-3 flex items-baseline justify-between">
+            <p className="text-sm font-semibold">{dryland.done} of {dryland.goal} sessions</p>
+            <p className="text-[11px] text-muted-foreground">{Math.round((dryland.done / dryland.goal) * 100)}%</p>
+          </div>
+          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-surface">
+            <div className="h-full rounded-full bg-teal" style={{ width: `${Math.min(100, (dryland.done / dryland.goal) * 100)}%` }} />
+          </div>
+          <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
+            <Trophy size={12} className="text-volt" />
+            <span>Ranked #{dryland.rank} on {dryland.team_name}</span>
+          </div>
+        </Link>
+      </section>
+
       {/* My Teams */}
       <section className="mt-6">
         <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">My Teams</h2>
@@ -500,125 +646,43 @@ function ParentDashboard() {
         </div>
       </section>
 
-      {/* RSVP prompt */}
-      {/* Next Session */}
-      <section className="mt-6">
-        {hasActiveDryland === false && (
-          <Link
-            to="/parent/train"
-            className="mb-3 flex items-center gap-3 rounded-2xl border border-volt/40 bg-volt/10 p-3"
-          >
-            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-volt/20">
-              <Dumbbell size={18} className="text-volt" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-bold text-foreground">No training program scheduled</p>
-              <p className="text-[11px] text-muted-foreground">Browse free dryland programs to keep training between camps.</p>
-            </div>
-            <ChevronRight size={16} className="text-volt" />
-          </Link>
-        )}
-        <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Next Session</h2>
-        <div className="mt-2 space-y-2">
-          {nextSessions.map((ns) => {
-            const days = daysUntil(ns.session_date);
-            const label = days === 0 ? "TODAY" : days === 1 ? "TOMORROW" : new Date(ns.session_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-            return (
-              <Link
-                key={ns.child_name + ns.camp_id}
-                to="/parent/camp/$campId"
-                params={{ campId: ns.camp_id }}
-                className="block rounded-2xl border border-border bg-card p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-bold uppercase tracking-[2px] text-teal">{ns.child_name}</p>
-                    <p className="mt-0.5 truncate text-sm font-semibold">{ns.camp_name}</p>
-                    {ns.session_title && (
-                      <p className="mt-0.5 truncate text-xs text-muted-foreground">{ns.session_title}</p>
-                    )}
-                  </div>
-                  <span className={"whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold " + (days != null && days <= 1 ? "bg-teal/15 text-teal" : "bg-surface text-foreground border border-border")}>
-                    {label}
-                  </span>
-                </div>
-                <div className="mt-3 grid grid-cols-1 gap-1.5 text-[11px] text-muted-foreground">
-                  <span className="flex items-center gap-1.5">
-                    <Calendar size={11} />
-                    {new Date(ns.session_date + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
-                  </span>
-                  {(ns.start_time || ns.end_time) && (
-                    <span className="flex items-center gap-1.5">
-                      <Clock size={11} />
-                      {[fmtTime(ns.start_time), fmtTime(ns.end_time)].filter(Boolean).join(" – ")}
-                    </span>
-                  )}
-                  {ns.venue_name && (
-                    <span className="flex items-center gap-1.5">
-                      <MapPin size={11} />
-                      {ns.venue_name}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Tomorrow's RSVPs — one card per child per camp day */}
-      {displayRsvps.length > 0 && (
+      {/* Recent Media */}
+      {displayMedia.length > 0 && (
         <section className="mt-6">
-          <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Tomorrow's RSVP</h2>
-          <div className="mt-2 space-y-2">
-            {displayRsvps.map((r) => (
-              <div key={r.id} className="rounded-2xl border border-teal/40 bg-teal/10 p-4">
-                <p className="text-[10px] font-bold uppercase tracking-[2px] text-teal">{r.child_name}</p>
-                <p className="mt-1 text-sm font-semibold">Is {r.child_name} attending {r.camp_name} tomorrow?</p>
-                <div className="mt-3 flex gap-2">
-                  <button onClick={() => respondRsvp(r.id, "attending")} className="flex-1 rounded-full bg-teal py-2 text-xs font-bold text-background">Attending</button>
-                  <button onClick={() => respondRsvp(r.id, "not_attending")} className="flex-1 rounded-full border border-border py-2 text-xs font-bold text-foreground">Not Attending</button>
-                </div>
-              </div>
+          <div className="flex items-center justify-between">
+            <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Recent Media</h2>
+            <Link
+              to="/parent/teams/$teamId/media"
+              params={{ teamId: displayTeams[0]?.id ?? "" }}
+              className="text-[11px] font-semibold text-teal"
+            >
+              See All
+            </Link>
+          </div>
+          <div className="-mx-5 mt-2 flex gap-3 overflow-x-auto px-5 pb-1">
+            {displayMedia.map((m) => (
+              <Link
+                key={m.id}
+                to="/parent/teams/$teamId/media"
+                params={{ teamId: displayTeams[0]?.id ?? "" }}
+                className="relative block h-32 w-44 shrink-0 overflow-hidden rounded-2xl border border-border bg-surface"
+              >
+                <img src={m.thumb_url} alt="" className="h-full w-full object-cover" />
+                {m.kind === "video" && (
+                  <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-background/70 text-white">
+                    <ImageIcon size={12} />
+                  </span>
+                )}
+                {m.athlete_name && (
+                  <span className="absolute bottom-2 left-2 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-bold text-foreground">
+                    {m.athlete_name.split(/\s+/)[0]}
+                  </span>
+                )}
+              </Link>
             ))}
           </div>
         </section>
       )}
-
-      {/* Registered Camps */}
-      <section className="mt-6">
-        <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Registered Camps</h2>
-        <div className="mt-2 space-y-2">
-          {displayCamps.map((r) => {
-              const live = isLive(r.camp.start_date, r.camp.end_date);
-              const d = daysUntil(r.camp.start_date);
-              return (
-                <Link key={r.reg_id} to="/parent/camp/$campId" params={{ campId: r.camp.id }} className="block rounded-2xl border border-border bg-card p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold">{r.camp.name}</p>
-                      {r.coach_name && <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[2px] text-teal">{r.coach_name}</p>}
-                      <p className="mt-1 text-[11px] text-muted-foreground">For {r.child_name}</p>
-                    </div>
-                    {live ? (
-                      <span className="flex items-center gap-1 rounded-full bg-volt/15 px-2 py-0.5 text-[10px] font-bold text-volt">
-                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-volt" /> LIVE
-                      </span>
-                    ) : d != null && d >= 0 ? (
-                      <span className="whitespace-nowrap rounded-full bg-teal/15 px-2 py-0.5 text-[10px] font-bold text-teal">
-                        {d === 0 ? "Today" : `${d} day${d === 1 ? "" : "s"} away`}
-                      </span>
-                    ) : null}
-                  </div>
-                  <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1"><MapPin size={11} />{r.camp.venue_name ?? "Venue TBA"}</span>
-                    <span>{fmtDates(r.camp.start_date, r.camp.end_date)}</span>
-                  </div>
-                </Link>
-              );
-            })}
-        </div>
-      </section>
 
       {/* Unread Messages */}
       {displayThreads.length > 0 && (
