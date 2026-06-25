@@ -48,22 +48,27 @@ function TeamLayout() {
           </div>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <Link to="/coach/teams/$teamId/schedule" params={{ teamId }} className="flex items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 shadow-glow-teal">
-            <Calendar size={18} className="text-background" />
-            <span className="text-sm font-bold text-background">Schedule</span>
-          </Link>
-          <Link to="/coach/teams/$teamId/roster" params={{ teamId }} className="flex items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 shadow-glow-teal">
-            <Users size={18} className="text-background" />
-            <span className="text-sm font-bold text-background">Roster</span>
-          </Link>
-          <Link to="/coach/teams/$teamId/stats" params={{ teamId }} className="flex items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 shadow-glow-teal">
-            <BarChart3 size={18} className="text-background" />
-            <span className="text-sm font-bold text-background">Stats</span>
-          </Link>
-          <Link to="/coach/teams/$teamId/playbook" params={{ teamId }} className="flex items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 shadow-glow-teal">
-            <Camera size={18} className="text-background" />
-            <span className="text-sm font-bold text-background">Media</span>
-          </Link>
+          {[
+            { to: "/coach/teams/$teamId/schedule" as const, label: "Schedule", Icon: Calendar },
+            { to: "/coach/teams/$teamId/roster" as const, label: "Roster", Icon: Users },
+            { to: "/coach/teams/$teamId/stats" as const, label: "Stats", Icon: BarChart3 },
+            { to: "/coach/teams/$teamId/playbook" as const, label: "Media", Icon: Camera },
+          ].map(({ to, label, Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              params={{ teamId }}
+              onClick={() => {
+                requestAnimationFrame(() =>
+                  document.getElementById("team-tab-content")?.scrollIntoView({ behavior: "smooth", block: "start" }),
+                );
+              }}
+              className="flex items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 shadow-glow-teal active:opacity-90"
+            >
+              <Icon size={18} className="text-background" />
+              <span className="text-sm font-bold text-background">{label}</span>
+            </Link>
+          ))}
         </div>
         <div className="mt-3 grid grid-cols-6 gap-1 rounded-full border border-border bg-surface p-1">
           {tabs.map((t) => {
@@ -82,7 +87,7 @@ function TeamLayout() {
           })}
         </div>
       </div>
-      <div className="mt-3 px-5">
+      <div id="team-tab-content" className="mt-3 px-5 scroll-mt-4">
         <Outlet />
       </div>
     </div>
