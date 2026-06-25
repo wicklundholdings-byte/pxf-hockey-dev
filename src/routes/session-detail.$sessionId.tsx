@@ -536,6 +536,14 @@ function SessionDetail() {
 
       {runOpen && <RunSession session={session} onClose={() => setRunOpen(false)} onComplete={() => { setRunOpen(false); if (!session.completed) toggleComplete(); }} />}
 
+      {assignOpen && (
+        <AssignToTeamPractice
+          session={session}
+          onClose={() => setAssignOpen(false)}
+          onSaved={(label) => { setAssignOpen(false); setToast(label); }}
+        />
+      )}
+
       {toast && (
         <div className="fixed left-1/2 bottom-24 z-50 -translate-x-1/2 rounded-full bg-volt px-4 py-2 text-[12px] font-bold text-background shadow-glow-volt">
           {toast}
