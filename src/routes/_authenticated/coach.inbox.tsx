@@ -301,9 +301,9 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
 
 function NewConvoSheet({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
   const { user } = useAuth();
-  const [mode, setMode] = useState<"camp" | "dm">("camp");
-  const [camps, setCamps] = useState<Camp[]>([]);
-  const [campId, setCampId] = useState<string>("");
+  const [mode, setMode] = useState<"team" | "dm">("team");
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [teamId, setTeamId] = useState<string>("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [contacts, setContacts] = useState<MessageableContact[]>([]);
@@ -312,8 +312,8 @@ function NewConvoSheet({ onClose, onCreated }: { onClose: () => void; onCreated:
   const [contactSearch, setContactSearch] = useState("");
 
   useEffect(() => {
-    supabase.from("camps").select("id,name").order("created_at", { ascending: false }).then(({ data }) => {
-      setCamps((data ?? []) as Camp[]);
+    supabase.from("teams").select("id,name").order("created_at", { ascending: false }).then(({ data }) => {
+      setTeams((data ?? []) as Team[]);
     });
   }, []);
 
@@ -327,12 +327,12 @@ function NewConvoSheet({ onClose, onCreated }: { onClose: () => void; onCreated:
   }, [mode]);
 
   async function createGroup() {
-    if (!user || !campId) return;
+    if (!user || !teamId) return;
     setCreating(true);
     setError(null);
     const { data, error: err } = await supabase
       .from("conversations")
-      .insert({ type: "camp_group", camp_id: campId, created_by: user.id })
+      .insert({ type: "team_group", team_id: teamId, created_by: user.id })
       .select("id")
       .single();
     if (err) { setError(err.message); setCreating(false); return; }
@@ -374,36 +374,36 @@ function NewConvoSheet({ onClose, onCreated }: { onClose: () => void; onCreated:
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <button onClick={() => setMode("camp")} className={"flex items-center justify-center gap-1.5 rounded-xl border py-2 text-xs font-bold " + (mode === "camp" ? "border-teal bg-teal/10 text-teal" : "border-border bg-surface text-muted-foreground")}>
-            <Users size={12} /> Camp group
+          <button onClick={() => setMode("team")} className={"flex items-center justify-center gap-1.5 rounded-xl border py-2 text-xs font-bold " + (mode === "team" ? "border-teal bg-teal/10 text-teal" : "border-border bg-surface text-muted-foreground")}>
+            <Users size={12} /> Team
           </button>
           <button onClick={() => setMode("dm")} className={"flex items-center justify-center gap-1.5 rounded-xl border py-2 text-xs font-bold " + (mode === "dm" ? "border-teal bg-teal/10 text-teal" : "border-border bg-surface text-muted-foreground")}>
             <User size={12} /> Direct message
           </button>
         </div>
 
-        {mode === "camp" ? (
+        {mode === "team" ? (
           <>
-            <p className="mt-3 text-[11px] text-muted-foreground">Start a group chat tied to one of your camps.</p>
-            <label className="mt-4 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Camp</label>
+            <p className="mt-3 text-[11px] text-muted-foreground">Start a group chat tied to one of your teams.</p>
+            <label className="mt-4 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Team</label>
             <select
-              value={campId}
-              onChange={(e) => setCampId(e.target.value)}
+              value={teamId}
+              onChange={(e) => setTeamId(e.target.value)}
               className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-foreground"
             >
-              <option value="">Select a camp…</option>
-              {camps.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              <option value="">Select a team…</option>
+              {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
             {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
             <button
-              disabled={!campId || creating}
+              disabled={!teamId || creating}
               onClick={createGroup}
               className="mt-5 w-full rounded-full bg-gradient-brand py-3 text-sm font-bold text-primary-foreground disabled:opacity-40"
             >
               {creating ? "Creating…" : "Create group"}
             </button>
             <p className="mt-3 text-center text-[10px] text-muted-foreground">
-              Invite parents from the camp roster once they have an account.
+              Invite parents from the team roster once they have an account.
             </p>
           </>
         ) : (
