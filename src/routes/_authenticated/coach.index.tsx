@@ -38,6 +38,15 @@ type KidLite = { id: string; full_name: string; birthday: string | null; positio
 type TeamLite = { id: string; name: string; season: string | null; logo_url: string | null; primary_color: string | null; role: "coach" | "parent" };
 type LeaderLite = { athlete_id: string; name: string; team_name: string; count: number };
 type MediaLite = { id: string; thumb_url: string; athlete_name: string | null; team_id: string };
+type PrivateLite = {
+  id: string;
+  athlete_name: string;
+  session_date: string;
+  start_time: string | null;
+  duration_minutes: number | null;
+  location: string | null;
+  fee_cents: number | null;
+};
 
 function ageOf(b: string | null) {
   if (!b) return null;
@@ -74,12 +83,29 @@ function EliteCoachDashboard() {
   const [events, setEvents] = useState<EventLite[]>([]);
   const [leaders, setLeaders] = useState<LeaderLite[]>([]);
   const [media, setMedia] = useState<MediaLite[]>([]);
+  const [privates, setPrivates] = useState<PrivateLite[]>([]);
+  const [showBookPrivate, setShowBookPrivate] = useState(false);
+
+  async function reloadPrivates(uid: string) {
+    const today = new Date().toISOString().slice(0, 10);
+    const { data } = await (supabase as any)
+      .from("private_sessions")
+      .select("id,athlete_name,session_date,start_time,duration_minutes,location,fee_cents")
+      .eq("owner_id", uid)
+      .gte("session_date", today)
+      .order("session_date", { ascending: true })
+      .order("start_time", { ascending: true })
+      .limit(8);
+    setPrivates(((data ?? []) as PrivateLite[]));
+  }
 
   useEffect(() => {
     if (!user?.id) return;
     (async () => {
       const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
       setCoachName(prof?.full_name ?? user.email?.split("@")[0] ?? "Coach");
+
+      reloadPrivates(user.id);
 
       const [c, r, st] = await Promise.all([
         supabase.from("camps").select("id,name,slug,capacity,status,start_date,end_date,price_cents").order("start_date", { ascending: true }),
