@@ -753,6 +753,134 @@ function AddDrillModal({ onClose, onPick }: { onClose: () => void; onPick: (d: D
     const t = q.trim().toLowerCase();
     return DRILLS.filter((d) => !t || d.name.toLowerCase().includes(t) || d.category.toLowerCase().includes(t));
   }, [q]);
+}
+
+/* ========================= Assign to Team Practice ========================= */
+
+type TeamRow = { id: string; name: string };
+type EventRow = { id: string; title: string | null; event_date: string; start_time: string | null; venue: string | null };
+
+function AssignToTeamPractice({ session, onClose, onSaved }: { session: Session; onClose: () => void; onSaved: (label: string) => void }) {
+  const save = useServerFn(savePracticePlan);
+  const [teams, setTeams] = useState<TeamRow[] | null>(null);
+  const [teamId, setTeamId] = useState<string | null>(null);
+  const [events, setEvents] = useState<EventRow[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("teams").select("id,name").order("created_at", { ascending: false });
+      setTeams((data ?? []) as TeamRow[]);
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!teamId) { setEvents(null); return; }
+    (async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data } = await supabase
+        .from("team_events")
+        .select("id,title,event_date,start_time,venue,event_type")
+        .eq("team_id", teamId)
+        .eq("event_type", "practice")
+        .gte("event_date", today)
+        .order("event_date", { ascending: true })
+        .limit(25);
+      setEvents((data ?? []) as EventRow[]);
+    })();
+  }, [teamId]);
+
+  async function assignToEvent(eventId: string, label: string) {
+    if (!teamId) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const items: Array<{ itemType: "note"; noteText: string; durationMinutes?: number }> = [
+        { itemType: "note", noteText: `Session: ${session.name}`, durationMinutes: session.totalMins || undefined },
+        ...session.blocks.map((b) => {
+          const d = findDrill(b.drillId);
+          return { itemType: "note" as const, noteText: d?.name ?? "Drill", durationMinutes: b.mins };
+        }),
+      ];
+      if (session.notes) items.push({ itemType: "note", noteText: `Notes: ${session.notes}` });
+      await save({ data: { teamId, eventId, templateName: session.name, items } });
+      onSaved(`Added to ${label}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur" onClick={onClose}>
+      <div className="max-h-[80vh] w-full max-w-screen-sm overflow-y-auto rounded-t-3xl border-t border-border/60 bg-surface" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface px-4 py-3">
+          <div>
+            <p className="text-[10px] font-bold tracking-[0.3em] text-volt">ASSIGN</p>
+            <h2 className="mt-0.5 text-lg font-bold text-foreground">Add to Team Practice</h2>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="grid h-9 w-9 place-items-center rounded-full bg-surface-2 text-foreground"><X size={16} /></button>
+        </div>
+
+        <div className="p-4 space-y-4">
+          <div>
+            <p className="mb-1.5 text-[10px] font-bold tracking-[0.2em] text-muted-foreground">TEAM</p>
+            {teams === null ? (
+              <p className="text-xs text-muted-foreground">Loading teams…</p>
+            ) : teams.length === 0 ? (
+              <p className="text-xs text-muted-foreground">You don't have any teams yet.</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {teams.map((t) => (
+                  <button key={t.id} onClick={() => setTeamId(t.id)} className={"rounded-full border px-3 py-1.5 text-[11px] font-semibold " + (teamId === t.id ? "border-teal bg-teal text-background" : "border-border bg-surface text-muted-foreground")}>{t.name}</button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {teamId && (
+            <div>
+              <p className="mb-1.5 text-[10px] font-bold tracking-[0.2em] text-muted-foreground">UPCOMING PRACTICES</p>
+              {events === null ? (
+                <p className="text-xs text-muted-foreground">Loading…</p>
+              ) : events.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No upcoming practices scheduled.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {events.map((ev) => {
+                    const label = `${ev.title ?? "Practice"} · ${formatDate(ev.event_date)}${ev.start_time ? " · " + ev.start_time.slice(0, 5) : ""}`;
+                    return (
+                      <li key={ev.id}>
+                        <button disabled={busy} onClick={() => assignToEvent(ev.id, ev.title ?? "Practice")} className="flex w-full items-center justify-between gap-2 rounded-2xl border border-border bg-card p-3 text-left disabled:opacity-50">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-bold text-foreground">{ev.title ?? "Practice"}</p>
+                            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{formatDate(ev.event_date)}{ev.start_time ? " · " + ev.start_time.slice(0, 5) : ""}{ev.venue ? " · " + ev.venue : ""}</p>
+                          </div>
+                          <ChevronRight size={14} className="text-teal" />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {error && <p className="text-xs text-destructive">{error}</p>}
+          <p className="text-[10px] text-muted-foreground">Replaces any existing practice plan on the selected event.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function _AddDrillModalImpl({ onClose, onPick }: { onClose: () => void; onPick: (d: Drill) => void }) {
+  const [q, setQ] = useState("");
+  const list = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    return DRILLS.filter((d) => !t || d.name.toLowerCase().includes(t) || d.category.toLowerCase().includes(t));
+  }, [q]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur" onClick={onClose}>
