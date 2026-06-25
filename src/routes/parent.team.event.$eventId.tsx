@@ -6,6 +6,7 @@ import { submitRsvp } from "@/lib/teams.functions";
 import { ArrowLeft, Check, X, HelpCircle } from "lucide-react";
 import { GameMediaTab } from "@/components/teams/game-media-tab";
 import { useAuth } from "@/hooks/use-auth";
+import { ParentPracticePlan } from "@/components/teams/parent-practice-plan";
 
 export const Route = createFileRoute("/parent/team/event/$eventId")({
   component: ParentEvent,
@@ -78,6 +79,14 @@ function ParentEvent() {
 
       {(event.event_type === "game" || event.event_type === "practice") && (
         <>
+          {event.event_type === "practice" && (
+            <>
+              <h3 className="mt-5 text-xs font-bold">Practice Plan</h3>
+              <div className="mt-2">
+                <ParentPracticePlan eventId={eventId} />
+              </div>
+            </>
+          )}
           <h3 className="mt-5 text-xs font-bold">Media</h3>
           <div className="mt-2">
             <GameMediaTab
