@@ -63,7 +63,7 @@ function ParentLayout() {
       <BottomNav
         items={[
           { to: "/parent", label: "Home", icon: Home, exact: true },
-          { to: "/parent/camps", label: "Camps", icon: Flag },
+          { to: "/parent/camps", label: "Events", icon: CalendarDays },
           { to: "/parent/teams", label: "Teams", icon: Users },
           { to: "/parent/train", label: "Train", icon: Dumbbell },
           { to: "/parent/inbox", label: "Inbox", icon: MessageCircle },
