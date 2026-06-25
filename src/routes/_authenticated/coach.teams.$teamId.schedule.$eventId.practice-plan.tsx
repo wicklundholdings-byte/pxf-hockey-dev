@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +27,7 @@ function itemDuration(it: Item): number {
 
 function PracticePlan() {
   const { teamId, eventId } = Route.useParams();
+  const navigate = useNavigate();
   const save = useServerFn(savePracticePlan);
   const [items, setItems] = useState<Item[]>([]);
   const [browsing, setBrowsing] = useState(false);
@@ -40,6 +41,15 @@ function PracticePlan() {
   const [dbCategories, setDbCategories] = useState<string[]>([]);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const sid = window.localStorage.getItem(`pxf:event-session:${eventId}`);
+        if (sid) {
+          navigate({ to: "/session-detail/$sessionId", params: { sessionId: sid }, replace: true });
+          return;
+        }
+      } catch { /* ignore */ }
+    }
     (async () => {
       const { data: cats } = await supabase.from("drill_categories").select("id,title").order("sort_order");
       const catRows = (cats ?? []) as Array<{ id: string; title: string }>;
