@@ -176,17 +176,10 @@ function TeamDashboard() {
     return null;
   }, [upcoming]);
 
-  // Stats snapshot
-  const totals = useMemo(() => {
-    return skaters.reduce(
-      (acc, s) => ({ g: acc.g + s.g, a: acc.a + s.a, pts: acc.pts + s.pts, pim: acc.pim + s.pim }),
-      { g: 0, a: 0, pts: 0, pim: 0 },
-    );
-  }, [skaters]);
-  const scoringLeader = skaters[0] ?? null;
-  const topGoalie = useMemo(() => {
-    return [...goalies].sort((a, b) => (b.saves / Math.max(1, b.shots)) - (a.saves / Math.max(1, a.shots)))[0] ?? null;
-  }, [goalies]);
+  // Leaderboards: top 3 by goals, assists, points
+  const goalsTop3 = useMemo(() => [...skaters].sort((a, b) => b.g - a.g || b.pts - a.pts).slice(0, 3), [skaters]);
+  const assistsTop3 = useMemo(() => [...skaters].sort((a, b) => b.a - a.a || b.pts - a.pts).slice(0, 3), [skaters]);
+  const pointsTop3 = useMemo(() => [...skaters].sort((a, b) => b.pts - a.pts || b.g - a.g).slice(0, 3), [skaters]);
 
   const dropPct = attendance.avg != null && attendance.prev != null ? attendance.prev - attendance.avg : 0;
   const showAttendanceWarning = dropPct > 15;
