@@ -440,6 +440,9 @@ function TeamCoachDashboard() {
       const teamNameById = new Map(allTeams.map((t) => [t.id, t.name]));
       if (athleteIds.length) {
         const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+        const { data: an } = await supabase.from("attendees").select("id, full_name").in("id", athleteIds);
+        const nameMap = new Map(((an ?? []) as any[]).map((a) => [a.id, a.full_name as string]));
+
         const { data: prog } = await supabase
           .from("dryland_watch_progress")
           .select("athlete_id, completed, last_watched_at")
@@ -449,17 +452,12 @@ function TeamCoachDashboard() {
         const counts = new Map<string, number>();
         ((prog ?? []) as any[]).forEach((r) => counts.set(r.athlete_id, (counts.get(r.athlete_id) ?? 0) + 1));
         const top = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3);
-        if (top.length) {
-          const topIds = top.map(([id]) => id);
-          const { data: names } = await supabase.from("attendees").select("id, full_name").in("id", topIds);
-          const nameMap = new Map(((names ?? []) as any[]).map((a) => [a.id, a.full_name]));
-          setLeaders(top.map(([id, count]) => ({
-            athlete_id: id,
-            name: nameMap.get(id) ?? "Athlete",
-            team_name: teamNameById.get(teamByAthlete.get(id) ?? "") ?? "",
-            count,
-          })));
-        }
+        setLeaders(top.map(([id, count]) => ({
+          athlete_id: id,
+          name: nameMap.get(id) ?? "Athlete",
+          team_name: teamNameById.get(teamByAthlete.get(id) ?? "") ?? "",
+          count,
+        })));
 
         // Recent media for athletes in their teams
         const { data: med } = await supabase
@@ -468,15 +466,10 @@ function TeamCoachDashboard() {
           .in("athlete_id", athleteIds)
           .order("recorded_at", { ascending: false })
           .limit(8);
-        const nm = nameMap;
-        if (!nm.size) {
-          const { data: an } = await supabase.from("attendees").select("id, full_name").in("id", athleteIds);
-          ((an ?? []) as any[]).forEach((a) => nm.set(a.id, a.full_name));
-        }
         setMedia(((med ?? []) as any[]).map((m) => ({
           id: m.id,
           thumb_url: m.thumbnail_url ?? m.video_url,
-          athlete_name: nm.get(m.athlete_id) ?? null,
+          athlete_name: nameMap.get(m.athlete_id) ?? null,
           team_id: teamByAthlete.get(m.athlete_id) ?? "",
         })));
       }
