@@ -11,11 +11,13 @@ export const Route = createFileRoute("/_authenticated/coach/inbox")({
 
 type Convo = {
   id: string;
-  type: "dm" | "camp_group";
+  type: "dm" | "camp_group" | "team_group";
   camp_id: string | null;
+  team_id: string | null;
   created_by: string;
   created_at: string;
   camps?: { name: string | null } | null;
+  teams?: { name: string | null } | null;
   last?: { body: string | null; created_at: string } | null;
 };
 type Msg = {
@@ -27,6 +29,7 @@ type Msg = {
   created_at: string;
 };
 type Camp = { id: string; name: string };
+type Team = { id: string; name: string };
 
 function InboxPage() {
   const { user } = useAuth();
@@ -41,7 +44,7 @@ function InboxPage() {
     setLoading(true);
     const { data } = await supabase
       .from("conversations")
-      .select("id,type,camp_id,created_by,created_at, camps(name)")
+      .select("id,type,camp_id,team_id,created_by,created_at, camps(name), teams(name)")
       .order("created_at", { ascending: false });
     const list = (data ?? []) as unknown as Convo[];
     // fetch last message for each (one query)
@@ -113,7 +116,12 @@ function InboxPage() {
       ) : (
         <ul className="space-y-2">
           {convos.map((c) => {
-            const title = c.type === "camp_group" ? (c.camps?.name ?? "Camp group") : "Direct message";
+            const title =
+              c.type === "team_group"
+                ? (c.teams?.name ?? "Team")
+                : c.type === "camp_group"
+                  ? (c.camps?.name ?? "Camp group")
+                  : "Direct message";
             const initials = (title).split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
             return (
               <li key={c.id}>
@@ -123,9 +131,13 @@ function InboxPage() {
                 >
                   <div className={
                     "grid h-10 w-10 shrink-0 place-items-center rounded-full text-[11px] font-bold " +
-                    (c.type === "camp_group" ? "bg-amber-400/15 text-amber-400" : "bg-teal/15 text-teal")
+                    (c.type === "camp_group"
+                      ? "bg-amber-400/15 text-amber-400"
+                      : c.type === "team_group"
+                        ? "bg-teal/15 text-teal"
+                        : "bg-teal/15 text-teal")
                   }>
-                    {c.type === "camp_group" ? <Users size={16} /> : initials}
+                    {c.type === "camp_group" || c.type === "team_group" ? <Users size={16} /> : initials}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
@@ -207,7 +219,12 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
     setMessages((prev) => prev.map((x) => (x.id === m.id ? { ...x, pinned: !x.pinned } : x)));
   }
 
-  const title = convo.type === "camp_group" ? (convo.camps?.name ?? "Camp group") : "Direct message";
+  const title =
+    convo.type === "team_group"
+      ? (convo.teams?.name ?? "Team")
+      : convo.type === "camp_group"
+        ? (convo.camps?.name ?? "Camp group")
+        : "Direct message";
   const pinned = messages.filter((m) => m.pinned);
 
   return (
