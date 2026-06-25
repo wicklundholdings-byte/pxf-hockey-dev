@@ -3,17 +3,34 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { createEvent } from "@/lib/teams.functions";
-import { Plus, X } from "lucide-react";
-import { TeamEventRow } from "@/components/teams/team-event-row";
+import { Plus, X, Swords, Dumbbell, Star } from "lucide-react";
 import { maskName } from "@/lib/team-stats";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedule/")({
   component: Schedule,
 });
 
-type EventRow = { id: string; event_type: "game" | "practice" | "team_event"; title: string | null; opponent_name: string | null; venue: string | null; event_date: string; start_time: string | null };
+type EventRow = { id: string; event_type: "game" | "practice" | "team_event"; title: string | null; opponent_name: string | null; home_away: string | null; venue: string | null; event_date: string; start_time: string | null };
 type RsvpCounts = { yes: number; no: number; maybe: number; none: number };
 type ResultRow = { team_score: number; opponent_score: number; result: string | null; leader: { name: string; g: number; a: number; pts: number } | null; shutout: { name: string; svpct: string } | null };
+
+const TYPE_META: Record<string, { label: string; icon: typeof Swords; bg: string; color: string }> = {
+  game: { label: "GAME", icon: Swords, bg: "bg-red-500/15", color: "text-red-400" },
+  practice: { label: "PRACTICE", icon: Dumbbell, bg: "bg-emerald-500/15", color: "text-emerald-400" },
+  team_event: { label: "EVENT", icon: Star, bg: "bg-surface-2", color: "text-muted-foreground" },
+};
+
+function fmtDate(d: string) {
+  try { return new Date(d + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }); } catch { return d; }
+}
+function fmtTime(t: string) {
+  const [h, m] = t.split(":");
+  const hr = parseInt(h, 10); const ap = hr >= 12 ? "PM" : "AM"; const h12 = ((hr + 11) % 12) + 1;
+  return `${h12}:${m} ${ap}`;
+}
+function mapsUrl(venue: string) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue)}`;
+}
 
 function Schedule() {
   const { teamId } = Route.useParams();
@@ -25,7 +42,7 @@ function Schedule() {
   async function refresh() {
     const { data } = await supabase
       .from("team_events")
-      .select("id,event_type,title,opponent_name,venue,event_date,start_time")
+      .select("id,event_type,title,opponent_name,home_away,venue,event_date,start_time")
       .eq("team_id", teamId)
       .order("event_date", { ascending: true });
     const evs = (data ?? []) as EventRow[];
@@ -91,20 +108,82 @@ function Schedule() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold">Schedule</h3>
+        <h3 className="text-sm font-bold">Upcoming</h3>
         <button onClick={() => setAdding(true)} className="inline-flex items-center gap-1 rounded-full bg-teal px-3 py-1 text-[11px] font-bold text-background">
           <Plus size={12} /> Add event
         </button>
       </div>
-      <div className="mt-3 space-y-2">
+      <div className="mt-3 space-y-3">
         {events.length === 0 && (
-          <p className="rounded-xl border border-dashed border-border bg-surface p-4 text-center text-xs text-muted-foreground">No events scheduled yet.</p>
+          <p className="rounded-xl border border-dashed border-border bg-surface p-4 text-center text-xs text-muted-foreground">No upcoming events.</p>
         )}
-        {events.map((e) => (
-          <Link key={e.id} to="/coach/teams/$teamId/schedule/$eventId" params={{ teamId, eventId: e.id }}>
-            <TeamEventRow event={e} counts={counts[e.id]} result={results[e.id] ?? null} />
-          </Link>
-        ))}
+        {events.map((e) => {
+          const meta = TYPE_META[e.event_type] ?? TYPE_META.team_event;
+          const Icon = meta.icon;
+          const res = results[e.id];
+          const label = e.event_type === "game"
+            ? `${e.home_away === "away" ? "@" : "vs"} ${e.opponent_name || "TBD"}`
+            : e.title || meta.label;
+          const c = counts[e.id];
+          return (
+            <div key={e.id}>
+              <Link
+                to="/coach/teams/$teamId/schedule/$eventId"
+                params={{ teamId, eventId: e.id }}
+                className="block rounded-2xl border border-border bg-surface p-3"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={"grid h-10 w-10 place-items-center rounded-xl " + meta.bg}>
+                    <Icon size={16} className={meta.color} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className={"rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider " + meta.bg + " " + meta.color}>{meta.label}</span>
+                      {res?.result && (
+                        <span className={"rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider " +
+                          (res.result === "win" ? "bg-emerald-500/15 text-emerald-400"
+                            : res.result === "loss" ? "bg-red-500/15 text-red-400"
+                            : res.result.startsWith("ot") ? "bg-teal/15 text-teal"
+                            : "bg-surface-2 text-muted-foreground")}>
+                          {res.result.toUpperCase().replace("_", " ")}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 truncate text-sm font-semibold">{label}</p>
+                    {res && (
+                      <p className="text-[11px] font-bold">Final: {res.team_score} — {res.opponent_score}</p>
+                    )}
+                    {res?.leader && (
+                      <p className="truncate text-[10px] text-amber-400">⭐ {res.leader.name} — {res.leader.g}G {res.leader.a}A {res.leader.pts}PTS</p>
+                    )}
+                    {res?.shutout && (
+                      <p className="truncate text-[10px] text-teal">🥅 Shutout — {res.shutout.name} {res.shutout.svpct}</p>
+                    )}
+                    <p className="text-[11px] text-muted-foreground">
+                      {fmtDate(e.event_date)}{e.start_time ? " · " + fmtTime(e.start_time) : ""}{e.venue ? " · " + e.venue : ""}
+                    </p>
+                    {c && (
+                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px] font-bold">
+                        <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-emerald-400">{c.yes} IN</span>
+                        <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-amber-400">{c.maybe} MAYBE</span>
+                        <span className="rounded-full bg-red-500/15 px-1.5 py-0.5 text-red-400">{c.no} OUT</span>
+                        <span className="rounded-full bg-surface-2 px-1.5 py-0.5 text-muted-foreground">{c.none} NO REPLY</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {e.venue && (
+                  <button
+                    onClick={(ev) => { ev.preventDefault(); ev.stopPropagation(); window.open(mapsUrl(e.venue!), "_blank"); }}
+                    className="mt-2 inline-flex w-full items-center justify-center rounded-lg border border-border bg-background py-1.5 text-[11px] font-semibold text-muted-foreground"
+                  >
+                    Open in Google Maps
+                  </button>
+                )}
+              </Link>
+            </div>
+          );
+        })}
       </div>
       {adding && <AddEventSheet teamId={teamId} onClose={() => setAdding(false)} onSaved={() => { setAdding(false); refresh(); }} />}
     </div>
