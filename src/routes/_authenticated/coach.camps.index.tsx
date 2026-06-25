@@ -3,10 +3,19 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Search, List, Calendar as CalendarIcon, MapPin, AlertTriangle, Snowflake } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
+import { TierGate } from "@/components/tier-gate";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/")({
-  component: CampsPage,
+  component: GatedCampsPage,
 });
+
+function GatedCampsPage() {
+  return (
+    <TierGate feature="campManagement">
+      <CampsPage />
+    </TierGate>
+  );
+}
 
 type Camp = {
   id: string;
