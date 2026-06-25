@@ -28,6 +28,7 @@ export function setMockTier(tier: TierId | "auto") {
 
 export function useCurrentTier(): {
   tier: TierId | null;
+  dbTier: TierId | null;
   tierMeta: Tier | null;
   loading: boolean;
   isMocked: boolean;
@@ -53,10 +54,6 @@ export function useCurrentTier(): {
 
   useEffect(() => {
     let cancelled = false;
-    if (mock) {
-      setLoading(false);
-      return;
-    }
     if (authLoading) return;
     if (!user) {
       setDbTier(null);
@@ -82,9 +79,13 @@ export function useCurrentTier(): {
     };
   }, [user, authLoading, mock]);
 
-  const effective = mock ?? dbTier;
+  // A stale dev mock of "parent" can leak into coach previews via localStorage.
+  // Parent is not a coach subscription tier, so keep paid coach accounts on their
+  // real DB tier instead of dropping coach dashboards/features to parent mode.
+  const effective = mock === "parent" && dbTier && dbTier !== "parent" ? dbTier : (mock ?? dbTier);
   return {
     tier: effective,
+    dbTier,
     tierMeta: effective ? getTier(effective) : null,
     loading: authLoading || loading,
     isMocked: !!mock,
