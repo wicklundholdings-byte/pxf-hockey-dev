@@ -749,6 +749,7 @@ function formatDate(iso: string) {
 
 function AddDrillModal({ onClose, onPick }: { onClose: () => void; onPick: (d: Drill) => void }) {
   const [q, setQ] = useState("");
+  // (no-op: anchor for AssignToTeamPractice insertion above)
   const list = useMemo(() => {
     const t = q.trim().toLowerCase();
     return DRILLS.filter((d) => !t || d.name.toLowerCase().includes(t) || d.category.toLowerCase().includes(t));
