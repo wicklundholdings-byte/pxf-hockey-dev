@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { createEvent } from "@/lib/teams.functions";
-import { loadTeamSeasonStats, gaa, svpct, type TeamRecord, type SkaterAgg, type GoalieAgg } from "@/lib/team-stats";
+import { loadTeamSeasonStats, type TeamRecord, type SkaterAgg } from "@/lib/team-stats";
 import { Swords, Dumbbell, MapPin, Users, Plus, Flame, Medal, ChevronRight, AlertTriangle, X, Film } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/")({
