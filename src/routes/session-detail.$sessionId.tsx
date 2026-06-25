@@ -266,6 +266,12 @@ function SessionDetail() {
         >
           <Printer size={12} /> Export PDF
         </button>
+        <button
+          onClick={() => setAssignOpen(true)}
+          className="mt-3 ml-2 inline-flex items-center gap-1.5 rounded-full bg-teal px-3 py-1.5 text-[11px] font-bold text-background"
+        >
+          <ClipboardList size={12} /> Add to Team Practice
+        </button>
 
         {editingName ? (
           <input
