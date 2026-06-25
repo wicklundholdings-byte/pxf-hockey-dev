@@ -424,6 +424,39 @@ function EliteCoachDashboard() {
         </Link>
       </section>
 
+      {/* Upcoming Privates */}
+      <section>
+        <div className="flex items-center justify-between">
+          <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Upcoming Privates</h2>
+          <Link to="/coach/bookings" className="text-[11px] font-semibold text-teal">View all ›</Link>
+        </div>
+        <div className="-mx-5 mt-2 flex gap-3 overflow-x-auto px-5 pb-1">
+          {privates.slice(0, 5).map((p) => (
+            <div key={p.id} className="w-60 shrink-0 rounded-2xl border border-border bg-card p-3">
+              <p className="truncate text-sm font-semibold">{p.athlete_name}</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
+                {fmtEventDate(p.session_date)}{p.start_time ? ` · ${fmtTime(p.start_time)}` : ""}
+              </p>
+              {p.location && <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{p.location}</p>}
+              <div className="mt-2 flex items-center justify-between text-[11px]">
+                <span className="text-muted-foreground">{p.duration_minutes ? `${p.duration_minutes} min` : "—"}</span>
+                {p.fee_cents != null && <span className="font-bold text-teal">{fmtMoney(p.fee_cents)}</span>}
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setShowBookPrivate(true)}
+            className="grid w-44 shrink-0 place-items-center rounded-2xl border border-dashed border-teal/40 bg-transparent p-3 text-center"
+          >
+            <div>
+              <Plus size={20} className="mx-auto text-teal" />
+              <p className="mt-1 text-[11px] font-semibold text-teal">Schedule a Private</p>
+            </div>
+          </button>
+        </div>
+      </section>
+
       {/* My Athletes */}
       {kids.length > 0 && (
         <section>
