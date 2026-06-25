@@ -1486,6 +1486,7 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          team_id: string | null
           type: Database["public"]["Enums"]["conversation_type"]
         }
         Insert: {
@@ -1493,6 +1494,7 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          team_id?: string | null
           type: Database["public"]["Enums"]["conversation_type"]
         }
         Update: {
@@ -1500,6 +1502,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          team_id?: string | null
           type?: Database["public"]["Enums"]["conversation_type"]
         }
         Relationships: [
@@ -1508,6 +1511,13 @@ export type Database = {
             columns: ["camp_id"]
             isOneToOne: false
             referencedRelation: "camps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -4731,7 +4741,7 @@ export type Database = {
         | "shot_speed"
         | "agility_circuits"
         | "recovery_wellness"
-      conversation_type: "camp_group" | "dm"
+      conversation_type: "camp_group" | "dm" | "team_group"
       device_provider: "apple_health" | "whoop" | "garmin"
       difficulty_level: "beginner" | "intermediate" | "advanced" | "elite"
       dryland_category: "stick_skills" | "shooting" | "strength_explosiveness"
@@ -4942,7 +4952,7 @@ export const Constants = {
         "agility_circuits",
         "recovery_wellness",
       ],
-      conversation_type: ["camp_group", "dm"],
+      conversation_type: ["camp_group", "dm", "team_group"],
       device_provider: ["apple_health", "whoop", "garmin"],
       difficulty_level: ["beginner", "intermediate", "advanced", "elite"],
       dryland_category: ["stick_skills", "shooting", "strength_explosiveness"],
