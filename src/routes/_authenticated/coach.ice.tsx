@@ -265,6 +265,7 @@ function SingleSlotSheet({ rinks, onClose, onSaved }: { rinks: Rink[]; onClose: 
   const [end, setEnd] = useState("10:30");
   const [surface, setSurface] = useState("full_ice");
   const [notes, setNotes] = useState("");
+  const [costPerHour, setCostPerHour] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function save() {
@@ -281,6 +282,7 @@ function SingleSlotSheet({ rinks, onClose, onSaved }: { rinks: Rink[]; onClose: 
         surface_type: surface,
         notes: notes || null,
         booked_by_coach_id: u.user.id,
+        cost_per_hour_cents: costPerHour ? Math.round(parseFloat(costPerHour) * 100) : null,
       });
       if (error) throw error;
       onSaved();
@@ -313,6 +315,9 @@ function SingleSlotSheet({ rinks, onClose, onSaved }: { rinks: Rink[]; onClose: 
           <select value={surface} onChange={(e) => setSurface(e.target.value)} className="input">
             {Object.entries(SURFACE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
+        </Field>
+        <Field label="Cost / hour (USD)">
+          <input type="number" min="0" step="1" placeholder="optional" value={costPerHour} onChange={(e) => setCostPerHour(e.target.value)} className="input" />
         </Field>
         <Field label="Notes"><input value={notes} onChange={(e) => setNotes(e.target.value)} className="input" /></Field>
         <button disabled={busy} onClick={save} className="w-full rounded-full bg-gradient-brand py-2 text-xs font-bold text-primary-foreground disabled:opacity-50">
