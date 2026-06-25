@@ -356,11 +356,30 @@ function RecordStat({ label, value, accent }: { label: string; value: number; ac
   );
 }
 
-function StatChip({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
+function LeaderboardColumn({ title, rows, statKey }: { title: string; rows: SkaterAgg[]; statKey: "g" | "a" | "pts" }) {
   return (
-    <div className={"rounded-xl border border-border bg-surface px-2 py-2 text-center"}>
-      <p className={"font-display text-lg font-bold " + (highlight ? "text-teal" : "")}>{value}</p>
-      <p className="text-[9px] font-bold tracking-wider text-muted-foreground">{label}</p>
+    <div className="rounded-2xl border border-border bg-surface p-2">
+      <p className="mb-1.5 text-center text-[9px] font-bold tracking-wider text-muted-foreground">{title}</p>
+      <div className="space-y-1">
+        {rows.map((r, i) => {
+          const isFirst = i === 0;
+          const rank = i + 1;
+          const lastName = r.display_name.trim().split(/\s+/).pop() ?? r.display_name;
+          return (
+            <div
+              key={r.team_player_id}
+              className={`flex items-center gap-2 rounded-xl px-2 py-1.5 text-[11px] ${isFirst ? "bg-teal/10" : ""}`}
+            >
+              <span className={`w-4 text-center font-bold ${isFirst ? "text-teal" : "text-muted-foreground"}`}>#{rank}</span>
+              <span className="min-w-0 flex-1 truncate font-bold">{lastName}</span>
+              <span className="shrink-0 font-bold tabular-nums">{r[statKey]}</span>
+            </div>
+          );
+        })}
+        {rows.length === 0 && (
+          <p className="py-2 text-center text-[10px] text-muted-foreground">No data</p>
+        )}
+      </div>
     </div>
   );
 }
