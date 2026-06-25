@@ -15,6 +15,20 @@ type Event = { id: string; event_type: string; title: string | null; opponent_na
 type Player = { id: string; display_name: string; jersey_number: string | null };
 type Rsvp = { team_player_id: string; response: string };
 type Att = { team_player_id: string; status: string };
+type SavedSession = { id: string; name: string };
+
+const SESSIONS_KEY = "pxf:sessions:v2";
+
+function readSavedSessions(): SavedSession[] {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(window.localStorage.getItem(SESSIONS_KEY) ?? "[]"); } catch { return []; }
+}
+
+function sessionNameFromNote(note?: string | null) {
+  const text = (note ?? "").trim();
+  const match = /^(?:▼\s*)?Session:\s*(.+)$/i.exec(text);
+  return match?.[1]?.trim() ?? null;
+}
 
 function EventDetail() {
   const { teamId, eventId } = Route.useParams();
@@ -24,6 +38,7 @@ function EventDetail() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [rsvps, setRsvps] = useState<Record<string, string>>({});
   const [attendance, setAttendance] = useState<Record<string, string>>({});
+  const [practiceSessionId, setPracticeSessionId] = useState<string | null>(null);
 
   async function load() {
     const [e, p, r, a] = await Promise.all([
@@ -38,6 +53,43 @@ function EventDetail() {
     setRsvps(rmap);
     const amap: Record<string, string> = {}; (a.data ?? []).forEach((x: Att) => { amap[x.team_player_id] = x.status; });
     setAttendance(amap);
+    setPracticeSessionId(null);
+    if ((e.data as Event | null)?.event_type === "practice") {
+      const savedSessions = readSavedSessions();
+      const storedSessionId = typeof window !== "undefined" ? window.localStorage.getItem(`pxf:event-session:${eventId}`) : null;
+      if (storedSessionId && savedSessions.some((s) => s.id === storedSessionId)) {
+        setPracticeSessionId(storedSessionId);
+        return;
+      }
+      const { data: plans } = await supabase
+        .from("practice_plans")
+        .select("id,template_name")
+        .eq("event_id", eventId)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      const plan = plans?.[0] as { id: string; template_name: string | null } | undefined;
+      const directSessionId = /^__sid:([^|]+)/.exec(plan?.template_name ?? "")?.[1] ?? null;
+      if (directSessionId) {
+        setPracticeSessionId(directSessionId);
+        if (typeof window !== "undefined") window.localStorage.setItem(`pxf:event-session:${eventId}`, directSessionId);
+        return;
+      }
+      if (plan?.id) {
+        const { data: items } = await supabase
+          .from("practice_plan_items")
+          .select("note_text")
+          .eq("plan_id", plan.id)
+          .order("display_order");
+        const sessionName = ((items ?? []) as Array<{ note_text: string | null }>)
+          .map((item) => sessionNameFromNote(item.note_text))
+          .find((name): name is string => !!name);
+        const matched = sessionName ? savedSessions.find((s) => s.name.trim().toLowerCase() === sessionName.toLowerCase()) : null;
+        if (matched) {
+          setPracticeSessionId(matched.id);
+          if (typeof window !== "undefined") window.localStorage.setItem(`pxf:event-session:${eventId}`, matched.id);
+        }
+      }
+    }
   }
   useEffect(() => { load(); }, [eventId, teamId]);
 
@@ -75,9 +127,15 @@ function EventDetail() {
       {(event.event_type === "practice" || event.event_type === "game") && (
         <div className="mt-3 grid grid-cols-2 gap-2">
           {event.event_type === "practice" && (
-          <Link to="/coach/teams/$teamId/schedule/$eventId/practice-plan" params={{ teamId, eventId }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-brand px-3 py-2 text-xs font-bold text-primary-foreground shadow-glow-teal">
-            <ClipboardList size={14} /> Practice Plan
-          </Link>
+            practiceSessionId ? (
+              <Link to="/session-detail/$sessionId" params={{ sessionId: practiceSessionId }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-brand px-3 py-2 text-xs font-bold text-primary-foreground shadow-glow-teal">
+                <ClipboardList size={14} /> Practice Plan
+              </Link>
+            ) : (
+              <Link to="/coach/teams/$teamId/schedule/$eventId/practice-plan" params={{ teamId, eventId }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-brand px-3 py-2 text-xs font-bold text-primary-foreground shadow-glow-teal">
+                <ClipboardList size={14} /> Practice Plan
+              </Link>
+            )
           )}
           {event.event_type === "game" && (
             <Link to="/coach/teams/$teamId/schedule/$eventId/game-prep" params={{ teamId, eventId }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-brand px-3 py-2 text-xs font-bold text-primary-foreground shadow-glow-teal">
