@@ -310,6 +310,27 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
           </Link>
         )}
 
+        {hasAccess && (
+          <Link
+            to="/coach/staff"
+            className="block rounded-2xl border border-border bg-card p-5"
+          >
+            <div className="flex items-start gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-teal/15 text-teal">
+                <UserCog size={18} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Elite</p>
+                <p className="font-display text-base font-bold text-foreground">Staff Coaches</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Invite up to 3 staff coaches for free, then $9.99/mo each. Assign them to specific teams.
+                </p>
+              </div>
+              <ChevronRight size={16} className="mt-1 text-muted-foreground" />
+            </div>
+          </Link>
+        )}
+
         <Section icon={User} title="Profile">
           <div className="flex items-center gap-3">
             <div className="relative grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-teal/40 to-volt/30 text-xl font-bold">R</div>
