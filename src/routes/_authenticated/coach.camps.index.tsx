@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Search, List, Calendar as CalendarIcon, MapPin, AlertTriangle, Snowflake, Swords, Dumbbell, Star } from "lucide-react";
+import { Plus, Search, List, Calendar as CalendarIcon, MapPin, AlertTriangle, Snowflake, Swords, Dumbbell, Flag } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 import { TierGate } from "@/components/tier-gate";
 import { useCurrentTier } from "@/hooks/use-tier";
@@ -13,11 +13,12 @@ export const Route = createFileRoute("/_authenticated/coach/camps/")({
 
 function GatedCampsPage() {
   const { tier, loading } = useCurrentTier();
-  if (loading) return null;
   // Team / Association tiers don't have camps — show a unified team events feed instead
+  if (tier && !tierAtLeast(tier, "elite")) return <TeamEventsFeed />;
+  if (loading) return null;
   if (!tierAtLeast(tier, "elite")) return <TeamEventsFeed />;
   return (
-    <TierGate feature="campManagement">
+    <TierGate feature="campManagement" fallback={<TeamEventsFeed />}>
       <CampsPage />
     </TierGate>
   );
@@ -270,18 +271,21 @@ type FeedEvent = {
   team_id: string;
   team_name: string;
   event_type: "game" | "practice" | "team_event";
+  kind: "game" | "practice" | "team_event";
+  title_text: string;
   title: string | null;
   opponent_name: string | null;
   home_away: string | null;
   venue: string | null;
   event_date: string;
   start_time: string | null;
+  end_time: string | null;
 };
 
-const FEED_META: Record<string, { label: string; icon: typeof Swords; bg: string; color: string }> = {
-  game: { label: "GAME", icon: Swords, bg: "bg-red-500/15", color: "text-red-400" },
-  practice: { label: "PRACTICE", icon: Dumbbell, bg: "bg-emerald-500/15", color: "text-emerald-400" },
-  team_event: { label: "EVENT", icon: Star, bg: "bg-surface-2", color: "text-muted-foreground" },
+const FEED_META: Record<FeedEvent["kind"], { label: string; icon: typeof Swords; bg: string; color: string }> = {
+  game: { label: "Game", icon: Swords, bg: "bg-amber-500/15", color: "text-amber-400" },
+  practice: { label: "Practice", icon: Dumbbell, bg: "bg-emerald-500/15", color: "text-emerald-400" },
+  team_event: { label: "Team Event", icon: Flag, bg: "bg-violet-500/15", color: "text-violet-400" },
 };
 
 function feedFmtDate(d: string) {
@@ -312,59 +316,104 @@ function TeamEventsFeed() {
       const today = new Date().toISOString().slice(0, 10);
       const { data: evs } = await supabase
         .from("team_events")
-        .select("id,team_id,event_type,title,opponent_name,home_away,venue,event_date,start_time")
+        .select("id,team_id,event_type,title,opponent_name,home_away,venue,event_date,start_time,end_time")
         .in("team_id", teamList.map((t) => t.id))
         .gte("event_date", today)
         .order("event_date", { ascending: true })
+        .order("start_time", { ascending: true })
         .limit(50);
-      setEvents(((evs ?? []) as Array<Omit<FeedEvent, "team_name">>).map((e) => ({ ...e, team_name: nameMap.get(e.team_id) ?? "Team" })));
+      setEvents(((evs ?? []) as Array<Omit<FeedEvent, "team_name" | "kind" | "title_text">>).map((e) => {
+        const kind = e.event_type === "game" ? "game" : e.event_type === "practice" ? "practice" : "team_event";
+        const titleText = kind === "game"
+          ? `${e.home_away === "away" ? "@" : "vs"} ${e.opponent_name || "Opponent"}`
+          : e.title || (kind === "practice" ? "Practice" : "Team Event");
+        return { ...e, kind, title_text: titleText, team_name: nameMap.get(e.team_id) ?? "Team" };
+      }));
       setLoading(false);
     })();
   }, []);
 
-  if (loading) return <p className="text-xs text-muted-foreground">Loading…</p>;
+  const upcoming = events.slice(0, 3);
+  const groups = useMemo(() => {
+    const map = new Map<string, { label: string; items: FeedEvent[] }>();
+    events.forEach((event) => {
+      if (!map.has(event.team_id)) map.set(event.team_id, { label: event.team_name, items: [] });
+      map.get(event.team_id)!.items.push(event);
+    });
+    return Array.from(map.entries());
+  }, [events]);
 
   return (
-    <div>
-      <h3 className="text-sm font-bold">Upcoming events</h3>
-      <div className="mt-3 space-y-3">
-        {events.length === 0 && (
-          <p className="rounded-xl border border-dashed border-border bg-surface p-4 text-center text-xs text-muted-foreground">
-            No upcoming events across your teams.
-          </p>
-        )}
-        {events.map((e) => {
-          const meta = FEED_META[e.event_type] ?? FEED_META.team_event;
-          const Icon = meta.icon;
-          const label = e.event_type === "game"
-            ? `${e.home_away === "away" ? "@" : "vs"} ${e.opponent_name || "TBD"}`
-            : e.title || meta.label;
-          return (
-            <Link
-              key={e.id}
-              to="/coach/teams/$teamId/schedule/$eventId"
-              params={{ teamId: e.team_id, eventId: e.id }}
-              className="block rounded-2xl border border-border bg-surface p-3"
-            >
-              <div className="flex items-center gap-3">
-                <div className={"grid h-10 w-10 place-items-center rounded-xl " + meta.bg}>
-                  <Icon size={16} className={meta.color} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className={"rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider " + meta.bg + " " + meta.color}>{meta.label}</span>
-                    <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[9px] font-bold tracking-wider text-muted-foreground">{e.team_name}</span>
-                  </div>
-                  <p className="mt-1 truncate text-sm font-semibold">{label}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {feedFmtDate(e.event_date)}{e.start_time ? " · " + feedFmtTime(e.start_time) : ""}{e.venue ? " · " + e.venue : ""}
-                  </p>
-                </div>
-              </div>
-            </Link>
-          );
-        })}
+    <div className="space-y-5">
+      <div>
+        <h2 className="font-display text-2xl font-bold">Events</h2>
+        <p className="mt-1 text-[11px] text-muted-foreground">Everything happening across your teams</p>
       </div>
+
+      {loading ? (
+        <p className="text-xs text-muted-foreground">Loading…</p>
+      ) : events.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border bg-card p-6 text-center">
+          <CalendarIcon className="mx-auto mb-2 text-muted-foreground" size={28} />
+          <p className="text-sm font-semibold">No upcoming events</p>
+          <p className="mt-1 text-xs text-muted-foreground">When team events are scheduled, they show up here.</p>
+        </div>
+      ) : (
+        <>
+          <section>
+            <h3 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Upcoming</h3>
+            <div className="mt-2 space-y-2">
+              {upcoming.map((event) => <TeamEventCard key={`up-${event.id}`} event={event} showSource />)}
+            </div>
+          </section>
+
+          {groups.map(([key, group]) => (
+            <section key={key}>
+              <h3 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">{group.label}</h3>
+              <div className="mt-2 space-y-2">
+                {group.items.slice(0, 3).map((event) => <TeamEventCard key={`${key}-${event.id}`} event={event} />)}
+              </div>
+            </section>
+          ))}
+        </>
+      )}
     </div>
+  );
+}
+
+function TeamEventCard({ event, showSource }: { event: FeedEvent; showSource?: boolean }) {
+  const meta = FEED_META[event.kind];
+  const Icon = meta.icon;
+  return (
+    <Link
+      to="/coach/teams/$teamId/schedule/$eventId"
+      params={{ teamId: event.team_id, eventId: event.id }}
+      className="block rounded-2xl border border-border bg-card p-3"
+    >
+      <div className="flex items-start gap-3">
+        <div className={"grid h-10 w-10 shrink-0 place-items-center rounded-xl " + meta.bg}>
+          <Icon size={18} className={meta.color} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <p className="truncate text-sm font-semibold">{event.title_text}</p>
+            <span className={"shrink-0 text-[10px] font-bold uppercase tracking-wider " + meta.color}>{meta.label}</span>
+          </div>
+          {showSource && <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{event.team_name}</p>}
+          <div className="mt-1 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+            <span className="flex min-w-0 items-center gap-1">
+              <CalendarIcon size={11} className="shrink-0" />
+              <span className="truncate">{feedFmtDate(event.event_date)}{event.start_time ? ` · ${feedFmtTime(event.start_time)}` : ""}</span>
+            </span>
+            {event.venue && (
+              <span className="flex min-w-0 items-center gap-1 truncate">
+                <MapPin size={11} className="shrink-0" />
+                <span className="truncate">{event.venue}</span>
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </Link>
   );
 }
