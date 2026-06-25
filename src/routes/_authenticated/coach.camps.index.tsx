@@ -1,15 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Search, List, Calendar as CalendarIcon, MapPin, AlertTriangle, Snowflake } from "lucide-react";
+import { Plus, Search, List, Calendar as CalendarIcon, MapPin, AlertTriangle, Snowflake, Swords, Dumbbell, Star } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 import { TierGate } from "@/components/tier-gate";
+import { useCurrentTier } from "@/hooks/use-tier";
+import { tierAtLeast } from "@/lib/tiers";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/")({
   component: GatedCampsPage,
 });
 
 function GatedCampsPage() {
+  const { tier, loading } = useCurrentTier();
+  if (loading) return null;
+  // Team / Association tiers don't have camps — show a unified team events feed instead
+  if (!tierAtLeast(tier, "elite")) return <TeamEventsFeed />;
   return (
     <TierGate feature="campManagement">
       <CampsPage />
