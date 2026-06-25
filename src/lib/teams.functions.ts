@@ -243,6 +243,19 @@ export const savePracticePlan = createServerFn({ method: "POST" })
     items: Array<{ itemType: "session" | "drill" | "note"; drillId?: string; sessionId?: string; noteText?: string; durationMinutes?: number }>;
   }) => d)
   .handler(async ({ data, context }) => {
+    // If attaching to a specific event, replace any previous plan for that event
+    // so the team UI shows a single canonical plan.
+    if (data.eventId) {
+      const { data: existing } = await context.supabase
+        .from("practice_plans")
+        .select("id")
+        .eq("event_id", data.eventId);
+      const ids = (existing ?? []).map((p: { id: string }) => p.id);
+      if (ids.length) {
+        await context.supabase.from("practice_plan_items").delete().in("plan_id", ids);
+        await context.supabase.from("practice_plans").delete().in("id", ids);
+      }
+    }
     const { data: plan, error } = await context.supabase
       .from("practice_plans")
       .insert({
