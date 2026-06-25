@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Flame, Medal, Trophy, ChevronRight, Calendar, Users, BarChart3, Camera } from "lucide-react";
+import { ArrowLeft, Flame, Medal, Trophy, ChevronRight, Calendar, Users, BarChart3, Camera, Swords, Dumbbell, Star } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/parent/teams/$teamId")({
@@ -20,6 +20,33 @@ type LeaderRow = {
   longest_streak_weeks: number;
 };
 
+type UpcomingEvent = {
+  id: string;
+  event_type: "game" | "practice" | "team_event";
+  title: string | null;
+  opponent_name: string | null;
+  home_away: string | null;
+  venue: string | null;
+  event_date: string;
+  start_time: string | null;
+};
+
+const EVENT_META: Record<string, { label: string; icon: typeof Swords; bg: string; color: string }> = {
+  game: { label: "GAME", icon: Swords, bg: "bg-red-500/15", color: "text-red-400" },
+  practice: { label: "PRACTICE", icon: Dumbbell, bg: "bg-emerald-500/15", color: "text-emerald-400" },
+  team_event: { label: "EVENT", icon: Star, bg: "bg-surface-2", color: "text-muted-foreground" },
+};
+
+function fmtEventDate(d: string) {
+  try { return new Date(d + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }); } catch { return d; }
+}
+function fmtEventTime(t: string | null) {
+  if (!t) return "";
+  const [h, m] = t.split(":");
+  const hr = parseInt(h, 10); const ap = hr >= 12 ? "PM" : "AM"; const h12 = ((hr + 11) % 12) + 1;
+  return `${h12}:${m} ${ap}`;
+}
+
 function maskName(full: string) {
   const parts = full.trim().split(/\s+/);
   return (parts[0] ?? "") + (parts[1]?.[0] ? ` ${parts[1][0]}.` : "");
@@ -32,6 +59,7 @@ function TeamLayout() {
   const [team, setTeam] = useState<Team | null>(null);
   const [leaders, setLeaders] = useState<LeaderRow[]>([]);
   const [myAthleteIds, setMyAthleteIds] = useState<string[]>([]);
+  const [upcoming, setUpcoming] = useState<UpcomingEvent[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -67,6 +95,21 @@ function TeamLayout() {
       setMyAthleteIds(((data ?? []) as { id: string }[]).map((a) => a.id));
     })();
   }, [user?.id]);
+
+  useEffect(() => {
+    (async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data } = await supabase
+        .from("team_events")
+        .select("id,event_type,title,opponent_name,home_away,venue,event_date,start_time")
+        .eq("team_id", teamId)
+        .gte("event_date", today)
+        .order("event_date", { ascending: true })
+        .order("start_time", { ascending: true })
+        .limit(3);
+      setUpcoming(((data ?? []) as UpcomingEvent[]));
+    })();
+  }, [teamId]);
 
   const top3 = leaders.slice(0, 3);
   const myRowIdx = leaders.findIndex((l) => myAthleteIds.includes(l.athlete_id));
