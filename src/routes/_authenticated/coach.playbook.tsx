@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Drills } from "@/components/drills-library";
 import { PlaybookSessions } from "@/components/coach/playbook-sessions";
-import { PlaybookCamps } from "@/components/coach/playbook-camps";
 import { PlaybookFavorites } from "@/components/coach/playbook-favorites";
 import { CoachDrylandLibrary } from "@/components/coach/dryland-library";
 
@@ -10,7 +9,7 @@ export const Route = createFileRoute("/_authenticated/coach/playbook")({
   component: PlaybookPage,
 });
 
-type Tab = "drills" | "sessions" | "camps" | "dryland" | "favorites";
+type Tab = "drills" | "practices" | "dryland" | "favorites";
 
 function PlaybookPage() {
   const [tab, setTab] = useState<Tab>("drills");
@@ -19,11 +18,10 @@ function PlaybookPage() {
     <div className="-mx-5 -mt-2">
       <div className="px-5 pb-3 pt-2">
         <p className="text-[11px] font-semibold tracking-[0.3em] text-muted-foreground">PLAYBOOK</p>
-        <div className="mt-3 grid grid-cols-5 gap-1 rounded-full border border-border bg-surface p-1">
+        <div className="mt-3 grid grid-cols-4 gap-1 rounded-full border border-border bg-surface p-1">
           {([
             ["drills", "Drills"],
-            ["sessions", "Sessions"],
-            ["camps", "Camps"],
+            ["practices", "Practices"],
             ["dryland", "Dryland"],
             ["favorites", "Favorites"],
           ] as const).map(([id, label]) => (
@@ -39,8 +37,7 @@ function PlaybookPage() {
       </div>
       <div className="px-5">
         {tab === "drills" && <Drills />}
-        {tab === "sessions" && <PlaybookSessions />}
-        {tab === "camps" && <PlaybookCamps />}
+        {tab === "practices" && <PlaybookSessions />}
         {tab === "dryland" && <CoachDrylandLibrary />}
         {tab === "favorites" && <PlaybookFavorites />}
       </div>
