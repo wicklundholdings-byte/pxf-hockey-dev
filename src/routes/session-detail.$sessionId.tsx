@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate, notFound } from "@tanstack/react-ro
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { savePracticePlan } from "@/lib/teams.functions";
+import { savePracticePlan, createEvent } from "@/lib/teams.functions";
 import {
   ArrowLeft, Pencil, Calendar as CalendarIcon, Clock, Users, BarChart3, Disc3,
   Wrench, ListChecks, GripVertical, Trash2, ChevronRight, Plus, Copy, CheckCircle2,
@@ -758,11 +758,16 @@ type EventRow = { id: string; title: string | null; event_date: string; start_ti
 
 function AssignToTeamPractice({ session, onClose, onSaved }: { session: Session; onClose: () => void; onSaved: (label: string) => void }) {
   const save = useServerFn(savePracticePlan);
+  const createEv = useServerFn(createEvent);
   const [teams, setTeams] = useState<TeamRow[] | null>(null);
   const [teamId, setTeamId] = useState<string | null>(null);
   const [events, setEvents] = useState<EventRow[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newDate, setNewDate] = useState(new Date().toISOString().slice(0, 10));
+  const [newTime, setNewTime] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -804,6 +809,23 @@ function AssignToTeamPractice({ session, onClose, onSaved }: { session: Session;
       onSaved(`Added to ${label}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save");
+      setBusy(false);
+    }
+  }
+
+  async function createAndAssign() {
+    if (!teamId || !newDate) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const title = newTitle.trim() || "Practice";
+      const { id } = await createEv({ data: {
+        teamId, eventType: "practice", title,
+        eventDate: newDate, startTime: newTime || undefined,
+      } });
+      await assignToEvent(id, title);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not create practice");
       setBusy(false);
     }
   }
@@ -860,6 +882,27 @@ function AssignToTeamPractice({ session, onClose, onSaved }: { session: Session;
                   })}
                 </ul>
               )}
+
+              <div className="mt-3">
+                {!creating ? (
+                  <button onClick={() => setCreating(true)} className="flex w-full items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border bg-surface px-3 py-2.5 text-xs font-semibold text-foreground">
+                    <Plus size={14} className="text-teal" /> Create new practice
+                  </button>
+                ) : (
+                  <div className="space-y-2 rounded-2xl border border-border bg-card p-3">
+                    <p className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground">NEW PRACTICE</p>
+                    <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Practice title" className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground" />
+                    <div className="grid grid-cols-2 gap-2">
+                      <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} className="rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground" />
+                      <input type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)} className="rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground" />
+                    </div>
+                    <div className="flex gap-2">
+                      <button disabled={busy || !newDate} onClick={createAndAssign} className="flex-1 rounded-xl bg-teal px-3 py-2 text-xs font-bold text-background disabled:opacity-50">Create & assign</button>
+                      <button onClick={() => setCreating(false)} className="rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-muted-foreground">Cancel</button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
