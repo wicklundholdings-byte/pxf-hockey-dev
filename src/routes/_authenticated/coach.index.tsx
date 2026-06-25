@@ -7,6 +7,9 @@ import { StatusBadge } from "@/components/coach/status-badge";
 import { TodaysAttendanceCard } from "@/components/coach/todays-attendance-card";
 import { UpcomingSevenDays } from "@/components/teams/upcoming-7-days";
 import { DrylandActivityCard } from "@/components/coach/dryland-activity-card";
+import { useCurrentTier } from "@/hooks/use-tier";
+import { tierAtLeast } from "@/lib/tiers";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/coach/")({
   component: CoachDashboard,
@@ -20,6 +23,9 @@ function fmtMoney(cents: number) {
 }
 
 function CoachDashboard() {
+  const { tier } = useCurrentTier();
+  const { user } = useAuth();
+  const hasCamps = tierAtLeast(tier, "elite");
   const [range, setRange] = useState<7 | 30 | 90>(30);
   const [camps, setCamps] = useState<Camp[]>([]);
   const [regs, setRegs] = useState<Reg[]>([]);
@@ -28,6 +34,32 @@ function CoachDashboard() {
   const [outstandingCount, setOutstandingCount] = useState(0);
   const [unscheduledIce, setUnscheduledIce] = useState(0);
   const [unscheduledIceHours, setUnscheduledIceHours] = useState(0);
+  const [teamStats, setTeamStats] = useState({ teams: 0, athletes: 0, upcomingGames: 0, drylandCompleted: 0 });
+
+  useEffect(() => {
+    if (hasCamps || !user?.id) return;
+    (async () => {
+      const { data: teams } = await supabase.from("teams").select("id").eq("coach_id", user.id);
+      const teamIds = (teams ?? []).map((t: any) => t.id);
+      if (teamIds.length === 0) {
+        setTeamStats({ teams: 0, athletes: 0, upcomingGames: 0, drylandCompleted: 0 });
+        return;
+      }
+      const today = new Date().toISOString().slice(0, 10);
+      const [players, games, dryland] = await Promise.all([
+        supabase.from("team_players").select("athlete_id", { count: "exact", head: false }).in("team_id", teamIds),
+        supabase.from("team_events").select("id", { count: "exact", head: true }).in("team_id", teamIds).eq("event_type", "game").gte("event_date", today),
+        supabase.from("dryland_watch_progress").select("id", { count: "exact", head: true }).in("team_id", teamIds).eq("completed", true),
+      ]);
+      const athleteIds = new Set(((players.data as any[]) ?? []).map((p) => p.athlete_id).filter(Boolean));
+      setTeamStats({
+        teams: teamIds.length,
+        athletes: athleteIds.size,
+        upcomingGames: games.count ?? 0,
+        drylandCompleted: dryland.count ?? 0,
+      });
+    })();
+  }, [hasCamps, user?.id]);
 
   useEffect(() => {
     (async () => {
@@ -104,12 +136,19 @@ function CoachDashboard() {
     { label: "Contacts", value: contactCount, icon: Users, accent: "text-foreground" },
   ];
 
+  const teamStatCards = [
+    { label: "Upcoming games", value: teamStats.upcomingGames, icon: CalendarDays, accent: "text-teal" },
+    { label: "Active teams", value: teamStats.teams, icon: Users, accent: "text-emerald-400" },
+    { label: "Total athletes", value: teamStats.athletes, icon: Users, accent: "text-foreground" },
+    { label: "Dryland sessions", value: teamStats.drylandCompleted, icon: Activity, accent: "text-foreground" },
+  ];
+
   return (
     <div className="space-y-5">
       <TodaysAttendanceCard />
       <UpcomingSevenDays />
       <DrylandActivityCard />
-      {(unassignedCampIds.length > 0 || outstandingCount > 0 || unscheduledIce > 0) && (
+      {(unscheduledIce > 0 || (hasCamps && (unassignedCampIds.length > 0 || outstandingCount > 0))) && (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {unscheduledIce > 0 && (
             <Link to="/coach/ice" className="flex items-center gap-3 rounded-2xl border border-teal/40 bg-teal/5 p-3">
@@ -121,7 +160,7 @@ function CoachDashboard() {
               <ChevronRight size={14} className="text-muted-foreground" />
             </Link>
           )}
-          {unassignedCampIds.length > 0 && (
+          {hasCamps && unassignedCampIds.length > 0 && (
             <Link to="/coach/teams" className="flex items-center gap-3 rounded-2xl border border-orange-500/40 bg-orange-500/5 p-3">
               <AlertTriangle size={18} className="text-orange-500" />
               <div className="min-w-0 flex-1">
@@ -131,7 +170,7 @@ function CoachDashboard() {
               <ChevronRight size={14} className="text-muted-foreground" />
             </Link>
           )}
-          {outstandingCount > 0 && (
+          {hasCamps && outstandingCount > 0 && (
             <Link to="/coach/financials" className="flex items-center gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/5 p-3">
               <DollarSign size={18} className="text-amber-500" />
               <div className="min-w-0 flex-1">
@@ -148,19 +187,33 @@ function CoachDashboard() {
           <Snowflake size={18} className="text-teal" />
           <span className="text-xs font-semibold text-teal">Add Ice Times</span>
         </Link>
-        <Link to="/coach/camps/new" className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/40 bg-transparent py-3 text-center transition-colors hover:bg-emerald-400/5">
-          <Plus size={18} className="text-emerald-400" />
-          <span className="text-xs font-semibold text-emerald-400">+ Create Session</span>
-        </Link>
+        {hasCamps ? (
+          <Link to="/coach/camps/new" className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/40 bg-transparent py-3 text-center transition-colors hover:bg-emerald-400/5">
+            <Plus size={18} className="text-emerald-400" />
+            <span className="text-xs font-semibold text-emerald-400">+ Create Session</span>
+          </Link>
+        ) : (
+          <Link to="/coach/teams" className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/40 bg-transparent py-3 text-center transition-colors hover:bg-emerald-400/5">
+            <Users size={18} className="text-emerald-400" />
+            <span className="text-xs font-semibold text-emerald-400">My Teams</span>
+          </Link>
+        )}
       </div>
       {/* Quick Access */}
-      <div className="grid grid-cols-4 gap-2">
-        {[
-          { to: "/coach/camps/new", label: "Create Camp", icon: CalendarPlus },
-          { to: "/coach/roster", label: "Roster", icon: Users },
-          { to: "/coach/financials", label: "Financials", icon: DollarSign },
-          { to: "/coach/analytics", label: "Analytics", icon: BarChart3 },
-        ].map((q) => (
+      <div className={"grid gap-2 " + (hasCamps ? "grid-cols-4" : "grid-cols-3")}>
+        {(hasCamps
+          ? [
+              { to: "/coach/camps/new" as const, label: "Create Camp", icon: CalendarPlus },
+              { to: "/coach/roster" as const, label: "Roster", icon: Users },
+              { to: "/coach/financials" as const, label: "Financials", icon: DollarSign },
+              { to: "/coach/analytics" as const, label: "Analytics", icon: BarChart3 },
+            ]
+          : [
+              { to: "/coach/roster" as const, label: "Roster", icon: Users },
+              { to: "/coach/analytics" as const, label: "Analytics", icon: BarChart3 },
+              { to: "/coach/attendees" as const, label: "Athletes", icon: Users },
+            ]
+        ).map((q) => (
           <Link
             key={q.label}
             to={q.to}
@@ -183,7 +236,7 @@ function CoachDashboard() {
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {statCards.map((s) => (
+        {(hasCamps ? statCards : teamStatCards).map((s) => (
           <div key={s.label} className="rounded-2xl border border-border bg-card p-3">
             <div className="flex items-center justify-between">
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</span>
@@ -195,6 +248,7 @@ function CoachDashboard() {
       </div>
 
       {/* Chart */}
+      {hasCamps && (
       <div className="rounded-2xl border border-border bg-card p-4">
         <div className="flex items-center justify-between">
           <div>
@@ -236,8 +290,10 @@ function CoachDashboard() {
           </ResponsiveContainer>
         </div>
       </div>
+      )}
 
       {/* Active camps */}
+      {hasCamps && (
       <div className="rounded-2xl border border-border bg-card p-4">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-display text-sm font-bold text-foreground">Active camps</h2>
@@ -271,8 +327,10 @@ function CoachDashboard() {
           </ul>
         )}
       </div>
+      )}
 
       {/* Activity */}
+      {hasCamps && (
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card p-4">
           <h2 className="mb-3 flex items-center gap-1.5 font-display text-sm font-bold text-foreground">
@@ -325,6 +383,7 @@ function CoachDashboard() {
           </ul>
         </div>
       </div>
+      )}
     </div>
   );
 }
