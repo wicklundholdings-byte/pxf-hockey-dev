@@ -106,22 +106,22 @@ function TeamLayout() {
           </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-4 gap-2">
-          <Link to="/parent/teams/$teamId/schedule" params={{ teamId }} className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-gradient-brand py-3 shadow-glow-teal">
-            <Calendar size={20} className="text-white" />
-            <span className="text-[10px] font-bold text-white">Schedule</span>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <Link to="/parent/teams/$teamId/schedule" params={{ teamId }} className="flex items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 shadow-glow-teal">
+            <Calendar size={18} className="text-background" />
+            <span className="text-sm font-bold text-background">Schedule</span>
           </Link>
-          <Link to="/parent/teams/$teamId/roster" params={{ teamId }} className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-gradient-brand py-3 shadow-glow-teal">
-            <Users size={20} className="text-white" />
-            <span className="text-[10px] font-bold text-white">Roster</span>
+          <Link to="/parent/teams/$teamId/roster" params={{ teamId }} className="flex items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 shadow-glow-teal">
+            <Users size={18} className="text-background" />
+            <span className="text-sm font-bold text-background">Roster</span>
           </Link>
-          <Link to="/parent/teams/$teamId/stats" params={{ teamId }} className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-gradient-brand py-3 shadow-glow-teal">
-            <BarChart3 size={20} className="text-white" />
-            <span className="text-[10px] font-bold text-white">Stats</span>
+          <Link to="/parent/teams/$teamId/stats" params={{ teamId }} className="flex items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 shadow-glow-teal">
+            <BarChart3 size={18} className="text-background" />
+            <span className="text-sm font-bold text-background">Stats</span>
           </Link>
-          <Link to="/parent/teams/$teamId/media" params={{ teamId }} className="flex flex-col items-center justify-center gap-1 rounded-2xl bg-gradient-brand py-3 shadow-glow-teal">
-            <Camera size={20} className="text-white" />
-            <span className="text-[10px] font-bold text-white">Media</span>
+          <Link to="/parent/teams/$teamId/media" params={{ teamId }} className="flex items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 shadow-glow-teal">
+            <Camera size={18} className="text-background" />
+            <span className="text-sm font-bold text-background">Media</span>
           </Link>
         </div>
 
