@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Calendar, Users, BarChart3, Camera } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId")({
   component: TeamLayout,
