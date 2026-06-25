@@ -44,11 +44,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     (!!user && !authLoading);
 
   const athleteRoots = ["/", "/drills", "/sessions", "/profile", "/saved-sessions", "/calendar"];
-  const onAthleteRoute =
-    athleteRoots.includes(pathname) ||
-    pathname.startsWith("/session-detail/") ||
-    pathname.startsWith("/drill-detail/") ||
-    pathname === "/drill-builder";
+  const onAthleteRoute = athleteRoots.includes(pathname);
   useEffect(() => {
     if (authLoading || roleLoading || !role) return;
     const correctHome = roleHome(role);
