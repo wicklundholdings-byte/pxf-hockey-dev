@@ -905,12 +905,19 @@ function EliteStaffDashboard({ assignedTeamIds }: { assignedTeamIds: string[] })
   const [events, setEvents] = useState<EventLite[]>([]);
   const [leaders, setLeaders] = useState<LeaderLite[]>([]);
   const [media, setMedia] = useState<MediaLite[]>([]);
+  const [earnings, setEarnings] = useState<{ monthCents: number; seasonCents: number; monthSessions: number; monthItems: Array<{ date: string; label: string; rateCents: number }> } | null>(null);
 
   useEffect(() => {
     if (!user?.id) return;
     (async () => {
       const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
       setCoachName(prof?.full_name ?? user.email?.split("@")[0] ?? "Coach");
+
+      try {
+        const { listMyStaffEarnings } = await import("@/lib/coach-costs.functions");
+        const e = await listMyStaffEarnings();
+        setEarnings(e);
+      } catch { /* noop */ }
 
       // My athletes (kids)
       try {
@@ -988,6 +995,38 @@ function EliteStaffDashboard({ assignedTeamIds }: { assignedTeamIds: string[] })
         <h1 className="font-display text-2xl font-bold leading-tight">Hey {firstName},</h1>
         <p className="text-base font-light text-muted-foreground">Here's what's happening.</p>
       </div>
+
+      {earnings && (earnings.monthCents > 0 || earnings.seasonCents > 0) && (
+        <section>
+          <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">My Earnings</h2>
+          <div className="mt-2 rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">This month</p>
+                <p className="font-display text-2xl font-bold text-emerald-400">${(earnings.monthCents / 100).toLocaleString()}</p>
+                <p className="text-[10px] text-muted-foreground">{earnings.monthSessions} session{earnings.monthSessions === 1 ? "" : "s"}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Season total</p>
+                <p className="font-display text-base font-bold text-foreground">${(earnings.seasonCents / 100).toLocaleString()}</p>
+              </div>
+            </div>
+            {earnings.monthItems.length > 0 && (
+              <ul className="mt-3 space-y-1 border-t border-border pt-2">
+                {earnings.monthItems.map((it, i) => (
+                  <li key={i} className="flex items-center justify-between text-[11px]">
+                    <div className="min-w-0">
+                      <p className="truncate text-foreground">{it.label}</p>
+                      <p className="text-[9px] text-muted-foreground">{new Date(it.date + "T00:00:00").toLocaleDateString()}</p>
+                    </div>
+                    <span className="text-foreground">${(it.rateCents / 100).toLocaleString()}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+      )}
 
       {kids.length > 0 && (
         <section>

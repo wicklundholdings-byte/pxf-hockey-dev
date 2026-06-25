@@ -2,9 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { DollarSign, TrendingUp, Wallet, Tag, Plus, X, Copy, CheckCircle2, BarChart3, Percent, Download } from "lucide-react";
+import { DollarSign, TrendingUp, Wallet, Tag, Plus, X, Copy, CheckCircle2, BarChart3, Percent, Download, ChevronDown, ChevronUp, Snowflake, Users, TrendingDown } from "lucide-react";
 import { TierGate } from "@/components/tier-gate";
 import { BlockForStaff } from "@/components/block-for-staff";
+import { getCoachCostsThisMonth, getIceCostsThisMonth, setIceCostOverride } from "@/lib/coach-costs.functions";
 
 export const Route = createFileRoute("/_authenticated/coach/financials")({
   component: GatedFinancials,
@@ -131,6 +132,16 @@ function BigStat({ icon: Icon, label, value, sub, tint }: { icon: typeof DollarS
 }
 
 function OverviewTab({ regs }: { regs: Reg[] }) {
+  const grossMtdCents = useMemo(() => {
+    const now = new Date();
+    const m = now.getMonth(), y = now.getFullYear();
+    return regs.filter((r) => r.status === "paid").reduce((s, r) => {
+      const d = new Date(r.created_at);
+      if (d.getMonth() !== m || d.getFullYear() !== y) return s;
+      return s + (r.amount_cents ?? 0);
+    }, 0);
+  }, [regs]);
+
   // Revenue by camp
   const byCamp = useMemo(() => {
     const m = new Map<string, number>();
@@ -144,6 +155,8 @@ function OverviewTab({ regs }: { regs: Reg[] }) {
 
   return (
     <div className="space-y-3">
+      <ProfitabilityCards grossMtdCents={grossMtdCents} />
+
       <div className="rounded-2xl border border-border bg-card p-4">
         <h3 className="mb-3 text-[10px] font-bold uppercase tracking-wider text-foreground">Revenue by camp</h3>
         {byCamp.length === 0 ? (
@@ -162,6 +175,131 @@ function OverviewTab({ regs }: { regs: Reg[] }) {
               </li>
             ))}
           </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ProfitabilityCards({ grossMtdCents }: { grossMtdCents: number }) {
+  const [iceCents, setIceCents] = useState(0);
+  const [iceMode, setIceMode] = useState<"auto" | "override">("auto");
+  const [pricedCount, setPricedCount] = useState(0);
+  const [coachTotalCents, setCoachTotalCents] = useState(0);
+  const [coachRows, setCoachRows] = useState<Awaited<ReturnType<typeof getCoachCostsThisMonth>>["staff"]>([]);
+  const [expanded, setExpanded] = useState(false);
+  const [openStaff, setOpenStaff] = useState<string | null>(null);
+  const [editingIce, setEditingIce] = useState(false);
+  const [iceInput, setIceInput] = useState("");
+
+  const reload = async () => {
+    const [ice, coach] = await Promise.all([getIceCostsThisMonth(), getCoachCostsThisMonth()]);
+    setIceCents(ice.totalCents); setIceMode(ice.mode); setPricedCount(ice.pricedCount);
+    setIceInput(((ice.overrideCents ?? 0) / 100).toFixed(0));
+    setCoachTotalCents(coach.totalCents); setCoachRows(coach.staff);
+  };
+  useEffect(() => { reload(); }, []);
+
+  const gross = grossMtdCents;
+  const profit = gross - iceCents - coachTotalCents;
+  const fmt = (c: number) => `$${(c / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+
+  return (
+    <div className="space-y-3">
+      {/* Gross Profit */}
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          {profit >= 0 ? <TrendingUp size={11} className="text-emerald-400" /> : <TrendingDown size={11} className="text-red-400" />}
+          Gross Profit · this month
+        </div>
+        <p className={"mt-1 font-display text-3xl font-bold " + (profit >= 0 ? "text-emerald-400" : "text-red-400")}>{profit < 0 ? "-" : ""}{fmt(Math.abs(profit))}</p>
+        <p className="text-[11px] text-muted-foreground">{fmt(gross)} sales − {fmt(iceCents)} ice − {fmt(coachTotalCents)} coaches</p>
+      </div>
+
+      {/* Ice Costs */}
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              <Snowflake size={11} className="text-teal" /> Ice Costs · this month
+            </div>
+            <p className="mt-1 font-display text-2xl font-bold text-foreground">{fmt(iceCents)}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {iceMode === "auto" ? `${pricedCount} slot${pricedCount === 1 ? "" : "s"} priced` : "Manual entry"}
+            </p>
+          </div>
+          {!editingIce && (
+            <button onClick={() => setEditingIce(true)} className="rounded-full border border-border px-3 py-1 text-[10px] font-semibold">Edit</button>
+          )}
+        </div>
+        {editingIce && (
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">$</span>
+            <input
+              type="number" min="0" step="1" value={iceInput}
+              onChange={(e) => setIceInput(e.target.value)}
+              className="w-28 rounded-md border border-border bg-surface px-2 py-1 text-xs"
+            />
+            <button
+              onClick={async () => {
+                await setIceCostOverride({ data: { amountCents: Math.round(parseFloat(iceInput || "0") * 100) } });
+                setEditingIce(false);
+                reload();
+              }}
+              className="rounded-full bg-gradient-brand px-3 py-1 text-[10px] font-bold text-primary-foreground"
+            >Save</button>
+            <button onClick={() => setEditingIce(false)} className="text-[10px] text-muted-foreground">Cancel</button>
+            {iceMode === "auto" && pricedCount > 0 && (
+              <span className="text-[10px] text-muted-foreground">Auto sum from slots: {fmt(iceCents)}</span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Coach Costs */}
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <button onClick={() => setExpanded(!expanded)} className="flex w-full items-center justify-between">
+          <div className="text-left">
+            <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              <Users size={11} className="text-teal" /> Coach Costs · this month
+            </div>
+            <p className="mt-1 font-display text-2xl font-bold text-foreground">{fmt(coachTotalCents)}</p>
+            <p className="text-[10px] text-muted-foreground">{coachRows.length} coach{coachRows.length === 1 ? "" : "es"}</p>
+          </div>
+          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+        {expanded && (
+          <div className="mt-3 space-y-2">
+            {coachRows.length === 0 ? (
+              <p className="text-[11px] text-muted-foreground">No staff sessions assigned this month.</p>
+            ) : coachRows.map((s) => {
+              const open = openStaff === s.staffId;
+              return (
+                <div key={s.staffId} className="rounded-xl border border-border bg-surface">
+                  <button onClick={() => setOpenStaff(open ? null : s.staffId)} className="flex w-full items-center justify-between px-3 py-2 text-left">
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold text-foreground">{s.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{s.sessions} session{s.sessions === 1 ? "" : "s"}</p>
+                    </div>
+                    <p className="ml-2 text-xs font-bold text-emerald-400">{fmt(s.totalCents)}</p>
+                  </button>
+                  {open && (
+                    <ul className="border-t border-border px-3 py-2 space-y-1">
+                      {s.items.map((it, idx) => (
+                        <li key={idx} className="flex items-center justify-between text-[11px]">
+                          <div className="min-w-0">
+                            <p className="truncate text-foreground">{it.label}</p>
+                            <p className="text-[9px] text-muted-foreground">{new Date(it.date + "T00:00:00").toLocaleDateString()}</p>
+                          </div>
+                          <span className="text-foreground">{fmt(it.rateCents)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>

@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, Mail, Trash2, Plus, Copy, Check } from "lucide-react";
+import { ChevronLeft, Mail, Trash2, Plus, Copy, Check, CalendarRange } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { listStaff, inviteStaffCoach, removeStaffCoach, reassignStaffTeams } from "@/lib/staff.functions";
+import { setStaffSessionRate, listAssignableSessions, listStaffAssignments, assignStaffToSession, unassignStaffFromSession } from "@/lib/coach-costs.functions";
 
 export const Route = createFileRoute("/_authenticated/coach/staff")({
   component: StaffPage,
@@ -16,6 +17,7 @@ type StaffRow = {
   id: string; email: string; full_name: string | null; status: string;
   invited_at: string; accepted_at: string | null; invite_token: string;
   staff_user_id: string | null;
+  session_rate_cents: number;
   teams: { team_id: string; name: string }[];
 };
 type TeamOpt = { id: string; name: string };
@@ -26,6 +28,7 @@ function StaffPage() {
   const [teams, setTeams] = useState<TeamOpt[]>([]);
   const [openInvite, setOpenInvite] = useState(false);
   const [editing, setEditing] = useState<StaffRow | null>(null);
+  const [managingSessions, setManagingSessions] = useState<StaffRow | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refresh = async () => {
@@ -94,11 +97,16 @@ function StaffPage() {
                 Teams: {s.teams.length ? s.teams.map((t) => t.name).join(", ") : <span className="text-muted-foreground/70">none assigned</span>}
               </p>
               <p className="mt-0.5 text-[10px] text-muted-foreground">Added {new Date(s.invited_at).toLocaleDateString()}</p>
+              <RateEditor staff={s} onSaved={refresh} />
               <div className="mt-3 flex items-center gap-2">
                 <button
                   onClick={() => setEditing(s)}
                   className="rounded-full border border-border px-3 py-1 text-[11px] font-semibold"
                 >Reassign teams</button>
+                <button
+                  onClick={() => setManagingSessions(s)}
+                  className="flex items-center gap-1 rounded-full border border-border px-3 py-1 text-[11px] font-semibold"
+                ><CalendarRange size={12} /> Sessions</button>
                 {s.status === "invited" && (
                   <CopyLink token={s.invite_token} />
                 )}
@@ -127,6 +135,12 @@ function StaffPage() {
           teams={teams}
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); refresh(); }}
+        />
+      )}
+      {managingSessions && (
+        <SessionsSheet
+          staff={managingSessions}
+          onClose={() => setManagingSessions(null)}
         />
       )}
     </div>
@@ -236,6 +250,131 @@ function ReassignSheet({ staff, teams, onClose, onSaved }: { staff: StaffRow; te
             {saving ? "Saving…" : "Save"}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function RateEditor({ staff, onSaved }: { staff: StaffRow; onSaved: () => void }) {
+  const [val, setVal] = useState<string>(((staff.session_rate_cents ?? 0) / 100).toFixed(2));
+  const [saving, setSaving] = useState(false);
+  const [savedOk, setSavedOk] = useState(false);
+  const save = async () => {
+    const cents = Math.round(parseFloat(val || "0") * 100);
+    if (Number.isNaN(cents)) return;
+    setSaving(true);
+    try {
+      await setStaffSessionRate({ data: { staffId: staff.id, rateCents: cents } });
+      setSavedOk(true);
+      setTimeout(() => setSavedOk(false), 1500);
+      onSaved();
+    } finally { setSaving(false); }
+  };
+  return (
+    <div className="mt-2 flex items-center gap-2 rounded-xl bg-surface px-3 py-2">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Rate</span>
+      <span className="text-xs text-muted-foreground">$</span>
+      <input
+        type="number" min="0" step="1" value={val}
+        onChange={(e) => setVal(e.target.value)}
+        onBlur={save}
+        className="w-20 rounded-md border border-border bg-background px-2 py-1 text-xs"
+      />
+      <span className="text-[11px] text-muted-foreground">/ session</span>
+      {saving ? <span className="text-[10px] text-muted-foreground">Saving…</span> :
+        savedOk ? <Check size={12} className="text-emerald-400" /> : null}
+      <span className="ml-auto text-[10px] text-muted-foreground">Owner-only</span>
+    </div>
+  );
+}
+
+type AssignableItem = { id: string; date: string; start: string | null; label: string };
+
+function SessionsSheet({ staff, onClose }: { staff: StaffRow; onClose: () => void }) {
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [camps, setCamps] = useState<AssignableItem[]>([]);
+  const [teamEvents, setTeamEvents] = useState<AssignableItem[]>([]);
+  const [assigned, setAssigned] = useState<Set<string>>(new Set());
+
+  const keyOf = (sourceType: string, id: string) => `${sourceType}:${id}`;
+
+  const load = async () => {
+    setLoading(true);
+    const [opts, mine] = await Promise.all([
+      listAssignableSessions(),
+      listStaffAssignments({ data: { staffId: staff.id } }),
+    ]);
+    setCamps(opts.campSessions);
+    setTeamEvents(opts.teamEvents);
+    setAssigned(new Set(mine.map((m) => keyOf(m.source_type, m.source_id))));
+    setLoading(false);
+  };
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [staff.id]);
+
+  const toggle = async (sourceType: "camp_session" | "team_event", item: AssignableItem) => {
+    const k = keyOf(sourceType, item.id);
+    setBusy(true);
+    try {
+      if (assigned.has(k)) {
+        await unassignStaffFromSession({ data: { staffId: staff.id, sourceType, sourceId: item.id } });
+      } else {
+        await assignStaffToSession({ data: { staffId: staff.id, sourceType, sourceId: item.id, sessionDate: item.date } });
+      }
+      const next = new Set(assigned);
+      if (next.has(k)) next.delete(k); else next.add(k);
+      setAssigned(next);
+    } finally { setBusy(false); }
+  };
+
+  const renderList = (sourceType: "camp_session" | "team_event", items: AssignableItem[]) => (
+    items.length === 0 ? <p className="text-[11px] text-muted-foreground">None upcoming.</p> : (
+      <ul className="space-y-1">
+        {items.map((it) => {
+          const k = keyOf(sourceType, it.id);
+          const on = assigned.has(k);
+          return (
+            <li key={k}>
+              <button
+                disabled={busy}
+                onClick={() => toggle(sourceType, it)}
+                className={"flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-xs " + (on ? "border-teal bg-teal/10" : "border-border bg-surface")}
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-foreground">{it.label}</p>
+                  <p className="truncate text-[10px] text-muted-foreground">{new Date(it.date + "T00:00:00").toLocaleDateString()} {it.start ? `· ${it.start}` : ""}</p>
+                </div>
+                {on ? <Check size={14} className="text-teal" /> : <Plus size={14} className="text-muted-foreground" />}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    )
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center">
+      <div className="flex max-h-[85vh] w-full max-w-md flex-col rounded-t-3xl bg-background p-5 sm:rounded-3xl">
+        <h2 className="font-display text-lg font-bold">Assign sessions</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {staff.full_name || staff.email} · ${((staff.session_rate_cents ?? 0) / 100).toFixed(2)} / session
+        </p>
+        <div className="mt-4 flex-1 space-y-4 overflow-y-auto">
+          {loading ? <p className="text-xs text-muted-foreground">Loading…</p> : (
+            <>
+              <section>
+                <h3 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Camp sessions</h3>
+                {renderList("camp_session", camps)}
+              </section>
+              <section>
+                <h3 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Team events</h3>
+                {renderList("team_event", teamEvents)}
+              </section>
+            </>
+          )}
+        </div>
+        <button onClick={onClose} className="mt-4 w-full rounded-full border border-border py-2 text-sm">Done</button>
       </div>
     </div>
   );

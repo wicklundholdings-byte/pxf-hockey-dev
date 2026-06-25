@@ -10,7 +10,7 @@ export const listStaff = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { data: staff, error } = await context.supabase
       .from("elite_staff_coaches")
-      .select("id,email,full_name,status,invited_at,accepted_at,invite_token,staff_user_id")
+      .select("id,email,full_name,status,invited_at,accepted_at,invite_token,staff_user_id,session_rate_cents")
       .eq("owner_id", context.userId)
       .neq("status", "removed")
       .order("invited_at", { ascending: false });

@@ -2169,6 +2169,7 @@ export type Database = {
           invited_at: string
           owner_id: string
           removed_at: string | null
+          session_rate_cents: number
           staff_user_id: string | null
           status: Database["public"]["Enums"]["elite_staff_status"]
           updated_at: string
@@ -2183,6 +2184,7 @@ export type Database = {
           invited_at?: string
           owner_id: string
           removed_at?: string | null
+          session_rate_cents?: number
           staff_user_id?: string | null
           status?: Database["public"]["Enums"]["elite_staff_status"]
           updated_at?: string
@@ -2197,6 +2199,7 @@ export type Database = {
           invited_at?: string
           owner_id?: string
           removed_at?: string | null
+          session_rate_cents?: number
           staff_user_id?: string | null
           status?: Database["public"]["Enums"]["elite_staff_status"]
           updated_at?: string
@@ -3036,6 +3039,33 @@ export type Database = {
           },
         ]
       }
+      ice_cost_overrides: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          month_start: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          month_start: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          month_start?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ice_import_batches: {
         Row: {
           created_at: string
@@ -3072,6 +3102,7 @@ export type Database = {
           batch_id: string | null
           booked_by_coach_id: string | null
           camp_id: string | null
+          cost_per_hour_cents: number | null
           created_at: string
           end_time: string
           id: string
@@ -3088,6 +3119,7 @@ export type Database = {
           batch_id?: string | null
           booked_by_coach_id?: string | null
           camp_id?: string | null
+          cost_per_hour_cents?: number | null
           created_at?: string
           end_time: string
           id?: string
@@ -3104,6 +3136,7 @@ export type Database = {
           batch_id?: string | null
           booked_by_coach_id?: string | null
           camp_id?: string | null
+          cost_per_hour_cents?: number | null
           created_at?: string
           end_time?: string
           id?: string
@@ -3845,6 +3878,47 @@ export type Database = {
             columns: ["registration_id"]
             isOneToOne: false
             referencedRelation: "registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_session_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          owner_id: string
+          rate_cents: number
+          session_date: string
+          source_id: string
+          source_type: Database["public"]["Enums"]["staff_session_source"]
+          staff_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          owner_id: string
+          rate_cents?: number
+          session_date: string
+          source_id: string
+          source_type: Database["public"]["Enums"]["staff_session_source"]
+          staff_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          owner_id?: string
+          rate_cents?: number
+          session_date?: string
+          source_id?: string
+          source_type?: Database["public"]["Enums"]["staff_session_source"]
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_session_assignments_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "elite_staff_coaches"
             referencedColumns: ["id"]
           },
         ]
@@ -4874,6 +4948,7 @@ export type Database = {
         | "waitlisted"
         | "refunded"
         | "pending"
+      staff_session_source: "camp_session" | "team_event"
       subscription_status_enum:
         | "free"
         | "trialing"
@@ -5090,6 +5165,7 @@ export const Constants = {
         "refunded",
         "pending",
       ],
+      staff_session_source: ["camp_session", "team_event"],
       subscription_status_enum: [
         "free",
         "trialing",
