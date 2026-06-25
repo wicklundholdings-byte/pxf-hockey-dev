@@ -1,9 +1,13 @@
 import { createFileRoute, Link, useNavigate, notFound } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { supabase } from "@/integrations/supabase/client";
+import { savePracticePlan } from "@/lib/teams.functions";
 import {
   ArrowLeft, Pencil, Calendar as CalendarIcon, Clock, Users, BarChart3, Disc3,
   Wrench, ListChecks, GripVertical, Trash2, ChevronRight, Plus, Copy, CheckCircle2,
   Play, X, SkipForward, Save, Pause, RotateCcw, Video, Image as ImageIcon, Minus, Printer,
+  ClipboardList,
 } from "lucide-react";
 import { DRILLS, findDrill, type Category, type Drill } from "@/data/pxf";
 
