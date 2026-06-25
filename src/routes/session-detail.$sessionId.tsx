@@ -748,11 +748,7 @@ function formatDate(iso: string) {
 /* ============================== Add Drill Modal ============================== */
 
 function AddDrillModal({ onClose, onPick }: { onClose: () => void; onPick: (d: Drill) => void }) {
-  const [q, setQ] = useState("");
-  const list = useMemo(() => {
-    const t = q.trim().toLowerCase();
-    return DRILLS.filter((d) => !t || d.name.toLowerCase().includes(t) || d.category.toLowerCase().includes(t));
-  }, [q]);
+  return <AddDrillModalImpl onClose={onClose} onPick={onPick} />;
 }
 
 /* ========================= Assign to Team Practice ========================= */
