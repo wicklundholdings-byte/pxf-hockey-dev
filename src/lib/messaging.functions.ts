@@ -110,3 +110,92 @@ export const canMessageContact = createServerFn({ method: "POST" })
       .limit(1);
     return { allowed: (reg ?? []).length > 0 };
   });
+
+export type TeamContact = {
+  id: string;
+  kind: "parent" | "athlete";
+  name: string;
+  email: string | null;
+  player_name: string | null;
+};
+
+export const listTeamMessageableContacts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { teamId: string }) => data)
+  .handler(async ({ data, context }): Promise<TeamContact[]> => {
+    const { supabase } = context as any;
+    const { data: players } = await supabase
+      .from("team_players")
+      .select("id, display_name, parent_contact_id, athlete_id")
+      .eq("team_id", data.teamId);
+    const rows = (players ?? []) as Array<{
+      id: string;
+      display_name: string | null;
+      parent_contact_id: string | null;
+      athlete_id: string | null;
+    }>;
+
+    const parentIds = Array.from(
+      new Set(rows.map((r) => r.parent_contact_id).filter(Boolean) as string[]),
+    );
+    const athleteIds = Array.from(
+      new Set(rows.map((r) => r.athlete_id).filter(Boolean) as string[]),
+    );
+
+    const parentsById: Record<string, { full_name: string | null; email: string | null }> = {};
+    if (parentIds.length > 0) {
+      const { data: parents } = await supabase
+        .from("contacts")
+        .select("id, full_name, email")
+        .in("id", parentIds);
+      (parents ?? []).forEach((p: any) => {
+        parentsById[p.id] = { full_name: p.full_name, email: p.email };
+      });
+    }
+
+    const athletesById: Record<string, { full_name: string | null }> = {};
+    if (athleteIds.length > 0) {
+      const { data: athletes } = await supabase
+        .from("attendees")
+        .select("id, full_name")
+        .in("id", athleteIds);
+      (athletes ?? []).forEach((a: any) => {
+        athletesById[a.id] = { full_name: a.full_name };
+      });
+    }
+
+    const result: TeamContact[] = [];
+    rows.forEach((r) => {
+      const playerName =
+        r.display_name ||
+        (r.athlete_id ? athletesById[r.athlete_id]?.full_name ?? null : null);
+      if (r.parent_contact_id) {
+        const p = parentsById[r.parent_contact_id];
+        if (p) {
+          result.push({
+            id: `parent:${r.parent_contact_id}`,
+            kind: "parent",
+            name: p.full_name || p.email || "Parent",
+            email: p.email,
+            player_name: playerName,
+          });
+        }
+      }
+      if (r.athlete_id) {
+        const a = athletesById[r.athlete_id];
+        if (a) {
+          result.push({
+            id: `athlete:${r.athlete_id}`,
+            kind: "athlete",
+            name: a.full_name || playerName || "Athlete",
+            email: null,
+            player_name: playerName,
+          });
+        }
+      }
+    });
+
+    // de-dupe by id
+    const seen = new Set<string>();
+    return result.filter((r) => (seen.has(r.id) ? false : (seen.add(r.id), true)));
+  });
