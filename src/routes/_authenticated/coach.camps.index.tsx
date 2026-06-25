@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/coach/status-badge";
 import { TierGate } from "@/components/tier-gate";
 import { useCurrentTier } from "@/hooks/use-tier";
 import { tierAtLeast } from "@/lib/tiers";
+import { BlockForStaff } from "@/components/block-for-staff";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/")({
   component: GatedCampsPage,
@@ -13,6 +14,15 @@ export const Route = createFileRoute("/_authenticated/coach/camps/")({
 
 function GatedCampsPage() {
   const { tier, loading } = useCurrentTier();
+  // Staff coaches never see camp management.
+  return (
+    <BlockForStaff>
+      <InnerGatedCampsPage tier={tier} loading={loading} />
+    </BlockForStaff>
+  );
+}
+
+function InnerGatedCampsPage({ tier, loading }: { tier: ReturnType<typeof useCurrentTier>["tier"]; loading: boolean }) {
   // Team / Association tiers don't have camps — show a unified team events feed instead
   if (tier && !tierAtLeast(tier, "elite")) return <TeamEventsFeed />;
   if (loading) return null;

@@ -5,6 +5,7 @@ import { DollarSign, TrendingUp, TrendingDown, Users, ChevronRight, AlertTriangl
 import { TeamEventRow } from "@/components/teams/team-event-row";
 import { useCurrentTier } from "@/hooks/use-tier";
 import { useAuth } from "@/hooks/use-auth";
+import { useEliteRole } from "@/hooks/use-elite-role";
 
 export const Route = createFileRoute("/_authenticated/coach/")({
   component: CoachDashboardRoot,
@@ -12,8 +13,10 @@ export const Route = createFileRoute("/_authenticated/coach/")({
 
 function CoachDashboardRoot() {
   const { tier, dbTier, loading } = useCurrentTier();
-  if (loading) return <div className="h-40" />;
+  const { role, loading: roleLoading, assignedTeamIds } = useEliteRole();
+  if (loading || roleLoading) return <div className="h-40" />;
   const effectiveCoachTier = tier === "parent" && dbTier ? dbTier : tier;
+  if (role === "staff") return <EliteStaffDashboard assignedTeamIds={assignedTeamIds} />;
   return effectiveCoachTier === "elite" ? <EliteCoachDashboard /> : <TeamCoachDashboard />;
 }
 
@@ -889,6 +892,227 @@ function TeamCoachDashboard() {
           </div>
         </section>
       )}
+    </div>
+  );
+}
+
+// ====================== Elite Staff Coach Dashboard ======================
+function EliteStaffDashboard({ assignedTeamIds }: { assignedTeamIds: string[] }) {
+  const { user } = useAuth();
+  const [coachName, setCoachName] = useState("");
+  const [kids, setKids] = useState<KidLite[]>([]);
+  const [teams, setTeams] = useState<TeamLite[]>([]);
+  const [events, setEvents] = useState<EventLite[]>([]);
+  const [leaders, setLeaders] = useState<LeaderLite[]>([]);
+  const [media, setMedia] = useState<MediaLite[]>([]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+      setCoachName(prof?.full_name ?? user.email?.split("@")[0] ?? "Coach");
+
+      // My athletes (kids)
+      try {
+        const ids = await (supabase as any).rpc("current_user_contact_ids");
+        const myContactIds = (ids.data ?? []) as string[];
+        if (myContactIds.length) {
+          const { data: kRows } = await supabase.from("attendees").select("id, full_name, birthday, position").in("contact_id", myContactIds);
+          setKids((kRows ?? []) as KidLite[]);
+        }
+      } catch { /* noop */ }
+
+      const teamIds = assignedTeamIds;
+      if (!teamIds.length) return;
+
+      const { data: tRows } = await supabase
+        .from("teams").select("id,name,season,logo_url,primary_color").in("id", teamIds);
+      setTeams(((tRows ?? []) as any[]).map((t) => ({ ...t, role: "coach" as const })));
+
+      // Next 7 days team events for assigned teams
+      const today = new Date().toISOString().slice(0, 10);
+      const in7 = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+      const { data: te } = await supabase
+        .from("team_events")
+        .select("id,event_type,title,opponent_name,venue,event_date,start_time,team_id, teams(name)")
+        .in("team_id", teamIds)
+        .in("event_type", ["game", "practice"])
+        .gte("event_date", today).lte("event_date", in7);
+      const evs: EventLite[] = ((te ?? []) as any[]).map((x) => ({
+        id: x.id, event_type: x.event_type, title: x.title, opponent_name: x.opponent_name,
+        venue: x.venue, event_date: x.event_date, start_time: x.start_time,
+        team_id: x.team_id, team_name: x.teams?.name ?? null,
+        link: { to: "/coach/teams/$teamId/schedule/$eventId", params: { teamId: x.team_id, eventId: x.id } },
+      }));
+      evs.sort((a, b) => a.event_date.localeCompare(b.event_date) || (a.start_time ?? "").localeCompare(b.start_time ?? ""));
+      setEvents(evs);
+
+      // Dryland leaders for assigned teams
+      const { data: players } = await supabase.from("team_players").select("athlete_id, team_id").in("team_id", teamIds);
+      const playerRows = ((players ?? []) as any[]);
+      const athleteIds = Array.from(new Set(playerRows.map((p) => p.athlete_id).filter(Boolean)));
+      const teamByAthlete = new Map<string, string>();
+      playerRows.forEach((p) => { if (p.athlete_id && !teamByAthlete.has(p.athlete_id)) teamByAthlete.set(p.athlete_id, p.team_id); });
+      const teamNameById = new Map((tRows ?? []).map((t: any) => [t.id, t.name as string]));
+      if (athleteIds.length) {
+        const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+        const { data: an } = await supabase.from("attendees").select("id, full_name").in("id", athleteIds);
+        const nameMap = new Map(((an ?? []) as any[]).map((a) => [a.id, a.full_name as string]));
+        const { data: prog } = await supabase
+          .from("dryland_watch_progress").select("athlete_id, completed, last_watched_at")
+          .in("athlete_id", athleteIds).eq("completed", true).gte("last_watched_at", weekAgo);
+        const counts = new Map<string, number>();
+        ((prog ?? []) as any[]).forEach((rr) => counts.set(rr.athlete_id, (counts.get(rr.athlete_id) ?? 0) + 1));
+        const top = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3);
+        setLeaders(top.map(([id, count]) => ({
+          athlete_id: id, name: nameMap.get(id) ?? "Athlete",
+          team_name: teamNameById.get(teamByAthlete.get(id) ?? "") ?? "", count,
+        })));
+        const { data: med } = await supabase
+          .from("athlete_media").select("id, thumbnail_url, video_url, athlete_id, recorded_at")
+          .in("athlete_id", athleteIds).order("recorded_at", { ascending: false }).limit(3);
+        setMedia(((med ?? []) as any[]).map((m) => ({
+          id: m.id, thumb_url: m.thumbnail_url ?? m.video_url,
+          athlete_name: nameMap.get(m.athlete_id) ?? null,
+          team_id: teamByAthlete.get(m.athlete_id) ?? "",
+        })));
+      }
+    })();
+  }, [user?.id, assignedTeamIds.join(",")]);
+
+  const firstName = (coachName || user?.email?.split("@")[0] || "Coach").split(/\s+/)[0];
+
+  return (
+    <div className="space-y-6 pb-4">
+      <div>
+        <h1 className="font-display text-2xl font-bold leading-tight">Hey {firstName},</h1>
+        <p className="text-base font-light text-muted-foreground">Here's what's happening.</p>
+      </div>
+
+      {kids.length > 0 && (
+        <section>
+          <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">My Athletes</h2>
+          <div className={"mt-2 " + (kids.length > 1 ? "grid grid-cols-2 gap-3" : "")}>
+            {kids.map((k) => {
+              const age = ageOf(k.birthday);
+              const inits = k.full_name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
+              return (
+                <div key={k.id} className="rounded-2xl border border-border bg-card p-4">
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <div className="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-teal/30 to-volt/20 font-display text-lg font-bold text-teal ring-2 ring-teal/40">{inits}</div>
+                    <p className="w-full break-words text-sm font-semibold leading-tight">{k.full_name}</p>
+                    <p className="text-[11px] text-muted-foreground">{[age != null ? `Age ${age}` : null, k.position].filter(Boolean).join(" · ") || "Profile"}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      <section>
+        <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Next Up · 7 days</h2>
+        {events.length === 0 ? (
+          <p className="mt-2 rounded-2xl border border-border bg-card p-4 text-xs text-muted-foreground">No events scheduled in the next 7 days.</p>
+        ) : (
+          <div className="mt-2 space-y-2">
+            {events.map((e) => (
+              <Link key={`${e.event_type}-${e.id}`} to={e.link.to} params={e.link.params} className="block">
+                <TeamEventRow event={{
+                  event_type: e.event_type, title: e.title, opponent_name: e.opponent_name,
+                  venue: e.venue, event_date: e.event_date, start_time: e.start_time, team_name: e.team_name,
+                }} />
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">My Teams</h2>
+        {teams.length === 0 ? (
+          <p className="mt-2 rounded-2xl border border-border bg-card p-4 text-xs text-muted-foreground">No teams assigned yet. Ask the head coach to assign one.</p>
+        ) : (
+          <div className="mt-2 space-y-2">
+            {teams.map((t) => (
+              <Link key={t.id} to="/coach/teams/$teamId" params={{ teamId: t.id }} className="flex items-center justify-between rounded-2xl border border-border bg-card p-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  {t.logo_url ? (
+                    <img src={t.logo_url} alt="" className="h-11 w-11 rounded-xl object-cover" />
+                  ) : (
+                    <div className="grid h-11 w-11 place-items-center rounded-xl text-xs font-bold text-background" style={{ background: t.primary_color || "var(--color-teal)" }}>
+                      {t.name.slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">{t.name}</p>
+                    <p className="truncate text-[11px] text-muted-foreground">{t.season ?? ""}</p>
+                  </div>
+                </div>
+                <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[9px] font-bold tracking-wider text-teal">COACH</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Dryland This Week</h2>
+            <Trophy size={14} className="text-volt" />
+          </div>
+          {leaders.length === 0 ? (
+            <p className="mt-3 text-xs text-muted-foreground">No completed sessions yet this week.</p>
+          ) : (
+            <ol className="mt-3 space-y-2">
+              {leaders.map((l, idx) => (
+                <li key={l.athlete_id} className="flex items-center gap-3">
+                  <span className={"grid h-7 w-7 place-items-center rounded-full text-[11px] font-bold " + (idx === 0 ? "bg-volt/20 text-volt" : "bg-surface text-foreground")}>{idx + 1}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{l.name}</p>
+                    <p className="truncate text-[11px] text-muted-foreground">{l.team_name}</p>
+                  </div>
+                  <span className="text-xs font-bold text-teal">{l.count} session{l.count === 1 ? "" : "s"}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      </section>
+
+      {media.length > 0 && (
+        <section>
+          <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Recent Media</h2>
+          <div className="-mx-5 mt-2 flex gap-3 overflow-x-auto px-5 pb-1">
+            {media.map((m) => (
+              <div key={m.id} className="relative block h-32 w-44 shrink-0 overflow-hidden rounded-2xl border border-border bg-surface">
+                {m.thumb_url ? (
+                  <img src={m.thumb_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="grid h-full w-full place-items-center text-muted-foreground"><ImageIcon size={20} /></div>
+                )}
+                {m.athlete_name && (
+                  <span className="absolute bottom-2 left-2 rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-bold text-foreground">
+                    {m.athlete_name.split(/\s+/)[0]}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div className="grid grid-cols-2 gap-3">
+        <Link to="/coach/ice" className="flex items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-transparent py-3 text-center transition-colors hover:bg-teal/5">
+          <Snowflake size={18} className="text-teal" />
+          <span className="text-xs font-semibold text-teal">Add Ice Times</span>
+        </Link>
+        <Link to="/coach/sessions" className="flex items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-transparent py-3 text-center transition-colors hover:bg-teal/5">
+          <Plus size={18} className="text-teal" />
+          <span className="text-xs font-semibold text-teal">{"\u00a0"}Create Session</span>
+        </Link>
+      </div>
     </div>
   );
 }

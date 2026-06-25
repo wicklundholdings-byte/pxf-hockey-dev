@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { DollarSign, TrendingUp, Wallet, Tag, Plus, X, Copy, CheckCircle2, BarChart3, Percent, Download } from "lucide-react";
 import { TierGate } from "@/components/tier-gate";
+import { BlockForStaff } from "@/components/block-for-staff";
 
 export const Route = createFileRoute("/_authenticated/coach/financials")({
   component: GatedFinancials,
@@ -11,9 +12,11 @@ export const Route = createFileRoute("/_authenticated/coach/financials")({
 
 function GatedFinancials() {
   return (
-    <TierGate feature="stripePayouts">
-      <FinancialsPage />
-    </TierGate>
+    <BlockForStaff>
+      <TierGate feature="stripePayouts">
+        <FinancialsPage />
+      </TierGate>
+    </BlockForStaff>
   );
 }
 

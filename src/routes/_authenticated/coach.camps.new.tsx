@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, ArrowRight, Check, Upload, Plus, Trash2, CalendarDays, MapPin, DollarSign, FileText, Snowflake } from "lucide-react";
 import { StatusBadge } from "@/components/coach/status-badge";
 import { TierGate } from "@/components/tier-gate";
+import { BlockForStaff } from "@/components/block-for-staff";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/new")({
   component: GatedNewCampWizard,
@@ -14,9 +15,11 @@ export const Route = createFileRoute("/_authenticated/coach/camps/new")({
 
 function GatedNewCampWizard() {
   return (
-    <TierGate feature="campManagement">
-      <NewCampWizard />
-    </TierGate>
+    <BlockForStaff>
+      <TierGate feature="campManagement">
+        <NewCampWizard />
+      </TierGate>
+    </BlockForStaff>
   );
 }
 
