@@ -11,9 +11,10 @@ export const Route = createFileRoute("/_authenticated/coach/")({
 });
 
 function CoachDashboardRoot() {
-  const { tier, loading } = useCurrentTier();
+  const { tier, dbTier, loading } = useCurrentTier();
   if (loading) return <div className="h-40" />;
-  return tier === "elite" ? <EliteCoachDashboard /> : <TeamCoachDashboard />;
+  const effectiveCoachTier = tier === "parent" && dbTier ? dbTier : tier;
+  return effectiveCoachTier === "elite" ? <EliteCoachDashboard /> : <TeamCoachDashboard />;
 }
 
 type Camp = { id: string; name: string; slug: string; capacity: number; status: string; start_date: string | null; price_cents: number };

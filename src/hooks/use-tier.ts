@@ -28,6 +28,7 @@ export function setMockTier(tier: TierId | "auto") {
 
 export function useCurrentTier(): {
   tier: TierId | null;
+  dbTier: TierId | null;
   tierMeta: Tier | null;
   loading: boolean;
   isMocked: boolean;
@@ -53,10 +54,6 @@ export function useCurrentTier(): {
 
   useEffect(() => {
     let cancelled = false;
-    if (mock) {
-      setLoading(false);
-      return;
-    }
     if (authLoading) return;
     if (!user) {
       setDbTier(null);
@@ -85,6 +82,7 @@ export function useCurrentTier(): {
   const effective = mock ?? dbTier;
   return {
     tier: effective,
+    dbTier,
     tierMeta: effective ? getTier(effective) : null,
     loading: authLoading || loading,
     isMocked: !!mock,

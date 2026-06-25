@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { X, LogIn, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { DEV_ACCOUNTS, DEV_PASSWORD, seedDevAccounts } from "@/lib/dev-accounts.functions";
+import { setMockTier } from "@/hooks/use-tier";
 
 /**
  * Dev-only login & seed panel. Rendered on /auth either via 5-tap on the PXF
@@ -36,15 +37,16 @@ export function DevPanel({ onClose }: { onClose: () => void }) {
     })();
   }, [seed]);
 
-  async function loginAs(email: string) {
+  async function loginAs(account: (typeof DEV_ACCOUNTS)[number]) {
     setErr(null);
-    setBusy(email);
-    const { error } = await supabase.auth.signInWithPassword({ email, password: DEV_PASSWORD });
+    setBusy(account.email);
+    const { error } = await supabase.auth.signInWithPassword({ email: account.email, password: DEV_PASSWORD });
     setBusy(null);
     if (error) {
       setErr(error.message);
       return;
     }
+    setMockTier(account.tier);
     onClose();
     navigate({ to: "/" });
   }
@@ -92,7 +94,7 @@ export function DevPanel({ onClose }: { onClose: () => void }) {
                 <p className="truncate text-[11px] text-muted-foreground">{a.email}</p>
               </div>
               <button
-                onClick={() => loginAs(a.email)}
+                onClick={() => loginAs(a)}
                 disabled={!!busy || seeding}
                 className="flex shrink-0 items-center gap-1 rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-primary-foreground disabled:opacity-50"
               >
