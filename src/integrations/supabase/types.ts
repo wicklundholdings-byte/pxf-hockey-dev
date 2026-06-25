@@ -2158,6 +2158,87 @@ export type Database = {
           },
         ]
       }
+      elite_staff_coaches: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          invite_token: string
+          invited_at: string
+          owner_id: string
+          removed_at: string | null
+          staff_user_id: string | null
+          status: Database["public"]["Enums"]["elite_staff_status"]
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          invite_token?: string
+          invited_at?: string
+          owner_id: string
+          removed_at?: string | null
+          staff_user_id?: string | null
+          status?: Database["public"]["Enums"]["elite_staff_status"]
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          invite_token?: string
+          invited_at?: string
+          owner_id?: string
+          removed_at?: string | null
+          staff_user_id?: string | null
+          status?: Database["public"]["Enums"]["elite_staff_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      elite_staff_team_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          staff_id: string
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          staff_id: string
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          staff_id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "elite_staff_team_assignments_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "elite_staff_coaches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "elite_staff_team_assignments_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_campaigns: {
         Row: {
           audience_filter: Json
@@ -4649,9 +4730,11 @@ export type Database = {
       }
     }
     Functions: {
+      accept_staff_invite: { Args: { _token: string }; Returns: Json }
       claim_coach_role: { Args: never; Returns: undefined }
       current_user_contact_ids: { Args: never; Returns: string[] }
       effective_owner_id: { Args: never; Returns: string }
+      elite_owner_for: { Args: { _user: string }; Returns: string }
       get_combine_share: { Args: { _token: string }; Returns: Json }
       get_meta_pixel_id: { Args: { _coach_id: string }; Returns: string }
       get_profile_names: {
@@ -4662,6 +4745,7 @@ export type Database = {
         }[]
       }
       get_rsvp_by_token: { Args: { _token: string }; Returns: Json }
+      get_staff_invite_by_token: { Args: { _token: string }; Returns: Json }
       get_team_dryland_leaderboard: {
         Args: { _since: string; _team_id: string }
         Returns: {
@@ -4689,6 +4773,7 @@ export type Database = {
         Args: { _conv: string; _user: string }
         Returns: boolean
       }
+      is_elite_staff: { Args: { _user: string }; Returns: boolean }
       is_parent_of_camp: { Args: { _camp_id: string }; Returns: boolean }
       is_team_coach: { Args: { _team_id: string }; Returns: boolean }
       is_team_member_visible_to_parent: {
@@ -4716,6 +4801,7 @@ export type Database = {
         Args: { p_tier: string; p_user_id: string }
         Returns: undefined
       }
+      staff_assigned_team_ids: { Args: { _user: string }; Returns: string[] }
       submit_team_invite: {
         Args: {
           _athlete_dob: string
@@ -4755,6 +4841,7 @@ export type Database = {
         | "strength_fitness"
         | "synthetic_ice"
         | "mobility_flexibility"
+      elite_staff_status: "invited" | "active" | "removed"
       email_campaign_status: "draft" | "scheduled" | "sent"
       email_marketing_provider: "mailchimp" | "klaviyo"
       enrollment_role: "parent" | "coach"
@@ -4967,6 +5054,7 @@ export const Constants = {
         "synthetic_ice",
         "mobility_flexibility",
       ],
+      elite_staff_status: ["invited", "active", "removed"],
       email_campaign_status: ["draft", "scheduled", "sent"],
       email_marketing_provider: ["mailchimp", "klaviyo"],
       enrollment_role: ["parent", "coach"],

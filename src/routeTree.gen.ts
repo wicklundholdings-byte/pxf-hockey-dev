@@ -42,6 +42,7 @@ import { Route as CampsIndexRouteImport } from './routes/camps.index'
 import { Route as TeamInviteTokenRouteImport } from './routes/team-invite.$token'
 import { Route as StoreCartRouteImport } from './routes/store.cart'
 import { Route as StoreProductIdRouteImport } from './routes/store.$productId'
+import { Route as StaffInviteTokenRouteImport } from './routes/staff-invite.$token'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
 import { Route as RsvpTokenRouteImport } from './routes/rsvp.$token'
 import { Route as PaymentsSubscribeRouteImport } from './routes/payments.subscribe'
@@ -92,6 +93,7 @@ import { Route as AuthenticatedCoachWaiversRouteImport } from './routes/_authent
 import { Route as AuthenticatedCoachTrainRouteImport } from './routes/_authenticated/coach.train'
 import { Route as AuthenticatedCoachTeamsRouteImport } from './routes/_authenticated/coach.teams'
 import { Route as AuthenticatedCoachTeamRouteImport } from './routes/_authenticated/coach.team'
+import { Route as AuthenticatedCoachStaffRouteImport } from './routes/_authenticated/coach.staff'
 import { Route as AuthenticatedCoachSequencesRouteImport } from './routes/_authenticated/coach.sequences'
 import { Route as AuthenticatedCoachRosterRouteImport } from './routes/_authenticated/coach.roster'
 import { Route as AuthenticatedCoachPlaybookRouteImport } from './routes/_authenticated/coach.playbook'
@@ -319,6 +321,11 @@ const StoreCartRoute = StoreCartRouteImport.update({
 const StoreProductIdRoute = StoreProductIdRouteImport.update({
   id: '/store/$productId',
   path: '/store/$productId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffInviteTokenRoute = StaffInviteTokenRouteImport.update({
+  id: '/staff-invite/$token',
+  path: '/staff-invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SessionDetailSessionIdRoute = SessionDetailSessionIdRouteImport.update({
@@ -574,6 +581,11 @@ const AuthenticatedCoachTeamsRoute = AuthenticatedCoachTeamsRouteImport.update({
 const AuthenticatedCoachTeamRoute = AuthenticatedCoachTeamRouteImport.update({
   id: '/team',
   path: '/team',
+  getParentRoute: () => AuthenticatedCoachRoute,
+} as any)
+const AuthenticatedCoachStaffRoute = AuthenticatedCoachStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
   getParentRoute: () => AuthenticatedCoachRoute,
 } as any)
 const AuthenticatedCoachSequencesRoute =
@@ -1003,6 +1015,7 @@ export interface FileRoutesByFullPath {
   '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
+  '/staff-invite/$token': typeof StaffInviteTokenRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
   '/team-invite/$token': typeof TeamInviteTokenRoute
@@ -1030,6 +1043,7 @@ export interface FileRoutesByFullPath {
   '/coach/playbook': typeof AuthenticatedCoachPlaybookRoute
   '/coach/roster': typeof AuthenticatedCoachRosterRoute
   '/coach/sequences': typeof AuthenticatedCoachSequencesRoute
+  '/coach/staff': typeof AuthenticatedCoachStaffRoute
   '/coach/team': typeof AuthenticatedCoachTeamRoute
   '/coach/teams': typeof AuthenticatedCoachTeamsRouteWithChildren
   '/coach/train': typeof AuthenticatedCoachTrainRoute
@@ -1146,6 +1160,7 @@ export interface FileRoutesByTo {
   '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
+  '/staff-invite/$token': typeof StaffInviteTokenRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
   '/team-invite/$token': typeof TeamInviteTokenRoute
@@ -1173,6 +1188,7 @@ export interface FileRoutesByTo {
   '/coach/playbook': typeof AuthenticatedCoachPlaybookRoute
   '/coach/roster': typeof AuthenticatedCoachRosterRoute
   '/coach/sequences': typeof AuthenticatedCoachSequencesRoute
+  '/coach/staff': typeof AuthenticatedCoachStaffRoute
   '/coach/team': typeof AuthenticatedCoachTeamRoute
   '/coach/train': typeof AuthenticatedCoachTrainRoute
   '/coach/waivers': typeof AuthenticatedCoachWaiversRoute
@@ -1291,6 +1307,7 @@ export interface FileRoutesById {
   '/payments/subscribe': typeof PaymentsSubscribeRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
+  '/staff-invite/$token': typeof StaffInviteTokenRoute
   '/store/$productId': typeof StoreProductIdRoute
   '/store/cart': typeof StoreCartRoute
   '/team-invite/$token': typeof TeamInviteTokenRoute
@@ -1318,6 +1335,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/playbook': typeof AuthenticatedCoachPlaybookRoute
   '/_authenticated/coach/roster': typeof AuthenticatedCoachRosterRoute
   '/_authenticated/coach/sequences': typeof AuthenticatedCoachSequencesRoute
+  '/_authenticated/coach/staff': typeof AuthenticatedCoachStaffRoute
   '/_authenticated/coach/team': typeof AuthenticatedCoachTeamRoute
   '/_authenticated/coach/teams': typeof AuthenticatedCoachTeamsRouteWithChildren
   '/_authenticated/coach/train': typeof AuthenticatedCoachTrainRoute
@@ -1441,6 +1459,7 @@ export interface FileRouteTypes {
     | '/payments/subscribe'
     | '/rsvp/$token'
     | '/session-detail/$sessionId'
+    | '/staff-invite/$token'
     | '/store/$productId'
     | '/store/cart'
     | '/team-invite/$token'
@@ -1468,6 +1487,7 @@ export interface FileRouteTypes {
     | '/coach/playbook'
     | '/coach/roster'
     | '/coach/sequences'
+    | '/coach/staff'
     | '/coach/team'
     | '/coach/teams'
     | '/coach/train'
@@ -1584,6 +1604,7 @@ export interface FileRouteTypes {
     | '/payments/subscribe'
     | '/rsvp/$token'
     | '/session-detail/$sessionId'
+    | '/staff-invite/$token'
     | '/store/$productId'
     | '/store/cart'
     | '/team-invite/$token'
@@ -1611,6 +1632,7 @@ export interface FileRouteTypes {
     | '/coach/playbook'
     | '/coach/roster'
     | '/coach/sequences'
+    | '/coach/staff'
     | '/coach/team'
     | '/coach/train'
     | '/coach/waivers'
@@ -1728,6 +1750,7 @@ export interface FileRouteTypes {
     | '/payments/subscribe'
     | '/rsvp/$token'
     | '/session-detail/$sessionId'
+    | '/staff-invite/$token'
     | '/store/$productId'
     | '/store/cart'
     | '/team-invite/$token'
@@ -1755,6 +1778,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach/playbook'
     | '/_authenticated/coach/roster'
     | '/_authenticated/coach/sequences'
+    | '/_authenticated/coach/staff'
     | '/_authenticated/coach/team'
     | '/_authenticated/coach/teams'
     | '/_authenticated/coach/train'
@@ -1867,6 +1891,7 @@ export interface RootRouteChildren {
   PaymentsSubscribeRoute: typeof PaymentsSubscribeRoute
   RsvpTokenRoute: typeof RsvpTokenRoute
   SessionDetailSessionIdRoute: typeof SessionDetailSessionIdRoute
+  StaffInviteTokenRoute: typeof StaffInviteTokenRoute
   StoreProductIdRoute: typeof StoreProductIdRoute
   StoreCartRoute: typeof StoreCartRoute
   TeamInviteTokenRoute: typeof TeamInviteTokenRoute
@@ -2108,6 +2133,13 @@ declare module '@tanstack/react-router' {
       path: '/store/$productId'
       fullPath: '/store/$productId'
       preLoaderRoute: typeof StoreProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff-invite/$token': {
+      id: '/staff-invite/$token'
+      path: '/staff-invite/$token'
+      fullPath: '/staff-invite/$token'
+      preLoaderRoute: typeof StaffInviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/session-detail/$sessionId': {
@@ -2458,6 +2490,13 @@ declare module '@tanstack/react-router' {
       path: '/team'
       fullPath: '/coach/team'
       preLoaderRoute: typeof AuthenticatedCoachTeamRouteImport
+      parentRoute: typeof AuthenticatedCoachRoute
+    }
+    '/_authenticated/coach/staff': {
+      id: '/_authenticated/coach/staff'
+      path: '/staff'
+      fullPath: '/coach/staff'
+      preLoaderRoute: typeof AuthenticatedCoachStaffRouteImport
       parentRoute: typeof AuthenticatedCoachRoute
     }
     '/_authenticated/coach/sequences': {
@@ -3110,6 +3149,7 @@ interface AuthenticatedCoachRouteChildren {
   AuthenticatedCoachPlaybookRoute: typeof AuthenticatedCoachPlaybookRoute
   AuthenticatedCoachRosterRoute: typeof AuthenticatedCoachRosterRoute
   AuthenticatedCoachSequencesRoute: typeof AuthenticatedCoachSequencesRoute
+  AuthenticatedCoachStaffRoute: typeof AuthenticatedCoachStaffRoute
   AuthenticatedCoachTeamRoute: typeof AuthenticatedCoachTeamRoute
   AuthenticatedCoachTeamsRoute: typeof AuthenticatedCoachTeamsRouteWithChildren
   AuthenticatedCoachTrainRoute: typeof AuthenticatedCoachTrainRoute
@@ -3139,6 +3179,7 @@ const AuthenticatedCoachRouteChildren: AuthenticatedCoachRouteChildren = {
   AuthenticatedCoachPlaybookRoute: AuthenticatedCoachPlaybookRoute,
   AuthenticatedCoachRosterRoute: AuthenticatedCoachRosterRoute,
   AuthenticatedCoachSequencesRoute: AuthenticatedCoachSequencesRoute,
+  AuthenticatedCoachStaffRoute: AuthenticatedCoachStaffRoute,
   AuthenticatedCoachTeamRoute: AuthenticatedCoachTeamRoute,
   AuthenticatedCoachTeamsRoute: AuthenticatedCoachTeamsRouteWithChildren,
   AuthenticatedCoachTrainRoute: AuthenticatedCoachTrainRoute,
@@ -3361,6 +3402,7 @@ const rootRouteChildren: RootRouteChildren = {
   PaymentsSubscribeRoute: PaymentsSubscribeRoute,
   RsvpTokenRoute: RsvpTokenRoute,
   SessionDetailSessionIdRoute: SessionDetailSessionIdRoute,
+  StaffInviteTokenRoute: StaffInviteTokenRoute,
   StoreProductIdRoute: StoreProductIdRoute,
   StoreCartRoute: StoreCartRoute,
   TeamInviteTokenRoute: TeamInviteTokenRoute,

@@ -7,6 +7,7 @@ import { TrialBanner } from "@/components/trial-banner";
 import { DevTierSwitcher } from "@/components/tier-gate";
 import { getUserAppRole } from "@/lib/user-role";
 import { StandaloneRecorder } from "@/routes/_authenticated/coach.film";
+import { useEliteRole } from "@/hooks/use-elite-role";
 
 export const Route = createFileRoute("/_authenticated/coach")({
   ssr: false,
@@ -23,13 +24,16 @@ export const Route = createFileRoute("/_authenticated/coach")({
 function CoachLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [recorderOpen, setRecorderOpen] = useState(false);
-  const navItems = [
+  const { role } = useEliteRole();
+  const baseNav = [
     { to: "/coach", label: "Dashboard", icon: LayoutDashboard, exact: true, match: ["/coach"] },
     { to: "/coach/camps", label: "Events", icon: CalendarDays, match: ["/coach/camps", "/coach/bookings"] },
     { to: "/coach/teams", label: "Teams", icon: Users, match: ["/coach/teams"] },
     { to: "/coach/playbook", label: "Playbook", icon: BookOpen, match: ["/coach/playbook"] },
     { to: "/coach/inbox", label: "Inbox", icon: MessageSquare, match: ["/coach/inbox", "/coach/broadcast"] },
   ];
+  // Staff coaches cannot see camp management at all.
+  const navItems = role === "staff" ? baseNav.filter((n) => n.to !== "/coach/camps") : baseNav;
   const hideChrome = pathname === "/coach/plans";
 
   const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
