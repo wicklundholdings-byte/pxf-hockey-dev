@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { createEvent } from "@/lib/teams.functions";
-import { loadTeamSeasonStats, gaa, svpct, type TeamRecord, type SkaterAgg, type GoalieAgg } from "@/lib/team-stats";
+import { loadTeamSeasonStats, type TeamRecord, type SkaterAgg } from "@/lib/team-stats";
 import { Swords, Dumbbell, MapPin, Users, Plus, Flame, Medal, ChevronRight, AlertTriangle, X, Film } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/")({
@@ -42,7 +42,6 @@ function TeamDashboard() {
   // Section 1: Season record
   const [record, setRecord] = useState<TeamRecord | null>(null);
   const [skaters, setSkaters] = useState<SkaterAgg[]>([]);
-  const [goalies, setGoalies] = useState<GoalieAgg[]>([]);
 
   // Section 2/3: Upcoming events
   const [upcoming, setUpcoming] = useState<EventRow[]>([]);
@@ -64,7 +63,7 @@ function TeamDashboard() {
   useEffect(() => {
     (async () => {
       const s = await loadTeamSeasonStats(teamId, "all");
-      setRecord(s.record); setSkaters(s.skaters); setGoalies(s.goalies);
+      setRecord(s.record); setSkaters(s.skaters);
     })();
   }, [teamId]);
 
@@ -176,17 +175,10 @@ function TeamDashboard() {
     return null;
   }, [upcoming]);
 
-  // Stats snapshot
-  const totals = useMemo(() => {
-    return skaters.reduce(
-      (acc, s) => ({ g: acc.g + s.g, a: acc.a + s.a, pts: acc.pts + s.pts, pim: acc.pim + s.pim }),
-      { g: 0, a: 0, pts: 0, pim: 0 },
-    );
-  }, [skaters]);
-  const scoringLeader = skaters[0] ?? null;
-  const topGoalie = useMemo(() => {
-    return [...goalies].sort((a, b) => (b.saves / Math.max(1, b.shots)) - (a.saves / Math.max(1, a.shots)))[0] ?? null;
-  }, [goalies]);
+  // Leaderboards: top 3 by goals, assists, points
+  const goalsTop3 = useMemo(() => [...skaters].sort((a, b) => b.g - a.g || b.pts - a.pts).slice(0, 3), [skaters]);
+  const assistsTop3 = useMemo(() => [...skaters].sort((a, b) => b.a - a.a || b.pts - a.pts).slice(0, 3), [skaters]);
+  const pointsTop3 = useMemo(() => [...skaters].sort((a, b) => b.pts - a.pts || b.g - a.g).slice(0, 3), [skaters]);
 
   const dropPct = attendance.avg != null && attendance.prev != null ? attendance.prev - attendance.avg : 0;
   const showAttendanceWarning = dropPct > 15;
@@ -247,31 +239,10 @@ function TeamDashboard() {
           <p className="text-[10px] font-bold tracking-[0.25em] text-muted-foreground">TEAM STATS</p>
           <Link to="/coach/teams/$teamId/stats" params={{ teamId }} className="text-[11px] font-bold text-teal">View Full Stats ›</Link>
         </div>
-        <div className="mt-2 grid grid-cols-4 gap-1.5">
-          <StatChip label="G" value={totals.g} />
-          <StatChip label="A" value={totals.a} />
-          <StatChip label="PTS" value={totals.pts} highlight />
-          <StatChip label="PIM" value={totals.pim} />
-        </div>
-        <div className="mt-2 space-y-1.5">
-          {scoringLeader ? (
-            <div className="flex items-center justify-between rounded-2xl border border-border bg-surface px-3 py-2">
-              <div className="min-w-0">
-                <p className="text-[9px] font-bold tracking-wider text-amber-400">SCORING LEADER</p>
-                <p className="truncate text-sm font-bold">{scoringLeader.display_name}</p>
-              </div>
-              <p className="shrink-0 text-[11px] font-bold text-muted-foreground">{scoringLeader.g}G · {scoringLeader.a}A · <span className="text-teal">{scoringLeader.pts}PTS</span></p>
-            </div>
-          ) : null}
-          {topGoalie ? (
-            <div className="flex items-center justify-between rounded-2xl border border-border bg-surface px-3 py-2">
-              <div className="min-w-0">
-                <p className="text-[9px] font-bold tracking-wider text-teal">TOP GOALIE</p>
-                <p className="truncate text-sm font-bold">{topGoalie.display_name}</p>
-              </div>
-              <p className="shrink-0 text-[11px] font-bold text-muted-foreground">SV% <span className="text-teal">{svpct(topGoalie.saves, topGoalie.shots)}</span> · {gaa(topGoalie.ga, topGoalie.gp)} GAA</p>
-            </div>
-          ) : null}
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          <LeaderboardColumn title="GOALS" rows={goalsTop3} statKey="g" />
+          <LeaderboardColumn title="ASSISTS" rows={assistsTop3} statKey="a" />
+          <LeaderboardColumn title="POINTS" rows={pointsTop3} statKey="pts" />
         </div>
       </section>
 
@@ -385,11 +356,30 @@ function RecordStat({ label, value, accent }: { label: string; value: number; ac
   );
 }
 
-function StatChip({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
+function LeaderboardColumn({ title, rows, statKey }: { title: string; rows: SkaterAgg[]; statKey: "g" | "a" | "pts" }) {
   return (
-    <div className={"rounded-xl border border-border bg-surface px-2 py-2 text-center"}>
-      <p className={"font-display text-lg font-bold " + (highlight ? "text-teal" : "")}>{value}</p>
-      <p className="text-[9px] font-bold tracking-wider text-muted-foreground">{label}</p>
+    <div className="rounded-2xl border border-border bg-surface p-2">
+      <p className="mb-1.5 text-center text-[9px] font-bold tracking-wider text-muted-foreground">{title}</p>
+      <div className="space-y-1">
+        {rows.map((r, i) => {
+          const isFirst = i === 0;
+          const rank = i + 1;
+          const lastName = r.display_name.trim().split(/\s+/).pop() ?? r.display_name;
+          return (
+            <div
+              key={r.team_player_id}
+              className={`flex items-center gap-2 rounded-xl px-2 py-1.5 text-[11px] ${isFirst ? "bg-teal/10" : ""}`}
+            >
+              <span className={`w-4 text-center font-bold ${isFirst ? "text-teal" : "text-muted-foreground"}`}>#{rank}</span>
+              <span className="min-w-0 flex-1 truncate font-bold">{lastName}</span>
+              <span className="shrink-0 font-bold tabular-nums">{r[statKey]}</span>
+            </div>
+          );
+        })}
+        {rows.length === 0 && (
+          <p className="py-2 text-center text-[10px] text-muted-foreground">No data</p>
+        )}
+      </div>
     </div>
   );
 }
