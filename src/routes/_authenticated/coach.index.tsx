@@ -187,10 +187,17 @@ function CoachDashboard() {
           <Snowflake size={18} className="text-teal" />
           <span className="text-xs font-semibold text-teal">Add Ice Times</span>
         </Link>
-        <Link to="/coach/sessions/new" className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/40 bg-transparent py-3 text-center transition-colors hover:bg-emerald-400/5">
-          <Plus size={18} className="text-emerald-400" />
-          <span className="text-xs font-semibold text-emerald-400">+ Create Session</span>
-        </Link>
+        {hasCamps ? (
+          <Link to="/coach/camps/new" className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/40 bg-transparent py-3 text-center transition-colors hover:bg-emerald-400/5">
+            <Plus size={18} className="text-emerald-400" />
+            <span className="text-xs font-semibold text-emerald-400">+ Create Session</span>
+          </Link>
+        ) : (
+          <Link to="/coach/teams" className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/40 bg-transparent py-3 text-center transition-colors hover:bg-emerald-400/5">
+            <Users size={18} className="text-emerald-400" />
+            <span className="text-xs font-semibold text-emerald-400">My Teams</span>
+          </Link>
+        )}
       </div>
       {/* Quick Access */}
       <div className={"grid gap-2 " + (hasCamps ? "grid-cols-4" : "grid-cols-3")}>
