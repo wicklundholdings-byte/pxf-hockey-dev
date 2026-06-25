@@ -1,19 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { DollarSign, TrendingUp, Users, CalendarDays, Activity, BarChart3, ChevronRight, AlertTriangle, Snowflake, CalendarPlus, Plus } from "lucide-react";
+import { DollarSign, TrendingUp, Users, CalendarDays, Activity, BarChart3, ChevronRight, AlertTriangle, Snowflake, CalendarPlus, Plus, Image as ImageIcon, Trophy, ChevronDown, Cpu } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip, CartesianGrid } from "recharts";
 import { StatusBadge } from "@/components/coach/status-badge";
 import { TodaysAttendanceCard } from "@/components/coach/todays-attendance-card";
 import { UpcomingSevenDays } from "@/components/teams/upcoming-7-days";
 import { DrylandActivityCard } from "@/components/coach/dryland-activity-card";
+import { TeamEventRow } from "@/components/teams/team-event-row";
 import { useCurrentTier } from "@/hooks/use-tier";
 import { tierAtLeast } from "@/lib/tiers";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/coach/")({
-  component: CoachDashboard,
+  component: CoachDashboardRoot,
 });
+
+function CoachDashboardRoot() {
+  const { tier, loading } = useCurrentTier();
+  if (loading) return <div className="h-40" />;
+  const hasCamps = tierAtLeast(tier, "elite");
+  return hasCamps ? <EliteCoachDashboard /> : <TeamCoachDashboard />;
+}
 
 type Camp = { id: string; name: string; slug: string; capacity: number; status: string; start_date: string | null; price_cents: number };
 type Reg = { id: string; status: string; amount_cents: number; created_at: string; camp_id: string; attendee_id: string | null; contact_id: string | null };
