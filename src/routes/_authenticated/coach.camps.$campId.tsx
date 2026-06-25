@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { ArrowUp, ArrowDown, Trash2 } from "lucide-react";
 import { useHasFeature } from "@/hooks/use-tier";
 import { gateMessage } from "@/lib/tiers";
+import { BlockForStaff } from "@/components/block-for-staff";
 
 function PublishLinkButtons({ slug }: { slug: string }) {
   const { allowed } = useHasFeature("publicRegistration");
@@ -48,7 +49,11 @@ function PublishLinkButtons({ slug }: { slug: string }) {
 }
 
 export const Route = createFileRoute("/_authenticated/coach/camps/$campId")({
-  component: CampDetailPage,
+  component: () => (
+    <BlockForStaff>
+      <CampDetailPage />
+    </BlockForStaff>
+  ),
 });
 
 type Camp = {
