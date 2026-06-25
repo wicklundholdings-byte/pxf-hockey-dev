@@ -35,9 +35,15 @@ function TeamLayout() {
   return (
     <div className="-mx-5 -mt-2">
       <div className="px-5 pt-2">
-        <Link to="/coach/teams" className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-          <ArrowLeft size={14} /> All teams
-        </Link>
+        {isOverview ? (
+          <Link to="/coach/teams" className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <ArrowLeft size={14} /> All teams
+          </Link>
+        ) : (
+          <Link to="/coach/teams/$teamId" params={{ teamId }} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <ArrowLeft size={14} /> {team?.name || "Team"}
+          </Link>
+        )}
         <div className="mt-2 flex items-center gap-3">
           <div className="grid h-10 w-10 place-items-center rounded-xl text-xs font-bold text-background" style={{ background: team?.primary_color || "var(--color-teal)" }}>
             {team?.name?.slice(0, 2).toUpperCase() || "—"}
@@ -47,6 +53,7 @@ function TeamLayout() {
             <p className="text-[11px] text-muted-foreground">{team?.season || ""}</p>
           </div>
         </div>
+        {isOverview && (
         <div className="mt-3 grid grid-cols-2 gap-2">
           {[
             { to: "/coach/teams/$teamId/schedule" as const, label: "Schedule", Icon: Calendar },
@@ -58,11 +65,6 @@ function TeamLayout() {
               key={to}
               to={to}
               params={{ teamId }}
-              onClick={() => {
-                requestAnimationFrame(() =>
-                  document.getElementById("team-tab-content")?.scrollIntoView({ behavior: "smooth", block: "start" }),
-                );
-              }}
               className="flex items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 shadow-glow-teal active:opacity-90"
             >
               <Icon size={18} className="text-background" />
@@ -70,6 +72,8 @@ function TeamLayout() {
             </Link>
           ))}
         </div>
+        )}
+        {isOverview && (
         <div className="mt-3 grid grid-cols-6 gap-1 rounded-full border border-border bg-surface p-1">
           {tabs.map((t) => {
             const path = t.to.replace("$teamId", teamId);
@@ -86,6 +90,7 @@ function TeamLayout() {
             );
           })}
         </div>
+        )}
       </div>
       <div id="team-tab-content" className="mt-3 px-5 scroll-mt-4">
         <Outlet />
