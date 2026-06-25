@@ -86,9 +86,15 @@ function TeamLayout() {
   return (
     <div>
       <div className="px-5 pt-4">
-        <Link to="/parent/teams" className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-          <ArrowLeft size={14} /> Teams
-        </Link>
+        {isOverview ? (
+          <Link to="/parent/teams" className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <ArrowLeft size={14} /> Teams
+          </Link>
+        ) : (
+          <Link to="/parent/teams/$teamId" params={{ teamId }} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <ArrowLeft size={14} /> {team?.name || "Team"}
+          </Link>
+        )}
         <div className="mt-2 flex items-center gap-3">
           {team?.logo_url ? (
             <img src={team.logo_url} alt="" className="h-11 w-11 rounded-xl object-cover" />
@@ -106,6 +112,7 @@ function TeamLayout() {
           </div>
         </div>
 
+        {isOverview && (
         <div className="mt-3 grid grid-cols-2 gap-2">
           {[
             { to: "/parent/teams/$teamId/schedule" as const, label: "Schedule", Icon: Calendar },
@@ -117,11 +124,6 @@ function TeamLayout() {
               key={to}
               to={to}
               params={{ teamId }}
-              onClick={() => {
-                requestAnimationFrame(() =>
-                  document.getElementById("team-tab-content")?.scrollIntoView({ behavior: "smooth", block: "start" }),
-                );
-              }}
               className="flex items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 shadow-glow-teal active:opacity-90"
             >
               <Icon size={18} className="text-background" />
@@ -129,8 +131,9 @@ function TeamLayout() {
             </Link>
           ))}
         </div>
+        )}
 
-        {leaders.length > 0 && (
+        {isOverview && leaders.length > 0 && (
           <div className="mt-4 rounded-2xl border border-border bg-surface p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -196,6 +199,7 @@ function TeamLayout() {
           </div>
         )}
 
+        {isOverview && (
         <div className="mt-3 grid grid-cols-5 gap-1 rounded-full border border-border bg-surface p-1">
           {tabs.map((t) => {
             const path = t.to.replace("$teamId", teamId);
@@ -212,6 +216,7 @@ function TeamLayout() {
             );
           })}
         </div>
+        )}
       </div>
       <div id="team-tab-content" className="mt-3 scroll-mt-4">
         <Outlet />
