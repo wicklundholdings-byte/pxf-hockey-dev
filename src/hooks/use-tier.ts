@@ -53,6 +53,10 @@ export function useCurrentTier(): {
 
   useEffect(() => {
     let cancelled = false;
+    if (mock) {
+      setLoading(false);
+      return;
+    }
     if (authLoading) return;
     if (!user) {
       setDbTier(null);
@@ -76,7 +80,7 @@ export function useCurrentTier(): {
     return () => {
       cancelled = true;
     };
-  }, [user, authLoading]);
+  }, [user, authLoading, mock]);
 
   const effective = mock ?? dbTier;
   return {
