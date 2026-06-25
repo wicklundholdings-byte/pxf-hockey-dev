@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, Mail, Trash2, Plus, Copy, Check } from "lucide-react";
+import { ChevronLeft, Mail, Trash2, Plus, Copy, Check, CalendarRange } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { listStaff, inviteStaffCoach, removeStaffCoach, reassignStaffTeams } from "@/lib/staff.functions";
+import { setStaffSessionRate, listAssignableSessions, listStaffAssignments, assignStaffToSession, unassignStaffFromSession } from "@/lib/coach-costs.functions";
 
 export const Route = createFileRoute("/_authenticated/coach/staff")({
   component: StaffPage,
@@ -16,6 +17,7 @@ type StaffRow = {
   id: string; email: string; full_name: string | null; status: string;
   invited_at: string; accepted_at: string | null; invite_token: string;
   staff_user_id: string | null;
+  session_rate_cents: number;
   teams: { team_id: string; name: string }[];
 };
 type TeamOpt = { id: string; name: string };
@@ -26,6 +28,7 @@ function StaffPage() {
   const [teams, setTeams] = useState<TeamOpt[]>([]);
   const [openInvite, setOpenInvite] = useState(false);
   const [editing, setEditing] = useState<StaffRow | null>(null);
+  const [managingSessions, setManagingSessions] = useState<StaffRow | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refresh = async () => {
@@ -94,11 +97,16 @@ function StaffPage() {
                 Teams: {s.teams.length ? s.teams.map((t) => t.name).join(", ") : <span className="text-muted-foreground/70">none assigned</span>}
               </p>
               <p className="mt-0.5 text-[10px] text-muted-foreground">Added {new Date(s.invited_at).toLocaleDateString()}</p>
+              <RateEditor staff={s} onSaved={refresh} />
               <div className="mt-3 flex items-center gap-2">
                 <button
                   onClick={() => setEditing(s)}
                   className="rounded-full border border-border px-3 py-1 text-[11px] font-semibold"
                 >Reassign teams</button>
+                <button
+                  onClick={() => setManagingSessions(s)}
+                  className="flex items-center gap-1 rounded-full border border-border px-3 py-1 text-[11px] font-semibold"
+                ><CalendarRange size={12} /> Sessions</button>
                 {s.status === "invited" && (
                   <CopyLink token={s.invite_token} />
                 )}
@@ -127,6 +135,12 @@ function StaffPage() {
           teams={teams}
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); refresh(); }}
+        />
+      )}
+      {managingSessions && (
+        <SessionsSheet
+          staff={managingSessions}
+          onClose={() => setManagingSessions(null)}
         />
       )}
     </div>
