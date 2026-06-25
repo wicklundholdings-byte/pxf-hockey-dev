@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Dumbbell, StickyNote, ChevronDown, ChevronUp, Play } from "lucide-react";
+import { Dumbbell, StickyNote, ChevronDown, ChevronUp } from "lucide-react";
 
 type Item = {
   id: string;
