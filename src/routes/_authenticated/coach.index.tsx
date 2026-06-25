@@ -161,7 +161,7 @@ function EliteCoachDashboard() {
         </Link>
         <Link to="/coach/camps/new" className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/40 bg-transparent py-3 text-center transition-colors hover:bg-emerald-400/5">
           <Plus size={18} className="text-emerald-400" />
-          <span className="text-xs font-semibold text-emerald-400">+ Create Session</span>
+          <span className="text-xs font-semibold text-emerald-400">{"\u00a0"}Create Session</span>
         </Link>
       </div>
       {/* Quick Access */}
@@ -640,7 +640,7 @@ function TeamCoachDashboard() {
         </Link>
         <Link to="/coach/sessions" className="flex items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-transparent py-3 text-center transition-colors hover:bg-teal/5">
           <Plus size={18} className="text-teal" />
-          <span className="text-xs font-semibold text-teal">+ Create Session</span>
+          <span className="text-xs font-semibold text-teal">{"\u00a0"}Create Session</span>
         </Link>
       </div>
 
