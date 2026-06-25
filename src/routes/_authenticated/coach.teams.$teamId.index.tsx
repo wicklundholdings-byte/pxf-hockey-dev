@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { createEvent } from "@/lib/teams.functions";
 import { loadTeamSeasonStats, type TeamRecord, type SkaterAgg } from "@/lib/team-stats";
+import { mockRecord, mockSkaters } from "@/lib/mock-team-stats";
 import { Swords, Dumbbell, MapPin, Users, Plus, Flame, Medal, ChevronRight, AlertTriangle, X, Film } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/")({
@@ -62,8 +63,13 @@ function TeamDashboard() {
 
   useEffect(() => {
     (async () => {
-      const s = await loadTeamSeasonStats(teamId, "all");
-      setRecord(s.record); setSkaters(s.skaters);
+      if (teamId === "48222e0d-ad71-4c54-bc20-99b743ff8816") {
+        setRecord(mockRecord);
+        setSkaters(mockSkaters);
+      } else {
+        const s = await loadTeamSeasonStats(teamId, "all");
+        setRecord(s.record); setSkaters(s.skaters);
+      }
     })();
   }, [teamId]);
 
