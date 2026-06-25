@@ -42,7 +42,6 @@ function TeamDashboard() {
   // Section 1: Season record
   const [record, setRecord] = useState<TeamRecord | null>(null);
   const [skaters, setSkaters] = useState<SkaterAgg[]>([]);
-  const [goalies, setGoalies] = useState<GoalieAgg[]>([]);
 
   // Section 2/3: Upcoming events
   const [upcoming, setUpcoming] = useState<EventRow[]>([]);
@@ -64,7 +63,7 @@ function TeamDashboard() {
   useEffect(() => {
     (async () => {
       const s = await loadTeamSeasonStats(teamId, "all");
-      setRecord(s.record); setSkaters(s.skaters); setGoalies(s.goalies);
+      setRecord(s.record); setSkaters(s.skaters);
     })();
   }, [teamId]);
 
