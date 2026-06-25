@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Home, Flag, Dumbbell, MessageCircle, Users, Bell } from "lucide-react";
+import { Home, CalendarDays, Dumbbell, MessageCircle, Users, Bell } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserAppRole } from "@/lib/user-role";
