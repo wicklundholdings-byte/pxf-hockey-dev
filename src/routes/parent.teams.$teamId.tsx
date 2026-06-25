@@ -116,13 +116,6 @@ function TeamLayout() {
   const myRow = myRowIdx >= 0 ? leaders[myRowIdx] : null;
   const myOutsideTop3 = myRow && myRowIdx >= 3;
 
-  const tabs = [
-    { to: "/parent/teams/$teamId/schedule", label: "Schedule" },
-    { to: "/parent/teams/$teamId/roster", label: "Roster" },
-    { to: "/parent/teams/$teamId/media", label: "Media" },
-    { to: "/parent/teams/$teamId/stats", label: "Stats" },
-    { to: "/parent/teams/$teamId/messages", label: "Messages" },
-  ];
   const base = `/parent/teams/${teamId}`;
   const isOverview = pathname === base || pathname === base + "/";
 
