@@ -376,12 +376,24 @@ function TeamCoachDashboard() {
       const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
       setCoachName(prof?.full_name ?? user.email?.split("@")[0] ?? "Coach");
 
-      // Linked children athletes (if this coach is also a parent)
-      const { data: kRows } = await supabase
-        .from("attendees")
-        .select("id, full_name, birthday, position, skill_level")
-        .eq("owner_id", user.id);
-      setKids((kRows ?? []) as Kid[]);
+      // Linked children athletes (only when the coach is ALSO a parent of those
+      // athletes — match via their parent contact record, not owner_id, since
+      // coaches own their entire roster's attendee rows).
+      try {
+        const ids = await (supabase as any).rpc("current_user_contact_ids");
+        const myContactIds = (ids.data ?? []) as string[];
+        if (myContactIds.length) {
+          const { data: kRows } = await supabase
+            .from("attendees")
+            .select("id, full_name, birthday, position, skill_level")
+            .in("contact_id", myContactIds);
+          setKids((kRows ?? []) as Kid[]);
+        } else {
+          setKids([]);
+        }
+      } catch {
+        setKids([]);
+      }
 
       // Teams coached (coach_id = user.id)
       const { data: coachTeams } = await supabase
