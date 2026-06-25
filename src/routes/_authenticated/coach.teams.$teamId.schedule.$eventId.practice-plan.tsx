@@ -14,11 +14,22 @@ type SessionChild = { drillId: string; drillName: string; durationMinutes: numbe
 type Item =
   | { id: string; itemType: "drill"; drillId?: string; drillName: string; durationMinutes: number }
   | { id: string; itemType: "note"; noteText: string; durationMinutes: number }
-  | { id: string; itemType: "session"; sessionName: string; children: SessionChild[] };
+  | { id: string; itemType: "session"; sessionId?: string; sessionName: string; children: SessionChild[] };
 type Drill = { id: string; title: string; category?: string | null; duration_minutes?: number | null };
 type SavedBlock = { uid: string; drillId: string; mins: number };
 type SavedSession = { id: string; name: string; date: string; totalMins: number; blocks: SavedBlock[] };
 const SESSIONS_KEY = "pxf:sessions:v2";
+
+function readSavedSessions(): SavedSession[] {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(window.localStorage.getItem(SESSIONS_KEY) ?? "[]"); } catch { return []; }
+}
+
+function sessionNameFromNote(note?: string | null) {
+  const text = (note ?? "").trim();
+  const match = /^(?:▼\s*)?Session:\s*(.+)$/i.exec(text);
+  return match?.[1]?.trim() ?? null;
+}
 
 function itemDuration(it: Item): number {
   if (it.itemType === "session") return it.children.reduce((a, b) => a + (b.durationMinutes || 0), 0);
@@ -43,19 +54,44 @@ function PracticePlan() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      const savedSessions = readSavedSessions();
+      const redirectToSession = (sessionId: string) => {
+        if (typeof window !== "undefined") {
+          try { window.localStorage.setItem(`pxf:event-session:${eventId}`, sessionId); } catch { /* ignore */ }
+        }
+        if (!cancelled) navigate({ to: "/session-detail/$sessionId", params: { sessionId }, replace: true });
+      };
       // 1. Check server-side: did we assign a saved session to this event?
       try {
         const { data: plans } = await supabase
           .from("practice_plans")
-          .select("template_name")
+          .select("id,template_name")
           .eq("event_id", eventId)
           .order("created_at", { ascending: false })
           .limit(1);
-        const tn = (plans?.[0] as { template_name: string | null } | undefined)?.template_name ?? "";
+        const plan = plans?.[0] as { id: string; template_name: string | null } | undefined;
+        const tn = plan?.template_name ?? "";
         const m = /^__sid:([^|]+)/.exec(tn);
         if (m) {
-          if (!cancelled) navigate({ to: "/session-detail/$sessionId", params: { sessionId: m[1] }, replace: true });
+          redirectToSession(m[1]);
           return;
+        }
+        if (plan?.id) {
+          const { data: planItems } = await supabase
+            .from("practice_plan_items")
+            .select("note_text")
+            .eq("plan_id", plan.id)
+            .order("display_order");
+          const sessionName = ((planItems ?? []) as Array<{ note_text: string | null }>)
+            .map((it) => sessionNameFromNote(it.note_text))
+            .find((name): name is string => !!name);
+          if (sessionName) {
+            const saved = savedSessions.find((s) => s.name.trim().toLowerCase() === sessionName.toLowerCase());
+            if (saved) {
+              redirectToSession(saved.id);
+              return;
+            }
+          }
         }
       } catch { /* ignore */ }
       // 2. Fallback to legacy localStorage marker
@@ -63,7 +99,7 @@ function PracticePlan() {
         try {
           const sid = window.localStorage.getItem(`pxf:event-session:${eventId}`);
           if (sid) {
-            if (!cancelled) navigate({ to: "/session-detail/$sessionId", params: { sessionId: sid }, replace: true });
+            redirectToSession(sid);
             return;
           }
         } catch { /* ignore */ }
@@ -77,11 +113,9 @@ function PracticePlan() {
         id: r.id, title: r.title, category: r.category_id ? (catMap.get(r.category_id) ?? null) : null, duration_minutes: r.duration_minutes,
       })));
     })();
-    if (typeof window !== "undefined") {
-      try { setSessions(JSON.parse(window.localStorage.getItem(SESSIONS_KEY) ?? "[]")); } catch { /* ignore */ }
-    }
+    setSessions(readSavedSessions());
     return () => { cancelled = true; };
-  }, []);
+  }, [eventId, navigate]);
 
   function add(item: Item) { setItems((prev) => [...prev, item]); }
   function addDrill(d: Drill) {
@@ -99,7 +133,7 @@ function PracticePlan() {
       return { drillId: b.drillId, drillName: d?.name ?? "Drill", durationMinutes: b.mins };
     });
     const id = crypto.randomUUID();
-    add({ id, itemType: "session", sessionName: s.name || "Session", children });
+    add({ id, itemType: "session", sessionId: s.id, sessionName: s.name || "Session", children });
     setExpanded((e) => ({ ...e, [id]: true }));
     setPickingSession(false);
   }
@@ -135,7 +169,18 @@ function PracticePlan() {
           for (const c of it.children) flat.push({ itemType: "note", noteText: `  • ${c.drillName}`, durationMinutes: c.durationMinutes });
         }
       }
-      await save({ data: { teamId, eventId, items: flat } });
+      const assignedSession = items.find((it): it is Extract<Item, { itemType: "session" }> => it.itemType === "session" && !!it.sessionId);
+      await save({
+        data: {
+          teamId,
+          eventId,
+          templateName: assignedSession ? `__sid:${assignedSession.sessionId}|${assignedSession.sessionName}` : undefined,
+          items: flat,
+        },
+      });
+      if (assignedSession?.sessionId && typeof window !== "undefined") {
+        try { window.localStorage.setItem(`pxf:event-session:${eventId}`, assignedSession.sessionId); } catch { /* ignore */ }
+      }
       alert("Practice Plan saved");
     } catch (e: any) { alert(e?.message); } finally { setSaving(false); }
   }
