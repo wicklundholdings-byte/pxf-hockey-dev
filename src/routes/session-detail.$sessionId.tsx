@@ -75,6 +75,7 @@ function SessionDetail() {
   const [toast, setToast] = useState<string | null>(null);
   const [drag, setDrag] = useState<{ from: number; over: number } | null>(null);
   const [editingBlockUid, setEditingBlockUid] = useState<string | null>(null);
+  const [assignOpen, setAssignOpen] = useState(false);
 
   useEffect(() => {
     const all = readAll();
