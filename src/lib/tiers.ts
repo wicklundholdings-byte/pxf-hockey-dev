@@ -48,17 +48,18 @@ export const TIERS: Tier[] = [
     price: 14.99,
     trialDays: 14,
     coach: true,
-    tagline: "Team & practice management.",
+    tagline: "Placeholder for v2 — same access as Team Coach.",
     features: [
-      "Team management",
-      "Drill library",
-      "Session builder",
-      "Practices & games",
+      "Everything in Team Coach",
+      "Multiple teams (no cap)",
+      "Full team management",
+      "Team fee collection",
+      "Practice plan builder",
     ],
     restrictions: [
-      "No private camp booking",
-      "No Stripe payouts",
-      "No revenue collection",
+      "Association dashboard coming in v2",
+      "No camp creation",
+      "No camp revenue collection",
     ],
   },
   {
@@ -67,15 +68,21 @@ export const TIERS: Tier[] = [
     price: 24.99,
     trialDays: 14,
     coach: true,
-    tagline: "Everything in Association + private sessions.",
+    tagline: "Run your teams end-to-end.",
     features: [
-      "Everything in Association Coach",
-      "Private session booking",
-      "1-on-1 scheduling",
+      "Multiple teams (no cap)",
+      "Full team management: schedule, roster, RSVP",
+      "Game prep: lines, game plan, coach notes, publish",
+      "Game stats & film / video analysis",
+      "Practice plan builder & athlete session notes",
+      "Health forms & parent game day view",
+      "Dryland leaderboard",
+      "Team fee collection (parents pay in-app)",
     ],
     restrictions: [
-      "No full camp management",
-      "No public registration flow",
+      "No camp creation",
+      "No camp revenue collection",
+      "No broadcast push to all parents",
     ],
   },
   {
@@ -85,13 +92,18 @@ export const TIERS: Tier[] = [
     trialDays: 14,
     coach: true,
     popular: true,
-    tagline: "Full platform for coaches running camps.",
+    tagline: "Everything in Team Coach + camps & revenue.",
     features: [
-      "Camps & public registration",
-      "Stripe payouts",
-      "Film & combine",
-      "Ice time management",
-      "Every Elite feature unlocked",
+      "Everything in Team Coach",
+      "Camp creation & scheduling (full builder)",
+      "Sessions, ice time & capacity limits",
+      "Camp registration payments & pricing tiers",
+      "Discount codes & payout management",
+      "Broadcast push to all parents at once",
+      "Advanced analytics dashboard",
+    ],
+    restrictions: [
+      "Single coach account (no multi-staff)",
     ],
   },
   {
@@ -102,9 +114,10 @@ export const TIERS: Tier[] = [
     coach: true,
     tagline: "Organizations with multiple coaches.",
     features: [
-      "Everything in Elite",
-      "Multiple coaches under one org",
-      "Staff management",
+      "Everything in Elite Coach",
+      "Unlimited teams and camps",
+      "Multi-staff accounts: manager, assistant coach, content creator",
+      "Full role-based permission controls",
       "Organization-wide analytics",
     ],
   },
@@ -116,7 +129,7 @@ export const COACH_TIERS = TIERS.filter((t) => t.coach) as (Tier & {
 
 const RANK: Record<TierId, number> = {
   parent: 0,
-  association: 1,
+  association: 2,
   team: 2,
   elite: 3,
   academy: 4,
@@ -140,14 +153,26 @@ export function getTier(id: TierId): Tier {
 
 // Feature gate keys → minimum tier required.
 export const FEATURE_MIN_TIER: Record<string, TierId> = {
-  campManagement: "team",          // private camps available on Team+; full mgmt on Elite+
-  publicRegistration: "elite",     // public registration links only on Elite+
+  // Team management features — available on Team Coach (and Association, same rank)
+  teamManagement: "team",
+  drillLibrary: "team",
+  multipleTeams: "team",
+  gameStats: "team",
+  filmAnalysis: "team",
+  gamePrep: "team",
+  practicePlanBuilder: "team",
+  drylandLeaderboard: "team",
+  teamFeeCollection: "team",
+  privateSessionBooking: "team",
+  // Camp + revenue features — Elite and above
+  campManagement: "elite",
+  publicRegistration: "elite",
   stripePayouts: "elite",
-  privateSessionBooking: "team",   // 1-on-1 bookings available Team+
-  teamManagement: "association",
-  drillLibrary: "association",
-  staffManagement: "elite",        // multi-staff on Elite+
-  academyFeatures: "academy",      // org-wide analytics, multi-coach dashboard
+  broadcast: "elite",
+  advancedAnalytics: "elite",
+  // Academy-only
+  staffManagement: "academy",
+  academyFeatures: "academy",
   multipleCoaches: "academy",
 };
 
@@ -156,15 +181,21 @@ export function gateMessage(feature: keyof typeof FEATURE_MIN_TIER): string {
   const tier = getTier(min);
   switch (feature) {
     case "campManagement":
-      return "Camp management is available on Team Coach and above";
+      return "Camp creation is available on Elite Coach and above";
     case "publicRegistration":
-      return "Public camp registration is available on Elite Coach";
+      return "Public camp registration is available on Elite Coach and above";
     case "stripePayouts":
-      return "Stripe payouts are available on Elite Coach";
+      return "Camp revenue collection & payouts are available on Elite Coach and above";
+    case "broadcast":
+      return "Broadcast push to all parents is available on Elite Coach and above";
+    case "advancedAnalytics":
+      return "Advanced analytics is available on Elite Coach and above";
+    case "teamFeeCollection":
+      return "Team fee collection is available on Team Coach and above";
     case "privateSessionBooking":
-      return "Private session booking is available on Team Coach and above";
+      return "Available on Team Coach and above";
     case "staffManagement":
-      return "Staff management is available on Elite Coach and above";
+      return "Multi-staff accounts are available on Academy";
     case "academyFeatures":
     case "multipleCoaches":
       return "Multi-coach organizations are available on Academy";
