@@ -871,7 +871,7 @@ function AssignToTeamPractice({ session, onClose, onSaved }: { session: Session;
   );
 }
 
-function _AddDrillModalImpl({ onClose, onPick }: { onClose: () => void; onPick: (d: Drill) => void }) {
+function AddDrillModalImpl({ onClose, onPick }: { onClose: () => void; onPick: (d: Drill) => void }) {
   const [q, setQ] = useState("");
   const list = useMemo(() => {
     const t = q.trim().toLowerCase();
