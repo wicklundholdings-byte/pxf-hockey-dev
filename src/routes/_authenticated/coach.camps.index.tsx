@@ -264,3 +264,107 @@ function CalendarView({ camps }: { camps: Camp[] }) {
     </div>
   );
 }
+
+type FeedEvent = {
+  id: string;
+  team_id: string;
+  team_name: string;
+  event_type: "game" | "practice" | "team_event";
+  title: string | null;
+  opponent_name: string | null;
+  home_away: string | null;
+  venue: string | null;
+  event_date: string;
+  start_time: string | null;
+};
+
+const FEED_META: Record<string, { label: string; icon: typeof Swords; bg: string; color: string }> = {
+  game: { label: "GAME", icon: Swords, bg: "bg-red-500/15", color: "text-red-400" },
+  practice: { label: "PRACTICE", icon: Dumbbell, bg: "bg-emerald-500/15", color: "text-emerald-400" },
+  team_event: { label: "EVENT", icon: Star, bg: "bg-surface-2", color: "text-muted-foreground" },
+};
+
+function feedFmtDate(d: string) {
+  try { return new Date(d + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }); } catch { return d; }
+}
+function feedFmtTime(t: string) {
+  const [h, m] = t.split(":");
+  const hr = parseInt(h, 10); const ap = hr >= 12 ? "PM" : "AM"; const h12 = ((hr + 11) % 12) + 1;
+  return `${h12}:${m} ${ap}`;
+}
+
+function TeamEventsFeed() {
+  const [events, setEvents] = useState<FeedEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoading(false); return; }
+      const { data: teams } = await supabase
+        .from("teams")
+        .select("id,name")
+        .eq("coach_id", user.id);
+      const teamList = (teams ?? []) as Array<{ id: string; name: string }>;
+      if (!teamList.length) { setEvents([]); setLoading(false); return; }
+      const nameMap = new Map(teamList.map((t) => [t.id, t.name]));
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: evs } = await supabase
+        .from("team_events")
+        .select("id,team_id,event_type,title,opponent_name,home_away,venue,event_date,start_time")
+        .in("team_id", teamList.map((t) => t.id))
+        .gte("event_date", today)
+        .order("event_date", { ascending: true })
+        .limit(50);
+      setEvents(((evs ?? []) as Array<Omit<FeedEvent, "team_name">>).map((e) => ({ ...e, team_name: nameMap.get(e.team_id) ?? "Team" })));
+      setLoading(false);
+    })();
+  }, []);
+
+  if (loading) return <p className="text-xs text-muted-foreground">Loading…</p>;
+
+  return (
+    <div>
+      <h3 className="text-sm font-bold">Upcoming events</h3>
+      <div className="mt-3 space-y-3">
+        {events.length === 0 && (
+          <p className="rounded-xl border border-dashed border-border bg-surface p-4 text-center text-xs text-muted-foreground">
+            No upcoming events across your teams.
+          </p>
+        )}
+        {events.map((e) => {
+          const meta = FEED_META[e.event_type] ?? FEED_META.team_event;
+          const Icon = meta.icon;
+          const label = e.event_type === "game"
+            ? `${e.home_away === "away" ? "@" : "vs"} ${e.opponent_name || "TBD"}`
+            : e.title || meta.label;
+          return (
+            <Link
+              key={e.id}
+              to="/coach/teams/$teamId/schedule/$eventId"
+              params={{ teamId: e.team_id, eventId: e.id }}
+              className="block rounded-2xl border border-border bg-surface p-3"
+            >
+              <div className="flex items-center gap-3">
+                <div className={"grid h-10 w-10 place-items-center rounded-xl " + meta.bg}>
+                  <Icon size={16} className={meta.color} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className={"rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider " + meta.bg + " " + meta.color}>{meta.label}</span>
+                    <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[9px] font-bold tracking-wider text-muted-foreground">{e.team_name}</span>
+                  </div>
+                  <p className="mt-1 truncate text-sm font-semibold">{label}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {feedFmtDate(e.event_date)}{e.start_time ? " · " + feedFmtTime(e.start_time) : ""}{e.venue ? " · " + e.venue : ""}
+                  </p>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
