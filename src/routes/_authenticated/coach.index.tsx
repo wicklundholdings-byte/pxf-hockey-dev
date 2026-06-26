@@ -684,6 +684,7 @@ function SinglePrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
   const [locationId, setLocationId] = useState<string | null>(null);
   const [fee, setFee] = useState("");
   const [notes, setNotes] = useState("");
+  const [assignedCoachId, setAssignedCoachId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -701,6 +702,7 @@ function SinglePrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
       location_id: locationId,
       fee_cents: feeCents,
       notes: notes.trim() || null,
+      assigned_coach_id: assignedCoachId,
     });
     setSaving(false);
     if (error) { setErr(error.message); return; }
@@ -746,6 +748,9 @@ function SinglePrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
               }}
               placeholder="Rink or studio"
             />
+          </Field>
+          <Field label="Assigned coach">
+            <CoachPicker ownerId={ownerId} value={assignedCoachId} onChange={setAssignedCoachId} />
           </Field>
           <Field label="Notes">
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2}
