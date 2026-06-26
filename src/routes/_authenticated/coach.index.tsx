@@ -93,7 +93,7 @@ function EliteCoachDashboard() {
     const today = new Date().toISOString().slice(0, 10);
     const { data } = await (supabase as any)
       .from("private_sessions")
-      .select("id,athlete_name,session_date,start_time,duration_minutes,location,fee_cents,series_id")
+      .select("id,athlete_name,session_date,start_time,duration_minutes,location,fee_cents,series_id,assigned_coach_id")
       .eq("owner_id", uid)
       .gte("session_date", today)
       .order("session_date", { ascending: true })
