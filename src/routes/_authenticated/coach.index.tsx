@@ -368,33 +368,9 @@ function EliteCoachDashboard() {
       {/* Operations */}
       <Link
         to="/coach/operations"
-        className={
-          "block rounded-2xl border p-4 " +
-          (opsSummary.unassignedIce + opsSummary.pendingRequests > 0
-            ? "border-teal/40 bg-teal/5"
-            : "border-emerald-500/30 bg-emerald-500/5")
-        }
+        className="block w-full rounded-2xl border border-teal/40 bg-teal/10 py-5 text-center"
       >
-        <div className="flex items-center justify-between">
-          <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-teal">Operations</h2>
-          <ChevronRight size={14} className="text-muted-foreground" />
-        </div>
-        {opsSummary.unassignedIce + opsSummary.pendingRequests > 0 ? (
-          <div className="mt-2 space-y-1">
-            {opsSummary.unassignedIce > 0 && (
-              <p className="text-xs font-semibold">
-                {opsSummary.unassignedIce} ice time{opsSummary.unassignedIce === 1 ? "" : "s"} need an instructor
-              </p>
-            )}
-            {opsSummary.pendingRequests > 0 && (
-              <p className="text-xs font-semibold">
-                {opsSummary.pendingRequests} waitlist request{opsSummary.pendingRequests === 1 ? "" : "s"} pending
-              </p>
-            )}
-          </div>
-        ) : (
-          <p className="mt-2 text-xs font-semibold text-emerald-400">All ice times covered · No pending requests</p>
-        )}
+        <h2 className="text-[11px] font-bold uppercase tracking-[2px] text-teal">Operations</h2>
       </Link>
 
       {/* Financials Snapshot */}
