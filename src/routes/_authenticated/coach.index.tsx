@@ -89,6 +89,7 @@ function EliteCoachDashboard() {
   const [media, setMedia] = useState<MediaLite[]>([]);
   const [privates, setPrivates] = useState<PrivateLite[]>([]);
   const [showBookPrivate, setShowBookPrivate] = useState(false);
+  const [showAlertsSheet, setShowAlertsSheet] = useState(false);
   const [opsSummary, setOpsSummary] = useState<{ unassignedIce: number; pendingRequests: number }>({ unassignedIce: 0, pendingRequests: 0 });
 
   useEffect(() => {
