@@ -363,8 +363,26 @@ function NewCampWizard() {
             </div>
             {locationType === "venue" && (
               <>
-                <Field label="Venue name"><Input value={venueName} onChange={(e) => setVenueName(e.target.value)} placeholder="Westside Ice Arena" /></Field>
-                <Field label="Address"><Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="120 Rink Rd, Toronto ON" /></Field>
+                <Field label="Venue">
+                  <LocationPicker
+                    valueId={locationId}
+                    manualValue={venueName}
+                    onChange={(next) => {
+                      setLocationId(next.locationId);
+                      if (next.selected) {
+                        setVenueName(next.selected.name);
+                        setAddress(next.selected.address ?? "");
+                      } else {
+                        setVenueName(next.manual);
+                        if (!next.manual) setAddress("");
+                      }
+                    }}
+                    placeholder="Westside Ice Arena"
+                  />
+                </Field>
+                <Field label="Address">
+                  <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="120 Rink Rd, Toronto ON" />
+                </Field>
               </>
             )}
             <div className="grid grid-cols-2 gap-3">
