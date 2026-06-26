@@ -634,6 +634,92 @@ function EliteCoachDashboard() {
   );
 }
 
+function BookPrivateModal({ ownerId, onClose, onSaved }: { ownerId: string; onClose: () => void; onSaved: () => void }) {
+  const [athleteName, setAthleteName] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [time, setTime] = useState("");
+  const [duration, setDuration] = useState("60");
+  const [location, setLocation] = useState("");
+  const [fee, setFee] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function save() {
+    if (!athleteName.trim() || !date) { setErr("Athlete name and date are required."); return; }
+    setSaving(true); setErr(null);
+    const feeCents = fee.trim() ? Math.round(parseFloat(fee) * 100) : null;
+    const { error } = await (supabase as any).from("private_sessions").insert({
+      owner_id: ownerId,
+      athlete_name: athleteName.trim(),
+      session_date: date,
+      start_time: time || null,
+      duration_minutes: duration ? parseInt(duration, 10) : null,
+      location: location.trim() || null,
+      fee_cents: feeCents,
+    });
+    setSaving(false);
+    if (error) { setErr(error.message); return; }
+    onSaved();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-end bg-black/60 sm:place-items-center" onClick={onClose}>
+      <div className="w-full max-w-md rounded-t-3xl bg-card p-5 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+        <h3 className="font-display text-lg font-bold">Book Private</h3>
+        <p className="mt-0.5 text-[11px] text-muted-foreground">1-on-1 or small group (up to 6).</p>
+        <div className="mt-4 space-y-3">
+          <Field label="Athlete name (or group)">
+            <input value={athleteName} onChange={(e) => setAthleteName(e.target.value)} placeholder="e.g. Jordan W. or U12 Skills Group"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Date">
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+            </Field>
+            <Field label="Time">
+              <input type="time" value={time} onChange={(e) => setTime(e.target.value)}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+            </Field>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Duration (min)">
+              <input type="number" min="15" step="15" value={duration} onChange={(e) => setDuration(e.target.value)}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+            </Field>
+            <Field label="Fee (optional)">
+              <input type="number" min="0" step="1" value={fee} onChange={(e) => setFee(e.target.value)} placeholder="$"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+            </Field>
+          </div>
+          <Field label="Location">
+            <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Rink or studio"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+          </Field>
+          {err && <p className="text-[11px] text-red-400">{err}</p>}
+        </div>
+        <div className="mt-5 flex gap-2">
+          <button type="button" onClick={onClose}
+            className="flex-1 rounded-xl border border-border py-2 text-sm font-semibold">Cancel</button>
+          <button type="button" onClick={save} disabled={saving}
+            className="flex-1 rounded-xl bg-teal py-2 text-sm font-bold text-background disabled:opacity-60">
+            {saving ? "Saving…" : "Book"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
+      <div className="mt-1">{children}</div>
+    </label>
+  );
+}
+
 // ====================== Team / Association Coach Dashboard ======================
 
 type Kid = { id: string; full_name: string; birthday: string | null; position: string | null; skill_level: string | null };
