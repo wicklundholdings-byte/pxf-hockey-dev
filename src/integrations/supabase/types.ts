@@ -3493,6 +3493,7 @@ export type Database = {
           fee_cents: number | null
           id: string
           location: string | null
+          location_id: string | null
           notes: string | null
           owner_id: string
           session_date: string
@@ -3506,6 +3507,7 @@ export type Database = {
           fee_cents?: number | null
           id?: string
           location?: string | null
+          location_id?: string | null
           notes?: string | null
           owner_id: string
           session_date: string
@@ -3519,13 +3521,22 @@ export type Database = {
           fee_cents?: number | null
           id?: string
           location?: string | null
+          location_id?: string | null
           notes?: string | null
           owner_id?: string
           session_date?: string
           start_time?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "private_sessions_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "rinks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -3748,27 +3759,36 @@ export type Database = {
         Row: {
           address: string | null
           color: string
+          cost_per_hour_cents: number | null
           created_at: string
           id: string
+          location_type: string
           name: string
+          notes: string | null
           owner_id: string
           updated_at: string
         }
         Insert: {
           address?: string | null
           color?: string
+          cost_per_hour_cents?: number | null
           created_at?: string
           id?: string
+          location_type?: string
           name: string
+          notes?: string | null
           owner_id: string
           updated_at?: string
         }
         Update: {
           address?: string | null
           color?: string
+          cost_per_hour_cents?: number | null
           created_at?: string
           id?: string
+          location_type?: string
           name?: string
+          notes?: string | null
           owner_id?: string
           updated_at?: string
         }
