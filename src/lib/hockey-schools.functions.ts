@@ -222,11 +222,12 @@ export const respondToBookingRequest = createServerFn({ method: "POST" })
       data.action === "confirm" ? "confirmed" :
       data.action === "waitlist" ? "waitlisted" : "declined";
 
-    const patch: Record<string, unknown> = { status };
-    if (data.action === "decline" && data.declineMessage) patch.decline_message = data.declineMessage;
-    if (data.action === "confirm" && data.sessionId) patch.resulting_session_id = data.sessionId;
     const { error: upErr } = await supabaseAdmin
-      .from("private_booking_requests").update(patch).eq("id", req.id);
+      .from("private_booking_requests").update({
+        status,
+        decline_message: data.action === "decline" ? (data.declineMessage ?? null) : null,
+        resulting_session_id: data.action === "confirm" ? (data.sessionId ?? null) : null,
+      }).eq("id", req.id);
     if (upErr) throw new Error(upErr.message);
 
     // Make sure both sides are conversation members (in case the request predates the bridge).
