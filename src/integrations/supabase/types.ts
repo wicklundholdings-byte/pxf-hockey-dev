@@ -3485,6 +3485,59 @@ export type Database = {
           },
         ]
       }
+      private_series: {
+        Row: {
+          athlete_name: string
+          created_at: string
+          flat_fee_cents: number | null
+          id: string
+          location: string | null
+          location_id: string | null
+          name: string
+          notes: string | null
+          owner_id: string
+          per_session_fee_cents: number | null
+          pricing_mode: string
+          updated_at: string
+        }
+        Insert: {
+          athlete_name: string
+          created_at?: string
+          flat_fee_cents?: number | null
+          id?: string
+          location?: string | null
+          location_id?: string | null
+          name: string
+          notes?: string | null
+          owner_id: string
+          per_session_fee_cents?: number | null
+          pricing_mode?: string
+          updated_at?: string
+        }
+        Update: {
+          athlete_name?: string
+          created_at?: string
+          flat_fee_cents?: number | null
+          id?: string
+          location?: string | null
+          location_id?: string | null
+          name?: string
+          notes?: string | null
+          owner_id?: string
+          per_session_fee_cents?: number | null
+          pricing_mode?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_series_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "rinks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       private_sessions: {
         Row: {
           athlete_name: string
@@ -3496,6 +3549,7 @@ export type Database = {
           location_id: string | null
           notes: string | null
           owner_id: string
+          series_id: string | null
           session_date: string
           start_time: string | null
           updated_at: string
@@ -3510,6 +3564,7 @@ export type Database = {
           location_id?: string | null
           notes?: string | null
           owner_id: string
+          series_id?: string | null
           session_date: string
           start_time?: string | null
           updated_at?: string
@@ -3524,6 +3579,7 @@ export type Database = {
           location_id?: string | null
           notes?: string | null
           owner_id?: string
+          series_id?: string | null
           session_date?: string
           start_time?: string | null
           updated_at?: string
@@ -3534,6 +3590,13 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "rinks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_sessions_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "private_series"
             referencedColumns: ["id"]
           },
         ]

@@ -47,6 +47,7 @@ type PrivateLite = {
   duration_minutes: number | null;
   location: string | null;
   fee_cents: number | null;
+  series_id: string | null;
 };
 
 function ageOf(b: string | null) {
@@ -91,7 +92,7 @@ function EliteCoachDashboard() {
     const today = new Date().toISOString().slice(0, 10);
     const { data } = await (supabase as any)
       .from("private_sessions")
-      .select("id,athlete_name,session_date,start_time,duration_minutes,location,fee_cents")
+      .select("id,athlete_name,session_date,start_time,duration_minutes,location,fee_cents,series_id")
       .eq("owner_id", uid)
       .gte("session_date", today)
       .order("session_date", { ascending: true })
@@ -419,6 +420,9 @@ function EliteCoachDashboard() {
           {privates.slice(0, 5).map((p) => (
             <div key={p.id} className="w-60 shrink-0 rounded-2xl border border-border bg-card p-3">
               <p className="truncate text-sm font-semibold">{p.athlete_name}</p>
+              {p.series_id && (
+                <span className="mt-0.5 inline-block rounded-full bg-teal/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-teal">Series</span>
+              )}
               <p className="mt-0.5 text-[11px] text-muted-foreground">
                 {fmtEventDate(p.session_date)}{p.start_time ? ` · ${fmtTime(p.start_time)}` : ""}
               </p>
@@ -646,6 +650,26 @@ function EliteCoachDashboard() {
 }
 
 function BookPrivateModal({ ownerId, onClose, onSaved }: { ownerId: string; onClose: () => void; onSaved: () => void }) {
+  const [mode, setMode] = useState<"single" | "series">("single");
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-end bg-black/60 sm:place-items-center" onClick={onClose}>
+      <div className="w-full max-w-md rounded-t-3xl bg-card p-5 sm:rounded-2xl max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <h3 className="font-display text-lg font-bold">Book Private</h3>
+        <div className="mt-3 grid grid-cols-2 gap-1 rounded-xl border border-border p-1 text-xs font-semibold">
+          <button type="button" onClick={() => setMode("single")}
+            className={`rounded-lg py-1.5 ${mode === "single" ? "bg-teal text-background" : "text-muted-foreground"}`}>Single Session</button>
+          <button type="button" onClick={() => setMode("series")}
+            className={`rounded-lg py-1.5 ${mode === "series" ? "bg-teal text-background" : "text-muted-foreground"}`}>Series</button>
+        </div>
+        {mode === "single"
+          ? <SinglePrivateForm ownerId={ownerId} onClose={onClose} onSaved={onSaved} />
+          : <SeriesPrivateForm ownerId={ownerId} onClose={onClose} onSaved={onSaved} />}
+      </div>
+    </div>
+  );
+}
+
+function SinglePrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onClose: () => void; onSaved: () => void }) {
   const [athleteName, setAthleteName] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [time, setTime] = useState("");
@@ -653,6 +677,7 @@ function BookPrivateModal({ ownerId, onClose, onSaved }: { ownerId: string; onCl
   const [location, setLocation] = useState("");
   const [locationId, setLocationId] = useState<string | null>(null);
   const [fee, setFee] = useState("");
+  const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -669,6 +694,7 @@ function BookPrivateModal({ ownerId, onClose, onSaved }: { ownerId: string; onCl
       location: location.trim() || null,
       location_id: locationId,
       fee_cents: feeCents,
+      notes: notes.trim() || null,
     });
     setSaving(false);
     if (error) { setErr(error.message); return; }
@@ -676,11 +702,9 @@ function BookPrivateModal({ ownerId, onClose, onSaved }: { ownerId: string; onCl
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-end bg-black/60 sm:place-items-center" onClick={onClose}>
-      <div className="w-full max-w-md rounded-t-3xl bg-card p-5 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
-        <h3 className="font-display text-lg font-bold">Book Private</h3>
-        <p className="mt-0.5 text-[11px] text-muted-foreground">1-on-1 or small group (up to 6).</p>
-        <div className="mt-4 space-y-3">
+    <>
+      <p className="mt-3 text-[11px] text-muted-foreground">1-on-1 or small group (up to 6).</p>
+      <div className="mt-3 space-y-3">
           <Field label="Athlete name (or group)">
             <input value={athleteName} onChange={(e) => setAthleteName(e.target.value)} placeholder="e.g. Jordan W. or U12 Skills Group"
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
@@ -717,6 +741,10 @@ function BookPrivateModal({ ownerId, onClose, onSaved }: { ownerId: string; onCl
               placeholder="Rink or studio"
             />
           </Field>
+          <Field label="Notes">
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+          </Field>
           {err && <p className="text-[11px] text-red-400">{err}</p>}
         </div>
         <div className="mt-5 flex gap-2">
@@ -727,8 +755,170 @@ function BookPrivateModal({ ownerId, onClose, onSaved }: { ownerId: string; onCl
             {saving ? "Saving…" : "Book"}
           </button>
         </div>
+    </>
+  );
+}
+
+type DraftSession = { id: string; date: string; time: string; duration: string };
+
+function SeriesPrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onClose: () => void; onSaved: () => void }) {
+  const [seriesName, setSeriesName] = useState("");
+  const [athleteName, setAthleteName] = useState("");
+  const [location, setLocation] = useState("");
+  const [locationId, setLocationId] = useState<string | null>(null);
+  const [pricingMode, setPricingMode] = useState<"per_session" | "flat">("per_session");
+  const [perFee, setPerFee] = useState("");
+  const [flatFee, setFlatFee] = useState("");
+  const [notes, setNotes] = useState("");
+  const [sessions, setSessions] = useState<DraftSession[]>([
+    { id: crypto.randomUUID(), date: new Date().toISOString().slice(0, 10), time: "", duration: "60" },
+  ]);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const addSession = () => setSessions((s) => [...s, { id: crypto.randomUUID(), date: new Date().toISOString().slice(0, 10), time: "", duration: "60" }]);
+  const removeSession = (id: string) => setSessions((s) => s.filter((x) => x.id !== id));
+  const updateSession = (id: string, patch: Partial<DraftSession>) => setSessions((s) => s.map((x) => x.id === id ? { ...x, ...patch } : x));
+
+  const perCents = perFee.trim() ? Math.round(parseFloat(perFee) * 100) : 0;
+  const flatCents = flatFee.trim() ? Math.round(parseFloat(flatFee) * 100) : 0;
+  const totalCents = pricingMode === "per_session" ? perCents * sessions.length : flatCents;
+
+  async function publish() {
+    if (!seriesName.trim() || !athleteName.trim()) { setErr("Series name and athlete are required."); return; }
+    if (!sessions.length) { setErr("Add at least one session."); return; }
+    setSaving(true); setErr(null);
+    const { data: series, error: sErr } = await (supabase as any).from("private_series").insert({
+      owner_id: ownerId,
+      name: seriesName.trim(),
+      athlete_name: athleteName.trim(),
+      location: location.trim() || null,
+      location_id: locationId,
+      pricing_mode: pricingMode,
+      per_session_fee_cents: pricingMode === "per_session" ? (perCents || null) : null,
+      flat_fee_cents: pricingMode === "flat" ? (flatCents || null) : null,
+      notes: notes.trim() || null,
+    }).select("id").single();
+    if (sErr || !series) { setSaving(false); setErr(sErr?.message ?? "Failed"); return; }
+
+    const perSessionFee = pricingMode === "per_session" ? (perCents || null)
+      : (sessions.length ? Math.round(flatCents / sessions.length) : null);
+
+    const rows = sessions.map((s) => ({
+      owner_id: ownerId,
+      athlete_name: athleteName.trim(),
+      session_date: s.date,
+      start_time: s.time || null,
+      duration_minutes: s.duration ? parseInt(s.duration, 10) : null,
+      location: location.trim() || null,
+      location_id: locationId,
+      fee_cents: perSessionFee,
+      notes: notes.trim() || null,
+      series_id: series.id,
+    }));
+    const { error: insErr } = await (supabase as any).from("private_sessions").insert(rows);
+    setSaving(false);
+    if (insErr) { setErr(insErr.message); return; }
+    onSaved();
+  }
+
+  return (
+    <>
+      <p className="mt-3 text-[11px] text-muted-foreground">Schedule a recurring private series with one athlete.</p>
+      <div className="mt-3 space-y-3">
+        <Field label="Series name">
+          <input value={seriesName} onChange={(e) => setSeriesName(e.target.value)}
+            placeholder="Summer Skating Program — Jake M."
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+        </Field>
+        <Field label="Athlete">
+          <input value={athleteName} onChange={(e) => setAthleteName(e.target.value)}
+            placeholder="Jake M."
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+        </Field>
+        <Field label="Location">
+          <LocationPicker
+            ownerId={ownerId}
+            valueId={locationId}
+            manualValue={location}
+            onChange={(next) => { setLocationId(next.locationId); setLocation(next.selected?.name ?? next.manual); }}
+            placeholder="Rink or studio"
+          />
+        </Field>
+
+        <div>
+          <div className="flex items-center justify-between">
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sessions</span>
+            <button type="button" onClick={addSession} className="text-[11px] font-semibold text-teal">+ Add session</button>
+          </div>
+          <div className="mt-2 space-y-2">
+            {sessions.map((s, idx) => (
+              <div key={s.id} className="rounded-lg border border-border bg-background p-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Session {idx + 1}</span>
+                  {sessions.length > 1 && (
+                    <button type="button" onClick={() => removeSession(s.id)} className="text-[11px] text-red-400">Remove</button>
+                  )}
+                </div>
+                <div className="mt-1 grid grid-cols-3 gap-2">
+                  <input type="date" value={s.date} onChange={(e) => updateSession(s.id, { date: e.target.value })}
+                    className="rounded-lg border border-border bg-card px-2 py-1.5 text-xs" />
+                  <input type="time" value={s.time} onChange={(e) => updateSession(s.id, { time: e.target.value })}
+                    className="rounded-lg border border-border bg-card px-2 py-1.5 text-xs" />
+                  <input type="number" min="15" step="15" value={s.duration} onChange={(e) => updateSession(s.id, { duration: e.target.value })}
+                    placeholder="min" className="rounded-lg border border-border bg-card px-2 py-1.5 text-xs" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pricing</span>
+          <div className="mt-1 grid grid-cols-2 gap-1 rounded-xl border border-border p-1 text-xs font-semibold">
+            <button type="button" onClick={() => setPricingMode("per_session")}
+              className={`rounded-lg py-1.5 ${pricingMode === "per_session" ? "bg-teal text-background" : "text-muted-foreground"}`}>Per session</button>
+            <button type="button" onClick={() => setPricingMode("flat")}
+              className={`rounded-lg py-1.5 ${pricingMode === "flat" ? "bg-teal text-background" : "text-muted-foreground"}`}>Flat fee</button>
+          </div>
+          <div className="mt-2">
+            {pricingMode === "per_session" ? (
+              <input type="number" min="0" step="1" value={perFee} onChange={(e) => setPerFee(e.target.value)}
+                placeholder="$ per session"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+            ) : (
+              <input type="number" min="0" step="1" value={flatFee} onChange={(e) => setFlatFee(e.target.value)}
+                placeholder="$ total"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-teal/30 bg-teal/5 p-3 text-center">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total</p>
+          <p className="mt-1 font-display text-lg font-bold text-teal">
+            {pricingMode === "per_session"
+              ? `${sessions.length} × ${fmtMoney(perCents)} = ${fmtMoney(totalCents)}`
+              : `${fmtMoney(totalCents)} for ${sessions.length} session${sessions.length === 1 ? "" : "s"}`}
+          </p>
+        </div>
+
+        <Field label="Notes">
+          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+        </Field>
+
+        {err && <p className="text-[11px] text-red-400">{err}</p>}
       </div>
-    </div>
+      <div className="mt-5 flex gap-2">
+        <button type="button" onClick={onClose}
+          className="flex-1 rounded-xl border border-border py-2 text-sm font-semibold">Cancel</button>
+        <button type="button" onClick={publish} disabled={saving}
+          className="flex-1 rounded-xl bg-teal py-2 text-sm font-bold text-background disabled:opacity-60">
+          {saving ? "Publishing…" : "Publish Series"}
+        </button>
+      </div>
+    </>
   );
 }
 
