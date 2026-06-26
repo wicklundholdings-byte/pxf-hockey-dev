@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DollarSign, TrendingUp, TrendingDown, Users, ChevronRight, AlertTriangle, Snowflake, Plus, Image as ImageIcon, Trophy, ChevronDown, CalendarDays } from "lucide-react";
 import { TeamEventRow } from "@/components/teams/team-event-row";
@@ -711,7 +711,7 @@ function BookPrivateModal({ ownerId, onClose, onSaved }: { ownerId: string; onCl
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
       <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
