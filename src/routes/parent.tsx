@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Home, CalendarDays, Dumbbell, MessageCircle, Users, Bell } from "lucide-react";
+import { Home, CalendarDays, Dumbbell, MessageCircle, Building2, Bell } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserAppRole } from "@/lib/user-role";
@@ -64,7 +64,7 @@ function ParentLayout() {
         items={[
           { to: "/parent", label: "Home", icon: Home, exact: true },
           { to: "/parent/camps", label: "Events", icon: CalendarDays },
-          { to: "/parent/teams", label: "Teams", icon: Users },
+          { to: "/parent/teams", label: "My Clubs", icon: Building2 },
           { to: "/parent/train", label: "Train", icon: Dumbbell },
           { to: "/parent/inbox", label: "Inbox", icon: MessageCircle },
         ]}
