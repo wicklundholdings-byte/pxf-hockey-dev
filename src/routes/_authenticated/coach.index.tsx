@@ -641,6 +641,7 @@ function BookPrivateModal({ ownerId, onClose, onSaved }: { ownerId: string; onCl
   const [time, setTime] = useState("");
   const [duration, setDuration] = useState("60");
   const [location, setLocation] = useState("");
+  const [locationId, setLocationId] = useState<string | null>(null);
   const [fee, setFee] = useState("");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -656,6 +657,7 @@ function BookPrivateModal({ ownerId, onClose, onSaved }: { ownerId: string; onCl
       start_time: time || null,
       duration_minutes: duration ? parseInt(duration, 10) : null,
       location: location.trim() || null,
+      location_id: locationId,
       fee_cents: feeCents,
     });
     setSaving(false);
@@ -694,8 +696,16 @@ function BookPrivateModal({ ownerId, onClose, onSaved }: { ownerId: string; onCl
             </Field>
           </div>
           <Field label="Location">
-            <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Rink or studio"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+            <LocationPicker
+              ownerId={ownerId}
+              valueId={locationId}
+              manualValue={location}
+              onChange={(next) => {
+                setLocationId(next.locationId);
+                setLocation(next.selected?.name ?? next.manual);
+              }}
+              placeholder="Rink or studio"
+            />
           </Field>
           {err && <p className="text-[11px] text-red-400">{err}</p>}
         </div>
