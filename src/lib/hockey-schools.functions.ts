@@ -159,8 +159,32 @@ export const submitBookingRequest = createServerFn({ method: "POST" })
       data.instructorStaffId ? `Instructor staff id: ${data.instructorStaffId}` : null,
       data.notes ? `Notes: ${data.notes}` : null,
     ].filter(Boolean).join("\n");
+    // Create a DM conversation between parent and coach so this thread shows in both inboxes.
+    const { data: convo, error: convoErr } = await supabaseAdmin
+      .from("conversations")
+      .insert({ type: "dm", created_by: context.userId })
+      .select("id")
+      .single();
+    if (convoErr) throw new Error(convoErr.message);
+    await supabaseAdmin.from("conversation_members").insert([
+      { conversation_id: convo.id, user_id: context.userId },
+      { conversation_id: convo.id, user_id: data.ownerId },
+    ]);
+    const summary =
+      `Private session request for ${data.athleteName}\n` +
+      `Preferred dates: ${data.preferredDates.join(", ")}\n` +
+      `Preferred times: ${data.preferredTimes.join(", ")}\n` +
+      `Length: ${data.sessionLengthMinutes} min` +
+      (data.notes ? `\nNotes: ${data.notes}` : "");
+    await supabaseAdmin.from("messages").insert({
+      conversation_id: convo.id,
+      sender_id: context.userId,
+      body: summary,
+    });
     const { error } = await supabaseAdmin.from("private_booking_requests").insert({
       owner_id: data.ownerId,
+      parent_user_id: context.userId,
+      conversation_id: convo.id,
       athlete_name: data.athleteName,
       parent_name: me?.full_name ?? null,
       parent_contact: email ?? null,
@@ -170,4 +194,72 @@ export const submitBookingRequest = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     return { ok: true, coachName: prof.full_name ?? "Your coach" };
+  });
+
+/** Coach responds to a parent booking request: confirm / waitlist / decline. Posts a message into the bridge thread. */
+export const respondToBookingRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: {
+    requestId: string;
+    action: "confirm" | "waitlist" | "decline";
+    sessionId?: string | null;
+    sessionDate?: string | null;
+    startTime?: string | null;
+    location?: string | null;
+    declineMessage?: string | null;
+  }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: req, error: reqErr } = await supabaseAdmin
+      .from("private_booking_requests")
+      .select("id, owner_id, conversation_id, athlete_name, parent_user_id")
+      .eq("id", data.requestId)
+      .maybeSingle();
+    if (reqErr || !req) throw new Error("Request not found");
+    if (req.owner_id !== context.userId) throw new Error("Forbidden");
+
+    const status =
+      data.action === "confirm" ? "confirmed" :
+      data.action === "waitlist" ? "waitlisted" : "declined";
+
+    const { error: upErr } = await supabaseAdmin
+      .from("private_booking_requests").update({
+        status,
+        decline_message: data.action === "decline" ? (data.declineMessage ?? null) : null,
+        resulting_session_id: data.action === "confirm" ? (data.sessionId ?? null) : null,
+      }).eq("id", req.id);
+    if (upErr) throw new Error(upErr.message);
+
+    // Make sure both sides are conversation members (in case the request predates the bridge).
+    let convoId = req.conversation_id as string | null;
+    if (!convoId && req.parent_user_id) {
+      const { data: convo } = await supabaseAdmin
+        .from("conversations").insert({ type: "dm", created_by: context.userId }).select("id").single();
+      convoId = convo?.id ?? null;
+      if (convoId) {
+        await supabaseAdmin.from("conversation_members").insert([
+          { conversation_id: convoId, user_id: context.userId },
+          { conversation_id: convoId, user_id: req.parent_user_id },
+        ]);
+        await supabaseAdmin.from("private_booking_requests").update({ conversation_id: convoId }).eq("id", req.id);
+      }
+    }
+
+    if (convoId) {
+      let body = "";
+      if (data.action === "confirm") {
+        const when = [data.sessionDate, data.startTime?.slice(0, 5)].filter(Boolean).join(" · ");
+        body = `✅ Your private for ${req.athlete_name} is confirmed${when ? ` for ${when}` : ""}${data.location ? ` at ${data.location}` : ""}. Payment details will follow shortly.`;
+      } else if (data.action === "waitlist") {
+        body = `⏳ Your request for ${req.athlete_name} has been waitlisted. We'll reach out as soon as a slot opens up.`;
+      } else {
+        body = `❌ Unfortunately your request for ${req.athlete_name} can't be accommodated.${data.declineMessage ? `\n\n${data.declineMessage}` : ""}`;
+      }
+      await supabaseAdmin.from("messages").insert({
+        conversation_id: convoId,
+        sender_id: context.userId,
+        body,
+      });
+    }
+    return { ok: true };
   });

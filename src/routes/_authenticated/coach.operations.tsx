@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, Calendar, Clock, MapPin, AlertCircle, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useServerFn } from "@tanstack/react-start";
+import { respondToBookingRequest } from "@/lib/hockey-schools.functions";
 
 export const Route = createFileRoute("/_authenticated/coach/operations")({
   component: OperationsPage,
@@ -282,9 +284,14 @@ function WaitlistList({ requests, ice, staff, avail, ownerId, onChanged }: {
   requests: BookingReq[]; ice: IceRow[]; staff: StaffRow[]; avail: AvailRow[]; ownerId: string; onChanged: () => void;
 }) {
   const [confirming, setConfirming] = useState<BookingReq | null>(null);
+  const respond = useServerFn(respondToBookingRequest);
 
-  const updateStatus = async (id: string, status: string, decline_message?: string) => {
-    await (supabase as any).from("private_booking_requests").update({ status, decline_message: decline_message ?? null }).eq("id", id);
+  const waitlist = async (id: string) => {
+    await respond({ data: { requestId: id, action: "waitlist" } });
+    onChanged();
+  };
+  const decline = async (id: string, declineMessage?: string) => {
+    await respond({ data: { requestId: id, action: "decline", declineMessage: declineMessage ?? null } });
     onChanged();
   };
 
@@ -309,10 +316,10 @@ function WaitlistList({ requests, ice, staff, avail, ownerId, onChanged }: {
             {r.notes && <p className="mt-1 text-[11px] italic text-muted-foreground">"{r.notes}"</p>}
             <div className="mt-3 grid grid-cols-3 gap-2">
               <button onClick={() => setConfirming(r)} className="rounded-lg bg-emerald-500/15 py-1.5 text-[11px] font-bold text-emerald-400"><Check size={11} className="inline" /> Confirm</button>
-              <button onClick={() => updateStatus(r.id, "waitlisted")} className="rounded-lg bg-amber-500/15 py-1.5 text-[11px] font-bold text-amber-400"><AlertCircle size={11} className="inline" /> Waitlist</button>
+              <button onClick={() => waitlist(r.id)} className="rounded-lg bg-amber-500/15 py-1.5 text-[11px] font-bold text-amber-400"><AlertCircle size={11} className="inline" /> Waitlist</button>
               <button onClick={() => {
                 const msg = window.prompt("Decline message (optional)") ?? undefined;
-                updateStatus(r.id, "declined", msg);
+                decline(r.id, msg);
               }} className="rounded-lg bg-red-500/15 py-1.5 text-[11px] font-bold text-red-400"><X size={11} className="inline" /> Decline</button>
             </div>
           </div>
@@ -341,6 +348,7 @@ function ConfirmBookingSheet({ request, ice, staff, avail, ownerId, onClose, onS
   const [iceId, setIceId] = useState<string>("");
   const [coachId, setCoachId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const respond = useServerFn(respondToBookingRequest);
 
   const selectedSlot = openIce.find((s) => s.id === iceId) ?? null;
   const dow = selectedSlot ? new Date(selectedSlot.slot_date + "T00:00:00").getDay() : -1;
@@ -363,9 +371,16 @@ function ConfirmBookingSheet({ request, ice, staff, avail, ownerId, onClose, onS
     if (coachId) {
       await supabase.from("ice_slots").update({ booked_by_coach_id: coachId }).eq("id", selectedSlot.id);
     }
-    await (supabase as any).from("private_booking_requests").update({
-      status: "confirmed", resulting_session_id: session?.id ?? null,
-    }).eq("id", request.id);
+    await respond({
+      data: {
+        requestId: request.id,
+        action: "confirm",
+        sessionId: session?.id ?? null,
+        sessionDate: selectedSlot.slot_date,
+        startTime: selectedSlot.start_time,
+        location: selectedSlot.rink?.name ?? null,
+      },
+    });
     setSaving(false);
     onSaved();
   };
