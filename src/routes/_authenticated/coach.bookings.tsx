@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Clock, MapPin, DollarSign, Calendar as CalIcon } from "lucide-react";
 import { TierGate } from "@/components/tier-gate";
+import { BlockForStaff } from "@/components/block-for-staff";
 
 export const Route = createFileRoute("/_authenticated/coach/bookings")({
   head: () => ({ meta: [{ title: "1-on-1 Bookings — Coach" }] }),
@@ -10,9 +11,11 @@ export const Route = createFileRoute("/_authenticated/coach/bookings")({
 
 function GatedBookings() {
   return (
-    <TierGate feature="privateSessionBooking">
-      <BookingsScreen />
-    </TierGate>
+    <BlockForStaff>
+      <TierGate feature="privateSessionBooking">
+        <BookingsScreen />
+      </TierGate>
+    </BlockForStaff>
   );
 }
 
