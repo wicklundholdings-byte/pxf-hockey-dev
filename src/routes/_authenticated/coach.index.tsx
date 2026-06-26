@@ -321,51 +321,19 @@ function EliteCoachDashboard() {
         <p className="text-base font-light text-muted-foreground">Here's what's happening.</p>
       </div>
 
-      {/* Alerts */}
-      {hasAlerts && (
-        <section className="space-y-2">
-          {unassignedCampIds.length > 0 && (
-            <Link to="/coach/camps" className="flex items-center gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/5 p-3">
-              <AlertTriangle size={18} className="text-amber-500" />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold">{unassignedCampIds.length} camp{unassignedCampIds.length === 1 ? "" : "s"} need a coach assigned</p>
-                <p className="text-[10px] text-muted-foreground">Tap to assign staff</p>
-              </div>
-              <ChevronRight size={14} className="text-muted-foreground" />
-            </Link>
-          )}
-          {missingHealthCount > 0 && (
-            <Link to="/coach/attendees" className="flex items-center gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/5 p-3">
-              <AlertTriangle size={18} className="text-amber-500" />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold">{missingHealthCount} athlete{missingHealthCount === 1 ? "" : "s"} missing health forms</p>
-                <p className="text-[10px] text-muted-foreground">Request from parents</p>
-              </div>
-              <ChevronRight size={14} className="text-muted-foreground" />
-            </Link>
-          )}
-          {lowEnrollCamps.length > 0 && (
-            <Link to="/coach/camps" className="flex items-center gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/5 p-3">
-              <AlertTriangle size={18} className="text-amber-500" />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold">{lowEnrollCamps.length} camp{lowEnrollCamps.length === 1 ? "" : "s"} under 50% enrolled</p>
-                <p className="text-[10px] text-muted-foreground">Promote to fill seats</p>
-              </div>
-              <ChevronRight size={14} className="text-muted-foreground" />
-            </Link>
-          )}
-          {unpaidCount > 0 && (
-            <Link to="/coach/financials" className="flex items-center gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/5 p-3">
-              <DollarSign size={18} className="text-amber-500" />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold">{unpaidCount} unpaid registration{unpaidCount === 1 ? "" : "s"}</p>
-                <p className="text-[10px] text-muted-foreground">Send payment reminders</p>
-              </div>
-              <ChevronRight size={14} className="text-muted-foreground" />
-            </Link>
-          )}
-        </section>
-      )}
+      {/* Alerts button */}
+      <button
+        type="button"
+        onClick={() => setShowAlertsSheet(true)}
+        className={`flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold transition-colors ${
+          hasAlerts
+            ? "bg-amber-500 text-white"
+            : "bg-amber-500/20 text-amber-500"
+        }`}
+      >
+        <Bell size={16} />
+        <span>Alerts · {unassignedCampIds.length + missingHealthCount + lowEnrollCamps.length + unpaidCount}</span>
+      </button>
 
       {/* Operations */}
       <Link
