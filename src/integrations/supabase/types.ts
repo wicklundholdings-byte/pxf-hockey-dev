@@ -4606,6 +4606,110 @@ export type Database = {
         }
         Relationships: []
       }
+      team_payment_charges: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          last_reminder_at: string | null
+          paid_at: string | null
+          paid_by: string | null
+          request_id: string
+          status: string
+          team_player_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          id?: string
+          last_reminder_at?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          request_id: string
+          status?: string
+          team_player_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          last_reminder_at?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          request_id?: string
+          status?: string
+          team_player_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_payment_charges_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "team_payment_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_payment_charges_team_player_id_fkey"
+            columns: ["team_player_id"]
+            isOneToOne: false
+            referencedRelation: "team_players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_payment_requests: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          label: string
+          request_type: string
+          status: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          label: string
+          request_type: string
+          status?: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          label?: string
+          request_type?: string
+          status?: string
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_payment_requests_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_players: {
         Row: {
           added_by: string | null

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { MapPin, Star, ChevronRight, ChevronDown, Cpu, Calendar, Clock, Dumbbell, Trophy, Image as ImageIcon, Swords } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { OutstandingPayments } from "@/components/parent/outstanding-payments";
 
 export const Route = createFileRoute("/parent/")({
   head: () => ({ meta: [{ title: "Dashboard — PXF Hockey" }] }),
@@ -445,6 +446,8 @@ function ParentDashboard() {
         <h1 className="font-display text-2xl font-bold leading-tight">Hey {firstName},</h1>
         <p className="text-base font-light text-muted-foreground">Here's what's happening.</p>
       </div>
+
+      <OutstandingPayments />
 
       {/* My Athletes */}
       <section className="mt-6">
