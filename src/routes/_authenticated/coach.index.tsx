@@ -859,6 +859,9 @@ function SeriesPrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
             placeholder="Rink or studio"
           />
         </Field>
+        <Field label="Assigned coach">
+          <CoachPicker ownerId={ownerId} value={assignedCoachId} onChange={setAssignedCoachId} />
+        </Field>
 
         <div>
           <div className="flex items-center justify-between">
