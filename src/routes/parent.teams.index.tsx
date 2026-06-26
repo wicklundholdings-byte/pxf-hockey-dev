@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronRight, Users, Building2, Search, MapPin } from "lucide-react";
+import { ChevronRight, Users, Building2, Search } from "lucide-react";
 import { listMyHockeySchools } from "@/lib/hockey-schools.functions";
 
 export const Route = createFileRoute("/parent/teams/")({
