@@ -368,9 +368,9 @@ function EliteCoachDashboard() {
       {/* Operations */}
       <Link
         to="/coach/operations"
-        className="block w-full rounded-2xl border border-teal/40 bg-teal/10 py-5 text-center"
+        className="block w-full rounded-2xl bg-gradient-to-r from-teal to-emerald-500 py-5 text-center shadow-sm"
       >
-        <h2 className="text-[11px] font-bold uppercase tracking-[2px] text-teal">Operations</h2>
+        <h2 className="text-[11px] font-bold uppercase tracking-[2px] text-white">Operations</h2>
       </Link>
 
       {/* Financials Snapshot */}
