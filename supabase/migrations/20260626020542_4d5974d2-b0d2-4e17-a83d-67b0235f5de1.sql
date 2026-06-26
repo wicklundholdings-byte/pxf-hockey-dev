@@ -1,0 +1,2 @@
+ALTER TABLE public.private_sessions ADD COLUMN IF NOT EXISTS assigned_coach_id uuid REFERENCES auth.users(id) ON DELETE SET NULL;
+ALTER TABLE public.private_series ADD COLUMN IF NOT EXISTS assigned_coach_id uuid REFERENCES auth.users(id) ON DELETE SET NULL;

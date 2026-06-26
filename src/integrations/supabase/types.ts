@@ -3487,6 +3487,7 @@ export type Database = {
       }
       private_series: {
         Row: {
+          assigned_coach_id: string | null
           athlete_name: string
           created_at: string
           flat_fee_cents: number | null
@@ -3501,6 +3502,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_coach_id?: string | null
           athlete_name: string
           created_at?: string
           flat_fee_cents?: number | null
@@ -3515,6 +3517,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_coach_id?: string | null
           athlete_name?: string
           created_at?: string
           flat_fee_cents?: number | null
@@ -3540,6 +3543,7 @@ export type Database = {
       }
       private_sessions: {
         Row: {
+          assigned_coach_id: string | null
           athlete_name: string
           created_at: string
           duration_minutes: number | null
@@ -3555,6 +3559,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_coach_id?: string | null
           athlete_name: string
           created_at?: string
           duration_minutes?: number | null
@@ -3570,6 +3575,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_coach_id?: string | null
           athlete_name?: string
           created_at?: string
           duration_minutes?: number | null
