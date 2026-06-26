@@ -3485,6 +3485,62 @@ export type Database = {
           },
         ]
       }
+      private_booking_requests: {
+        Row: {
+          athlete_name: string
+          created_at: string
+          decline_message: string | null
+          id: string
+          notes: string | null
+          owner_id: string
+          parent_contact: string | null
+          parent_name: string | null
+          preferred_dates: string | null
+          preferred_times: string | null
+          resulting_session_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          athlete_name: string
+          created_at?: string
+          decline_message?: string | null
+          id?: string
+          notes?: string | null
+          owner_id: string
+          parent_contact?: string | null
+          parent_name?: string | null
+          preferred_dates?: string | null
+          preferred_times?: string | null
+          resulting_session_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          athlete_name?: string
+          created_at?: string
+          decline_message?: string | null
+          id?: string
+          notes?: string | null
+          owner_id?: string
+          parent_contact?: string | null
+          parent_name?: string | null
+          preferred_dates?: string | null
+          preferred_times?: string | null
+          resulting_session_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_booking_requests_resulting_session_id_fkey"
+            columns: ["resulting_session_id"]
+            isOneToOne: false
+            referencedRelation: "private_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       private_series: {
         Row: {
           assigned_coach_id: string | null
@@ -4009,6 +4065,44 @@ export type Database = {
             columns: ["registration_id"]
             isOneToOne: false
             referencedRelation: "registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_availability: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          owner_id: string
+          staff_id: string
+          start_time: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          owner_id: string
+          staff_id: string
+          start_time: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          owner_id?: string
+          staff_id?: string
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_availability_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "elite_staff_coaches"
             referencedColumns: ["id"]
           },
         ]
