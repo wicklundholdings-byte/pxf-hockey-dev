@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useEliteRole } from "@/hooks/use-elite-role";
 import { useServerFn } from "@tanstack/react-start";
-import { respondToBookingRequest } from "@/lib/hockey-schools.functions";
+import { respondToBookingRequest, confirmBookingRequest } from "@/lib/hockey-schools.functions";
 import { TypeBadge, type Location } from "@/components/coach/location-picker";
 
 export const Route = createFileRoute("/_authenticated/coach/operations")({
@@ -359,8 +359,10 @@ function ConfirmBookingSheet({ request, ice, staff, avail, ownerId, onClose, onS
   const openIce = ice.filter((s) => !s.camp_id);
   const [iceId, setIceId] = useState<string>("");
   const [coachId, setCoachId] = useState<string | null>(null);
+  const [feeDollars, setFeeDollars] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const respond = useServerFn(respondToBookingRequest);
+  const confirmFn = useServerFn(confirmBookingRequest);
 
   const selectedSlot = openIce.find((s) => s.id === iceId) ?? null;
   const dow = selectedSlot ? new Date(selectedSlot.slot_date + "T00:00:00").getDay() : -1;
@@ -371,26 +373,24 @@ function ConfirmBookingSheet({ request, ice, staff, avail, ownerId, onClose, onS
   const confirm = async () => {
     if (!selectedSlot) return;
     setSaving(true);
-    const { data: session } = await (supabase as any).from("private_sessions").insert({
-      owner_id: ownerId,
-      athlete_name: request.athlete_name,
-      session_date: selectedSlot.slot_date,
-      start_time: selectedSlot.start_time,
-      duration_minutes: 60,
-      location: selectedSlot.rink?.name ?? null,
-      assigned_coach_id: coachId,
-    }).select("id").single();
-    if (coachId) {
-      await supabase.from("ice_slots").update({ booked_by_coach_id: coachId }).eq("id", selectedSlot.id);
-    }
+    const feeCents = feeDollars.trim() ? Math.round(parseFloat(feeDollars) * 100) : null;
+    const result = await confirmFn({
+      data: {
+        requestId: request.id,
+        iceSlotId: selectedSlot.id,
+        coachUserId: coachId,
+        feeCents,
+        durationMinutes: 60,
+      },
+    });
     await respond({
       data: {
         requestId: request.id,
         action: "confirm",
-        sessionId: session?.id ?? null,
-        sessionDate: selectedSlot.slot_date,
-        startTime: selectedSlot.start_time,
-        location: selectedSlot.rink?.name ?? null,
+        sessionId: result.sessionId,
+        sessionDate: result.slotDate,
+        startTime: result.startTime,
+        location: result.location,
       },
     });
     setSaving(false);
@@ -423,6 +423,13 @@ function ConfirmBookingSheet({ request, ice, staff, avail, ownerId, onClose, onS
                 <option key={s.id} value={s.staff_user_id ?? ""}>{s.full_name ?? s.email}</option>
               ))}
             </select>
+          </div>
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Session fee (USD)</label>
+            <input type="number" inputMode="decimal" placeholder="e.g. 85" value={feeDollars}
+              onChange={(e) => setFeeDollars(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-2 text-sm" />
+            <p className="mt-1 text-[10px] text-muted-foreground">Parent gets a Pay Now prompt if a fee is set.</p>
           </div>
         </div>
         <div className="mt-4 flex gap-2">
