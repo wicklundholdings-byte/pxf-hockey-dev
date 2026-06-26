@@ -604,16 +604,32 @@ function EliteCoachDashboard() {
       )}
 
       {/* Ice Times + Create Session */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <Link to="/coach/ice" className="flex items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-transparent py-3 text-center transition-colors hover:bg-teal/5">
           <Snowflake size={18} className="text-teal" />
-          <span className="text-xs font-semibold text-teal">Add Ice Times</span>
+          <span className="text-xs font-semibold text-teal">Add Ice</span>
         </Link>
         <Link to="/coach/sessions" className="flex items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-transparent py-3 text-center transition-colors hover:bg-teal/5">
           <Plus size={18} className="text-teal" />
-          <span className="text-xs font-semibold text-teal">{"\u00a0"}Create Session</span>
+          <span className="text-xs font-semibold text-teal">Session</span>
         </Link>
+        <button
+          type="button"
+          onClick={() => setShowBookPrivate(true)}
+          className="flex items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-transparent py-3 text-center transition-colors hover:bg-teal/5"
+        >
+          <CalendarDays size={18} className="text-teal" />
+          <span className="text-xs font-semibold text-teal">Book Private</span>
+        </button>
       </div>
+
+      {showBookPrivate && (
+        <BookPrivateModal
+          onClose={() => setShowBookPrivate(false)}
+          onSaved={() => { setShowBookPrivate(false); if (user?.id) reloadPrivates(user.id); }}
+          ownerId={user?.id ?? ""}
+        />
+      )}
     </div>
   );
 }
