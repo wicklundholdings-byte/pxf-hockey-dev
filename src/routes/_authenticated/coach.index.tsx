@@ -1544,3 +1544,36 @@ function EliteStaffDashboard({ assignedTeamIds }: { assignedTeamIds: string[] })
     </div>
   );
 }
+
+function CoachPicker({ ownerId, value, onChange }: { ownerId: string; value: string | null; onChange: (v: string | null) => void }) {
+  const [options, setOptions] = useState<{ id: string; label: string }[]>([]);
+  useEffect(() => {
+    if (!ownerId) return;
+    (async () => {
+      const opts: { id: string; label: string }[] = [];
+      const { data: ownerProf } = await supabase.from("profiles").select("full_name,email").eq("id", ownerId).maybeSingle();
+      opts.push({ id: ownerId, label: `${(ownerProf as any)?.full_name ?? (ownerProf as any)?.email ?? "Me"} (You)` });
+      const { data: staff } = await (supabase as any)
+        .from("elite_staff_coaches")
+        .select("staff_user_id,full_name,email")
+        .eq("owner_id", ownerId)
+        .eq("status", "active");
+      for (const s of (staff ?? []) as any[]) {
+        if (s.staff_user_id) opts.push({ id: s.staff_user_id, label: s.full_name ?? s.email ?? "Staff coach" });
+      }
+      setOptions(opts);
+    })();
+  }, [ownerId]);
+  return (
+    <select
+      value={value ?? ""}
+      onChange={(e) => onChange(e.target.value || null)}
+      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+    >
+      <option value="">— Not assigned —</option>
+      {options.map((o) => (
+        <option key={o.id} value={o.id}>{o.label}</option>
+      ))}
+    </select>
+  );
+}
