@@ -47,6 +47,7 @@ type PrivateLite = {
   duration_minutes: number | null;
   location: string | null;
   fee_cents: number | null;
+  series_id: string | null;
 };
 
 function ageOf(b: string | null) {
@@ -91,7 +92,7 @@ function EliteCoachDashboard() {
     const today = new Date().toISOString().slice(0, 10);
     const { data } = await (supabase as any)
       .from("private_sessions")
-      .select("id,athlete_name,session_date,start_time,duration_minutes,location,fee_cents")
+      .select("id,athlete_name,session_date,start_time,duration_minutes,location,fee_cents,series_id")
       .eq("owner_id", uid)
       .gte("session_date", today)
       .order("session_date", { ascending: true })
@@ -419,6 +420,9 @@ function EliteCoachDashboard() {
           {privates.slice(0, 5).map((p) => (
             <div key={p.id} className="w-60 shrink-0 rounded-2xl border border-border bg-card p-3">
               <p className="truncate text-sm font-semibold">{p.athlete_name}</p>
+              {p.series_id && (
+                <span className="mt-0.5 inline-block rounded-full bg-teal/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-teal">Series</span>
+              )}
               <p className="mt-0.5 text-[11px] text-muted-foreground">
                 {fmtEventDate(p.session_date)}{p.start_time ? ` · ${fmtTime(p.start_time)}` : ""}
               </p>
