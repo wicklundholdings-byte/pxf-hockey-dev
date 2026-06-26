@@ -423,7 +423,6 @@ function EliteCoachDashboard() {
           </p>
         </Link>
       </section>
-
       {/* Upcoming Privates */}
       <section>
         <div className="flex items-center justify-between">
