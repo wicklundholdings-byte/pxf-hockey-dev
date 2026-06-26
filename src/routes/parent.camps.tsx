@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useServerFn } from "@tanstack/react-start";
 import { payForPrivateSession } from "@/lib/hockey-schools.functions";
+import { OutstandingPayments } from "@/components/parent/outstanding-payments";
 
 export const Route = createFileRoute("/parent/camps")({
   head: () => ({ meta: [{ title: "Events — PXF Hockey" }] }),
@@ -226,6 +227,8 @@ function ParentEvents() {
     <div className="min-h-screen bg-background px-5 pt-5 pb-24 text-foreground">
       <h1 className="font-display text-2xl font-bold">Events</h1>
       <p className="mt-1 text-[11px] text-muted-foreground">Everything your athlete is enrolled in</p>
+
+      <OutstandingPayments />
 
       {loading ? (
         <p className="mt-6 text-xs text-muted-foreground">Loading…</p>
