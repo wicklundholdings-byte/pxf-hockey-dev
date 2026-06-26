@@ -347,9 +347,9 @@ function EliteCoachDashboard() {
         </section>
       )}
 
-      {/* Revenue Snapshot */}
+      {/* Financials Snapshot */}
       <section>
-        <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Revenue · Month to date</h2>
+        <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Financials · Month to date</h2>
         <div className="mt-2 grid grid-cols-2 gap-3">
           <Link to="/coach/financials" className="rounded-2xl border border-border bg-card p-4">
             <div className="flex items-center justify-between">
@@ -361,7 +361,7 @@ function EliteCoachDashboard() {
           </Link>
           <Link to="/coach/financials" className="rounded-2xl border border-border bg-card p-4">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Net sales</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Gross Profit</span>
               <TrendingUp size={14} className="text-emerald-400" />
             </div>
             <div className="mt-1 font-display text-xl font-bold text-emerald-400">{fmtMoney(revenue.netThis)}</div>
