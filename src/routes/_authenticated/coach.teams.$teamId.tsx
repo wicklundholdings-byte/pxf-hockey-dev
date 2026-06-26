@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Calendar, Users, BarChart3, Camera } from "lucide-react";
+import { ArrowLeft, Calendar, Users, BarChart3, Camera, DollarSign } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId")({
   component: TeamLayout,
@@ -72,6 +72,16 @@ function TeamLayout() {
             </Link>
           ))}
         </div>
+        )}
+        {isOverview && (
+          <Link
+            to="/coach/teams/$teamId/payments"
+            params={{ teamId }}
+            className="mt-2 flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal py-3 active:opacity-90"
+          >
+            <DollarSign size={18} className="text-background" />
+            <span className="text-sm font-bold text-background">Payments</span>
+          </Link>
         )}
       </div>
       <div id="team-tab-content" className="mt-3 px-5 scroll-mt-4">
