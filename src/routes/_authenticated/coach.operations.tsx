@@ -75,10 +75,11 @@ function OperationsPage() {
         <h1 className="font-display text-xl font-bold">Operations</h1>
       </div>
 
-      <div className="grid grid-cols-3 gap-1 rounded-2xl border border-border bg-card p-1">
+      <div className="grid grid-cols-4 gap-1 rounded-2xl border border-border bg-card p-1">
         {([
           ["avail", "Staff"],
-          ["ice", "Ice times"],
+          ["ice", "Ice"],
+          ["loc", "Locations"],
           ["wait", `Waitlist${requests.length ? ` (${requests.length})` : ""}`],
         ] as const).map(([k, label]) => (
           <button key={k} onClick={() => setTab(k)}
@@ -94,6 +95,9 @@ function OperationsPage() {
       )}
       {tab === "ice" && (
         <IceAllocationList ice={ice} onTap={setEditingIce} />
+      )}
+      {tab === "loc" && effectiveOwnerId && (
+        <LocationsSection ownerId={effectiveOwnerId} canEdit={canEditLocs} />
       )}
       {tab === "wait" && (
         <WaitlistList requests={requests} ice={ice} staff={staff} avail={avail} ownerId={user?.id ?? ""} onChanged={reload} />
