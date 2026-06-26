@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { DollarSign, TrendingUp, TrendingDown, Users, ChevronRight, AlertTriangle, Snowflake, Plus, Image as ImageIcon, Trophy, ChevronDown, CalendarDays, Bell } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Users, ChevronRight, AlertTriangle, Snowflake, Plus, Image as ImageIcon, Trophy, ChevronDown, CalendarDays, Bell, Megaphone } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TeamEventRow } from "@/components/teams/team-event-row";
 import { useCurrentTier } from "@/hooks/use-tier";
@@ -338,9 +338,10 @@ function EliteCoachDashboard() {
       {/* Operations */}
       <Link
         to="/coach/operations"
-        className="block w-full rounded-2xl bg-gradient-to-r from-teal to-emerald-500 py-5 text-center shadow-sm"
+        className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-brand py-4 text-center shadow-sm"
       >
-        <h2 className="text-[11px] font-bold uppercase tracking-[2px] text-white">Operations</h2>
+        <Megaphone size={18} className="text-black" />
+        <span className="text-base font-bold text-black">Operations</span>
       </Link>
 
       {/* Financials Snapshot */}
