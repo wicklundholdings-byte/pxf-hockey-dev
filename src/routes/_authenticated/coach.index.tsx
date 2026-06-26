@@ -6,6 +6,7 @@ import { TeamEventRow } from "@/components/teams/team-event-row";
 import { useCurrentTier } from "@/hooks/use-tier";
 import { useAuth } from "@/hooks/use-auth";
 import { useEliteRole } from "@/hooks/use-elite-role";
+import { LocationPicker } from "@/components/coach/location-picker";
 
 export const Route = createFileRoute("/_authenticated/coach/")({
   component: CoachDashboardRoot,
@@ -623,6 +624,16 @@ function EliteCoachDashboard() {
         </button>
       </div>
 
+      <Link
+        to="/coach/locations"
+        className="flex items-center justify-between rounded-2xl border border-border bg-card p-3 text-xs"
+      >
+        <span className="flex items-center gap-2">
+          <Plus size={14} className="text-teal" /> Manage saved locations
+        </span>
+        <ChevronRight size={14} className="text-muted-foreground" />
+      </Link>
+
       {showBookPrivate && (
         <BookPrivateModal
           onClose={() => setShowBookPrivate(false)}
@@ -640,6 +651,7 @@ function BookPrivateModal({ ownerId, onClose, onSaved }: { ownerId: string; onCl
   const [time, setTime] = useState("");
   const [duration, setDuration] = useState("60");
   const [location, setLocation] = useState("");
+  const [locationId, setLocationId] = useState<string | null>(null);
   const [fee, setFee] = useState("");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -655,6 +667,7 @@ function BookPrivateModal({ ownerId, onClose, onSaved }: { ownerId: string; onCl
       start_time: time || null,
       duration_minutes: duration ? parseInt(duration, 10) : null,
       location: location.trim() || null,
+      location_id: locationId,
       fee_cents: feeCents,
     });
     setSaving(false);
@@ -693,8 +706,16 @@ function BookPrivateModal({ ownerId, onClose, onSaved }: { ownerId: string; onCl
             </Field>
           </div>
           <Field label="Location">
-            <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Rink or studio"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+            <LocationPicker
+              ownerId={ownerId}
+              valueId={locationId}
+              manualValue={location}
+              onChange={(next) => {
+                setLocationId(next.locationId);
+                setLocation(next.selected?.name ?? next.manual);
+              }}
+              placeholder="Rink or studio"
+            />
           </Field>
           {err && <p className="text-[11px] text-red-400">{err}</p>}
         </div>
