@@ -4817,6 +4817,33 @@ export type Database = {
           },
         ]
       }
+      coach_public_profiles: {
+        Row: {
+          bio: string | null
+          city: string | null
+          full_name: string | null
+          id: string | null
+          marketplace_visible: boolean | null
+          slug: string | null
+        }
+        Insert: {
+          bio?: string | null
+          city?: string | null
+          full_name?: string | null
+          id?: string | null
+          marketplace_visible?: boolean | null
+          slug?: string | null
+        }
+        Update: {
+          bio?: string | null
+          city?: string | null
+          full_name?: string | null
+          id?: string | null
+          marketplace_visible?: boolean | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
       public_marketplace_profiles: {
         Row: {
           bio: string | null
