@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Check, Upload, Plus, Trash2, CalendarDays, MapPi
 import { StatusBadge } from "@/components/coach/status-badge";
 import { TierGate } from "@/components/tier-gate";
 import { BlockForStaff } from "@/components/block-for-staff";
+import { LocationPicker } from "@/components/coach/location-picker";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/new")({
   component: GatedNewCampWizard,
@@ -59,6 +60,7 @@ function NewCampWizard() {
   const [locationType, setLocationType] = useState<LocType>("venue");
   const [venueName, setVenueName] = useState("");
   const [address, setAddress] = useState("");
+  const [locationId, setLocationId] = useState<string | null>(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [startTime, setStartTime] = useState("09:00");
