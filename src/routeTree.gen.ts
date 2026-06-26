@@ -22,7 +22,6 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PaymentsPreviewRouteImport } from './routes/payments-preview'
 import { Route as ParentRouteImport } from './routes/parent'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MembershipRouteImport } from './routes/membership'
 import { Route as GetVerifiedRouteImport } from './routes/get-verified'
 import { Route as GameiqRouteImport } from './routes/gameiq'
@@ -226,11 +225,6 @@ const ParentRoute = ParentRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NotificationsRoute = NotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MembershipRoute = MembershipRouteImport.update({
@@ -1002,7 +996,6 @@ export interface FileRoutesByFullPath {
   '/gameiq': typeof GameiqRoute
   '/get-verified': typeof GetVerifiedRoute
   '/membership': typeof MembershipRoute
-  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/parent': typeof ParentRouteWithChildren
   '/payments-preview': typeof PaymentsPreviewRoute
@@ -1156,7 +1149,6 @@ export interface FileRoutesByTo {
   '/gameiq': typeof GameiqRoute
   '/get-verified': typeof GetVerifiedRoute
   '/membership': typeof MembershipRoute
-  '/notifications': typeof NotificationsRoute
   '/payments-preview': typeof PaymentsPreviewRoute
   '/profile': typeof ProfileRoute
   '/programs': typeof ProgramsRoute
@@ -1302,7 +1294,6 @@ export interface FileRoutesById {
   '/gameiq': typeof GameiqRoute
   '/get-verified': typeof GetVerifiedRoute
   '/membership': typeof MembershipRoute
-  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/parent': typeof ParentRouteWithChildren
   '/payments-preview': typeof PaymentsPreviewRoute
@@ -1458,7 +1449,6 @@ export interface FileRouteTypes {
     | '/gameiq'
     | '/get-verified'
     | '/membership'
-    | '/notifications'
     | '/onboarding'
     | '/parent'
     | '/payments-preview'
@@ -1612,7 +1602,6 @@ export interface FileRouteTypes {
     | '/gameiq'
     | '/get-verified'
     | '/membership'
-    | '/notifications'
     | '/payments-preview'
     | '/profile'
     | '/programs'
@@ -1757,7 +1746,6 @@ export interface FileRouteTypes {
     | '/gameiq'
     | '/get-verified'
     | '/membership'
-    | '/notifications'
     | '/onboarding'
     | '/parent'
     | '/payments-preview'
@@ -1913,7 +1901,6 @@ export interface RootRouteChildren {
   GameiqRoute: typeof GameiqRoute
   GetVerifiedRoute: typeof GetVerifiedRoute
   MembershipRoute: typeof MembershipRoute
-  NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
   ParentRoute: typeof ParentRouteWithChildren
   PaymentsPreviewRoute: typeof PaymentsPreviewRoute
@@ -2045,13 +2032,6 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/notifications': {
-      id: '/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/membership': {
@@ -3460,7 +3440,6 @@ const rootRouteChildren: RootRouteChildren = {
   GameiqRoute: GameiqRoute,
   GetVerifiedRoute: GetVerifiedRoute,
   MembershipRoute: MembershipRoute,
-  NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRouteWithChildren,
   ParentRoute: ParentRouteWithChildren,
   PaymentsPreviewRoute: PaymentsPreviewRoute,
