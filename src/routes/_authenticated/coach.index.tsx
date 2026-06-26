@@ -88,6 +88,21 @@ function EliteCoachDashboard() {
   const [media, setMedia] = useState<MediaLite[]>([]);
   const [privates, setPrivates] = useState<PrivateLite[]>([]);
   const [showBookPrivate, setShowBookPrivate] = useState(false);
+  const [opsSummary, setOpsSummary] = useState<{ unassignedIce: number; pendingRequests: number }>({ unassignedIce: 0, pendingRequests: 0 });
+
+  useEffect(() => {
+    if (!user?.id) return;
+    (async () => {
+      const todayIso = new Date().toISOString().slice(0, 10);
+      const [{ count: iceCount }, { count: reqCount }] = await Promise.all([
+        supabase.from("ice_slots").select("id", { count: "exact", head: true })
+          .eq("owner_id", user.id).gte("slot_date", todayIso).is("booked_by_coach_id", null),
+        (supabase as any).from("private_booking_requests").select("id", { count: "exact", head: true })
+          .eq("owner_id", user.id).eq("status", "pending"),
+      ]);
+      setOpsSummary({ unassignedIce: iceCount ?? 0, pendingRequests: reqCount ?? 0 });
+    })();
+  }, [user?.id]);
 
   async function reloadPrivates(uid: string) {
     const today = new Date().toISOString().slice(0, 10);
