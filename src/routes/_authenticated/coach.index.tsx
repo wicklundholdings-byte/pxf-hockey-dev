@@ -6,6 +6,7 @@ import { TeamEventRow } from "@/components/teams/team-event-row";
 import { useCurrentTier } from "@/hooks/use-tier";
 import { useAuth } from "@/hooks/use-auth";
 import { useEliteRole } from "@/hooks/use-elite-role";
+import { LocationPicker } from "@/components/coach/location-picker";
 
 export const Route = createFileRoute("/_authenticated/coach/")({
   component: CoachDashboardRoot,
