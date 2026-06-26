@@ -3488,6 +3488,7 @@ export type Database = {
       private_booking_requests: {
         Row: {
           athlete_name: string
+          conversation_id: string | null
           created_at: string
           decline_message: string | null
           id: string
@@ -3495,6 +3496,7 @@ export type Database = {
           owner_id: string
           parent_contact: string | null
           parent_name: string | null
+          parent_user_id: string | null
           preferred_dates: string | null
           preferred_times: string | null
           resulting_session_id: string | null
@@ -3503,6 +3505,7 @@ export type Database = {
         }
         Insert: {
           athlete_name: string
+          conversation_id?: string | null
           created_at?: string
           decline_message?: string | null
           id?: string
@@ -3510,6 +3513,7 @@ export type Database = {
           owner_id: string
           parent_contact?: string | null
           parent_name?: string | null
+          parent_user_id?: string | null
           preferred_dates?: string | null
           preferred_times?: string | null
           resulting_session_id?: string | null
@@ -3518,6 +3522,7 @@ export type Database = {
         }
         Update: {
           athlete_name?: string
+          conversation_id?: string | null
           created_at?: string
           decline_message?: string | null
           id?: string
@@ -3525,6 +3530,7 @@ export type Database = {
           owner_id?: string
           parent_contact?: string | null
           parent_name?: string | null
+          parent_user_id?: string | null
           preferred_dates?: string | null
           preferred_times?: string | null
           resulting_session_id?: string | null
@@ -3532,6 +3538,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "private_booking_requests_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "private_booking_requests_resulting_session_id_fkey"
             columns: ["resulting_session_id"]
