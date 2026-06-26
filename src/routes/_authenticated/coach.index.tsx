@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DollarSign, TrendingUp, TrendingDown, Users, ChevronRight, AlertTriangle, Snowflake, Plus, Image as ImageIcon, Trophy, ChevronDown, CalendarDays } from "lucide-react";
 import { TeamEventRow } from "@/components/teams/team-event-row";
@@ -38,6 +38,15 @@ type KidLite = { id: string; full_name: string; birthday: string | null; positio
 type TeamLite = { id: string; name: string; season: string | null; logo_url: string | null; primary_color: string | null; role: "coach" | "parent" };
 type LeaderLite = { athlete_id: string; name: string; team_name: string; count: number };
 type MediaLite = { id: string; thumb_url: string; athlete_name: string | null; team_id: string };
+type PrivateLite = {
+  id: string;
+  athlete_name: string;
+  session_date: string;
+  start_time: string | null;
+  duration_minutes: number | null;
+  location: string | null;
+  fee_cents: number | null;
+};
 
 function ageOf(b: string | null) {
   if (!b) return null;
@@ -74,12 +83,29 @@ function EliteCoachDashboard() {
   const [events, setEvents] = useState<EventLite[]>([]);
   const [leaders, setLeaders] = useState<LeaderLite[]>([]);
   const [media, setMedia] = useState<MediaLite[]>([]);
+  const [privates, setPrivates] = useState<PrivateLite[]>([]);
+  const [showBookPrivate, setShowBookPrivate] = useState(false);
+
+  async function reloadPrivates(uid: string) {
+    const today = new Date().toISOString().slice(0, 10);
+    const { data } = await (supabase as any)
+      .from("private_sessions")
+      .select("id,athlete_name,session_date,start_time,duration_minutes,location,fee_cents")
+      .eq("owner_id", uid)
+      .gte("session_date", today)
+      .order("session_date", { ascending: true })
+      .order("start_time", { ascending: true })
+      .limit(8);
+    setPrivates(((data ?? []) as PrivateLite[]));
+  }
 
   useEffect(() => {
     if (!user?.id) return;
     (async () => {
       const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
       setCoachName(prof?.full_name ?? user.email?.split("@")[0] ?? "Coach");
+
+      reloadPrivates(user.id);
 
       const [c, r, st] = await Promise.all([
         supabase.from("camps").select("id,name,slug,capacity,status,start_date,end_date,price_cents").order("start_date", { ascending: true }),
@@ -382,6 +408,39 @@ function EliteCoachDashboard() {
         </div>
       </section>
 
+      {/* Upcoming Privates */}
+      <section>
+        <div className="flex items-center justify-between">
+          <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Upcoming Privates</h2>
+          <Link to="/coach/bookings" className="text-[11px] font-semibold text-teal">View all ›</Link>
+        </div>
+        <div className="-mx-5 mt-2 flex gap-3 overflow-x-auto px-5 pb-1">
+          {privates.slice(0, 5).map((p) => (
+            <div key={p.id} className="w-60 shrink-0 rounded-2xl border border-border bg-card p-3">
+              <p className="truncate text-sm font-semibold">{p.athlete_name}</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
+                {fmtEventDate(p.session_date)}{p.start_time ? ` · ${fmtTime(p.start_time)}` : ""}
+              </p>
+              {p.location && <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{p.location}</p>}
+              <div className="mt-2 flex items-center justify-between text-[11px]">
+                <span className="text-muted-foreground">{p.duration_minutes ? `${p.duration_minutes} min` : "—"}</span>
+                {p.fee_cents != null && <span className="font-bold text-teal">{fmtMoney(p.fee_cents)}</span>}
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setShowBookPrivate(true)}
+            className="grid w-44 shrink-0 place-items-center rounded-2xl border border-dashed border-teal/40 bg-transparent p-3 text-center"
+          >
+            <div>
+              <Plus size={20} className="mx-auto text-teal" />
+              <p className="mt-1 text-[11px] font-semibold text-teal">Schedule a Private</p>
+            </div>
+          </button>
+        </div>
+      </section>
+
       {/* Registrations */}
       <section>
         <Link to="/coach/roster" className="block rounded-2xl border border-border bg-card p-4">
@@ -545,17 +604,119 @@ function EliteCoachDashboard() {
       )}
 
       {/* Ice Times + Create Session */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <Link to="/coach/ice" className="flex items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-transparent py-3 text-center transition-colors hover:bg-teal/5">
           <Snowflake size={18} className="text-teal" />
-          <span className="text-xs font-semibold text-teal">Add Ice Times</span>
+          <span className="text-xs font-semibold text-teal">Add Ice</span>
         </Link>
         <Link to="/coach/sessions" className="flex items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-transparent py-3 text-center transition-colors hover:bg-teal/5">
           <Plus size={18} className="text-teal" />
-          <span className="text-xs font-semibold text-teal">{"\u00a0"}Create Session</span>
+          <span className="text-xs font-semibold text-teal">Session</span>
         </Link>
+        <button
+          type="button"
+          onClick={() => setShowBookPrivate(true)}
+          className="flex items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-transparent py-3 text-center transition-colors hover:bg-teal/5"
+        >
+          <CalendarDays size={18} className="text-teal" />
+          <span className="text-xs font-semibold text-teal">Book Private</span>
+        </button>
+      </div>
+
+      {showBookPrivate && (
+        <BookPrivateModal
+          onClose={() => setShowBookPrivate(false)}
+          onSaved={() => { setShowBookPrivate(false); if (user?.id) reloadPrivates(user.id); }}
+          ownerId={user?.id ?? ""}
+        />
+      )}
+    </div>
+  );
+}
+
+function BookPrivateModal({ ownerId, onClose, onSaved }: { ownerId: string; onClose: () => void; onSaved: () => void }) {
+  const [athleteName, setAthleteName] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [time, setTime] = useState("");
+  const [duration, setDuration] = useState("60");
+  const [location, setLocation] = useState("");
+  const [fee, setFee] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function save() {
+    if (!athleteName.trim() || !date) { setErr("Athlete name and date are required."); return; }
+    setSaving(true); setErr(null);
+    const feeCents = fee.trim() ? Math.round(parseFloat(fee) * 100) : null;
+    const { error } = await (supabase as any).from("private_sessions").insert({
+      owner_id: ownerId,
+      athlete_name: athleteName.trim(),
+      session_date: date,
+      start_time: time || null,
+      duration_minutes: duration ? parseInt(duration, 10) : null,
+      location: location.trim() || null,
+      fee_cents: feeCents,
+    });
+    setSaving(false);
+    if (error) { setErr(error.message); return; }
+    onSaved();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-end bg-black/60 sm:place-items-center" onClick={onClose}>
+      <div className="w-full max-w-md rounded-t-3xl bg-card p-5 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+        <h3 className="font-display text-lg font-bold">Book Private</h3>
+        <p className="mt-0.5 text-[11px] text-muted-foreground">1-on-1 or small group (up to 6).</p>
+        <div className="mt-4 space-y-3">
+          <Field label="Athlete name (or group)">
+            <input value={athleteName} onChange={(e) => setAthleteName(e.target.value)} placeholder="e.g. Jordan W. or U12 Skills Group"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Date">
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+            </Field>
+            <Field label="Time">
+              <input type="time" value={time} onChange={(e) => setTime(e.target.value)}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+            </Field>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Duration (min)">
+              <input type="number" min="15" step="15" value={duration} onChange={(e) => setDuration(e.target.value)}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+            </Field>
+            <Field label="Fee (optional)">
+              <input type="number" min="0" step="1" value={fee} onChange={(e) => setFee(e.target.value)} placeholder="$"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+            </Field>
+          </div>
+          <Field label="Location">
+            <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Rink or studio"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+          </Field>
+          {err && <p className="text-[11px] text-red-400">{err}</p>}
+        </div>
+        <div className="mt-5 flex gap-2">
+          <button type="button" onClick={onClose}
+            className="flex-1 rounded-xl border border-border py-2 text-sm font-semibold">Cancel</button>
+          <button type="button" onClick={save} disabled={saving}
+            className="flex-1 rounded-xl bg-teal py-2 text-sm font-bold text-background disabled:opacity-60">
+            {saving ? "Saving…" : "Book"}
+          </button>
+        </div>
       </div>
     </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="block">
+      <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
+      <div className="mt-1">{children}</div>
+    </label>
   );
 }
 
