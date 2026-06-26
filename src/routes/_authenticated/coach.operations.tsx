@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, Calendar, Clock, MapPin, AlertCircle, Check, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ChevronLeft, Calendar, Clock, MapPin, AlertCircle, Check, X, Plus, Pencil, Trash2, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useEliteRole } from "@/hooks/use-elite-role";
 import { useServerFn } from "@tanstack/react-start";
 import { respondToBookingRequest } from "@/lib/hockey-schools.functions";
+import { TypeBadge, type Location } from "@/components/coach/location-picker";
 
 export const Route = createFileRoute("/_authenticated/coach/operations")({
   component: OperationsPage,
