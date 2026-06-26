@@ -48,6 +48,7 @@ type PrivateLite = {
   location: string | null;
   fee_cents: number | null;
   series_id: string | null;
+  assigned_coach_id: string | null;
 };
 
 function ageOf(b: string | null) {
