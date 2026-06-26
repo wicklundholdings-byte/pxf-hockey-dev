@@ -3223,6 +3223,45 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          kind: string
+          link_to: string | null
+          payment_amount_cents: number | null
+          read_at: string | null
+          related_id: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          link_to?: string | null
+          payment_amount_cents?: number | null
+          read_at?: string | null
+          related_id?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          link_to?: string | null
+          payment_amount_cents?: number | null
+          read_at?: string | null
+          related_id?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           coupon_id: string | null
@@ -3614,6 +3653,7 @@ export type Database = {
         Row: {
           assigned_coach_id: string | null
           athlete_name: string
+          booking_request_id: string | null
           created_at: string
           duration_minutes: number | null
           fee_cents: number | null
@@ -3622,6 +3662,8 @@ export type Database = {
           location_id: string | null
           notes: string | null
           owner_id: string
+          parent_user_id: string | null
+          payment_status: string
           series_id: string | null
           session_date: string
           start_time: string | null
@@ -3630,6 +3672,7 @@ export type Database = {
         Insert: {
           assigned_coach_id?: string | null
           athlete_name: string
+          booking_request_id?: string | null
           created_at?: string
           duration_minutes?: number | null
           fee_cents?: number | null
@@ -3638,6 +3681,8 @@ export type Database = {
           location_id?: string | null
           notes?: string | null
           owner_id: string
+          parent_user_id?: string | null
+          payment_status?: string
           series_id?: string | null
           session_date: string
           start_time?: string | null
@@ -3646,6 +3691,7 @@ export type Database = {
         Update: {
           assigned_coach_id?: string | null
           athlete_name?: string
+          booking_request_id?: string | null
           created_at?: string
           duration_minutes?: number | null
           fee_cents?: number | null
@@ -3654,12 +3700,21 @@ export type Database = {
           location_id?: string | null
           notes?: string | null
           owner_id?: string
+          parent_user_id?: string | null
+          payment_status?: string
           series_id?: string | null
           session_date?: string
           start_time?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "private_sessions_booking_request_id_fkey"
+            columns: ["booking_request_id"]
+            isOneToOne: false
+            referencedRelation: "private_booking_requests"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "private_sessions_location_id_fkey"
             columns: ["location_id"]
