@@ -781,6 +781,7 @@ function SeriesPrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
   const [perFee, setPerFee] = useState("");
   const [flatFee, setFlatFee] = useState("");
   const [notes, setNotes] = useState("");
+  const [assignedCoachId, setAssignedCoachId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<DraftSession[]>([
     { id: crypto.randomUUID(), date: new Date().toISOString().slice(0, 10), time: "", duration: "60" },
   ]);
@@ -809,6 +810,7 @@ function SeriesPrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
       per_session_fee_cents: pricingMode === "per_session" ? (perCents || null) : null,
       flat_fee_cents: pricingMode === "flat" ? (flatCents || null) : null,
       notes: notes.trim() || null,
+      assigned_coach_id: assignedCoachId,
     }).select("id").single();
     if (sErr || !series) { setSaving(false); setErr(sErr?.message ?? "Failed"); return; }
 
@@ -826,6 +828,7 @@ function SeriesPrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
       fee_cents: perSessionFee,
       notes: notes.trim() || null,
       series_id: series.id,
+      assigned_coach_id: assignedCoachId,
     }));
     const { error: insErr } = await (supabase as any).from("private_sessions").insert(rows);
     setSaving(false);
