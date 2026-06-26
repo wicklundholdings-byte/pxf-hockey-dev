@@ -637,6 +637,60 @@ function EliteCoachDashboard() {
         <ChevronRight size={14} className="text-muted-foreground" />
       </Link>
 
+      {/* Alerts Sheet */}
+      <Sheet open={showAlertsSheet} onOpenChange={setShowAlertsSheet}>
+        <SheetContent side="bottom" className="rounded-t-3xl border-t border-border bg-card px-5 pb-8 pt-4">
+          <SheetHeader className="text-left">
+            <SheetTitle className="font-display text-lg">Alerts</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 space-y-2">
+            {unassignedCampIds.length > 0 && (
+              <Link to="/coach/camps" onClick={() => setShowAlertsSheet(false)} className="flex items-center gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/5 p-3">
+                <AlertTriangle size={18} className="text-amber-500" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold">{unassignedCampIds.length} camp{unassignedCampIds.length === 1 ? "" : "s"} need a coach assigned</p>
+                  <p className="text-[10px] text-muted-foreground">Tap to assign staff</p>
+                </div>
+                <ChevronRight size={14} className="text-muted-foreground" />
+              </Link>
+            )}
+            {missingHealthCount > 0 && (
+              <Link to="/coach/attendees" onClick={() => setShowAlertsSheet(false)} className="flex items-center gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/5 p-3">
+                <AlertTriangle size={18} className="text-amber-500" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold">{missingHealthCount} athlete{missingHealthCount === 1 ? "" : "s"} missing health forms</p>
+                  <p className="text-[10px] text-muted-foreground">Request from parents</p>
+                </div>
+                <ChevronRight size={14} className="text-muted-foreground" />
+              </Link>
+            )}
+            {lowEnrollCamps.length > 0 && (
+              <Link to="/coach/camps" onClick={() => setShowAlertsSheet(false)} className="flex items-center gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/5 p-3">
+                <AlertTriangle size={18} className="text-amber-500" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold">{lowEnrollCamps.length} camp{lowEnrollCamps.length === 1 ? "" : "s"} under 50% enrolled</p>
+                  <p className="text-[10px] text-muted-foreground">Promote to fill seats</p>
+                </div>
+                <ChevronRight size={14} className="text-muted-foreground" />
+              </Link>
+            )}
+            {unpaidCount > 0 && (
+              <Link to="/coach/financials" onClick={() => setShowAlertsSheet(false)} className="flex items-center gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/5 p-3">
+                <DollarSign size={18} className="text-amber-500" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold">{unpaidCount} unpaid registration{unpaidCount === 1 ? "" : "s"}</p>
+                  <p className="text-[10px] text-muted-foreground">Send payment reminders</p>
+                </div>
+                <ChevronRight size={14} className="text-muted-foreground" />
+              </Link>
+            )}
+            {!hasAlerts && (
+              <p className="py-6 text-center text-sm text-muted-foreground">No alerts right now. You're all caught up.</p>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
       {showBookPrivate && (
         <BookPrivateModal
           onClose={() => setShowBookPrivate(false)}
