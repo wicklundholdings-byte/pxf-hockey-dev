@@ -1,15 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Calendar, MapPin, Swords, Dumbbell, Flag } from "lucide-react";
+import { Calendar, MapPin, Swords, Dumbbell, Flag, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useServerFn } from "@tanstack/react-start";
+import { payForPrivateSession } from "@/lib/hockey-schools.functions";
 
 export const Route = createFileRoute("/parent/camps")({
   head: () => ({ meta: [{ title: "Events — PXF Hockey" }] }),
   component: ParentEvents,
 });
 
-type EventKind = "game" | "practice" | "team_event" | "camp_session";
+type EventKind = "game" | "practice" | "team_event" | "camp_session" | "private";
 
 type FeedEvent = {
   id: string;
@@ -24,6 +26,9 @@ type FeedEvent = {
   sourceLabel: string;
   to: string;
   params: Record<string, string>;
+  privateSessionId?: string;
+  paymentStatus?: string | null;
+  feeCents?: number | null;
 };
 
 const META: Record<EventKind, { icon: typeof Swords; color: string; label: string }> = {
@@ -31,6 +36,7 @@ const META: Record<EventKind, { icon: typeof Swords; color: string; label: strin
   practice: { icon: Dumbbell, color: "#10B981", label: "Practice" },
   team_event: { icon: Flag, color: "#8B5CF6", label: "Team Event" },
   camp_session: { icon: Calendar, color: "#06B6D4", label: "Camp Session" },
+  private: { icon: User, color: "#14B8A6", label: "Private" },
 };
 
 function fmtDate(d: string) {
@@ -49,6 +55,8 @@ function ParentEvents() {
   const { user } = useAuth();
   const [events, setEvents] = useState<FeedEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const payFn = useServerFn(payForPrivateSession);
+  const [paying, setPaying] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -165,10 +173,46 @@ function ParentEvents() {
       }
 
       all.sort((a, b) => (a.date + (a.start_time ?? "")).localeCompare(b.date + (b.start_time ?? "")));
+      // Private sessions tied to this parent
+      const today2 = new Date().toISOString().slice(0, 10);
+      const { data: privates } = await (supabase as any)
+        .from("private_sessions")
+        .select("id, athlete_name, session_date, start_time, location, fee_cents, payment_status")
+        .eq("parent_user_id", user.id)
+        .gte("session_date", today2)
+        .order("session_date", { ascending: true });
+      ((privates ?? []) as Array<any>).forEach((p) => {
+        all.push({
+          id: p.id,
+          kind: "private",
+          title: `Private · ${p.athlete_name}`,
+          date: p.session_date,
+          start_time: p.start_time,
+          venue: p.location,
+          sourceKey: `private`,
+          sourceLabel: "Private Sessions",
+          to: "/parent/camps",
+          params: {},
+          privateSessionId: p.id,
+          paymentStatus: p.payment_status,
+          feeCents: p.fee_cents,
+        });
+      });
+      all.sort((a, b) => (a.date + (a.start_time ?? "")).localeCompare(b.date + (b.start_time ?? "")));
       setEvents(all);
       setLoading(false);
     })();
   }, [user?.id, user?.email]);
+
+  const onPay = async (sessionId: string) => {
+    setPaying(sessionId);
+    try {
+      await payFn({ data: { sessionId } });
+      setEvents((prev) => prev.map((e) => e.privateSessionId === sessionId ? { ...e, paymentStatus: "paid" } : e));
+    } finally {
+      setPaying(null);
+    }
+  };
 
   const upcoming = events.slice(0, 3);
   // Group remaining by source
@@ -197,7 +241,7 @@ function ParentEvents() {
             <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Upcoming</h2>
             <div className="mt-2 space-y-2">
               {upcoming.map((e) => (
-                <EventCard key={`up-${e.kind}-${e.id}`} event={e} showSource />
+                <EventCard key={`up-${e.kind}-${e.id}`} event={e} showSource onPay={onPay} paying={paying} />
               ))}
             </div>
           </section>
@@ -207,7 +251,7 @@ function ParentEvents() {
               <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">{group.label}</h2>
               <div className="mt-2 space-y-2">
                 {group.items.slice(0, 3).map((e) => (
-                  <EventCard key={`${key}-${e.kind}-${e.id}`} event={e} />
+                  <EventCard key={`${key}-${e.kind}-${e.id}`} event={e} onPay={onPay} paying={paying} />
                 ))}
               </div>
             </section>
@@ -218,9 +262,12 @@ function ParentEvents() {
   );
 }
 
-function EventCard({ event, showSource }: { event: FeedEvent; showSource?: boolean }) {
+function EventCard({ event, showSource, onPay, paying }: { event: FeedEvent; showSource?: boolean; onPay?: (id: string) => void; paying?: string | null }) {
   const meta = META[event.kind];
   const Icon = meta.icon;
+  const isPrivate = event.kind === "private";
+  const needsPayment = isPrivate && event.paymentStatus === "pending";
+  const isPaid = isPrivate && event.paymentStatus === "paid";
   return (
     <Link
       to={event.to}
@@ -257,6 +304,32 @@ function EventCard({ event, showSource }: { event: FeedEvent; showSource?: boole
               </span>
             )}
           </div>
+          {isPrivate && (
+            <div className="mt-2 flex items-center gap-2">
+              {needsPayment && (
+                <>
+                  <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                    Payment Pending
+                  </span>
+                  {event.privateSessionId && onPay && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPay(event.privateSessionId!); }}
+                      disabled={paying === event.privateSessionId}
+                      className="rounded-full bg-teal px-3 py-1 text-[10px] font-bold text-black disabled:opacity-50"
+                    >
+                      {paying === event.privateSessionId ? "Paying…" : `Pay Now${event.feeCents ? ` · $${(event.feeCents/100).toFixed(0)}` : ""}`}
+                    </button>
+                  )}
+                </>
+              )}
+              {isPaid && (
+                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                  Paid
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </Link>
