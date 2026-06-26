@@ -2,6 +2,31 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
+// Internal helper — insert one notification row using service role.
+async function pushNotification(
+  admin: any,
+  args: {
+    userId: string;
+    kind: string;
+    title: string;
+    body?: string | null;
+    linkTo?: string | null;
+    relatedId?: string | null;
+    paymentAmountCents?: number | null;
+  },
+) {
+  if (!args.userId) return;
+  await admin.from("notifications").insert({
+    user_id: args.userId,
+    kind: args.kind,
+    title: args.title,
+    body: args.body ?? null,
+    link_to: args.linkTo ?? null,
+    related_id: args.relatedId ?? null,
+    payment_amount_cents: args.paymentAmountCents ?? null,
+  });
+}
+
 /** Schools (Elite Coach owners) where this parent has registered an athlete previously or currently. */
 export const listMyHockeySchools = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -261,5 +286,135 @@ export const respondToBookingRequest = createServerFn({ method: "POST" })
         body,
       });
     }
+
+    // Push notification to parent
+    if (req.parent_user_id) {
+      if (data.action === "confirm") {
+        let feeCents: number | null = null;
+        if (data.sessionId) {
+          const { data: sess } = await supabaseAdmin
+            .from("private_sessions").select("fee_cents").eq("id", data.sessionId).maybeSingle();
+          feeCents = (sess?.fee_cents as number | null) ?? null;
+        }
+        const when = [data.sessionDate, data.startTime?.slice(0, 5)].filter(Boolean).join(" · ");
+        await pushNotification(supabaseAdmin, {
+          userId: req.parent_user_id,
+          kind: "booking_confirmed",
+          title: `Private confirmed for ${req.athlete_name}`,
+          body: `${when}${data.location ? ` · ${data.location}` : ""}${feeCents ? ` · Tap to pay $${(feeCents/100).toFixed(0)}` : ""}`,
+          linkTo: "/parent/camps",
+          relatedId: data.sessionId ?? req.id,
+          paymentAmountCents: feeCents,
+        });
+      } else if (data.action === "decline") {
+        await pushNotification(supabaseAdmin, {
+          userId: req.parent_user_id,
+          kind: "booking_declined",
+          title: `Private request declined`,
+          body: data.declineMessage ?? `Your request for ${req.athlete_name} can't be accommodated right now.`,
+          linkTo: "/parent/inbox",
+          relatedId: req.id,
+        });
+      }
+    }
+    return { ok: true };
+  });
+
+/** Coach confirms a request, creating a private_session row tied to parent + booking + fee. */
+export const confirmBookingRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: {
+    requestId: string;
+    iceSlotId: string;
+    coachUserId?: string | null;
+    feeCents?: number | null;
+    durationMinutes?: number | null;
+  }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: req } = await supabaseAdmin
+      .from("private_booking_requests")
+      .select("id, owner_id, athlete_name, parent_user_id")
+      .eq("id", data.requestId).maybeSingle();
+    if (!req || req.owner_id !== context.userId) throw new Error("Forbidden");
+    const { data: slot } = await supabaseAdmin
+      .from("ice_slots")
+      .select("id, slot_date, start_time, end_time, rink:rinks(name)")
+      .eq("id", data.iceSlotId).maybeSingle();
+    if (!slot) throw new Error("Ice slot not found");
+    const location = (slot as any).rink?.name ?? null;
+    const { data: session, error: sErr } = await supabaseAdmin
+      .from("private_sessions").insert({
+        owner_id: context.userId,
+        parent_user_id: req.parent_user_id,
+        booking_request_id: req.id,
+        athlete_name: req.athlete_name,
+        session_date: slot.slot_date,
+        start_time: slot.start_time,
+        duration_minutes: data.durationMinutes ?? 60,
+        fee_cents: data.feeCents ?? null,
+        location,
+        assigned_coach_id: data.coachUserId ?? null,
+        payment_status: data.feeCents ? "pending" : "unpaid",
+      }).select("id").single();
+    if (sErr) throw new Error(sErr.message);
+    if (data.coachUserId) {
+      await supabaseAdmin.from("ice_slots").update({ booked_by_coach_id: data.coachUserId }).eq("id", slot.id);
+      // Notify the assigned staff coach
+      await pushNotification(supabaseAdmin, {
+        userId: data.coachUserId,
+        kind: "session_assigned",
+        title: `New session assigned`,
+        body: `${req.athlete_name} · ${slot.slot_date} ${String(slot.start_time).slice(0,5)}${location ? ` · ${location}` : ""}`,
+        linkTo: "/coach",
+        relatedId: session.id,
+      });
+    }
+    return { sessionId: session.id, location, slotDate: slot.slot_date, startTime: slot.start_time };
+  });
+
+/** Parent marks payment for their confirmed private session and notifies the coach. */
+export const payForPrivateSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { sessionId: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: sess } = await supabaseAdmin
+      .from("private_sessions")
+      .select("id, owner_id, parent_user_id, athlete_name, fee_cents, session_date, start_time")
+      .eq("id", data.sessionId).maybeSingle();
+    if (!sess || sess.parent_user_id !== context.userId) throw new Error("Forbidden");
+    await supabaseAdmin.from("private_sessions")
+      .update({ payment_status: "paid" }).eq("id", sess.id);
+    await pushNotification(supabaseAdmin, {
+      userId: sess.owner_id,
+      kind: "payment_received",
+      title: `Payment received`,
+      body: `${sess.athlete_name}${sess.fee_cents ? ` · $${(sess.fee_cents/100).toFixed(0)}` : ""}`,
+      linkTo: "/coach/financials",
+      relatedId: sess.id,
+      paymentAmountCents: sess.fee_cents,
+    });
+    return { ok: true };
+  });
+
+/** Read current user's notifications (most recent first). */
+export const listMyNotifications = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await context.supabase
+      .from("notifications")
+      .select("id, kind, title, body, link_to, related_id, payment_amount_cents, read_at, created_at")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    return data ?? [];
+  });
+
+/** Mark all my notifications read. */
+export const markAllNotificationsRead = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await context.supabase.from("notifications")
+      .update({ read_at: new Date().toISOString() }).is("read_at", null);
     return { ok: true };
   });
