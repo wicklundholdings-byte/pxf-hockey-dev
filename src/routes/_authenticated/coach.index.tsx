@@ -408,21 +408,6 @@ function EliteCoachDashboard() {
         </div>
       </section>
 
-      {/* Registrations */}
-      <section>
-        <Link to="/coach/roster" className="block rounded-2xl border border-border bg-card p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Registrations · This month</h2>
-            <ChevronRight size={14} className="text-muted-foreground" />
-          </div>
-          <p className="mt-2 font-display text-2xl font-bold">{regsThisMonth.total}</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            <span className="font-bold text-emerald-400">{regsThisMonth.confirmed} confirmed</span>
-            <span className="mx-1">·</span>
-            <span className="font-bold text-amber-400">{regsThisMonth.pending} pending</span>
-          </p>
-        </Link>
-      </section>
       {/* Upcoming Privates */}
       <section>
         <div className="flex items-center justify-between">
