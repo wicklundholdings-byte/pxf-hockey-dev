@@ -48,6 +48,7 @@ type PrivateLite = {
   location: string | null;
   fee_cents: number | null;
   series_id: string | null;
+  assigned_coach_id: string | null;
 };
 
 function ageOf(b: string | null) {
@@ -92,7 +93,7 @@ function EliteCoachDashboard() {
     const today = new Date().toISOString().slice(0, 10);
     const { data } = await (supabase as any)
       .from("private_sessions")
-      .select("id,athlete_name,session_date,start_time,duration_minutes,location,fee_cents,series_id")
+      .select("id,athlete_name,session_date,start_time,duration_minutes,location,fee_cents,series_id,assigned_coach_id")
       .eq("owner_id", uid)
       .gte("session_date", today)
       .order("session_date", { ascending: true })
@@ -431,6 +432,11 @@ function EliteCoachDashboard() {
                 <span className="text-muted-foreground">{p.duration_minutes ? `${p.duration_minutes} min` : "—"}</span>
                 {p.fee_cents != null && <span className="font-bold text-teal">{fmtMoney(p.fee_cents)}</span>}
               </div>
+              {!p.assigned_coach_id && (
+                <p className="mt-1.5 rounded-md bg-amber-500/15 px-2 py-1 text-[10px] font-semibold text-amber-400">
+                  ⚠ Coach not assigned
+                </p>
+              )}
             </div>
           ))}
           <button
@@ -678,6 +684,7 @@ function SinglePrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
   const [locationId, setLocationId] = useState<string | null>(null);
   const [fee, setFee] = useState("");
   const [notes, setNotes] = useState("");
+  const [assignedCoachId, setAssignedCoachId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -695,6 +702,7 @@ function SinglePrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
       location_id: locationId,
       fee_cents: feeCents,
       notes: notes.trim() || null,
+      assigned_coach_id: assignedCoachId,
     });
     setSaving(false);
     if (error) { setErr(error.message); return; }
@@ -741,6 +749,9 @@ function SinglePrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
               placeholder="Rink or studio"
             />
           </Field>
+          <Field label="Assigned coach">
+            <CoachPicker ownerId={ownerId} value={assignedCoachId} onChange={setAssignedCoachId} />
+          </Field>
           <Field label="Notes">
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2}
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
@@ -770,6 +781,7 @@ function SeriesPrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
   const [perFee, setPerFee] = useState("");
   const [flatFee, setFlatFee] = useState("");
   const [notes, setNotes] = useState("");
+  const [assignedCoachId, setAssignedCoachId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<DraftSession[]>([
     { id: crypto.randomUUID(), date: new Date().toISOString().slice(0, 10), time: "", duration: "60" },
   ]);
@@ -798,6 +810,7 @@ function SeriesPrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
       per_session_fee_cents: pricingMode === "per_session" ? (perCents || null) : null,
       flat_fee_cents: pricingMode === "flat" ? (flatCents || null) : null,
       notes: notes.trim() || null,
+      assigned_coach_id: assignedCoachId,
     }).select("id").single();
     if (sErr || !series) { setSaving(false); setErr(sErr?.message ?? "Failed"); return; }
 
@@ -815,6 +828,7 @@ function SeriesPrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
       fee_cents: perSessionFee,
       notes: notes.trim() || null,
       series_id: series.id,
+      assigned_coach_id: assignedCoachId,
     }));
     const { error: insErr } = await (supabase as any).from("private_sessions").insert(rows);
     setSaving(false);
@@ -844,6 +858,9 @@ function SeriesPrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
             onChange={(next) => { setLocationId(next.locationId); setLocation(next.selected?.name ?? next.manual); }}
             placeholder="Rink or studio"
           />
+        </Field>
+        <Field label="Assigned coach">
+          <CoachPicker ownerId={ownerId} value={assignedCoachId} onChange={setAssignedCoachId} />
         </Field>
 
         <div>
@@ -1525,5 +1542,38 @@ function EliteStaffDashboard({ assignedTeamIds }: { assignedTeamIds: string[] })
         </Link>
       </div>
     </div>
+  );
+}
+
+function CoachPicker({ ownerId, value, onChange }: { ownerId: string; value: string | null; onChange: (v: string | null) => void }) {
+  const [options, setOptions] = useState<{ id: string; label: string }[]>([]);
+  useEffect(() => {
+    if (!ownerId) return;
+    (async () => {
+      const opts: { id: string; label: string }[] = [];
+      const { data: ownerProf } = await supabase.from("profiles").select("full_name,email").eq("id", ownerId).maybeSingle();
+      opts.push({ id: ownerId, label: `${(ownerProf as any)?.full_name ?? (ownerProf as any)?.email ?? "Me"} (You)` });
+      const { data: staff } = await (supabase as any)
+        .from("elite_staff_coaches")
+        .select("staff_user_id,full_name,email")
+        .eq("owner_id", ownerId)
+        .eq("status", "active");
+      for (const s of (staff ?? []) as any[]) {
+        if (s.staff_user_id) opts.push({ id: s.staff_user_id, label: s.full_name ?? s.email ?? "Staff coach" });
+      }
+      setOptions(opts);
+    })();
+  }, [ownerId]);
+  return (
+    <select
+      value={value ?? ""}
+      onChange={(e) => onChange(e.target.value || null)}
+      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+    >
+      <option value="">— Not assigned —</option>
+      {options.map((o) => (
+        <option key={o.id} value={o.id}>{o.label}</option>
+      ))}
+    </select>
   );
 }
