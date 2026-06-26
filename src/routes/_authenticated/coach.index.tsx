@@ -316,24 +316,24 @@ function EliteCoachDashboard() {
   return (
     <div className="space-y-6 pb-4">
       {/* Greeting */}
-      <div>
-        <h1 className="font-display text-2xl font-bold leading-tight">Hey {firstName},</h1>
-        <p className="text-base font-light text-muted-foreground">Here's what's happening.</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold leading-tight">Hey {firstName},</h1>
+          <p className="text-base font-light text-muted-foreground">Here's what's happening.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowAlertsSheet(true)}
+          className="relative p-1 text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <Bell size={20} />
+          {hasAlerts && (
+            <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-amber-500 px-1 text-[9px] font-bold text-white">
+              {unassignedCampIds.length + missingHealthCount + lowEnrollCamps.length + unpaidCount}
+            </span>
+          )}
+        </button>
       </div>
-
-      {/* Alerts button */}
-      <button
-        type="button"
-        onClick={() => setShowAlertsSheet(true)}
-        className={`flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold transition-colors ${
-          hasAlerts
-            ? "bg-amber-500 text-white"
-            : "bg-amber-500/20 text-amber-500"
-        }`}
-      >
-        <Bell size={16} />
-        <span>Alerts · {unassignedCampIds.length + missingHealthCount + lowEnrollCamps.length + unpaidCount}</span>
-      </button>
 
       {/* Operations */}
       <Link
