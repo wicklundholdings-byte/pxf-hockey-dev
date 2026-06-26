@@ -29,15 +29,21 @@ type BookingReq = {
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+type LocType = Location["location_type"];
+
 function OperationsPage() {
   const { user } = useAuth();
-  const [tab, setTab] = useState<"avail" | "ice" | "wait">("avail");
+  const { role, ownerId } = useEliteRole();
+  const [tab, setTab] = useState<"avail" | "ice" | "loc" | "wait">("avail");
   const [staff, setStaff] = useState<StaffRow[]>([]);
   const [avail, setAvail] = useState<AvailRow[]>([]);
   const [ice, setIce] = useState<IceRow[]>([]);
   const [requests, setRequests] = useState<BookingReq[]>([]);
   const [editingStaff, setEditingStaff] = useState<StaffRow | null>(null);
   const [editingIce, setEditingIce] = useState<IceRow | null>(null);
+
+  const effectiveOwnerId = ownerId ?? user?.id ?? null;
+  const canEditLocs = role !== "staff";
 
   const reload = async () => {
     if (!user?.id) return;
