@@ -432,6 +432,11 @@ function EliteCoachDashboard() {
                 <span className="text-muted-foreground">{p.duration_minutes ? `${p.duration_minutes} min` : "—"}</span>
                 {p.fee_cents != null && <span className="font-bold text-teal">{fmtMoney(p.fee_cents)}</span>}
               </div>
+              {!p.assigned_coach_id && (
+                <p className="mt-1.5 rounded-md bg-amber-500/15 px-2 py-1 text-[10px] font-semibold text-amber-400">
+                  ⚠ Coach not assigned
+                </p>
+              )}
             </div>
           ))}
           <button
