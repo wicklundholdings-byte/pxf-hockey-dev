@@ -78,6 +78,7 @@ import { Route as RsvpTeamTokenRouteImport } from './routes/rsvp.team.$token'
 import { Route as ParentTrainProgramIdRouteImport } from './routes/parent.train.$programId'
 import { Route as ParentTeamsTeamIdRouteImport } from './routes/parent.teams.$teamId'
 import { Route as ParentTeamTeamIdRouteImport } from './routes/parent.team.$teamId'
+import { Route as ParentHockeySchoolsBrowseRouteImport } from './routes/parent.hockey-schools.browse'
 import { Route as ParentHockeySchoolOwnerIdRouteImport } from './routes/parent.hockey-school.$ownerId'
 import { Route as ParentConversationConversationIdRouteImport } from './routes/parent.conversation.$conversationId'
 import { Route as ParentCampCampIdRouteImport } from './routes/parent.camp.$campId'
@@ -506,6 +507,12 @@ const ParentTeamTeamIdRoute = ParentTeamTeamIdRouteImport.update({
   path: '/team/$teamId',
   getParentRoute: () => ParentRoute,
 } as any)
+const ParentHockeySchoolsBrowseRoute =
+  ParentHockeySchoolsBrowseRouteImport.update({
+    id: '/hockey-schools/browse',
+    path: '/hockey-schools/browse',
+    getParentRoute: () => ParentRoute,
+  } as any)
 const ParentHockeySchoolOwnerIdRoute =
   ParentHockeySchoolOwnerIdRouteImport.update({
     id: '/hockey-school/$ownerId',
@@ -1083,6 +1090,7 @@ export interface FileRoutesByFullPath {
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/parent/hockey-school/$ownerId': typeof ParentHockeySchoolOwnerIdRoute
+  '/parent/hockey-schools/browse': typeof ParentHockeySchoolsBrowseRoute
   '/parent/team/$teamId': typeof ParentTeamTeamIdRoute
   '/parent/teams/$teamId': typeof ParentTeamsTeamIdRouteWithChildren
   '/parent/train/$programId': typeof ParentTrainProgramIdRoute
@@ -1230,6 +1238,7 @@ export interface FileRoutesByTo {
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/parent/hockey-school/$ownerId': typeof ParentHockeySchoolOwnerIdRoute
+  '/parent/hockey-schools/browse': typeof ParentHockeySchoolsBrowseRoute
   '/parent/team/$teamId': typeof ParentTeamTeamIdRoute
   '/parent/train/$programId': typeof ParentTrainProgramIdRoute
   '/rsvp/team/$token': typeof RsvpTeamTokenRoute
@@ -1381,6 +1390,7 @@ export interface FileRoutesById {
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/parent/hockey-school/$ownerId': typeof ParentHockeySchoolOwnerIdRoute
+  '/parent/hockey-schools/browse': typeof ParentHockeySchoolsBrowseRoute
   '/parent/team/$teamId': typeof ParentTeamTeamIdRoute
   '/parent/teams/$teamId': typeof ParentTeamsTeamIdRouteWithChildren
   '/parent/train/$programId': typeof ParentTrainProgramIdRoute
@@ -1536,6 +1546,7 @@ export interface FileRouteTypes {
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
     | '/parent/hockey-school/$ownerId'
+    | '/parent/hockey-schools/browse'
     | '/parent/team/$teamId'
     | '/parent/teams/$teamId'
     | '/parent/train/$programId'
@@ -1683,6 +1694,7 @@ export interface FileRouteTypes {
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
     | '/parent/hockey-school/$ownerId'
+    | '/parent/hockey-schools/browse'
     | '/parent/team/$teamId'
     | '/parent/train/$programId'
     | '/rsvp/team/$token'
@@ -1833,6 +1845,7 @@ export interface FileRouteTypes {
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
     | '/parent/hockey-school/$ownerId'
+    | '/parent/hockey-schools/browse'
     | '/parent/team/$teamId'
     | '/parent/teams/$teamId'
     | '/parent/train/$programId'
@@ -2424,6 +2437,13 @@ declare module '@tanstack/react-router' {
       path: '/team/$teamId'
       fullPath: '/parent/team/$teamId'
       preLoaderRoute: typeof ParentTeamTeamIdRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/parent/hockey-schools/browse': {
+      id: '/parent/hockey-schools/browse'
+      path: '/hockey-schools/browse'
+      fullPath: '/parent/hockey-schools/browse'
+      preLoaderRoute: typeof ParentHockeySchoolsBrowseRouteImport
       parentRoute: typeof ParentRoute
     }
     '/parent/hockey-school/$ownerId': {
@@ -3377,6 +3397,7 @@ interface ParentRouteChildren {
   ParentCampCampIdRoute: typeof ParentCampCampIdRoute
   ParentConversationConversationIdRoute: typeof ParentConversationConversationIdRoute
   ParentHockeySchoolOwnerIdRoute: typeof ParentHockeySchoolOwnerIdRoute
+  ParentHockeySchoolsBrowseRoute: typeof ParentHockeySchoolsBrowseRoute
   ParentTeamTeamIdRoute: typeof ParentTeamTeamIdRoute
   ParentTeamsTeamIdRoute: typeof ParentTeamsTeamIdRouteWithChildren
   ParentTeamsIndexRoute: typeof ParentTeamsIndexRoute
@@ -3394,6 +3415,7 @@ const ParentRouteChildren: ParentRouteChildren = {
   ParentCampCampIdRoute: ParentCampCampIdRoute,
   ParentConversationConversationIdRoute: ParentConversationConversationIdRoute,
   ParentHockeySchoolOwnerIdRoute: ParentHockeySchoolOwnerIdRoute,
+  ParentHockeySchoolsBrowseRoute: ParentHockeySchoolsBrowseRoute,
   ParentTeamTeamIdRoute: ParentTeamTeamIdRoute,
   ParentTeamsTeamIdRoute: ParentTeamsTeamIdRouteWithChildren,
   ParentTeamsIndexRoute: ParentTeamsIndexRoute,
