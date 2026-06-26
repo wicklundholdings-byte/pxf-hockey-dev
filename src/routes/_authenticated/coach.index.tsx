@@ -624,6 +624,16 @@ function EliteCoachDashboard() {
         </button>
       </div>
 
+      <Link
+        to="/coach/locations"
+        className="flex items-center justify-between rounded-2xl border border-border bg-card p-3 text-xs"
+      >
+        <span className="flex items-center gap-2">
+          <Plus size={14} className="text-teal" /> Manage saved locations
+        </span>
+        <ChevronRight size={14} className="text-muted-foreground" />
+      </Link>
+
       {showBookPrivate && (
         <BookPrivateModal
           onClose={() => setShowBookPrivate(false)}
