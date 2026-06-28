@@ -110,6 +110,39 @@
   --sidebar-ring: var(--teal);
 }
 
+/* Light theme — applied when <html> has the `light` class. */
+.light {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.18 0 0);
+  --surface: oklch(0.975 0 0);
+  --surface-2: oklch(0.94 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0 0);
+  --primary: var(--teal);
+  --primary-foreground: oklch(0.15 0 0);
+  --secondary: oklch(0.95 0 0);
+  --secondary-foreground: oklch(0.18 0 0);
+  --muted: oklch(0.95 0 0);
+  --muted-foreground: oklch(0.45 0 0);
+  --accent: var(--volt);
+  --accent-foreground: oklch(0.15 0 0);
+  --destructive: oklch(0.6 0.22 25);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0 0 0 / 10%);
+  --input: oklch(0 0 0 / 14%);
+  --ring: var(--teal);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.18 0 0);
+  --sidebar-primary: var(--teal);
+  --sidebar-primary-foreground: oklch(0.15 0 0);
+  --sidebar-accent: oklch(0.95 0 0);
+  --sidebar-accent-foreground: oklch(0.18 0 0);
+  --sidebar-border: oklch(0 0 0 / 10%);
+  --sidebar-ring: var(--teal);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
