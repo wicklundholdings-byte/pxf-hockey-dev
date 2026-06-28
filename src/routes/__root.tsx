@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/app-shell";
 import { Toaster } from "@/components/ui/sonner";
+import { useAppTheme } from "@/hooks/use-app-theme";
 
 function NotFoundComponent() {
   return (
@@ -116,6 +117,12 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var k='pxf:theme';var v=localStorage.getItem(k)||'system';var r=v==='system'?(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):v;var c=document.documentElement.classList;c.toggle('light',r==='light');c.toggle('dark',r==='dark');document.documentElement.style.colorScheme=r;}catch(e){}})();",
+          }}
+        />
       </head>
       <body>
         {children}
@@ -127,6 +134,8 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  // Initialize theme + keep in sync with system changes.
+  useAppTheme();
 
   return (
     <QueryClientProvider client={queryClient}>
