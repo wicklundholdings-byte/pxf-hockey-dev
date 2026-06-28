@@ -384,6 +384,8 @@ function CoachSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["us
           </label>
         </Section>
 
+        <AppearanceSection />
+
         <Section icon={Building2} title="Program (Coach)">
           <Field label="Program name" defaultValue="PXF Skills Academy" />
           <div className="flex items-center gap-3">
