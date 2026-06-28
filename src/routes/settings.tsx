@@ -7,6 +7,8 @@ import { BottomNav } from "@/components/bottom-nav";
 import { useAuth, useHasCoachAccess, useUserAppRole } from "@/hooks/use-auth";
 import { useNavigate } from "@tanstack/react-router";
 import { useCoachVerified } from "@/components/verified-badge";
+import { useAppTheme, type ThemeMode } from "@/hooks/use-app-theme";
+import { Monitor, Sun, Moon } from "lucide-react";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings — PXF Hockey" }] }),
@@ -34,6 +36,41 @@ function Section({ icon: Icon, title, children }: { icon: typeof User; title: st
       <h2 className="flex items-center gap-2 text-sm font-bold"><Icon size={16} className="text-teal" /> {title}</h2>
       <div className="mt-4 space-y-3">{children}</div>
     </section>
+  );
+}
+
+function AppearanceSection() {
+  const { mode, setMode } = useAppTheme();
+  const opts: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
+    { value: "system", label: "System", icon: Monitor },
+    { value: "light", label: "Light", icon: Sun },
+    { value: "dark", label: "Dark", icon: Moon },
+  ];
+  return (
+    <Section icon={Palette} title="Appearance">
+      <p className="text-[11px] text-muted-foreground">Choose how PXF Hockey looks. System follows your device setting.</p>
+      <div className="grid grid-cols-3 gap-2">
+        {opts.map((o) => {
+          const Icon = o.icon;
+          const active = mode === o.value;
+          return (
+            <button
+              key={o.value}
+              onClick={() => setMode(o.value)}
+              className={
+                "flex flex-col items-center gap-1 rounded-xl border px-3 py-3 text-xs font-semibold transition " +
+                (active
+                  ? "border-teal bg-teal/10 text-foreground"
+                  : "border-border bg-background text-muted-foreground hover:text-foreground")
+              }
+            >
+              <Icon size={16} className={active ? "text-teal" : ""} />
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+    </Section>
   );
 }
 
