@@ -122,6 +122,8 @@ function ParentSettings({ user, signOut }: { user: ReturnType<typeof useAuth>["u
           <Field label="Email" type="email" defaultValue={user?.email ?? ""} readOnly />
         </Section>
 
+        <AppearanceSection />
+
         <Section icon={Bell} title="Notifications">
           {parentNotifTypes.map((n) => (
             <label key={n.id} className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-sm">
