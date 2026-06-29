@@ -615,69 +615,6 @@ function EliteCoachDashboard() {
         )}
       </section>
 
-      {/* Registrations */}
-      <section>
-        <Link to="/coach/roster" className="block rounded-2xl border border-border bg-card p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Registrations · This month</h2>
-            <ChevronRight size={14} className="text-muted-foreground" />
-          </div>
-          <p className="mt-2 font-display text-2xl font-bold">{regsThisMonth.total}</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            <span className="font-bold text-emerald-400">{regsThisMonth.confirmed} confirmed</span>
-            <span className="mx-1">·</span>
-            <span className="font-bold text-amber-400">{regsThisMonth.pending} pending</span>
-          </p>
-        </Link>
-      </section>
-
-      {/* My Athletes */}
-      {kids.length > 0 && (
-        <section>
-          <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">My Athletes</h2>
-          <div className={"mt-2 " + (kids.length > 1 ? "grid grid-cols-2 gap-3" : "")}>
-            {kids.map((k) => {
-              const age = ageOf(k.birthday);
-              const inits = k.full_name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
-              return (
-                <div key={k.id} className="rounded-2xl border border-border bg-card p-4">
-                  <div className="flex flex-col items-center gap-2 text-center">
-                    <div className="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-teal/30 to-volt/20 font-display text-lg font-bold text-teal ring-2 ring-teal/40">
-                      {inits}
-                    </div>
-                    <p className="w-full break-words text-sm font-semibold leading-tight">{k.full_name}</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {[age != null ? `Age ${age}` : null, k.position].filter(Boolean).join(" · ") || "Profile"}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* Next Up */}
-      <section>
-        <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Next Up · 7 days</h2>
-        {events.length === 0 ? (
-          <p className="mt-2 rounded-2xl border border-border bg-card p-4 text-xs text-muted-foreground">
-            No events scheduled in the next 7 days.
-          </p>
-        ) : (
-          <div className="mt-2 space-y-2">
-            {events.map((e) => (
-              <Link key={`${e.event_type}-${e.id}`} to={e.link.to} params={e.link.params} className="block">
-                <TeamEventRow event={{
-                  event_type: e.event_type, title: e.title, opponent_name: e.opponent_name,
-                  venue: e.venue, event_date: e.event_date, start_time: e.start_time, team_name: e.team_name,
-                }} />
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
-
       {/* My Teams */}
       <section>
         <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">My Teams</h2>
@@ -720,6 +657,27 @@ function EliteCoachDashboard() {
                 </Link>
               );
             })}
+          </div>
+        )}
+      </section>
+
+      {/* Next Up */}
+      <section>
+        <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Next Up · 7 days</h2>
+        {events.length === 0 ? (
+          <p className="mt-2 rounded-2xl border border-border bg-card p-4 text-xs text-muted-foreground">
+            No events scheduled in the next 7 days.
+          </p>
+        ) : (
+          <div className="mt-2 space-y-2">
+            {events.map((e) => (
+              <Link key={`${e.event_type}-${e.id}`} to={e.link.to} params={e.link.params} className="block">
+                <TeamEventRow event={{
+                  event_type: e.event_type, title: e.title, opponent_name: e.opponent_name,
+                  venue: e.venue, event_date: e.event_date, start_time: e.start_time, team_name: e.team_name,
+                }} />
+              </Link>
+            ))}
           </div>
         )}
       </section>
