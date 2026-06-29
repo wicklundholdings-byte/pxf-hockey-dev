@@ -8,6 +8,7 @@ import { DevTierSwitcher } from "@/components/tier-gate";
 import { getUserAppRole } from "@/lib/user-role";
 import { StandaloneRecorder } from "@/routes/_authenticated/coach.film";
 import { useEliteRole } from "@/hooks/use-elite-role";
+import { BackButton } from "@/components/back-button";
 
 export const Route = createFileRoute("/_authenticated/coach")({
   ssr: false,
@@ -42,7 +43,8 @@ function CoachLayout() {
     <div className="min-h-screen bg-background">
       <div className="px-5 pt-4 pb-28">
         {!hideChrome && <TrialBanner foundingMember plan="Elite Coach" />}
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-between gap-2">
+          <BackButton />
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[10px] font-bold tracking-wider text-teal">COACH</span>
             <button className="rounded-full border border-border bg-surface p-1.5 text-muted-foreground hover:text-foreground">

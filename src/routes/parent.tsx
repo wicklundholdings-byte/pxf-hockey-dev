@@ -8,6 +8,7 @@ import { getUserAppRole } from "@/lib/user-role";
 import { DevTierSwitcher } from "@/components/tier-gate";
 import { useAuth } from "@/hooks/use-auth";
 import { PxfLogo } from "@/components/app-shell";
+import { BackButton } from "@/components/back-button";
 
 export const Route = createFileRoute("/parent")({
   ssr: false,
@@ -40,7 +41,10 @@ function ParentLayout() {
   return (
     <div className="relative mx-auto min-h-screen w-full max-w-[480px] bg-background pb-24">
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border/60 bg-background/85 px-5 pb-3 pt-5 backdrop-blur-xl">
-        <PxfLogo />
+        <div className="flex items-center gap-3">
+          <BackButton />
+          <PxfLogo />
+        </div>
         <div className="flex items-center gap-2">
           <Link
             to="/notifications"
