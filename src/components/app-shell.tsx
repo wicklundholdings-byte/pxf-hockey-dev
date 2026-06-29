@@ -76,7 +76,26 @@ export function AppShell({ children }: { children: ReactNode }) {
     return <div className="min-h-screen bg-background text-foreground" />;
   }
   if (isChromeless) {
-    return <div className="min-h-screen bg-background text-foreground">{children}</div>;
+    const suppressFloating =
+      pathname === "/auth" ||
+      pathname.startsWith("/onboarding") ||
+      pathname.startsWith("/book/") ||
+      pathname === "/parent" ||
+      pathname.startsWith("/parent/") ||
+      pathname === "/coach" ||
+      pathname.startsWith("/coach/") ||
+      pathname === "/home-coach" ||
+      pathname.startsWith("/home-coach/");
+    return (
+      <div className="relative min-h-screen bg-background text-foreground">
+        {!suppressFloating && (
+          <div className="sticky top-0 z-40 flex items-center border-b border-border/60 bg-background/85 px-4 py-2 backdrop-blur-xl">
+            <BackButton />
+          </div>
+        )}
+        {children}
+      </div>
+    );
   }
   const nav: NavItem[] = baseNav;
 
