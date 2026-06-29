@@ -91,6 +91,14 @@ function EliteCoachDashboard() {
   const [showBookPrivate, setShowBookPrivate] = useState(false);
   const [showAlertsSheet, setShowAlertsSheet] = useState(false);
   const [opsSummary, setOpsSummary] = useState<{ unassignedIce: number; pendingRequests: number }>({ unassignedIce: 0, pendingRequests: 0 });
+  const [todayEvents, setTodayEvents] = useState<Array<{
+    id: string; kind: "camp" | "practice" | "game" | "private" | "ice"; title: string;
+    location: string | null; start_time: string | null; instructor: string | null;
+    rsvp_confirmed: number | null; rsvp_total: number | null;
+    link: { to: string; params?: Record<string, string> };
+  }>>([]);
+  const [campDayMap, setCampDayMap] = useState<Map<string, { day: number; total: number; next: { date: string; start: string | null } | null }>>(new Map());
+  const [unreadAlertsViewed, setUnreadAlertsViewed] = useState(false);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -139,6 +147,29 @@ function EliteCoachDashboard() {
       const staffed = new Set(((st.data as any[]) ?? []).map((row) => row.camp_id as string));
       const upcomingCamps = campsRows.filter((cc) => cc.status !== "ended");
       setUnassignedCampIds(upcomingCamps.filter((cc) => !staffed.has(cc.id)).map((cc) => cc.id));
+
+      // Camp Day X of Y + next session
+      const todayIso2 = new Date().toISOString().slice(0, 10);
+      const activeCampIds = campsRows.filter((cc) => cc.status === "live").map((cc) => cc.id);
+      if (activeCampIds.length) {
+        const { data: csAll } = await supabase
+          .from("camp_sessions").select("id,camp_id,session_date,start_time,end_time")
+          .in("camp_id", activeCampIds).order("session_date");
+        const map = new Map<string, { day: number; total: number; next: { date: string; start: string | null } | null }>();
+        const byCamp = new Map<string, CampSession[]>();
+        ((csAll ?? []) as CampSession[]).forEach((s) => {
+          const arr = byCamp.get(s.camp_id) ?? [];
+          arr.push(s); byCamp.set(s.camp_id, arr);
+        });
+        byCamp.forEach((arr, cid) => {
+          const total = arr.length;
+          const dayIdx = arr.findIndex((s) => s.session_date >= todayIso2);
+          const day = dayIdx === -1 ? total : Math.max(1, dayIdx + 1);
+          const next = arr.find((s) => s.session_date >= todayIso2) ?? null;
+          map.set(cid, { day, total, next: next ? { date: next.session_date, start: next.start_time } : null });
+        });
+        setCampDayMap(map);
+      }
 
       // Missing health forms
       const attendeeIds = Array.from(new Set(regsRows.map((x) => x.attendee_id).filter(Boolean) as string[]));
@@ -211,6 +242,74 @@ function EliteCoachDashboard() {
       });
       evs.sort((a, b) => a.event_date.localeCompare(b.event_date) || (a.start_time ?? "").localeCompare(b.start_time ?? ""));
       setEvents(evs);
+
+      // TODAY's events
+      const todayIso = new Date().toISOString().slice(0, 10);
+      const todayList: typeof todayEvents = [];
+      // team events
+      if (allTeamIds.length) {
+        const { data: teToday } = await supabase
+          .from("team_events")
+          .select("id,event_type,title,opponent_name,venue,event_date,start_time,team_id, teams(name)")
+          .in("team_id", allTeamIds)
+          .in("event_type", ["game", "practice"])
+          .eq("event_date", todayIso);
+        ((teToday ?? []) as any[]).forEach((x) => {
+          const t = x.event_type === "game" ? "game" : "practice";
+          const title = x.event_type === "game" ? `vs ${x.opponent_name || "TBD"}` : (x.title || "Practice");
+          todayList.push({
+            id: x.id, kind: t as any, title, location: x.venue ?? null, start_time: x.start_time,
+            instructor: null, rsvp_confirmed: null, rsvp_total: null,
+            link: { to: "/coach/teams/$teamId/schedule/$eventId", params: { teamId: x.team_id, eventId: x.id } },
+          });
+        });
+      }
+      // camp sessions today
+      const { data: csToday } = await supabase
+        .from("camp_sessions").select("id,camp_id,session_date,start_time")
+        .eq("session_date", todayIso);
+      const campNameMap = new Map(campsRows.map((cc) => [cc.id, cc.name]));
+      const campCapMap = new Map(campsRows.map((cc) => [cc.id, cc.capacity]));
+      const filledByCamp = new Map<string, number>();
+      regsRows.filter((r) => r.status === "paid").forEach((r) => filledByCamp.set(r.camp_id, (filledByCamp.get(r.camp_id) ?? 0) + 1));
+      ((csToday ?? []) as any[]).forEach((x) => {
+        const cap = campCapMap.get(x.camp_id) ?? 0;
+        const filled = filledByCamp.get(x.camp_id) ?? 0;
+        todayList.push({
+          id: x.id, kind: "camp", title: campNameMap.get(x.camp_id) ?? "Camp",
+          location: null, start_time: x.start_time, instructor: null,
+          rsvp_confirmed: filled, rsvp_total: cap || null,
+          link: { to: "/coach/camps/$campId", params: { campId: x.camp_id } },
+        });
+      });
+      // privates today
+      const { data: pvToday } = await (supabase as any).from("private_sessions")
+        .select("id,athlete_name,session_date,start_time,location,assigned_coach_id")
+        .eq("owner_id", user.id).eq("session_date", todayIso);
+      ((pvToday ?? []) as any[]).forEach((x) => {
+        todayList.push({
+          id: x.id, kind: "private", title: x.athlete_name || "Private",
+          location: x.location ?? null, start_time: x.start_time,
+          instructor: x.assigned_coach_id ? null : "Unassigned",
+          rsvp_confirmed: null, rsvp_total: null,
+          link: { to: "/coach/bookings", params: {} },
+        });
+      });
+      // ice slots today
+      const { data: iceToday } = await supabase.from("ice_slots")
+        .select("id,slot_date,start_time,location,booked_by_coach_id")
+        .eq("owner_id", user.id).eq("slot_date", todayIso);
+      ((iceToday ?? []) as any[]).forEach((x) => {
+        todayList.push({
+          id: x.id, kind: "ice", title: "Ice Time",
+          location: x.location ?? null, start_time: x.start_time,
+          instructor: x.booked_by_coach_id ? null : "Unassigned",
+          rsvp_confirmed: null, rsvp_total: null,
+          link: { to: "/coach/ice", params: {} },
+        });
+      });
+      todayList.sort((a, b) => (a.start_time ?? "").localeCompare(b.start_time ?? ""));
+      setTodayEvents(todayList);
 
       // Dryland leaderboard (top 3 across all teams this week)
       if (allTeamIds.length) {
