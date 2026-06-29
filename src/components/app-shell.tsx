@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { useAuth, useUserAppRole } from "@/hooks/use-auth";
 import { getUserAppRole, roleHome } from "@/lib/user-role";
 import { supabase } from "@/integrations/supabase/client";
+import { BackButton } from "@/components/back-button";
 
 type NavItem = { to: string; label: string; icon: typeof Home; exact?: boolean };
 const baseNav: NavItem[] = [
@@ -83,7 +84,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="relative mx-auto flex min-h-screen w-full max-w-[480px] flex-col bg-background text-foreground">
       {/* Top bar */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border/60 bg-background/85 px-5 pb-3 pt-5 backdrop-blur-xl">
-        <PxfLogo />
+        <div className="flex items-center gap-3">
+          <BackButton />
+          <PxfLogo />
+        </div>
         <button
           aria-label="Notifications"
           className="relative grid h-10 w-10 place-items-center rounded-full border border-border/60 bg-surface text-foreground/80 transition-colors hover:text-foreground"
