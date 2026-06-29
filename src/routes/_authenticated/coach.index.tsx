@@ -91,6 +91,14 @@ function EliteCoachDashboard() {
   const [showBookPrivate, setShowBookPrivate] = useState(false);
   const [showAlertsSheet, setShowAlertsSheet] = useState(false);
   const [opsSummary, setOpsSummary] = useState<{ unassignedIce: number; pendingRequests: number }>({ unassignedIce: 0, pendingRequests: 0 });
+  const [todayEvents, setTodayEvents] = useState<Array<{
+    id: string; kind: "camp" | "practice" | "game" | "private" | "ice"; title: string;
+    location: string | null; start_time: string | null; instructor: string | null;
+    rsvp_confirmed: number | null; rsvp_total: number | null;
+    link: { to: string; params?: Record<string, string> };
+  }>>([]);
+  const [campDayMap, setCampDayMap] = useState<Map<string, { day: number; total: number; next: { date: string; start: string | null } | null }>>(new Map());
+  const [unreadAlertsViewed, setUnreadAlertsViewed] = useState(false);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -139,6 +147,29 @@ function EliteCoachDashboard() {
       const staffed = new Set(((st.data as any[]) ?? []).map((row) => row.camp_id as string));
       const upcomingCamps = campsRows.filter((cc) => cc.status !== "ended");
       setUnassignedCampIds(upcomingCamps.filter((cc) => !staffed.has(cc.id)).map((cc) => cc.id));
+
+      // Camp Day X of Y + next session
+      const todayIso2 = new Date().toISOString().slice(0, 10);
+      const activeCampIds = campsRows.filter((cc) => cc.status === "live").map((cc) => cc.id);
+      if (activeCampIds.length) {
+        const { data: csAll } = await supabase
+          .from("camp_sessions").select("id,camp_id,session_date,start_time,end_time")
+          .in("camp_id", activeCampIds).order("session_date");
+        const map = new Map<string, { day: number; total: number; next: { date: string; start: string | null } | null }>();
+        const byCamp = new Map<string, CampSession[]>();
+        ((csAll ?? []) as CampSession[]).forEach((s) => {
+          const arr = byCamp.get(s.camp_id) ?? [];
+          arr.push(s); byCamp.set(s.camp_id, arr);
+        });
+        byCamp.forEach((arr, cid) => {
+          const total = arr.length;
+          const dayIdx = arr.findIndex((s) => s.session_date >= todayIso2);
+          const day = dayIdx === -1 ? total : Math.max(1, dayIdx + 1);
+          const next = arr.find((s) => s.session_date >= todayIso2) ?? null;
+          map.set(cid, { day, total, next: next ? { date: next.session_date, start: next.start_time } : null });
+        });
+        setCampDayMap(map);
+      }
 
       // Missing health forms
       const attendeeIds = Array.from(new Set(regsRows.map((x) => x.attendee_id).filter(Boolean) as string[]));
@@ -211,6 +242,74 @@ function EliteCoachDashboard() {
       });
       evs.sort((a, b) => a.event_date.localeCompare(b.event_date) || (a.start_time ?? "").localeCompare(b.start_time ?? ""));
       setEvents(evs);
+
+      // TODAY's events
+      const todayIso = new Date().toISOString().slice(0, 10);
+      const todayList: typeof todayEvents = [];
+      // team events
+      if (allTeamIds.length) {
+        const { data: teToday } = await supabase
+          .from("team_events")
+          .select("id,event_type,title,opponent_name,venue,event_date,start_time,team_id, teams(name)")
+          .in("team_id", allTeamIds)
+          .in("event_type", ["game", "practice"])
+          .eq("event_date", todayIso);
+        ((teToday ?? []) as any[]).forEach((x) => {
+          const t = x.event_type === "game" ? "game" : "practice";
+          const title = x.event_type === "game" ? `vs ${x.opponent_name || "TBD"}` : (x.title || "Practice");
+          todayList.push({
+            id: x.id, kind: t as any, title, location: x.venue ?? null, start_time: x.start_time,
+            instructor: null, rsvp_confirmed: null, rsvp_total: null,
+            link: { to: "/coach/teams/$teamId/schedule/$eventId", params: { teamId: x.team_id, eventId: x.id } },
+          });
+        });
+      }
+      // camp sessions today
+      const { data: csToday } = await supabase
+        .from("camp_sessions").select("id,camp_id,session_date,start_time")
+        .eq("session_date", todayIso);
+      const campNameMap = new Map(campsRows.map((cc) => [cc.id, cc.name]));
+      const campCapMap = new Map(campsRows.map((cc) => [cc.id, cc.capacity]));
+      const filledByCamp = new Map<string, number>();
+      regsRows.filter((r) => r.status === "paid").forEach((r) => filledByCamp.set(r.camp_id, (filledByCamp.get(r.camp_id) ?? 0) + 1));
+      ((csToday ?? []) as any[]).forEach((x) => {
+        const cap = campCapMap.get(x.camp_id) ?? 0;
+        const filled = filledByCamp.get(x.camp_id) ?? 0;
+        todayList.push({
+          id: x.id, kind: "camp", title: campNameMap.get(x.camp_id) ?? "Camp",
+          location: null, start_time: x.start_time, instructor: null,
+          rsvp_confirmed: filled, rsvp_total: cap || null,
+          link: { to: "/coach/camps/$campId", params: { campId: x.camp_id } },
+        });
+      });
+      // privates today
+      const { data: pvToday } = await (supabase as any).from("private_sessions")
+        .select("id,athlete_name,session_date,start_time,location,assigned_coach_id")
+        .eq("owner_id", user.id).eq("session_date", todayIso);
+      ((pvToday ?? []) as any[]).forEach((x) => {
+        todayList.push({
+          id: x.id, kind: "private", title: x.athlete_name || "Private",
+          location: x.location ?? null, start_time: x.start_time,
+          instructor: x.assigned_coach_id ? null : "Unassigned",
+          rsvp_confirmed: null, rsvp_total: null,
+          link: { to: "/coach/bookings", params: {} },
+        });
+      });
+      // ice slots today
+      const { data: iceToday } = await supabase.from("ice_slots")
+        .select("id,slot_date,start_time,location,booked_by_coach_id")
+        .eq("owner_id", user.id).eq("slot_date", todayIso);
+      ((iceToday ?? []) as any[]).forEach((x) => {
+        todayList.push({
+          id: x.id, kind: "ice", title: "Ice Time",
+          location: x.location ?? null, start_time: x.start_time,
+          instructor: x.booked_by_coach_id ? null : "Unassigned",
+          rsvp_confirmed: null, rsvp_total: null,
+          link: { to: "/coach/ice", params: {} },
+        });
+      });
+      todayList.sort((a, b) => (a.start_time ?? "").localeCompare(b.start_time ?? ""));
+      setTodayEvents(todayList);
 
       // Dryland leaderboard (top 3 across all teams this week)
       if (allTeamIds.length) {
@@ -301,6 +400,37 @@ function EliteCoachDashboard() {
 
   const firstName = (coachName || user?.email?.split("@")[0] || "Coach").split(/\s+/)[0];
   const hasAlerts = unassignedCampIds.length > 0 || missingHealthCount > 0 || lowEnrollCamps.length > 0 || unpaidCount > 0;
+  const alertsCount = unassignedCampIds.length + missingHealthCount + lowEnrollCamps.length + unpaidCount;
+  const showAlertBadge = hasAlerts && !unreadAlertsViewed;
+  const hourNow = new Date().getHours();
+  const greet = hourNow < 12 ? "Good morning" : hourNow < 18 ? "Good afternoon" : "Good evening";
+  const todayLabel = new Date().toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }).toUpperCase();
+  const todayDisplay = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+
+  // Business snapshot
+  const pendingDollars = useMemo(
+    () => regs.filter((r) => r.status === "pending" || r.status === "unpaid").reduce((s, r) => s + r.amount_cents, 0),
+    [regs],
+  );
+  const paidCount = useMemo(() => regs.filter((r) => r.status === "paid").length, [regs]);
+
+  const kindColor: Record<string, string> = {
+    practice: "border-l-teal",
+    game: "border-l-orange-500",
+    camp: "border-l-purple-500",
+    private: "border-l-blue-500",
+    ice: "border-l-muted-foreground",
+  };
+  const kindLabel: Record<string, string> = {
+    practice: "PRACTICE", game: "GAME", camp: "CAMP", private: "PRIVATE", ice: "ICE TIME",
+  };
+  const kindBadgeBg: Record<string, string> = {
+    practice: "bg-teal/15 text-teal",
+    game: "bg-orange-500/15 text-orange-400",
+    camp: "bg-purple-500/15 text-purple-400",
+    private: "bg-blue-500/15 text-blue-400",
+    ice: "bg-surface-2 text-muted-foreground",
+  };
 
   const Trend = ({ pct }: { pct: number }) => {
     if (pct === 0) return <span className="text-[10px] text-muted-foreground">flat vs last mo</span>;
@@ -315,54 +445,81 @@ function EliteCoachDashboard() {
 
   return (
     <div className="space-y-6 pb-4">
-      {/* Greeting */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold leading-tight">Hey {firstName},</h1>
-          <p className="text-base font-light text-muted-foreground">Here's what's happening.</p>
+      {/* Greeting + Bell */}
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-bold leading-tight">{greet}, {firstName}</h1>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowAlertsSheet(true)}
-          className="relative p-1 text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <Bell size={20} />
-          {hasAlerts && (
-            <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-amber-500 px-1 text-[9px] font-bold text-white">
-              {unassignedCampIds.length + missingHealthCount + lowEnrollCamps.length + unpaidCount}
-            </span>
-          )}
-        </button>
+        <div className="flex items-center gap-3">
+          <span className="text-[11px] text-muted-foreground">{todayDisplay}</span>
+          <button
+            type="button"
+            onClick={() => { setShowAlertsSheet(true); setUnreadAlertsViewed(true); }}
+            className="relative p-1 text-muted-foreground transition-colors hover:text-foreground"
+            aria-label="Alerts"
+          >
+            <Bell size={20} />
+            {showAlertBadge && (
+              <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-orange-500 px-1 text-[9px] font-bold text-white">
+                {alertsCount}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Operations */}
-      <Link
-        to="/coach/operations"
-        className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-brand py-4 text-center shadow-sm"
-      >
-        <Megaphone size={18} className="text-black" />
-        <span className="text-base font-bold text-black">Operations</span>
-      </Link>
-
-      {/* Financials Snapshot */}
+      {/* TODAY */}
       <section>
-        <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Financials · Month to date</h2>
-        <div className="mt-2 grid grid-cols-2 gap-3">
-          <Link to="/coach/financials" className="rounded-2xl border border-border bg-card p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Gross sales</span>
-              <DollarSign size={14} className="text-teal" />
-            </div>
-            <div className="mt-1 font-display text-xl font-bold text-teal">{fmtMoney(revenue.grossThis)}</div>
-            <div className="mt-1"><Trend pct={revenue.grossTrend} /></div>
+        <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Today · {todayLabel}</h2>
+        {todayEvents.length === 0 ? (
+          <p className="mt-2 text-xs text-muted-foreground">No sessions today</p>
+        ) : (
+          <div className="mt-2 space-y-2">
+            {todayEvents.map((e) => (
+              <Link
+                key={`${e.kind}-${e.id}`}
+                to={e.link.to as any}
+                params={e.link.params as any}
+                className={`flex items-center gap-3 rounded-2xl border border-border border-l-4 bg-card p-3 ${kindColor[e.kind]}`}
+              >
+                <div className="w-14 shrink-0">
+                  <p className="text-sm font-bold">{e.start_time ? fmtTime(e.start_time) : "—"}</p>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider ${kindBadgeBg[e.kind]}`}>{kindLabel[e.kind]}</span>
+                  </div>
+                  <p className="mt-0.5 truncate text-sm font-semibold">{e.title}</p>
+                  {e.location && <p className="truncate text-[11px] text-muted-foreground">{e.location}</p>}
+                  {e.instructor && <p className="truncate text-[11px] text-amber-400">⚠ Instructor {e.instructor}</p>}
+                  {e.rsvp_total != null && (
+                    <p className="mt-0.5 text-[11px] font-bold text-teal">
+                      {e.rsvp_confirmed ?? 0} confirmed / {e.rsvp_total} spots
+                    </p>
+                  )}
+                </div>
+                <ChevronRight size={14} className="text-muted-foreground" />
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Business Snapshot */}
+      <section>
+        <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Business Snapshot</h2>
+        <div className="mt-2 flex gap-2">
+          <Link to="/coach/financials" className="flex-1 rounded-2xl border border-border bg-card px-3 py-2.5 text-center">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Revenue</p>
+            <p className="mt-0.5 text-sm font-bold text-teal">{fmtMoney(revenue.grossThis)}</p>
           </Link>
-          <Link to="/coach/financials" className="rounded-2xl border border-border bg-card p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Gross Profit</span>
-              <TrendingUp size={14} className="text-emerald-400" />
-            </div>
-            <div className="mt-1 font-display text-xl font-bold text-emerald-400">{fmtMoney(revenue.netThis)}</div>
-            <div className="mt-1"><Trend pct={revenue.netTrend} /></div>
+          <Link to="/coach/financials" className="flex-1 rounded-2xl border border-border bg-card px-3 py-2.5 text-center">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Registrations</p>
+            <p className="mt-0.5 text-sm font-bold">{paidCount}</p>
+          </Link>
+          <Link to="/coach/financials" className="flex-1 rounded-2xl border border-border bg-card px-3 py-2.5 text-center">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Pending</p>
+            <p className="mt-0.5 text-sm font-bold text-amber-400">{fmtMoney(pendingDollars)}</p>
           </Link>
         </div>
       </section>
@@ -377,6 +534,7 @@ function EliteCoachDashboard() {
           {activeCamps.map((c) => {
             const filled = regsByCamp.get(c.id) ?? 0;
             const rev = revenueByCamp.get(c.id) ?? 0;
+            const dayInfo = campDayMap.get(c.id);
             return (
               <Link
                 key={c.id}
@@ -384,12 +542,23 @@ function EliteCoachDashboard() {
                 params={{ campId: c.id }}
                 className="w-60 shrink-0 rounded-2xl border border-border bg-card p-3"
               >
-                <p className="truncate text-sm font-semibold">{c.name}</p>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">{fmtCampRange(c.start_date, c.end_date)}</p>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="truncate text-sm font-semibold">{c.name}</p>
+                  {dayInfo && dayInfo.total > 0 && (
+                    <span className="shrink-0 rounded-full bg-purple-500/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-purple-400">
+                      Day {dayInfo.day} of {dayInfo.total}
+                    </span>
+                  )}
+                </div>
                 <div className="mt-3 flex items-center justify-between text-[11px]">
                   <span className="text-muted-foreground">{filled} / {c.capacity || 0} spots</span>
                   <span className="font-bold text-teal">{fmtMoney(rev)}</span>
                 </div>
+                {dayInfo?.next && (
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    Next: {fmtEventDate(dayInfo.next.date)}{dayInfo.next.start ? ` · ${fmtTime(dayInfo.next.start)}` : ""}
+                  </p>
+                )}
               </Link>
             );
           })}
@@ -411,100 +580,37 @@ function EliteCoachDashboard() {
           <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Upcoming Privates</h2>
           <Link to="/coach/bookings" className="text-[11px] font-semibold text-teal">View all ›</Link>
         </div>
-        <div className="-mx-5 mt-2 flex gap-3 overflow-x-auto px-5 pb-1">
-          {privates.slice(0, 5).map((p) => (
-            <div key={p.id} className="w-60 shrink-0 rounded-2xl border border-border bg-card p-3">
-              <p className="truncate text-sm font-semibold">{p.athlete_name}</p>
-              {p.series_id && (
-                <span className="mt-0.5 inline-block rounded-full bg-teal/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-teal">Series</span>
-              )}
-              <p className="mt-0.5 text-[11px] text-muted-foreground">
-                {fmtEventDate(p.session_date)}{p.start_time ? ` · ${fmtTime(p.start_time)}` : ""}
-              </p>
-              {p.location && <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{p.location}</p>}
-              <div className="mt-2 flex items-center justify-between text-[11px]">
-                <span className="text-muted-foreground">{p.duration_minutes ? `${p.duration_minutes} min` : "—"}</span>
-                {p.fee_cents != null && <span className="font-bold text-teal">{fmtMoney(p.fee_cents)}</span>}
-              </div>
-              {!p.assigned_coach_id && (
-                <p className="mt-1.5 rounded-md bg-amber-500/15 px-2 py-1 text-[10px] font-semibold text-amber-400">
-                  ⚠ Coach not assigned
-                </p>
-              )}
-            </div>
-          ))}
+        {privates.length === 0 ? (
           <button
             type="button"
             onClick={() => setShowBookPrivate(true)}
-            className="grid w-44 shrink-0 place-items-center rounded-2xl border border-dashed border-teal/40 bg-transparent p-3 text-center"
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-teal/40 bg-transparent p-4 text-sm font-semibold text-teal"
           >
-            <div>
-              <Plus size={20} className="mx-auto text-teal" />
-              <p className="mt-1 text-[11px] font-semibold text-teal">Schedule a Private</p>
-            </div>
+            <Plus size={16} /> Book a Private
           </button>
-        </div>
-      </section>
-
-      {/* Registrations */}
-      <section>
-        <Link to="/coach/roster" className="block rounded-2xl border border-border bg-card p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Registrations · This month</h2>
-            <ChevronRight size={14} className="text-muted-foreground" />
-          </div>
-          <p className="mt-2 font-display text-2xl font-bold">{regsThisMonth.total}</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            <span className="font-bold text-emerald-400">{regsThisMonth.confirmed} confirmed</span>
-            <span className="mx-1">·</span>
-            <span className="font-bold text-amber-400">{regsThisMonth.pending} pending</span>
-          </p>
-        </Link>
-      </section>
-
-      {/* My Athletes */}
-      {kids.length > 0 && (
-        <section>
-          <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">My Athletes</h2>
-          <div className={"mt-2 " + (kids.length > 1 ? "grid grid-cols-2 gap-3" : "")}>
-            {kids.map((k) => {
-              const age = ageOf(k.birthday);
-              const inits = k.full_name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
+        ) : (
+          <div className="mt-2 space-y-2">
+            {privates.slice(0, 3).map((p) => {
+              const inits = (p.athlete_name || "?").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
               return (
-                <div key={k.id} className="rounded-2xl border border-border bg-card p-4">
-                  <div className="flex flex-col items-center gap-2 text-center">
-                    <div className="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-teal/30 to-volt/20 font-display text-lg font-bold text-teal ring-2 ring-teal/40">
-                      {inits}
-                    </div>
-                    <p className="w-full break-words text-sm font-semibold leading-tight">{k.full_name}</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {[age != null ? `Age ${age}` : null, k.position].filter(Boolean).join(" · ") || "Profile"}
-                    </p>
+                <div key={p.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-500/15 text-xs font-bold text-blue-400">
+                    {inits}
                   </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{p.athlete_name}</p>
+                    <p className="truncate text-[11px] text-muted-foreground">
+                      {fmtEventDate(p.session_date)}{p.start_time ? ` · ${fmtTime(p.start_time)}` : ""}
+                      {p.location ? ` · ${p.location}` : ""}
+                    </p>
+                    {!p.assigned_coach_id && (
+                      <p className="mt-0.5 text-[10px] font-semibold text-amber-400">⚠ Coach not assigned</p>
+                    )}
+                  </div>
+                  <span className="text-[11px] font-bold text-muted-foreground">{p.duration_minutes ? `${p.duration_minutes}m` : ""}</span>
                 </div>
               );
             })}
-          </div>
-        </section>
-      )}
-
-      {/* Next Up */}
-      <section>
-        <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Next Up · 7 days</h2>
-        {events.length === 0 ? (
-          <p className="mt-2 rounded-2xl border border-border bg-card p-4 text-xs text-muted-foreground">
-            No events scheduled in the next 7 days.
-          </p>
-        ) : (
-          <div className="mt-2 space-y-2">
-            {events.map((e) => (
-              <Link key={`${e.event_type}-${e.id}`} to={e.link.to} params={e.link.params} className="block">
-                <TeamEventRow event={{
-                  event_type: e.event_type, title: e.title, opponent_name: e.opponent_name,
-                  venue: e.venue, event_date: e.event_date, start_time: e.start_time, team_name: e.team_name,
-                }} />
-              </Link>
-            ))}
           </div>
         )}
       </section>
@@ -555,32 +661,25 @@ function EliteCoachDashboard() {
         )}
       </section>
 
-      {/* Dryland This Week */}
+      {/* Next Up */}
       <section>
-        <Link to="/coach/analytics" className="block rounded-2xl border border-border bg-card p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Dryland This Week</h2>
-            <Trophy size={14} className="text-volt" />
+        <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Next Up · 7 days</h2>
+        {events.length === 0 ? (
+          <p className="mt-2 rounded-2xl border border-border bg-card p-4 text-xs text-muted-foreground">
+            No events scheduled in the next 7 days.
+          </p>
+        ) : (
+          <div className="mt-2 space-y-2">
+            {events.map((e) => (
+              <Link key={`${e.event_type}-${e.id}`} to={e.link.to} params={e.link.params} className="block">
+                <TeamEventRow event={{
+                  event_type: e.event_type, title: e.title, opponent_name: e.opponent_name,
+                  venue: e.venue, event_date: e.event_date, start_time: e.start_time, team_name: e.team_name,
+                }} />
+              </Link>
+            ))}
           </div>
-          {leaders.length === 0 ? (
-            <p className="mt-3 text-xs text-muted-foreground">No completed sessions yet this week.</p>
-          ) : (
-            <ol className="mt-3 space-y-2">
-              {leaders.map((l, idx) => (
-                <li key={l.athlete_id} className="flex items-center gap-3">
-                  <span className={"grid h-7 w-7 place-items-center rounded-full text-[11px] font-bold " + (idx === 0 ? "bg-volt/20 text-volt" : "bg-surface text-foreground")}>
-                    {idx + 1}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{l.name}</p>
-                    <p className="truncate text-[11px] text-muted-foreground">{l.team_name}</p>
-                  </div>
-                  <span className="text-xs font-bold text-teal">{l.count} session{l.count === 1 ? "" : "s"}</span>
-                </li>
-              ))}
-            </ol>
-          )}
-        </Link>
+        )}
       </section>
 
       {/* Recent Media */}
@@ -627,16 +726,6 @@ function EliteCoachDashboard() {
           <span className="text-xs font-semibold text-teal">Book Private</span>
         </button>
       </div>
-
-      <Link
-        to="/coach/locations"
-        className="flex items-center justify-between rounded-2xl border border-border bg-card p-3 text-xs"
-      >
-        <span className="flex items-center gap-2">
-          <Plus size={14} className="text-teal" /> Manage saved locations
-        </span>
-        <ChevronRight size={14} className="text-muted-foreground" />
-      </Link>
 
       {/* Alerts Sheet */}
       <Sheet open={showAlertsSheet} onOpenChange={setShowAlertsSheet}>
