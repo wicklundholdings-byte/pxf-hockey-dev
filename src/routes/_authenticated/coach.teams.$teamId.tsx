@@ -40,7 +40,7 @@ function TeamLayout() {
           <div>
             <h2 className="font-display text-lg font-bold leading-tight">{team?.name || "Elite Demo Team"}</h2>
             <p className="text-[11px] text-muted-foreground">
-              {team ? [team.season, [team.division, team.age_group].filter(Boolean).join(" · ")].filter(Boolean).join(" · ") : "2026-27 · AAA Midget"}
+              {team ? [team.season, [team.division, team.age_group].filter(Boolean).join(" · ") || "AAA Midget"].filter(Boolean).join(" · ") : "2026-27 · AAA Midget"}
             </p>
           </div>
         </div>

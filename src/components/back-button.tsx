@@ -62,6 +62,13 @@ function parentLabel(pathname: string): string | null {
     "/coach/locations": "Locations",
   };
   if (map[parentPath]) return map[parentPath];
+  // If the immediate parent path is not mapped, check if the last segment
+  // is a dynamic/UUID segment and try the grandparent path.
+  const lastParent = parentParts[parentParts.length - 1] ?? "";
+  if (lastParent.startsWith("$") || /^[0-9a-f-]{8,}$/i.test(lastParent)) {
+    const grandparentPath = "/" + parentParts.slice(0, -1).join("/");
+    if (map[grandparentPath]) return map[grandparentPath];
+  }
   // Strip $ from dynamic segments for the leaf label
   const last = parentParts[parentParts.length - 1] ?? "";
   if (last.startsWith("$") || /^[0-9a-f-]{8,}$/i.test(last)) return null;
