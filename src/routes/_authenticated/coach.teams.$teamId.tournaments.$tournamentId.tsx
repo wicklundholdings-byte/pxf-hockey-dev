@@ -667,7 +667,7 @@ function ScheduleTab({ editMode, setEditMode, tournamentName }: { editMode: bool
 
 function DaySection({
   day, dayIdx, visibleIdx, editMode, drag, setDrag, onMove, flashTimeId, onTimeChange,
-  onEditItem, onDeleteItem, onAddItem, onRsvp,
+  onEditItem, onDeleteItem, onAddItem, onRsvp, onOpenItem,
 }: {
   day: { day: string; items: ItineraryItem[] };
   dayIdx: number;
@@ -682,6 +682,7 @@ function DaySection({
   onDeleteItem: (i: number) => void;
   onAddItem: (atIdx?: number) => void;
   onRsvp: (itemIdx: number, key: string, status: RsvpStatus) => void;
+  onOpenItem?: (itemIdx: number) => void;
 }) {
   const [open, setOpen] = useState(true);
   const [hover, setHover] = useState<number | null>(null);
@@ -725,6 +726,7 @@ function DaySection({
                 onEdit={() => onEditItem(i)}
                 onDelete={() => onDeleteItem(i)}
                 onRsvp={(key, status) => onRsvp(i, key, status)}
+                onOpen={onOpenItem && it.type === "Game" ? () => onOpenItem(i) : undefined}
               />
             </div>
           )})}
