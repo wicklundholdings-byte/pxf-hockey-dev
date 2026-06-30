@@ -493,6 +493,8 @@ function TravelTab() {
 
   return (
     <div className="space-y-4">
+      <AccommodationSection />
+
       {dirty && (
         <div className="sticky top-[140px] z-10 flex items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/15 px-3 py-2 backdrop-blur">
           <p className="text-[11px] font-bold text-amber-300">Draft — changes not yet sent to team</p>
