@@ -78,6 +78,7 @@ function fmtCampRange(s: string | null, e?: string | null) {
 
 function EliteCoachDashboard() {
   const { user } = useAuth();
+  const { hasStaff } = useHasStaff();
   const [coachName, setCoachName] = useState("");
   const [camps, setCamps] = useState<Camp2[]>([]);
   const [regs, setRegs] = useState<Reg[]>([]);
@@ -308,7 +309,7 @@ function EliteCoachDashboard() {
         todayList.push({
           id: x.id, kind: "private", title: x.athlete_name || "Private",
           location: x.location ?? null, start_time: x.start_time,
-          instructor: x.assigned_coach_id ? null : "Unassigned",
+          instructor: x.assigned_coach_id || !hasStaff ? null : "Unassigned",
           rsvp_confirmed: null, rsvp_total: null,
           link: { to: "/coach/bookings", params: {} },
         });
@@ -321,7 +322,7 @@ function EliteCoachDashboard() {
         todayList.push({
           id: x.id, kind: "ice", title: "Ice Time",
           location: x.location ?? null, start_time: x.start_time,
-          instructor: x.booked_by_coach_id ? null : "Unassigned",
+          instructor: x.booked_by_coach_id || !hasStaff ? null : "Unassigned",
           rsvp_confirmed: null, rsvp_total: null,
           link: { to: "/coach/ice", params: {} },
         });
