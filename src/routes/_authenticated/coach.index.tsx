@@ -856,6 +856,7 @@ function BookPrivateModal({ ownerId, onClose, onSaved }: { ownerId: string; onCl
 }
 
 function SinglePrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onClose: () => void; onSaved: () => void }) {
+  const { hasStaff } = useHasStaff();
   const [athleteName, setAthleteName] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [time, setTime] = useState("");
@@ -865,6 +866,9 @@ function SinglePrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
   const [fee, setFee] = useState("");
   const [notes, setNotes] = useState("");
   const [assignedCoachId, setAssignedCoachId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!hasStaff && !assignedCoachId) setAssignedCoachId(ownerId);
+  }, [hasStaff, ownerId]);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -953,6 +957,7 @@ function SinglePrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
 type DraftSession = { id: string; date: string; time: string; duration: string };
 
 function SeriesPrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onClose: () => void; onSaved: () => void }) {
+  const { hasStaff } = useHasStaff();
   const [seriesName, setSeriesName] = useState("");
   const [athleteName, setAthleteName] = useState("");
   const [location, setLocation] = useState("");
@@ -962,6 +967,9 @@ function SeriesPrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
   const [flatFee, setFlatFee] = useState("");
   const [notes, setNotes] = useState("");
   const [assignedCoachId, setAssignedCoachId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!hasStaff && !assignedCoachId) setAssignedCoachId(ownerId);
+  }, [hasStaff, ownerId]);
   const [sessions, setSessions] = useState<DraftSession[]>([
     { id: crypto.randomUUID(), date: new Date().toISOString().slice(0, 10), time: "", duration: "60" },
   ]);
