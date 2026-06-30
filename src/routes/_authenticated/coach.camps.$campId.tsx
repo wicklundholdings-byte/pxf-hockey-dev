@@ -1174,8 +1174,12 @@ function RosterCard({ regs }: { regs: Reg[] }) {
   );
 }
 
-function TodayRsvpCard({ attending, notAttending, noResponse, hasSession, campId: _campId }: { attending: number; notAttending: number; noResponse: number; hasSession: boolean; campId: string }) {
+function TodayRsvpCard({ attending, notAttending, noResponse, hasSession, campId: _campId, startDate }: { attending: number; notAttending: number; noResponse: number; hasSession: boolean; campId: string; startDate?: string | null }) {
   const [sent, setSent] = useState(false);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const start = startDate ? new Date(startDate + "T00:00:00") : null;
+  const isPreCamp = !hasSession && !!start && start > today;
+  const daysAway = start ? Math.ceil((start.getTime() - today.getTime()) / 86400000) : 0;
   return (
     <div className="rounded-2xl border border-border bg-card p-3">
       <div className="flex items-center justify-between">
@@ -1188,16 +1192,25 @@ function TodayRsvpCard({ attending, notAttending, noResponse, hasSession, campId
           <RsvpRow color="bg-red-400" label="Not Attending" value={notAttending} />
           <RsvpRow color="bg-muted-foreground" label="No Response" value={noResponse} />
         </div>
+      ) : isPreCamp && start ? (
+        <div className="mt-2">
+          <p className="text-[11px] font-semibold text-foreground">
+            Camp starts {start.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+          </p>
+          <p className="text-[10px] text-muted-foreground">{daysAway} {daysAway === 1 ? "day" : "days"} away</p>
+        </div>
       ) : (
         <p className="mt-2 text-[11px] text-muted-foreground">No session today.</p>
       )}
-      <button
-        onClick={() => setSent(true)}
-        disabled={!hasSession || noResponse === 0}
-        className={"mt-3 w-full rounded-full px-3 py-1.5 text-[10px] font-bold disabled:opacity-40 " + (sent ? "bg-emerald-400/15 text-emerald-400" : "bg-gradient-brand text-primary-foreground")}
-      >
-        {sent ? "Sent ✓" : "Send Reminder"}
-      </button>
+      {hasSession && (
+        <button
+          onClick={() => setSent(true)}
+          disabled={noResponse === 0}
+          className={"mt-3 w-full rounded-full px-3 py-1.5 text-[10px] font-bold disabled:opacity-40 " + (sent ? "bg-emerald-400/15 text-emerald-400" : "bg-gradient-brand text-primary-foreground")}
+        >
+          {sent ? "Sent ✓" : "Send Reminder"}
+        </button>
+      )}
     </div>
   );
 }
