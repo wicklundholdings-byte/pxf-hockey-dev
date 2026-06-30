@@ -1040,6 +1040,25 @@ function CampStaffSection({ campId }: { campId: string }) {
     })();
   }, [ownerId, hasStaff]);
 
+  type TM = { id: string; email: string; title: string; permission_level: "owner" | "coach" | "assistant"; status: string };
+  const [team, setTeam] = useState<TM[]>([]);
+  const [assigned, setAssigned] = useState<Array<{ id: string; team_member_id: string }>>([]);
+  const [picking, setPicking] = useState(false);
+
+  useEffect(() => {
+    if (hasStaffLoading || !hasStaff) return;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const [{ data: t }, { data: a }] = await Promise.all([
+        supabase.from("team_members").select("id, email, title, permission_level, status").eq("owner_id", u.user.id),
+        (supabase as any).from("camp_staff").select("id, team_member_id").eq("camp_id", campId),
+      ]);
+      setTeam((t ?? []) as TM[]);
+      setAssigned((a ?? []) as Array<{ id: string; team_member_id: string }>);
+    })();
+  }, [campId, hasStaff, hasStaffLoading]);
+
   if (!hasStaffLoading && !hasStaff) {
     const name = owner?.full_name ?? owner?.email ?? "Head Coach";
     const initials = name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
@@ -1066,24 +1085,6 @@ function CampStaffSection({ campId }: { campId: string }) {
       </section>
     );
   }
-
-  type TM = { id: string; email: string; title: string; permission_level: "owner" | "coach" | "assistant"; status: string };
-  const [team, setTeam] = useState<TM[]>([]);
-  const [assigned, setAssigned] = useState<Array<{ id: string; team_member_id: string }>>([]);
-  const [picking, setPicking] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
-      const [{ data: t }, { data: a }] = await Promise.all([
-        supabase.from("team_members").select("id, email, title, permission_level, status").eq("owner_id", u.user.id),
-        (supabase as any).from("camp_staff").select("id, team_member_id").eq("camp_id", campId),
-      ]);
-      setTeam((t ?? []) as TM[]);
-      setAssigned((a ?? []) as Array<{ id: string; team_member_id: string }>);
-    })();
-  }, [campId]);
 
   async function toggle(memberId: string) {
     const existing = assigned.find((x) => x.team_member_id === memberId);
