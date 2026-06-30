@@ -922,53 +922,6 @@ function CalendarExportSheet({ onClose }: { onClose: () => void }) {
   );
 }
 
-function EquipmentChecklist() {
-  const initial = [
-    "Home jersey (dark)", "Away jersey (white)", "Helmet + cage", "Gloves",
-    "Skates", "Stick(s)", "Hockey bag", "Water bottle", "Mouth guard",
-    "Shin / elbow pads", "Cup",
-  ];
-  const [items, setItems] = useState(initial.map((label) => ({ label, done: false })));
-  const [adding, setAdding] = useState("");
-
-  return (
-    <div className="border-t border-border px-3 py-3">
-      <ul className="space-y-2">
-        {items.map((it, i) => (
-          <li key={i}>
-            <label className="flex items-center gap-2 text-xs">
-              <input
-                type="checkbox"
-                checked={it.done}
-                onChange={() => setItems((arr) => arr.map((x, j) => j === i ? { ...x, done: !x.done } : x))}
-                className="h-4 w-4 rounded border-border accent-teal"
-              />
-              <span className={it.done ? "text-muted-foreground line-through" : ""}>{it.label}</span>
-            </label>
-          </li>
-        ))}
-      </ul>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (!adding.trim()) return;
-          setItems((arr) => [...arr, { label: adding.trim(), done: false }]);
-          setAdding("");
-        }}
-        className="mt-3 flex gap-2"
-      >
-        <input
-          value={adding}
-          onChange={(e) => setAdding(e.target.value)}
-          placeholder="Add custom item…"
-          className="flex-1 rounded-lg border border-border bg-surface-2 px-2 py-1.5 text-xs"
-        />
-        <button className="rounded-lg bg-teal px-3 py-1.5 text-[11px] font-bold text-background">Add</button>
-      </form>
-    </div>
-  );
-}
-
 /* =================== PAYMENTS =================== */
 
 function PaymentsTab() {
