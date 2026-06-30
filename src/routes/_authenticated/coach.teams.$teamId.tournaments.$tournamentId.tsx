@@ -15,7 +15,7 @@ const DATA: Record<string, { name: string; dates: string; city: string; status: 
   "winter-invitational": { name: "Lower Mainland Winter Invitational", dates: "Feb 14–16", city: "Burnaby, BC", status: "UPCOMING", readonly: true },
 };
 
-const TABS = ["Overview", "Games", "Roster", "Travel", "Payments"] as const;
+const TABS = ["Overview", "Schedule", "Roster", "Logistics", "Payments"] as const;
 type Tab = (typeof TABS)[number];
 
 function TournamentDetail() {
@@ -60,10 +60,10 @@ function TournamentDetail() {
       </div>
 
       <div className="pt-4">
-        {tab === "Overview" && <OverviewTab onJumpStandings={() => setTab("Games")} />}
-        {tab === "Games" && <GamesTab readonly={t.readonly} />}
+        {tab === "Overview" && <OverviewTab onJumpStandings={() => setTab("Schedule")} />}
+        {tab === "Schedule" && <ScheduleTab readonly={t.readonly} />}
         {tab === "Roster" && <RosterTab />}
-        {tab === "Travel" && <TravelTab />}
+        {tab === "Logistics" && <LogisticsTab />}
         {tab === "Payments" && <PaymentsTab />}
       </div>
     </div>
@@ -169,132 +169,7 @@ function InfoCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-/* =================== GAMES =================== */
-
-type Game = {
-  opp: string; date: string; time: string; rink: string;
-  played?: boolean; us?: number; them?: number; result?: "WIN" | "LOSS" | "OT";
-  jersey: "Home (Dark)" | "Away (White)";
-  past?: boolean;
-};
-
-function GamesTab({ readonly: _readonly }: { readonly?: boolean }) {
-  const [filter, setFilter] = useState<"Pool" | "Playoffs" | "All">("Pool");
-  const pool: Game[] = [
-    { opp: "Burnaby Winter Club", date: "Jul 18", time: "9:00 AM", rink: "Rink 1", played: true, us: 3, them: 1, result: "WIN", jersey: "Home (Dark)" },
-    { opp: "Coquitlam Express", date: "Jul 19", time: "2:00 PM", rink: "Rink 3", jersey: "Away (White)" },
-    { opp: "North Delta Lightning", date: "Jul 20", time: "11:00 AM", rink: "Rink 2", jersey: "Home (Dark)" },
-  ];
-
-  return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
-        {(["Pool", "Playoffs", "All"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={
-              "rounded-full px-3 py-1.5 text-[11px] font-bold " +
-              (filter === f ? "bg-teal text-background" : "border border-border text-muted-foreground")
-            }
-          >
-            {f === "Pool" ? "Pool Games" : f}
-          </button>
-        ))}
-      </div>
-
-      {(filter === "Pool" || filter === "All") && (
-        <div className="space-y-2">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pool Games</p>
-          {pool.map((g, i) => <GameCard key={i} g={g} />)}
-        </div>
-      )}
-
-      {(filter === "Playoffs" || filter === "All") && (
-        <div className="space-y-2">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Playoffs</p>
-          <div className="rounded-xl border border-dashed border-border bg-surface p-4 text-center text-xs text-muted-foreground">
-            Playoff bracket TBD — advances after pool play
-          </div>
-        </div>
-      )}
-
-      <div>
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pool Standings</p>
-        <StandingsTable />
-      </div>
-    </div>
-  );
-}
-
-function GameCard({ g }: { g: Game }) {
-  const jerseyDot = g.jersey.startsWith("Home") ? "bg-teal" : "bg-zinc-300";
-  const resultColor =
-    g.result === "WIN" ? "bg-teal/20 text-teal" :
-    g.result === "LOSS" ? "bg-red-500/20 text-red-400" :
-    g.result === "OT" ? "bg-amber-500/20 text-amber-400" : "";
-
-  return (
-    <div className="rounded-xl border border-border bg-surface p-3">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="text-sm font-bold">vs. {g.opp}</p>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">{g.date} · {g.time} · {g.rink}</p>
-          <p className="mt-1 inline-flex items-center gap-1.5 text-[10px] text-muted-foreground">
-            <span className={"h-2 w-2 rounded-full " + jerseyDot} /> {g.jersey}
-          </p>
-        </div>
-        <div className="text-right">
-          {g.played ? (
-            <>
-              <p className="text-base font-bold">{g.us}–{g.them}</p>
-              <span className={"rounded-full px-2 py-0.5 text-[10px] font-bold " + resultColor}>{g.result}</span>
-            </>
-          ) : g.past ? (
-            <button className="rounded-full bg-amber-500/20 px-3 py-1 text-[10px] font-bold text-amber-400">
-              Enter Score
-            </button>
-          ) : (
-            <span className="text-[10px] font-bold text-muted-foreground">Upcoming</span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StandingsTable() {
-  const rows = [
-    { team: "Burnaby Winter Club", gp: 1, w: 1, l: 0, ot: 0, pts: 2, gf: 3, ga: 1 },
-    { team: "Elite Demo Team", gp: 1, w: 1, l: 0, ot: 0, pts: 2, gf: 3, ga: 1, me: true },
-    { team: "Coquitlam Express", gp: 0, w: 0, l: 0, ot: 0, pts: 0, gf: 0, ga: 0 },
-    { team: "North Delta Lightning", gp: 0, w: 0, l: 0, ot: 0, pts: 0, gf: 0, ga: 0 },
-  ];
-  return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-surface">
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="text-left text-[10px] uppercase tracking-wider text-muted-foreground">
-            <th className="px-2 py-2">Team</th>
-            <th className="px-1 py-2">GP</th><th className="px-1 py-2">W</th><th className="px-1 py-2">L</th>
-            <th className="px-1 py-2">OT</th><th className="px-1 py-2">PTS</th>
-            <th className="px-1 py-2">GF</th><th className="px-1 py-2">GA</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.team} className={r.me ? "bg-teal/15 font-bold text-teal" : "border-t border-border"}>
-              <td className="px-2 py-2">{r.team}</td>
-              <td className="px-1 py-2">{r.gp}</td><td className="px-1 py-2">{r.w}</td><td className="px-1 py-2">{r.l}</td>
-              <td className="px-1 py-2">{r.ot}</td><td className="px-1 py-2">{r.pts}</td>
-              <td className="px-1 py-2">{r.gf}</td><td className="px-1 py-2">{r.ga}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+/* (Games tab removed — its content merged into Schedule.) */
 
 /* =================== ROSTER =================== */
 
@@ -418,6 +293,7 @@ type ItineraryItem = {
   options: [string, string, string];
   responses: Record<string, RsvpStatus>;
   busCapacity?: number;
+  result?: string;
 };
 
 const ROSTER = [
@@ -427,24 +303,37 @@ const ROSTER = [
 ];
 
 const SEED: { day: string; items: ItineraryItem[] }[] = [
-  { day: "JUL 18 — FRIDAY", items: [
-    mkItem("bus1", "Transport", "Bus departs Surrey Sport & Leisure", "6:30 AM", "Surrey Sport & Leisure", { busCapacity: 14, mix: { yes: 9, no: 2, maybe: 1 } }),
-    mkItem("g1", "Game", "GAME 1 vs. Burnaby Winter Club", "9:00 AM", "Rink 1 · Langley Events Centre"),
-    mkItem("l1", "Meal", "Team lunch", "12:00 PM", "Boston Pizza Langley", { mix: { yes: 10, no: 1, maybe: 1 } }),
-    mkItem("h1", "Hotel", "Hotel check-in", "2:00 PM", "Sandman Hotel Langley · 8765 202 St", { mix: { yes: 10, no: 2 } }),
+  { day: "FRIDAY · JUL 18", items: [
+    mkItem("bus1", "Transport", "Bus Departure", "6:30 AM", "Surrey Sport & Leisure parking lot", { busCapacity: 14, mix: { yes: 9, no: 2, maybe: 1 } }),
+    mkItem("g1", "Game", "GAME 1 vs. Burnaby Winter Club", "9:00 AM", "Rink 1 · Langley Events Centre", { result: "3–1 WIN" }),
+    mkItem("l1", "Meal", "Team Lunch", "12:00 PM", "Boston Pizza Langley", { mix: { yes: 11, no: 1, maybe: 2 } }),
+    mkItem("h1", "Hotel", "Hotel Check-in", "2:00 PM", "Sandman Hotel Langley", { mix: { yes: 10, no: 2 } }),
+    mkItem("sk1", "Game", "Optional Skate", "5:30 PM", "Rink 3 · Langley Events Centre"),
+    mkItem("d1", "Meal", "Team Dinner", "7:00 PM", "Cactus Club · Families welcome", { mix: { yes: 13, no: 1 } }),
     mkItem("c1", "Curfew", "Curfew — players in rooms", "10:00 PM", "Hotel"),
   ]},
-  { day: "JUL 19 — SATURDAY", items: [
-    mkItem("br2", "Meal", "Team breakfast", "8:00 AM", "Hotel lobby", { mix: { yes: 11, no: 0, maybe: 1 } }),
+  { day: "SATURDAY · JUL 19", items: [
+    mkItem("br2", "Meal", "Team Breakfast", "8:00 AM", "Hotel Lobby"),
+    mkItem("bus2", "Transport", "Bus to Rink", "9:30 AM", "Hotel Lobby", { busCapacity: 14 }),
     mkItem("g2", "Game", "GAME 2 vs. Coquitlam Express", "2:00 PM", "Rink 3 · Langley Events Centre"),
-    mkItem("a2", "Activity", "Team bowling", "5:00 PM", "Langley Bowl & Entertainment", { mix: { yes: 8, no: 2, maybe: 2 } }),
+    mkItem("a2", "Activity", "Team Activity", "5:00 PM", "Langley Bowl", { mix: { yes: 8, no: 2, maybe: 2 } }),
+    mkItem("d2", "Meal", "Team Dinner", "8:00 PM", "The Keg"),
     mkItem("c2", "Curfew", "Curfew", "10:00 PM", "Hotel"),
+  ]},
+  { day: "SUNDAY · JUL 20", items: [
+    mkItem("br3", "Meal", "Team Breakfast", "8:30 AM", "Hotel Lobby"),
+    mkItem("g3", "Game", "GAME 3 vs. North Delta Lightning", "11:00 AM", "Rink 2 · Langley Events Centre"),
+    mkItem("po1", "Other", "Playoff TBD — based on standings", "2:30 PM", ""),
+  ]},
+  { day: "MONDAY · JUL 21", items: [
+    mkItem("po2", "Game", "Playoff Games (if advancing)", "TBD", "Langley Events Centre"),
+    mkItem("busr", "Transport", "Bus Return", "6:00 PM", "Departs Langley Events Centre", { busCapacity: 14 }),
   ]},
 ];
 
 function mkItem(
   id: string, type: ItemType, title: string, time: string, location: string,
-  extra?: { busCapacity?: number; mix?: { yes: number; no: number; maybe?: number } }
+  extra?: { busCapacity?: number; mix?: { yes: number; no: number; maybe?: number }; result?: string }
 ): ItineraryItem {
   const options = defaultOptions(type);
   const responses: Record<string, RsvpStatus> = {};
@@ -458,15 +347,31 @@ function mkItem(
     id, type, title, time, location,
     rsvp: RSVP_DEFAULTS[type], options, responses,
     busCapacity: extra?.busCapacity,
+    result: extra?.result,
   };
 }
 
-function TravelTab() {
+type ScheduleFilter = "All" | "Games" | "Transport" | "Accommodation" | "Team Functions" | "My RSVPs";
+
+function itemMatchesFilter(it: ItineraryItem, f: ScheduleFilter): boolean {
+  switch (f) {
+    case "All": return true;
+    case "Games": return it.type === "Game";
+    case "Transport": return it.type === "Transport";
+    case "Accommodation": return it.type === "Hotel";
+    case "Team Functions": return it.type === "Meal" || it.type === "Activity" || it.type === "Curfew" || it.type === "Other";
+    case "My RSVPs": return it.rsvp;
+  }
+}
+
+function ScheduleTab({ readonly: _readonly }: { readonly?: boolean }) {
   const [days, setDays] = useState(SEED);
   const [editMode, setEditMode] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [editing, setEditing] = useState<{ dayIdx: number; itemIdx: number } | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [filter, setFilter] = useState<ScheduleFilter>("All");
+  const [calOpen, setCalOpen] = useState(false);
 
   function updateItem(dayIdx: number, itemIdx: number, patch: Partial<ItineraryItem>) {
     setDays((d) => d.map((day, di) => di !== dayIdx ? day : {
@@ -493,8 +398,6 @@ function TravelTab() {
 
   return (
     <div className="space-y-4">
-      <AccommodationSection />
-
       {dirty && (
         <div className="sticky top-[140px] z-10 flex items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/15 px-3 py-2 backdrop-blur">
           <p className="text-[11px] font-bold text-amber-300">Draft — changes not yet sent to team</p>
@@ -505,32 +408,56 @@ function TravelTab() {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Day-by-day Itinerary</p>
+      <div className="flex items-center justify-between gap-2">
+        <div className="-mx-1 flex flex-1 gap-1.5 overflow-x-auto no-scrollbar">
+          {(["All", "Games", "Transport", "Accommodation", "Team Functions", "My RSVPs"] as ScheduleFilter[]).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={
+                "shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors " +
+                (filter === f ? "bg-teal text-background" : "border border-border bg-surface text-muted-foreground")
+              }
+            >
+              {f}
+            </button>
+          ))}
+        </div>
         <button
           onClick={() => setEditMode((v) => !v)}
-          className={"rounded-full border px-3 py-1.5 text-[11px] font-bold " + (editMode ? "border-teal bg-teal text-background" : "border-teal text-teal")}
+          className={"shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold " + (editMode ? "border-teal bg-teal text-background" : "border-teal text-teal")}
         >
-          {editMode ? "Done" : <><Pencil size={12} className="mr-1 inline" /> Edit Itinerary</>}
+          {editMode ? "Done" : <><Pencil size={12} className="mr-1 inline" /> Edit Schedule</>}
         </button>
       </div>
 
+      <button onClick={() => setCalOpen(true)} className="inline-flex items-center gap-1 text-[11px] font-bold text-teal">
+        <CalendarIcon size={12} /> + Add to Calendar
+      </button>
+
       <div className="space-y-4">
-        {days.map((d, dayIdx) => (
-          <DaySection
-            key={d.day}
-            day={d}
-            editMode={editMode}
-            onEditItem={(itemIdx) => setEditing({ dayIdx, itemIdx })}
-            onDeleteItem={(itemIdx) => deleteItem(dayIdx, itemIdx)}
-            onAddItem={(atIdx) => addItem(dayIdx, atIdx)}
-            onRsvp={(itemIdx, key, status) =>
-              updateItem(dayIdx, itemIdx, {
-                responses: { ...d.items[itemIdx].responses, [key]: status },
-              })
-            }
-          />
-        ))}
+        {days.map((d, dayIdx) => {
+          const visible = d.items
+            .map((it, i) => ({ it, i }))
+            .filter(({ it }) => itemMatchesFilter(it, filter));
+          if (visible.length === 0 && !editMode) return null;
+          return (
+            <DaySection
+              key={d.day}
+              day={d}
+              visibleIdx={visible.map((v) => v.i)}
+              editMode={editMode}
+              onEditItem={(itemIdx) => setEditing({ dayIdx, itemIdx })}
+              onDeleteItem={(itemIdx) => deleteItem(dayIdx, itemIdx)}
+              onAddItem={(atIdx) => addItem(dayIdx, atIdx)}
+              onRsvp={(itemIdx, key, status) =>
+                updateItem(dayIdx, itemIdx, {
+                  responses: { ...d.items[itemIdx].responses, [key]: status },
+                })
+              }
+            />
+          );
+        })}
       </div>
 
       {editing && (
@@ -564,14 +491,17 @@ function TravelTab() {
           onPublish={() => { setDirty(false); setEditMode(false); setConfirmOpen(false); }}
         />
       )}
+
+      {calOpen && <CalendarExportSheet onClose={() => setCalOpen(false)} />}
     </div>
   );
 }
 
 function DaySection({
-  day, editMode, onEditItem, onDeleteItem, onAddItem, onRsvp,
+  day, visibleIdx, editMode, onEditItem, onDeleteItem, onAddItem, onRsvp,
 }: {
   day: { day: string; items: ItineraryItem[] };
+  visibleIdx: number[];
   editMode: boolean;
   onEditItem: (i: number) => void;
   onDeleteItem: (i: number) => void;
@@ -579,6 +509,7 @@ function DaySection({
   onRsvp: (itemIdx: number, key: string, status: RsvpStatus) => void;
 }) {
   const [open, setOpen] = useState(true);
+  const indices = editMode ? day.items.map((_, i) => i) : visibleIdx;
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-surface">
       <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between px-3 py-3 text-left">
@@ -587,9 +518,11 @@ function DaySection({
       </button>
       {open && (
         <div className="border-t border-border px-3 py-3">
-          {day.items.map((it, i) => (
+          {indices.map((i, pos) => {
+            const it = day.items[i];
+            return (
             <div key={it.id}>
-              {editMode && i > 0 && (
+              {editMode && pos > 0 && (
                 <button onClick={() => onAddItem(i)} className="my-1 flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-border py-1 text-[10px] font-bold text-muted-foreground">
                   <Plus size={10} /> Add Item
                 </button>
@@ -602,7 +535,7 @@ function DaySection({
                 onRsvp={(key, status) => onRsvp(i, key, status)}
               />
             </div>
-          ))}
+          )})}
           {editMode && (
             <button onClick={() => onAddItem()} className="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-teal/50 py-2 text-[11px] font-bold text-teal">
               <Plus size={12} /> Add Item
@@ -637,6 +570,25 @@ function ItemRow({
   const seatsNeeded = item.type === "Transport" ? counts.yes : 0;
   const overCapacity = item.busCapacity && seatsNeeded > item.busCapacity;
 
+  const myStatus: RsvpStatus = (item.responses["__me"] ?? "none") as RsvpStatus;
+  const myLabel =
+    !item.rsvp ? "" :
+    myStatus === "yes" ? item.options[0].toUpperCase() :
+    myStatus === "no" ? item.options[1].toUpperCase() :
+    myStatus === "maybe" ? item.options[2].toUpperCase() :
+    "NO REPLY";
+  const myCls =
+    myStatus === "yes" ? "bg-teal/20 text-teal" :
+    myStatus === "no" ? "bg-red-500/20 text-red-400" :
+    myStatus === "maybe" ? "bg-amber-500/20 text-amber-400" :
+    "bg-surface-2 text-muted-foreground";
+
+  const resultCls = item.result?.includes("WIN")
+    ? "bg-teal/20 text-teal"
+    : item.result?.includes("LOSS")
+      ? "bg-red-500/20 text-red-400"
+      : "bg-amber-500/20 text-amber-400";
+
   return (
     <div className="group relative my-1 rounded-lg border border-border bg-surface-2/40">
       <div className="flex items-center gap-2 px-2 py-2">
@@ -649,6 +601,9 @@ function ItemRow({
           <span className="text-base leading-none">{TYPE_ICON[item.type]}</span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-semibold">{item.title}</p>
+            {item.location && (
+              <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{item.location}</p>
+            )}
             {item.rsvp && !editMode && (
               <p className="mt-0.5 flex gap-2 text-[10px]">
                 <span className="text-teal">✓ {counts.yes}</span>
@@ -658,6 +613,12 @@ function ItemRow({
               </p>
             )}
           </div>
+          {item.result && (
+            <span className={"shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold " + resultCls}>{item.result}</span>
+          )}
+          {item.rsvp && !editMode && (
+            <span className={"shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold " + myCls}>{myLabel}</span>
+          )}
         </button>
         {editMode ? (
           <button onClick={() => setShowDelete((v) => !v)} className="rounded p-1 text-muted-foreground">
@@ -1045,6 +1006,135 @@ const BILLET_ROSTER = [
 const IS_PARENT = false;
 const PARENT_CHILD_NAME = "Liam Carter";
 
+function LogisticsTab() {
+  return (
+    <div className="space-y-5">
+      <AccommodationSection />
+      <EquipmentChecklistCard />
+      <TournamentNotesCard />
+      <AttachmentsCard />
+      <TournamentWebsiteCard />
+    </div>
+  );
+}
+
+function EquipmentChecklistCard() {
+  const initial = [
+    "Home jersey (dark)", "Away jersey (white)",
+    "Helmet + cage", "Gloves",
+    "Skates", "Stick(s)",
+    "Hockey bag", "Water bottle",
+    "Mouth guard", "Shin/elbow pads",
+  ];
+  const [items, setItems] = useState(initial);
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [open, setOpen] = useState(false);
+  const [adding, setAdding] = useState("");
+  const done = items.filter((i) => checked[i]).length;
+  return (
+    <section className="overflow-hidden rounded-xl border border-border bg-surface">
+      <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between px-4 py-3 text-left">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Equipment Checklist</p>
+          <p className="mt-0.5 text-xs">{done} of {items.length} packed</p>
+        </div>
+        {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+      </button>
+      {open && (
+        <div className="border-t border-border px-4 py-3">
+          <div className="grid grid-cols-2 gap-2">
+            {items.map((it) => (
+              <label key={it} className="flex items-center gap-2 rounded-md border border-border bg-surface-2 px-2 py-2 text-[11px]">
+                <input
+                  type="checkbox"
+                  checked={!!checked[it]}
+                  onChange={() => setChecked((s) => ({ ...s, [it]: !s[it] }))}
+                  className="h-4 w-4 accent-teal"
+                />
+                <span className={checked[it] ? "line-through text-muted-foreground" : ""}>{it}</span>
+              </label>
+            ))}
+          </div>
+          <div className="mt-3 flex gap-2">
+            <input
+              value={adding}
+              onChange={(e) => setAdding(e.target.value)}
+              placeholder="Add item…"
+              className="flex-1 rounded-md border border-border bg-surface-2 px-2 py-1.5 text-xs"
+            />
+            <button
+              onClick={() => { if (adding.trim()) { setItems((x) => [...x, adding.trim()]); setAdding(""); } }}
+              className="rounded-full border border-teal px-3 py-1.5 text-[11px] font-bold text-teal"
+            >
+              <Plus size={12} className="mr-1 inline" /> Add
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function TournamentNotesCard() {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(
+    "White jerseys for game 2. Dress sharp for team dinner Friday — no hoodies. Bring your own tape.",
+  );
+  const [draft, setDraft] = useState(text);
+  return (
+    <section className="rounded-xl border border-border bg-surface p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tournament Notes</p>
+        {!editing ? (
+          <button onClick={() => { setDraft(text); setEditing(true); }} className="text-[11px] font-bold text-teal">Edit Notes</button>
+        ) : (
+          <div className="flex gap-2">
+            <button onClick={() => setEditing(false)} className="text-[11px] font-bold text-muted-foreground">Cancel</button>
+            <button onClick={() => { setText(draft); setEditing(false); }} className="text-[11px] font-bold text-teal">Save</button>
+          </div>
+        )}
+      </div>
+      {!editing ? (
+        <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed">{text}</p>
+      ) : (
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          rows={4}
+          className="mt-2 w-full rounded-md border border-border bg-surface-2 px-2 py-2 text-xs"
+        />
+      )}
+    </section>
+  );
+}
+
+function AttachmentsCard() {
+  const files = [
+    { name: "Tournament Package", icon: "📎" },
+    { name: "Rules & Regulations", icon: "📎" },
+  ];
+  return (
+    <section>
+      <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Attachments</p>
+      <div className="space-y-2">
+        {files.map((f) => (
+          <button key={f.name} className="flex w-full items-center gap-2 rounded-md border border-border bg-surface-2 px-3 py-2.5 text-left text-xs font-semibold">
+            <span>{f.icon}</span> {f.name}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function TournamentWebsiteCard() {
+  return (
+    <button className="flex w-full items-center justify-center gap-2 rounded-full border border-teal py-2.5 text-xs font-bold text-teal">
+      <Link2 size={14} /> 🔗 Tournament Website
+    </button>
+  );
+}
+
 function AccommodationSection() {
   const [mode, setMode] = useState<AccomMode>("Hotel");
   const [billets, setBillets] = useState<Billet[]>(SEED_BILLETS);
@@ -1133,27 +1223,47 @@ function AccommodationSection() {
 }
 
 function HotelCard() {
+  const [showRooms, setShowRooms] = useState(false);
   return (
     <div className="rounded-xl border border-border bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Hotel</p>
           <p className="mt-1 text-sm font-bold">Sandman Hotel Langley</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">8765 202 St, Langley, BC</p>
+          <a
+            href="https://maps.google.com/?q=8765+202+St,+Langley,+BC"
+            target="_blank" rel="noreferrer"
+            className="mt-0.5 inline-block text-xs text-muted-foreground active:opacity-70"
+          >
+            8765 202 St, Langley, BC
+          </a>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Check-in: <span className="font-semibold text-foreground">Jul 17</span> · Check-out:{" "}
+            <span className="font-semibold text-foreground">Jul 21</span>
+          </p>
         </div>
         <Home size={16} className="text-teal" />
       </div>
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        <a href="https://maps.google.com/?q=Sandman+Hotel+Langley" target="_blank" rel="noreferrer" className="flex items-center justify-center gap-1 rounded-md bg-surface-2 py-2 text-[11px] font-bold">
-          <MapPin size={12} /> Maps
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <a href="https://maps.google.com/?q=Sandman+Hotel+Langley" target="_blank" rel="noreferrer" className="flex items-center justify-center gap-1 rounded-full border border-teal py-2 text-[11px] font-bold text-teal">
+          <MapPin size={12} /> Get Directions
         </a>
-        <a href="tel:6045300050" className="flex items-center justify-center gap-1 rounded-md bg-surface-2 py-2 text-[11px] font-bold">
-          <Phone size={12} /> Call
+        <a href="tel:6045300050" className="flex items-center justify-center gap-1 rounded-full border border-teal py-2 text-[11px] font-bold text-teal">
+          <Phone size={12} /> Call Hotel
         </a>
-        <button className="flex items-center justify-center gap-1 rounded-md bg-surface-2 py-2 text-[11px] font-bold text-muted-foreground">
-          Confirmation #
-        </button>
       </div>
+
+      <label className="mt-3 flex items-center justify-between rounded-md border border-border bg-surface-2 px-3 py-2">
+        <span className="text-[11px] font-semibold">Show room assignments</span>
+        <input type="checkbox" checked={showRooms} onChange={(e) => setShowRooms(e.target.checked)} className="h-4 w-4 accent-teal" />
+      </label>
+      {showRooms && (
+        <div className="mt-2 space-y-1 rounded-md border border-border bg-surface-2 p-3 text-[11px]">
+          <p><span className="font-bold text-teal">Room 201:</span> Carter, Brooks</p>
+          <p><span className="font-bold text-teal">Room 203:</span> Jensen, Petrov, Callahan</p>
+          <p><span className="font-bold text-teal">Room 205:</span> Coaching Staff</p>
+        </div>
+      )}
     </div>
   );
 }
