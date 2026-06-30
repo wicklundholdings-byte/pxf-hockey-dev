@@ -718,13 +718,13 @@ function EditItemModal({
         <div className="mt-3">
           <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Type</label>
           <div className="mt-1 flex flex-wrap gap-1.5">
-            {(Object.keys(TYPE_ICON) as ItemType[]).map((t) => (
+            {(Object.keys(TYPE_LABEL) as ItemType[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setForm({ ...form, type: t, rsvp: RSVP_DEFAULTS[t], options: defaultOptions(t) })}
                 className={"rounded-full px-2.5 py-1 text-[10px] font-bold " + (form.type === t ? "bg-teal text-background" : "border border-border")}
               >
-                {TYPE_ICON[t]} {t}
+                {TYPE_LABEL[t]}
               </button>
             ))}
           </div>
