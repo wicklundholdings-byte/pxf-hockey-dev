@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ChevronLeft, ChevronDown, ChevronRight, Plus, Hotel, Bus, ClipboardList,
-  Paperclip, MapPin, Phone, Link2, ChevronUp,
+  Paperclip, MapPin, Phone, Link2, ChevronUp, Pencil, Trash2, GripVertical,
+  Calendar as CalendarIcon, X, AlertTriangle, BellRing, Check,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/tournaments/$tournamentId")({
