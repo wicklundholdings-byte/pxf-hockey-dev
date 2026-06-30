@@ -8,6 +8,7 @@ import { TierGate } from "@/components/tier-gate";
 import { useCurrentTier } from "@/hooks/use-tier";
 import { tierAtLeast } from "@/lib/tiers";
 import { BlockForStaff } from "@/components/block-for-staff";
+import { useHasStaff } from "@/hooks/use-has-staff";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/")({
   component: GatedCampsPage,
@@ -105,6 +106,7 @@ function CampsPage() {
   const [q, setQ] = useState("");
   const [tab, setTab] = useState<"all" | "camps" | "privates" | "teams">("all");
   const [assignFor, setAssignFor] = useState<Camp | null>(null);
+  const { hasStaff } = useHasStaff();
 
   async function reload() {
     const today = new Date().toISOString().slice(0, 10);
@@ -175,7 +177,7 @@ function CampsPage() {
             key={"c-" + c.id}
             camp={c}
             stats={regCounts.get(c.id) ?? { count: 0, revenue: 0 }}
-            staffed={staffedCampIds.has(c.id)}
+            staffed={staffedCampIds.has(c.id) || !hasStaff}
             onAssign={() => setAssignFor(c)}
           />
         ),
@@ -186,7 +188,7 @@ function CampsPage() {
         key: "p-" + p.id,
         sortDate: p.session_date,
         sortTime: p.start_time ?? "00:00",
-        node: <PrivateCard key={"p-" + p.id} item={p} />,
+        node: <PrivateCard key={"p-" + p.id} item={p} hasStaff={hasStaff} />,
       });
     });
     filteredTeamEvents.forEach((e) => {
@@ -199,7 +201,7 @@ function CampsPage() {
     });
     items.sort((a, b) => a.sortDate.localeCompare(b.sortDate) || a.sortTime.localeCompare(b.sortTime));
     return items;
-  }, [filteredCamps, filteredPrivates, filteredTeamEvents, regCounts, staffedCampIds]);
+  }, [filteredCamps, filteredPrivates, filteredTeamEvents, regCounts, staffedCampIds, hasStaff]);
 
   const tabs: Array<{ key: typeof tab; label: string }> = [
     { key: "all", label: "All" },
@@ -271,7 +273,7 @@ function CampsPage() {
               key={c.id}
               camp={c}
               stats={regCounts.get(c.id) ?? { count: 0, revenue: 0 }}
-              staffed={staffedCampIds.has(c.id)}
+              staffed={staffedCampIds.has(c.id) || !hasStaff}
               onAssign={() => setAssignFor(c)}
             />
           ))}
@@ -288,7 +290,7 @@ function CampsPage() {
               <p className="font-semibold text-foreground">No upcoming privates</p>
               <p className="mt-1 text-teal font-bold">Book a Private +</p>
             </Link>
-          ) : filteredPrivates.map((p) => <PrivateCard key={p.id} item={p} />)}
+          ) : filteredPrivates.map((p) => <PrivateCard key={p.id} item={p} hasStaff={hasStaff} />)}
         </div>
       )}
 
@@ -365,7 +367,8 @@ function CampCard({ camp: c, stats, staffed, onAssign }: {
   );
 }
 
-function PrivateCard({ item: p }: { item: PrivateLite }) {
+function PrivateCard({ item: p, hasStaff }: { item: PrivateLite; hasStaff: boolean }) {
+  const assigned = !!p.assigned_coach_id || !hasStaff;
   return (
     <Link
       to="/coach/bookings"
@@ -393,9 +396,9 @@ function PrivateCard({ item: p }: { item: PrivateLite }) {
             </p>
           )}
           <p className="mt-1 flex items-center gap-1 text-[10px]">
-            <User size={10} className={p.assigned_coach_id ? "text-teal" : "text-orange-500"} />
-            <span className={p.assigned_coach_id ? "text-muted-foreground" : "font-bold uppercase text-orange-500"}>
-              {p.assigned_coach_id ? "Instructor assigned" : "No instructor assigned"}
+            <User size={10} className={assigned ? "text-teal" : "text-orange-500"} />
+            <span className={assigned ? "text-muted-foreground" : "font-bold uppercase text-orange-500"}>
+              {assigned ? "Instructor assigned" : "No instructor assigned"}
             </span>
           </p>
         </div>
