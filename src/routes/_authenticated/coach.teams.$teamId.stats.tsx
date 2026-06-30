@@ -332,9 +332,9 @@ function EnterStatsFlow({
 
 function ManualEntry({ onClose }: { onClose: () => void }) {
   const [rows, setRows] = useState(() =>
-    mockSkaters.map((s) => ({ id: s.id, name: s.name, g: 0, a: 0, pm: 0, pim: 0, sog: 0 }))
+    mockSkaters.map((s) => ({ id: s.id, name: s.name, g: 0, a: 0, pm: 0, pim: 0 }))
   );
-  function upd(id: string, k: "g"|"a"|"pm"|"pim"|"sog", v: string) {
+  function upd(id: string, k: "g"|"a"|"pm"|"pim", v: string) {
     const n = parseInt(v) || 0;
     setRows((r) => r.map((row) => row.id === id ? { ...row, [k]: n } : row));
   }
@@ -344,13 +344,13 @@ function ManualEntry({ onClose }: { onClose: () => void }) {
       <div className="mt-2 overflow-x-auto rounded-2xl border border-border bg-background">
         <table className="w-full min-w-[420px] text-[11px]">
           <thead className="text-[9px] uppercase tracking-wider text-muted-foreground">
-            <tr><th className="p-2 text-left">Player</th><th>G</th><th>A</th><th>+/-</th><th>PIM</th><th>SOG</th></tr>
+            <tr><th className="p-2 text-left">Player</th><th>G</th><th>A</th><th>+/-</th><th>PIM</th></tr>
           </thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.id} className="border-t border-border">
                 <td className="p-2 font-semibold">{r.name}</td>
-                {(["g","a","pm","pim","sog"] as const).map((k) => (
+                {(["g","a","pm","pim"] as const).map((k) => (
                   <td key={k} className="p-1 text-center">
                     <input
                       type="number"
