@@ -408,6 +408,23 @@ function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [filter, setFilter] = useState<ScheduleFilter>("All");
   const [calOpen, setCalOpen] = useState(false);
+  const [baseline, setBaseline] = useState(SEED);
+  const [flashTimeId, setFlashTimeId] = useState<string | null>(null);
+  const [drag, setDrag] = useState<{ dayIdx: number; itemIdx: number } | null>(null);
+
+  function moveItem(from: { dayIdx: number; itemIdx: number }, toDay: number, toIdx: number) {
+    setDays((d) => {
+      const next = d.map((day) => ({ ...day, items: [...day.items] }));
+      const [moved] = next[from.dayIdx].items.splice(from.itemIdx, 1);
+      let insertIdx = toIdx;
+      if (from.dayIdx === toDay && from.itemIdx < toIdx) insertIdx = toIdx - 1;
+      next[toDay].items.splice(Math.max(0, Math.min(insertIdx, next[toDay].items.length)), 0, moved);
+      return next;
+    });
+    setDirty(true);
+    // auto-highlight time field after a short delay so the new row renders
+    setTimeout(() => setFlashTimeId(null), 2200);
+  }
 
   function updateItem(dayIdx: number, itemIdx: number, patch: Partial<ItineraryItem>) {
     setDays((d) => d.map((day, di) => di !== dayIdx ? day : {
@@ -432,15 +449,13 @@ function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode
     setDirty(true);
   }
 
+  const changeSummary = useMemo(() => summarizeChanges(baseline, days), [baseline, days]);
+
   return (
     <div className="space-y-4">
-      {dirty && (
-        <div className="sticky top-[140px] z-10 flex items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/15 px-3 py-2 backdrop-blur">
-          <p className="text-[11px] font-bold text-amber-300">Draft — changes not yet sent to team</p>
-          <div className="flex gap-2">
-            <button onClick={() => { setDays(SEED); setDirty(false); }} className="rounded-full border border-border px-3 py-1 text-[10px] font-bold">Discard</button>
-            <button onClick={() => setConfirmOpen(true)} className="rounded-full bg-gradient-brand px-3 py-1 text-[10px] font-bold text-background shadow-glow-teal">Notify Team →</button>
-          </div>
+      {editMode && dirty && (
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2">
+          <p className="text-[11px] font-bold text-amber-300">Draft — not sent to team yet</p>
         </div>
       )}
 
@@ -474,8 +489,14 @@ function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode
             <DaySection
               key={d.day}
               day={d}
+              dayIdx={dayIdx}
               visibleIdx={visible.map((v) => v.i)}
               editMode={editMode}
+              drag={drag}
+              setDrag={setDrag}
+              onMove={(toIdx) => { if (drag) { moveItem(drag, dayIdx, toIdx); const moved = days[drag.dayIdx].items[drag.itemIdx]; setFlashTimeId(moved.id); setDrag(null); } }}
+              flashTimeId={flashTimeId}
+              onTimeChange={(itemIdx, time) => updateItem(dayIdx, itemIdx, { time })}
               onEditItem={(itemIdx) => setEditing({ dayIdx, itemIdx })}
               onDeleteItem={(itemIdx) => deleteItem(dayIdx, itemIdx)}
               onAddItem={(atIdx) => addItem(dayIdx, atIdx)}
@@ -515,13 +536,24 @@ function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode
 
       {confirmOpen && (
         <NotifyConfirmSheet
-          changeCount={3}
+          changes={changeSummary}
           onClose={() => setConfirmOpen(false)}
-          onPublish={() => { setDirty(false); setEditMode(false); setConfirmOpen(false); }}
+          onPublish={() => { setBaseline(days); setDirty(false); setEditMode(false); setConfirmOpen(false); }}
         />
       )}
 
       {calOpen && <CalendarExportSheet onClose={() => setCalOpen(false)} />}
+
+      {editMode && dirty && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 px-3 py-3 backdrop-blur">
+          <p className="text-center text-[11px] font-bold text-amber-300">You have unsaved changes</p>
+          <div className="mt-2 flex items-center justify-center gap-2">
+            <button onClick={() => { setDays(baseline); setDirty(false); }} className="rounded-full border border-border px-3 py-1.5 text-[11px] font-bold">Discard</button>
+            <button onClick={() => { setBaseline(days); setDirty(false); }} className="rounded-full border border-teal/60 bg-teal/10 px-3 py-1.5 text-[11px] font-bold text-teal">Save Draft</button>
+            <button onClick={() => setConfirmOpen(true)} className="rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-background shadow-glow-teal">Notify Team →</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
