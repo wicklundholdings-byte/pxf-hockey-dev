@@ -131,7 +131,11 @@ function EliteCoachDashboard() {
     if (!user?.id) return;
     (async () => {
       const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
-      setCoachName(prof?.full_name ?? user.email?.split("@")[0] ?? "Coach");
+      const metaName = (user.user_metadata as any)?.first_name || (user.user_metadata as any)?.full_name || "";
+      const TIER_WORDS = /^(elite|team|association|staff|coach)(\s|$)/i;
+      const candidates = [prof?.full_name, metaName, user.email?.split("@")[0]];
+      const picked = candidates.find((n) => n && !TIER_WORDS.test(String(n))) ?? user.email?.split("@")[0] ?? "Coach";
+      setCoachName(picked);
 
       reloadPrivates(user.id);
 
@@ -664,22 +668,46 @@ function EliteCoachDashboard() {
       {/* Next Up */}
       <section>
         <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Next Up · 7 days</h2>
-        {events.length === 0 ? (
-          <p className="mt-2 rounded-2xl border border-border bg-card p-4 text-xs text-muted-foreground">
-            No events scheduled in the next 7 days.
-          </p>
-        ) : (
-          <div className="mt-2 space-y-2">
-            {events.map((e) => (
-              <Link key={`${e.event_type}-${e.id}`} to={e.link.to} params={e.link.params} className="block">
-                <TeamEventRow event={{
-                  event_type: e.event_type, title: e.title, opponent_name: e.opponent_name,
-                  venue: e.venue, event_date: e.event_date, start_time: e.start_time, team_name: e.team_name,
-                }} />
-              </Link>
-            ))}
-          </div>
-        )}
+        {(() => {
+          // Group camp sessions by camp_id; keep team events individual.
+          type Group = { key: string; event: EventLite; count: number };
+          const groups: Group[] = [];
+          const campIdx = new Map<string, number>();
+          for (const e of events) {
+            if (e.event_type === "camp") {
+              const cid = (e.link.params as any)?.campId ?? e.id;
+              const idx = campIdx.get(cid);
+              if (idx == null) {
+                campIdx.set(cid, groups.length);
+                groups.push({ key: `camp-${cid}`, event: e, count: 1 });
+              } else {
+                groups[idx].count += 1;
+              }
+            } else {
+              groups.push({ key: `${e.event_type}-${e.id}`, event: e, count: 1 });
+            }
+          }
+          if (groups.length === 0) {
+            return (
+              <p className="mt-2 rounded-2xl border border-border bg-card p-4 text-xs text-muted-foreground">
+                No events scheduled in the next 7 days.
+              </p>
+            );
+          }
+          return (
+            <div className="mt-2 space-y-2">
+              {groups.map((g) => (
+                <Link key={g.key} to={g.event.link.to} params={g.event.link.params} className="block">
+                  <TeamEventRow event={{
+                    event_type: g.event.event_type, title: g.event.title, opponent_name: g.event.opponent_name,
+                    venue: g.event.venue, event_date: g.event.event_date, start_time: g.event.start_time,
+                    team_name: g.count > 1 ? `${g.count} sessions this week` : g.event.team_name,
+                  }} />
+                </Link>
+              ))}
+            </div>
+          );
+        })()}
       </section>
 
       {/* Recent Media */}
