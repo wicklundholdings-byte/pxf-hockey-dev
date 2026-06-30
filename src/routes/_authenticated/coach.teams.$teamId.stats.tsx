@@ -13,17 +13,17 @@ type MockSkater = { id: string; name: string; gp: number; g: number; a: number; 
 type MockGoalie = { id: string; name: string; gp: number; w: number; l: number; gaa: string; svp: string; so: number };
 
 const mockSkaters: MockSkater[] = [
-  { id: "p-carter", name: "Carter", gp: 14, g: 12, a: 14, pts: 26, pm: 8, pim: 4, sog: 87 },
-  { id: "p-brooks", name: "Brooks", gp: 14, g: 9, a: 11, pts: 20, pm: 5, pim: 6, sog: 62 },
-  { id: "p-jensen", name: "Jensen", gp: 13, g: 5, a: 6, pts: 11, pm: 2, pim: 2, sog: 44 },
-  { id: "p-petrov", name: "Petrov", gp: 14, g: 4, a: 5, pts: 9, pm: -1, pim: 8, sog: 38 },
-  { id: "p-callahan", name: "Callahan", gp: 12, g: 3, a: 4, pts: 7, pm: 1, pim: 4, sog: 31 },
-  { id: "p-reilly", name: "Reilly", gp: 14, g: 3, a: 4, pts: 7, pm: 3, pim: 12, sog: 28 },
-  { id: "p-macdonald", name: "MacDonald", gp: 11, g: 2, a: 3, pts: 5, pm: -2, pim: 6, sog: 24 },
-  { id: "p-nguyen", name: "Nguyen", gp: 14, g: 1, a: 2, pts: 3, pm: 1, pim: 2, sog: 18 },
-  { id: "p-marchetti", name: "Marchetti", gp: 14, g: 1, a: 1, pts: 2, pm: 4, pim: 14, sog: 22 },
-  { id: "p-kowalski", name: "Kowalski", gp: 14, g: 0, a: 3, pts: 3, pm: 6, pim: 10, sog: 19 },
-  { id: "p-thompson", name: "Thompson", gp: 14, g: 0, a: 2, pts: 2, pm: 3, pim: 8, sog: 17 },
+  { id: "p-carter", name: "Carter", gp: 14, g: 12, a: 14, pts: 26, ppg: 1.86, pm: 8, pim: 4 },
+  { id: "p-brooks", name: "Brooks", gp: 14, g: 9, a: 11, pts: 20, ppg: 1.43, pm: 5, pim: 6 },
+  { id: "p-jensen", name: "Jensen", gp: 13, g: 5, a: 6, pts: 11, ppg: 0.85, pm: 2, pim: 2 },
+  { id: "p-petrov", name: "Petrov", gp: 14, g: 4, a: 5, pts: 9, ppg: 0.64, pm: -1, pim: 8 },
+  { id: "p-callahan", name: "Callahan", gp: 12, g: 3, a: 4, pts: 7, ppg: 0.58, pm: 1, pim: 4 },
+  { id: "p-reilly", name: "Reilly", gp: 14, g: 3, a: 4, pts: 7, ppg: 0.50, pm: 3, pim: 12 },
+  { id: "p-macdonald", name: "MacDonald", gp: 11, g: 2, a: 3, pts: 5, ppg: 0.45, pm: -2, pim: 6 },
+  { id: "p-nguyen", name: "Nguyen", gp: 14, g: 1, a: 2, pts: 3, ppg: 0.21, pm: 1, pim: 2 },
+  { id: "p-marchetti", name: "Marchetti", gp: 14, g: 1, a: 1, pts: 2, ppg: 0.14, pm: 4, pim: 14 },
+  { id: "p-kowalski", name: "Kowalski", gp: 14, g: 0, a: 3, pts: 3, ppg: 0.21, pm: 6, pim: 10 },
+  { id: "p-thompson", name: "Thompson", gp: 14, g: 0, a: 2, pts: 2, ppg: 0.14, pm: 3, pim: 8 },
 ];
 
 const mockGoalies: MockGoalie[] = [
@@ -39,18 +39,17 @@ const mockPendingGames = [
 
 function genGameLogSkater(s: MockSkater) {
   // Distribute totals across GP games deterministically.
-  const rows: { opp: string; g: number; a: number; pm: number; pim: number; sog: number }[] = [];
+  const rows: { opp: string; g: number; a: number; pm: number; pim: number }[] = [];
   const opps = ["vs Trappers","@ Lightning","vs Sockeyes","@ Warriors","vs Hawks","@ Wolves","vs Bruins","@ Kings","vs Stars","@ Jets","vs Flames","@ Ducks","vs Sharks","@ Oilers"];
-  let gL = s.g, aL = s.a, pmL = s.pm, pimL = s.pim, sogL = s.sog;
+  let gL = s.g, aL = s.a, pmL = s.pm, pimL = s.pim;
   for (let i = 0; i < s.gp; i++) {
     const last = i === s.gp - 1;
     const g = last ? gL : Math.min(gL, i % 3 === 0 ? 1 : 0);
     const a = last ? aL : Math.min(aL, i % 2 === 0 ? 1 : 0);
     const pim = last ? pimL : Math.min(pimL, i % 4 === 0 ? 2 : 0);
-    const sog = last ? sogL : Math.min(sogL, Math.max(1, Math.floor(s.sog / s.gp)));
     const pm = last ? pmL : Math.sign(s.pm) * (i % 5 === 0 ? 1 : 0);
-    rows.push({ opp: opps[i % opps.length], g, a, pm, pim, sog });
-    gL -= g; aL -= a; pimL -= pim; sogL -= sog; pmL -= pm;
+    rows.push({ opp: opps[i % opps.length], g, a, pm, pim });
+    gL -= g; aL -= a; pimL -= pim; pmL -= pm;
   }
   return rows;
 }
