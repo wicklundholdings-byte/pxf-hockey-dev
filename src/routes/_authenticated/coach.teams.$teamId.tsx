@@ -22,6 +22,7 @@ function TeamLayout() {
   }, [teamId]);
 
   const base = `/coach/teams/${teamId}`;
+  const onTournamentDetail = pathname.startsWith(`${base}/tournaments/`);
   const tabs: { to: any; label: string; match: (p: string) => boolean }[] = [
     { to: "/coach/teams/$teamId", label: "Overview", match: (p) => p === base || p === base + "/" },
     { to: "/coach/teams/$teamId/schedule", label: "Schedule", match: (p) => p.startsWith(base + "/schedule") },
@@ -45,27 +46,29 @@ function TeamLayout() {
           </div>
         </div>
       </div>
-      <div className="sticky top-0 z-30 mt-3 border-b border-border bg-background/95 backdrop-blur">
-        <div className="flex gap-1 overflow-x-auto px-5 no-scrollbar">
-          {tabs.map((t) => {
-            const active = t.match(pathname);
-            return (
-              <Link
-                key={t.label}
-                to={t.to}
-                params={{ teamId } as any}
-                className={
-                  "shrink-0 border-b-2 px-3 py-3 text-sm font-bold transition-colors " +
-                  (active ? "border-teal text-teal" : "border-transparent text-muted-foreground")
-                }
-              >
-                {t.label}
-              </Link>
-            );
-          })}
+      {!onTournamentDetail && (
+        <div className="sticky top-0 z-30 mt-3 border-b border-border bg-background/95 backdrop-blur">
+          <div className="flex gap-1 overflow-x-auto px-5 no-scrollbar">
+            {tabs.map((t) => {
+              const active = t.match(pathname);
+              return (
+                <Link
+                  key={t.label}
+                  to={t.to}
+                  params={{ teamId } as any}
+                  className={
+                    "shrink-0 border-b-2 px-3 py-3 text-sm font-bold transition-colors " +
+                    (active ? "border-teal text-teal" : "border-transparent text-muted-foreground")
+                  }
+                >
+                  {t.label}
+                </Link>
+              );
+            })}
+          </div>
         </div>
-      </div>
-      <div id="team-tab-content" className="mt-3 px-5 scroll-mt-4">
+      )}
+      <div id="team-tab-content" className={`px-5 scroll-mt-4 ${onTournamentDetail ? "" : "mt-3"}`}>
         <Outlet />
       </div>
     </div>
