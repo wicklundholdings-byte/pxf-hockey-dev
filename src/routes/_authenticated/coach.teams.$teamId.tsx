@@ -26,7 +26,7 @@ function TeamLayout() {
     { to: "/coach/teams/$teamId", label: "Overview", match: (p) => p === base || p === base + "/" },
     { to: "/coach/teams/$teamId/schedule", label: "Schedule", match: (p) => p.startsWith(base + "/schedule") },
     { to: "/coach/teams/$teamId/roster", label: "Roster", match: (p) => p.startsWith(base + "/roster") },
-    { to: "/coach/teams/$teamId/stats", label: "Stats", match: (p) => p.startsWith(base + "/stats") },
+    { to: "/coach/teams/$teamId/tournaments", label: "Tournaments", match: (p) => p.startsWith(base + "/tournaments") },
     { to: "/coach/teams/$teamId/more", label: "More", match: (p) => p.startsWith(base + "/more") },
   ];
 

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Camera, DollarSign, Trophy, ClipboardList, ChevronRight, Plus, X } from "lucide-react";
+import { Camera, DollarSign, ClipboardList, ChevronRight, Plus, X, BarChart3 } from "lucide-react";
 import { createEvent } from "@/lib/teams.functions";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/more")({
@@ -13,9 +13,9 @@ function TeamMoreTab() {
   const [createOpen, setCreateOpen] = useState(false);
 
   const rows: { to: any; label: string; subtitle: string; Icon: any }[] = [
+    { to: "/coach/teams/$teamId/stats", label: "Stats", subtitle: "7W · 5L · 2OT · 14 GP", Icon: BarChart3 },
     { to: "/coach/teams/$teamId/media", label: "Media", subtitle: "2 videos · 4 photos", Icon: Camera },
     { to: "/coach/teams/$teamId/payments", label: "Payments", subtitle: "$700 outstanding", Icon: DollarSign },
-    { to: "/coach/teams/$teamId/schedule", label: "Tournaments", subtitle: "0 active tournaments", Icon: Trophy },
     { to: "/coach/teams/$teamId/schedule", label: "Practice Plans", subtitle: "3 saved plans", Icon: ClipboardList },
   ];
 
