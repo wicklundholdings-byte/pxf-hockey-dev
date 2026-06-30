@@ -33,21 +33,15 @@ function TeamLayout() {
   return (
     <div className="-mx-5 -mt-2">
       <div className="px-5 pt-2">
-        <Link to="/coach/teams" className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-          <ArrowLeft size={14} /> Teams
-        </Link>
         <div className="mt-2 flex items-center gap-3">
           <div className="grid h-10 w-10 place-items-center rounded-xl text-xs font-bold text-background" style={{ background: team?.primary_color || "var(--color-teal)" }}>
-            {team?.name?.slice(0, 2).toUpperCase() || "—"}
+            {team?.name ? team.name.slice(0, 2).toUpperCase() : "EL"}
           </div>
           <div>
-            <h2 className="font-display text-lg font-bold leading-tight">{team?.name || "Team"}</h2>
-            <p className="text-[11px] text-muted-foreground">{team?.season || ""}</p>
-            {(team?.division || team?.age_group) && (
-              <p className="text-[11px] font-semibold text-muted-foreground/90">
-                {[team?.division, team?.age_group].filter(Boolean).join(" · ")}
-              </p>
-            )}
+            <h2 className="font-display text-lg font-bold leading-tight">{team?.name || "Elite Demo Team"}</h2>
+            <p className="text-[11px] text-muted-foreground">
+              {team ? [team.season, [team.division, team.age_group].filter(Boolean).join(" · ")].filter(Boolean).join(" · ") : "2026-27 · AAA Midget"}
+            </p>
           </div>
         </div>
       </div>
