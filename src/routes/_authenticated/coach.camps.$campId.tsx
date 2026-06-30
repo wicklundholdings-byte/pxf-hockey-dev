@@ -1281,6 +1281,86 @@ function RsvpRow({ color, label, value }: { color: string; label: string; value:
   );
 }
 
+function DayRsvpPanel({ sessionId, campId }: { sessionId: string; campId: string }) {
+  type Row = {
+    id: string;
+    status: string;
+    responded_at: string | null;
+    registration_id: string;
+  };
+  const [rows, setRows] = useState<Row[] | null>(null);
+  const [names, setNames] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setRows(null);
+      const { data } = await (supabase as any)
+        .from("daily_rsvps")
+        .select("id,status,responded_at,registration_id")
+        .eq("camp_session_id", sessionId);
+      if (cancelled) return;
+      const list = (data ?? []) as Row[];
+      setRows(list);
+      const regIds = list.map((r) => r.registration_id);
+      if (regIds.length) {
+        const { data: regs } = await supabase
+          .from("registrations")
+          .select("id, attendees(full_name), contacts(full_name)")
+          .in("id", regIds)
+          .eq("camp_id", campId);
+        const map: Record<string, string> = {};
+        ((regs ?? []) as any[]).forEach((r) => {
+          map[r.id] = r.attendees?.full_name ?? r.contacts?.full_name ?? "Athlete";
+        });
+        if (!cancelled) setNames(map);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [sessionId, campId]);
+
+  if (rows === null) {
+    return <p className="mt-3 text-center text-[10px] text-muted-foreground">Loading RSVPs…</p>;
+  }
+  const attending = rows.filter((r) => r.status === "attending" || r.status === "yes");
+  const notAttending = rows.filter((r) => r.status !== "attending" && r.status !== "yes");
+  function row(r: Row, tone: "green" | "grey") {
+    const name = names[r.registration_id] ?? "Athlete";
+    const initials = name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+    const time = r.responded_at ? new Date(r.responded_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "No response";
+    return (
+      <li key={r.id} className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2">
+        <div className={"grid h-7 w-7 place-items-center rounded-full text-[10px] font-bold " + (tone === "green" ? "bg-emerald-400/15 text-emerald-400" : "bg-muted/30 text-muted-foreground")}>{initials}</div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[12px] font-semibold text-foreground">{name}</p>
+          <p className="text-[10px] text-muted-foreground">{r.status} · {time}</p>
+        </div>
+        {tone === "green" ? <Check size={14} className="text-emerald-400" /> : <Circle size={12} className="text-muted-foreground" />}
+      </li>
+    );
+  }
+  return (
+    <div className="mt-4 border-t border-border pt-3">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Day RSVPs</p>
+      {rows.length === 0 ? (
+        <p className="mt-2 text-center text-[11px] text-muted-foreground">No RSVPs yet.</p>
+      ) : (
+        <div className="mt-2 space-y-3">
+          <div>
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400">Attending ({attending.length})</p>
+            <ul className="space-y-1">{attending.map((r) => row(r, "green"))}</ul>
+            {attending.length === 0 && <p className="text-[10px] text-muted-foreground">None yet.</p>}
+          </div>
+          <div>
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Not Attending / No Response ({notAttending.length})</p>
+            <ul className="space-y-1">{notAttending.map((r) => row(r, "grey"))}</ul>
+            {notAttending.length === 0 && <p className="text-[10px] text-muted-foreground">None.</p>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function FinancialsPanel({ regs }: { regs: Reg[] }) {
   const paid = regs.filter((r) => r.status === "paid");
   const pending = regs.filter((r) => r.status === "pending");
