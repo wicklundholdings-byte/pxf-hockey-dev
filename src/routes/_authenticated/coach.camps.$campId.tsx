@@ -106,6 +106,7 @@ function CampDetailPage() {
   const [scanFlash, setScanFlash] = useState<string | null>(null);
   const [todayAttendance, setTodayAttendance] = useState<Map<string, boolean>>(new Map());
   const [completions, setCompletions] = useState<Record<string, SessionRunRecord>>({});
+  const [statsView, setStatsView] = useState<null | "paid" | "pending">(null);
 
   useEffect(() => {
     setCompletions(readCampCompletions(campId));
@@ -292,9 +293,19 @@ function CampDetailPage() {
 
       {/* Quick stats */}
       <div className="grid grid-cols-3 gap-2">
-        <Stat label="Paid" value={String(stats.paid)} tone="green" />
-        <Stat label="Pending" value={String(stats.pending)} tone="amber" />
-        <Stat label="Revenue" value={`$${(stats.revenue / 100).toLocaleString()}`} tone="teal" />
+        <Stat label="Paid" value={String(stats.paid)} tone="green" onClick={() => setStatsView("paid")} />
+        <Stat label="Pending" value={String(stats.pending)} tone="amber" onClick={() => setStatsView("pending")} />
+        <Stat
+          label="Revenue"
+          value={`$${(stats.revenue / 100).toLocaleString()}`}
+          tone="teal"
+          onClick={() => {
+            setMore("financials");
+            requestAnimationFrame(() => {
+              document.getElementById("camp-more-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+          }}
+        />
       </div>
 
       {(camp.venue_name || camp.address) && camp.location_type !== "online" && (
@@ -382,6 +393,7 @@ function CampDetailPage() {
           noResponse={todayNoResponse}
           hasSession={!!todaySession}
           campId={campId}
+          startDate={camp.start_date}
         />
       </div>
 
@@ -400,7 +412,7 @@ function CampDetailPage() {
       )}
 
       {/* More section */}
-      <section className="space-y-2 pt-2">
+      <section id="camp-more-section" className="space-y-2 pt-2">
         <h2 className="text-[10px] font-bold uppercase tracking-wider text-foreground">More</h2>
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
           <MoreRow icon={Hourglass} label="Waitlist" count={wait.length} open={more === "waitlist"} onClick={() => setMore(more === "waitlist" ? null : "waitlist")} />
@@ -428,6 +440,67 @@ function CampDetailPage() {
       {scannerOpen && (
         <QRScannerModal onScan={handleScan} onClose={() => setScannerOpen(false)} />
       )}
+
+      {statsView && (
+        <PaymentStatusSheet
+          view={statsView}
+          regs={regs}
+          onClose={() => setStatsView(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function PaymentStatusSheet({ view, regs, onClose }: { view: "paid" | "pending"; regs: Reg[]; onClose: () => void }) {
+  const rows = regs.filter((r) => (view === "paid" ? r.status === "paid" : r.status === "pending"));
+  const [sent, setSent] = useState<Set<string>>(new Set());
+  function sendReminder(reg: Reg) {
+    setSent((p) => new Set(p).add(reg.id));
+    toast.success(`Reminder sent to ${reg.contacts?.full_name ?? "parent"}`);
+  }
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-4" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-bold text-foreground">{view === "paid" ? "Paid athletes" : "Pending payments"}</h3>
+          <button onClick={onClose} className="text-muted-foreground"><X size={14} /></button>
+        </div>
+        {rows.length === 0 ? (
+          <p className="py-6 text-center text-xs text-muted-foreground">Nothing here yet.</p>
+        ) : (
+          <ul className="max-h-[60vh] space-y-2 overflow-y-auto">
+            {rows.map((r) => {
+              const name = r.attendees?.full_name ?? r.contacts?.full_name ?? "Athlete";
+              const initials = name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+              const amount = `$${((r.amount_cents ?? 0) / 100).toFixed(0)}`;
+              const date = new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+              return (
+                <li key={r.id} className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3">
+                  <div className={"grid h-9 w-9 place-items-center rounded-full text-[11px] font-bold " + (view === "paid" ? "bg-emerald-400/15 text-emerald-400" : "bg-amber-400/15 text-amber-400")}>{initials}</div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-foreground">{name}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {view === "paid" ? `Paid ${amount} · ${date}` : `Owes ${amount} · registered ${date}`}
+                    </p>
+                  </div>
+                  {view === "paid" ? (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-teal">View</span>
+                  ) : (
+                    <button
+                      onClick={() => sendReminder(r)}
+                      disabled={sent.has(r.id)}
+                      className={"rounded-full px-3 py-1.5 text-[10px] font-bold " + (sent.has(r.id) ? "bg-emerald-400/15 text-emerald-400" : "bg-gradient-brand text-primary-foreground")}
+                    >
+                      {sent.has(r.id) ? "Sent ✓" : "Send Reminder"}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
