@@ -351,12 +351,27 @@ function mkItem(
   };
 }
 
-function TravelTab() {
+type ScheduleFilter = "All" | "Games" | "Transport" | "Accommodation" | "Team Functions" | "My RSVPs";
+
+function itemMatchesFilter(it: ItineraryItem, f: ScheduleFilter): boolean {
+  switch (f) {
+    case "All": return true;
+    case "Games": return it.type === "Game";
+    case "Transport": return it.type === "Transport";
+    case "Accommodation": return it.type === "Hotel";
+    case "Team Functions": return it.type === "Meal" || it.type === "Activity" || it.type === "Curfew" || it.type === "Other";
+    case "My RSVPs": return it.rsvp;
+  }
+}
+
+function ScheduleTab({ readonly: _readonly }: { readonly?: boolean }) {
   const [days, setDays] = useState(SEED);
   const [editMode, setEditMode] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [editing, setEditing] = useState<{ dayIdx: number; itemIdx: number } | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [filter, setFilter] = useState<ScheduleFilter>("All");
+  const [calOpen, setCalOpen] = useState(false);
 
   function updateItem(dayIdx: number, itemIdx: number, patch: Partial<ItineraryItem>) {
     setDays((d) => d.map((day, di) => di !== dayIdx ? day : {
@@ -383,8 +398,6 @@ function TravelTab() {
 
   return (
     <div className="space-y-4">
-      <AccommodationSection />
-
       {dirty && (
         <div className="sticky top-[140px] z-10 flex items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/15 px-3 py-2 backdrop-blur">
           <p className="text-[11px] font-bold text-amber-300">Draft — changes not yet sent to team</p>
@@ -395,32 +408,56 @@ function TravelTab() {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Day-by-day Itinerary</p>
+      <div className="flex items-center justify-between gap-2">
+        <div className="-mx-1 flex flex-1 gap-1.5 overflow-x-auto no-scrollbar">
+          {(["All", "Games", "Transport", "Accommodation", "Team Functions", "My RSVPs"] as ScheduleFilter[]).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={
+                "shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors " +
+                (filter === f ? "bg-teal text-background" : "border border-border bg-surface text-muted-foreground")
+              }
+            >
+              {f}
+            </button>
+          ))}
+        </div>
         <button
           onClick={() => setEditMode((v) => !v)}
-          className={"rounded-full border px-3 py-1.5 text-[11px] font-bold " + (editMode ? "border-teal bg-teal text-background" : "border-teal text-teal")}
+          className={"shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold " + (editMode ? "border-teal bg-teal text-background" : "border-teal text-teal")}
         >
-          {editMode ? "Done" : <><Pencil size={12} className="mr-1 inline" /> Edit Itinerary</>}
+          {editMode ? "Done" : <><Pencil size={12} className="mr-1 inline" /> Edit Schedule</>}
         </button>
       </div>
 
+      <button onClick={() => setCalOpen(true)} className="inline-flex items-center gap-1 text-[11px] font-bold text-teal">
+        <CalendarIcon size={12} /> + Add to Calendar
+      </button>
+
       <div className="space-y-4">
-        {days.map((d, dayIdx) => (
-          <DaySection
-            key={d.day}
-            day={d}
-            editMode={editMode}
-            onEditItem={(itemIdx) => setEditing({ dayIdx, itemIdx })}
-            onDeleteItem={(itemIdx) => deleteItem(dayIdx, itemIdx)}
-            onAddItem={(atIdx) => addItem(dayIdx, atIdx)}
-            onRsvp={(itemIdx, key, status) =>
-              updateItem(dayIdx, itemIdx, {
-                responses: { ...d.items[itemIdx].responses, [key]: status },
-              })
-            }
-          />
-        ))}
+        {days.map((d, dayIdx) => {
+          const visible = d.items
+            .map((it, i) => ({ it, i }))
+            .filter(({ it }) => itemMatchesFilter(it, filter));
+          if (visible.length === 0 && !editMode) return null;
+          return (
+            <DaySection
+              key={d.day}
+              day={d}
+              visibleIdx={visible.map((v) => v.i)}
+              editMode={editMode}
+              onEditItem={(itemIdx) => setEditing({ dayIdx, itemIdx })}
+              onDeleteItem={(itemIdx) => deleteItem(dayIdx, itemIdx)}
+              onAddItem={(atIdx) => addItem(dayIdx, atIdx)}
+              onRsvp={(itemIdx, key, status) =>
+                updateItem(dayIdx, itemIdx, {
+                  responses: { ...d.items[itemIdx].responses, [key]: status },
+                })
+              }
+            />
+          );
+        })}
       </div>
 
       {editing && (
@@ -454,14 +491,17 @@ function TravelTab() {
           onPublish={() => { setDirty(false); setEditMode(false); setConfirmOpen(false); }}
         />
       )}
+
+      {calOpen && <CalendarExportSheet onClose={() => setCalOpen(false)} />}
     </div>
   );
 }
 
 function DaySection({
-  day, editMode, onEditItem, onDeleteItem, onAddItem, onRsvp,
+  day, visibleIdx, editMode, onEditItem, onDeleteItem, onAddItem, onRsvp,
 }: {
   day: { day: string; items: ItineraryItem[] };
+  visibleIdx: number[];
   editMode: boolean;
   onEditItem: (i: number) => void;
   onDeleteItem: (i: number) => void;
@@ -469,6 +509,7 @@ function DaySection({
   onRsvp: (itemIdx: number, key: string, status: RsvpStatus) => void;
 }) {
   const [open, setOpen] = useState(true);
+  const indices = editMode ? day.items.map((_, i) => i) : visibleIdx;
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-surface">
       <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between px-3 py-3 text-left">
@@ -477,9 +518,11 @@ function DaySection({
       </button>
       {open && (
         <div className="border-t border-border px-3 py-3">
-          {day.items.map((it, i) => (
+          {indices.map((i, pos) => {
+            const it = day.items[i];
+            return (
             <div key={it.id}>
-              {editMode && i > 0 && (
+              {editMode && pos > 0 && (
                 <button onClick={() => onAddItem(i)} className="my-1 flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-border py-1 text-[10px] font-bold text-muted-foreground">
                   <Plus size={10} /> Add Item
                 </button>
@@ -492,7 +535,7 @@ function DaySection({
                 onRsvp={(key, status) => onRsvp(i, key, status)}
               />
             </div>
-          ))}
+          )})}
           {editMode && (
             <button onClick={() => onAddItem()} className="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-teal/50 py-2 text-[11px] font-bold text-teal">
               <Plus size={12} /> Add Item
