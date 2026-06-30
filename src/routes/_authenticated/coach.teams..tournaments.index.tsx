@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus, MapPin, Calendar } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/tournaments/")({
+export const Route = createFileRoute("/_authenticated/coach/teams/tournaments/")({
   component: TournamentsTab,
 });
 
