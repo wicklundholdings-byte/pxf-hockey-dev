@@ -155,11 +155,24 @@ function EliteCoachDashboard() {
       // Camp Day X of Y + next session
       const todayIso2 = new Date().toISOString().slice(0, 10);
       const activeCampIds = campsRows.filter((cc) => cc.status === "live").map((cc) => cc.id);
+      const map = new Map<string, { day: number; total: number; next: { date: string; start: string | null } | null }>();
+      // Fallback: derive Day X of Y from camp start_date/end_date for every active camp
+      campsRows.filter((cc) => cc.status === "live").forEach((cc) => {
+        if (!cc.start_date || !cc.end_date) return;
+        const start = new Date(cc.start_date + "T00:00:00");
+        const end = new Date(cc.end_date + "T00:00:00");
+        const msPerDay = 86400000;
+        const total = Math.max(1, Math.round((end.getTime() - start.getTime()) / msPerDay) + 1);
+        const today = new Date(todayIso2 + "T00:00:00");
+        let day = Math.round((today.getTime() - start.getTime()) / msPerDay) + 1;
+        if (day < 1) day = 1;
+        if (day > total) day = total;
+        map.set(cc.id, { day, total, next: null });
+      });
       if (activeCampIds.length) {
         const { data: csAll } = await supabase
           .from("camp_sessions").select("id,camp_id,session_date,start_time,end_time")
           .in("camp_id", activeCampIds).order("session_date");
-        const map = new Map<string, { day: number; total: number; next: { date: string; start: string | null } | null }>();
         const byCamp = new Map<string, CampSession[]>();
         ((csAll ?? []) as CampSession[]).forEach((s) => {
           const arr = byCamp.get(s.camp_id) ?? [];
@@ -172,8 +185,8 @@ function EliteCoachDashboard() {
           const next = arr.find((s) => s.session_date >= todayIso2) ?? null;
           map.set(cid, { day, total, next: next ? { date: next.session_date, start: next.start_time } : null });
         });
-        setCampDayMap(map);
       }
+      setCampDayMap(map);
 
       // Missing health forms
       const attendeeIds = Array.from(new Set(regsRows.map((x) => x.attendee_id).filter(Boolean) as string[]));
