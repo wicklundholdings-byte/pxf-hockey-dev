@@ -312,21 +312,7 @@ function TeamDashboard() {
         </div>
       </section>
 
-      {/* 11. CREATE PRACTICE */}
-      <button
-        onClick={() => setCreateOpen(true)}
-        className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 text-sm font-bold text-background shadow-glow-teal active:opacity-90"
-      >
-        <Plus size={16} /> Create Practice
-      </button>
-
-      {createOpen && (
-        <CreatePracticeSheet
-          teamId={teamId}
-          onClose={() => setCreateOpen(false)}
-          onSaved={() => { setCreateOpen(false); refreshEvents(); }}
-        />
-      )}
+      {/* Create Practice moved to More tab */}
     </div>
   );
 }
