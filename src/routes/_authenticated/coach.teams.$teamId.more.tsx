@@ -13,7 +13,7 @@ function TeamMoreTab() {
   const [createOpen, setCreateOpen] = useState(false);
 
   const rows: { to: any; label: string; subtitle: string; Icon: any }[] = [
-    { to: "/coach/teams/$teamId/playbook", label: "Media", subtitle: "2 videos · 4 photos", Icon: Camera },
+    { to: "/coach/teams/$teamId/media", label: "Media", subtitle: "2 videos · 4 photos", Icon: Camera },
     { to: "/coach/teams/$teamId/payments", label: "Payments", subtitle: "$700 outstanding", Icon: DollarSign },
     { to: "/coach/teams/$teamId/schedule", label: "Tournaments", subtitle: "0 active tournaments", Icon: Trophy },
     { to: "/coach/teams/$teamId/schedule", label: "Practice Plans", subtitle: "3 saved plans", Icon: ClipboardList },
