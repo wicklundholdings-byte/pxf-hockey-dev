@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { TeamEventRow } from "@/components/teams/team-event-row";
 import { useCurrentTier } from "@/hooks/use-tier";
 import { useAuth } from "@/hooks/use-auth";
+import { useHasStaff } from "@/hooks/use-has-staff";
 import { useEliteRole } from "@/hooks/use-elite-role";
 import { LocationPicker } from "@/components/coach/location-picker";
 
@@ -77,6 +78,7 @@ function fmtCampRange(s: string | null, e?: string | null) {
 
 function EliteCoachDashboard() {
   const { user } = useAuth();
+  const { hasStaff } = useHasStaff();
   const [coachName, setCoachName] = useState("");
   const [camps, setCamps] = useState<Camp2[]>([]);
   const [regs, setRegs] = useState<Reg[]>([]);
@@ -150,7 +152,7 @@ function EliteCoachDashboard() {
       setRegs(regsRows);
       const staffed = new Set(((st.data as any[]) ?? []).map((row) => row.camp_id as string));
       const upcomingCamps = campsRows.filter((cc) => cc.status !== "ended");
-      setUnassignedCampIds(upcomingCamps.filter((cc) => !staffed.has(cc.id)).map((cc) => cc.id));
+      setUnassignedCampIds(hasStaff ? upcomingCamps.filter((cc) => !staffed.has(cc.id)).map((cc) => cc.id) : []);
 
       // Camp Day X of Y + next session
       const todayIso2 = new Date().toISOString().slice(0, 10);
@@ -307,7 +309,7 @@ function EliteCoachDashboard() {
         todayList.push({
           id: x.id, kind: "private", title: x.athlete_name || "Private",
           location: x.location ?? null, start_time: x.start_time,
-          instructor: x.assigned_coach_id ? null : "Unassigned",
+          instructor: x.assigned_coach_id || !hasStaff ? null : "Unassigned",
           rsvp_confirmed: null, rsvp_total: null,
           link: { to: "/coach/bookings", params: {} },
         });
@@ -320,7 +322,7 @@ function EliteCoachDashboard() {
         todayList.push({
           id: x.id, kind: "ice", title: "Ice Time",
           location: x.location ?? null, start_time: x.start_time,
-          instructor: x.booked_by_coach_id ? null : "Unassigned",
+          instructor: x.booked_by_coach_id || !hasStaff ? null : "Unassigned",
           rsvp_confirmed: null, rsvp_total: null,
           link: { to: "/coach/ice", params: {} },
         });
@@ -362,7 +364,7 @@ function EliteCoachDashboard() {
         }
       }
     })();
-  }, [user?.id]);
+  }, [user?.id, hasStaff]);
 
   // Revenue MTD + trend vs last month-to-day
   const revenue = useMemo(() => {
@@ -620,7 +622,7 @@ function EliteCoachDashboard() {
                       {fmtEventDate(p.session_date)}{p.start_time ? ` · ${fmtTime(p.start_time)}` : ""}
                       {p.location ? ` · ${p.location}` : ""}
                     </p>
-                    {!p.assigned_coach_id && (
+                    {!p.assigned_coach_id && hasStaff && (
                       <p className="mt-0.5 text-[10px] font-semibold text-amber-400">⚠ Coach not assigned</p>
                     )}
                   </div>
@@ -854,6 +856,7 @@ function BookPrivateModal({ ownerId, onClose, onSaved }: { ownerId: string; onCl
 }
 
 function SinglePrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onClose: () => void; onSaved: () => void }) {
+  const { hasStaff } = useHasStaff();
   const [athleteName, setAthleteName] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [time, setTime] = useState("");
@@ -863,6 +866,9 @@ function SinglePrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
   const [fee, setFee] = useState("");
   const [notes, setNotes] = useState("");
   const [assignedCoachId, setAssignedCoachId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!hasStaff && !assignedCoachId) setAssignedCoachId(ownerId);
+  }, [hasStaff, ownerId]);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -951,6 +957,7 @@ function SinglePrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
 type DraftSession = { id: string; date: string; time: string; duration: string };
 
 function SeriesPrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onClose: () => void; onSaved: () => void }) {
+  const { hasStaff } = useHasStaff();
   const [seriesName, setSeriesName] = useState("");
   const [athleteName, setAthleteName] = useState("");
   const [location, setLocation] = useState("");
@@ -960,6 +967,9 @@ function SeriesPrivateForm({ ownerId, onClose, onSaved }: { ownerId: string; onC
   const [flatFee, setFlatFee] = useState("");
   const [notes, setNotes] = useState("");
   const [assignedCoachId, setAssignedCoachId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!hasStaff && !assignedCoachId) setAssignedCoachId(ownerId);
+  }, [hasStaff, ownerId]);
   const [sessions, setSessions] = useState<DraftSession[]>([
     { id: crypto.randomUUID(), date: new Date().toISOString().slice(0, 10), time: "", duration: "60" },
   ]);
