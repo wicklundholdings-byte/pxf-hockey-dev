@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, CheckCircle2, XCircle, Clock, ClipboardList, Trophy, BarChart3 } from "lucide-react";
 
@@ -69,6 +69,7 @@ const RSVP_SEED: Record<string, "yes" | "no" | "maybe"> = {
 
 function TournamentGameDetail() {
   const { teamId, tournamentId, gameId } = Route.useParams();
+  const navigate = useNavigate();
   const tournament = TOURNAMENTS[tournamentId] ?? { name: "Tournament" };
   const event = GAMES[gameId] ?? GAMES.g1;
   const players = PLAYERS;
@@ -119,10 +120,26 @@ function TournamentGameDetail() {
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <button className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-brand px-3 py-2 text-xs font-bold text-primary-foreground shadow-glow-teal">
+        <button
+          onClick={() =>
+            navigate({
+              to: "/coach/teams/$teamId/schedule/$eventId/game-prep",
+              params: { teamId, eventId: gameId },
+            })
+          }
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-brand px-3 py-2 text-xs font-bold text-primary-foreground shadow-glow-teal active:opacity-90"
+        >
           <Trophy size={14} /> Game Prep
         </button>
-        <button className="inline-flex items-center justify-center gap-2 rounded-xl border border-teal/40 bg-teal/10 px-3 py-2 text-xs font-bold text-teal">
+        <button
+          onClick={() =>
+            navigate({
+              to: "/coach/teams/$teamId/stats",
+              params: { teamId },
+            })
+          }
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-teal/40 bg-teal/10 px-3 py-2 text-xs font-bold text-teal active:opacity-90"
+        >
           <BarChart3 size={14} /> Stats
         </button>
       </div>
