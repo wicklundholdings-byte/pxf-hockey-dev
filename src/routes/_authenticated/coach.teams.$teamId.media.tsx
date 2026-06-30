@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Play, Upload, X, ChevronLeft } from "lucide-react";
+import { Play, X, ChevronLeft, ChevronRight, Film, Camera } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/media")({
   component: TeamMediaScreen,
@@ -27,14 +27,24 @@ function TeamMediaScreen() {
 
   const hasContent = mockVideos.length > 0 || mockPhotos.length > 0;
 
+  const openPreview = (id: string, type: "video" | "photo") => {
+    setPreviewId(id);
+    setPreviewType(type);
+  };
+
+  const closePreview = () => {
+    setPreviewId(null);
+    setPreviewType(null);
+  };
+
   return (
-    <div className="space-y-5 pb-10">
+    <div className="space-y-6 pb-10">
       {/* Header */}
       <div className="flex items-center gap-2">
         <Link
           to="/coach/teams/$teamId/more"
           params={{ teamId } as any}
-          className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-surface px-3 py-1.5 text-[12px] font-semibold text-foreground/80 transition-colors hover:text-foreground"
+          className="inline-flex items-center gap-0.5 rounded-full border border-border/60 bg-surface px-3 py-1.5 text-[12px] font-semibold text-foreground/80 transition-colors hover:text-foreground"
         >
           <ChevronLeft size={14} />
           <span>More</span>
@@ -59,26 +69,33 @@ function TeamMediaScreen() {
               <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Film
               </h2>
-              <button className="text-[11px] font-semibold text-teal">+ Upload</button>
+              <button className="flex items-center gap-0.5 text-[11px] font-semibold text-teal">
+                See All
+                <ChevronRight size={12} />
+              </button>
             </div>
             <div className="grid grid-cols-2 gap-2">
               {mockVideos.map((v) => (
                 <button
                   key={v.id}
-                  onClick={() => {
-                    setPreviewId(v.id);
-                    setPreviewType("video");
-                  }}
-                  className="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-2 text-left"
+                  onClick={() => openPreview(v.id, "video")}
+                  className="relative h-[100px] overflow-hidden rounded-xl text-left"
+                  style={{ backgroundColor: "#131313" }}
                 >
+                  {/* Film reel icon placeholder */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="grid h-10 w-10 place-items-center rounded-full bg-background/60 backdrop-blur-sm">
-                      <Play size={18} className="ml-0.5 text-foreground" />
+                    <Film size={24} className="text-foreground/20" />
+                  </div>
+                  {/* Play button overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="grid h-9 w-9 place-items-center rounded-full bg-white/90 shadow-lg">
+                      <Play size={16} className="ml-0.5 text-black" fill="black" />
                     </div>
                   </div>
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent px-2.5 pb-2 pt-8">
-                    <p className="truncate text-[11px] font-bold">{v.title}</p>
-                    <p className="text-[10px] text-muted-foreground">{v.date}</p>
+                  {/* Bottom gradient overlay */}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-2.5 pb-2 pt-6">
+                    <p className="truncate text-[11px] font-bold text-white">{v.title}</p>
+                    <p className="text-[10px] text-white/70">{v.date}</p>
                   </div>
                 </button>
               ))}
@@ -91,21 +108,27 @@ function TeamMediaScreen() {
               <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Photos
               </h2>
-              <button className="text-[11px] font-semibold text-teal">+ Upload</button>
+              <button className="flex items-center gap-0.5 text-[11px] font-semibold text-teal">
+                See All
+                <ChevronRight size={12} />
+              </button>
             </div>
             <div className="grid grid-cols-2 gap-2">
               {mockPhotos.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => {
-                    setPreviewId(p.id);
-                    setPreviewType("photo");
-                  }}
-                  className="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-2 text-left"
+                  onClick={() => openPreview(p.id, "photo")}
+                  className="relative h-[100px] overflow-hidden rounded-xl text-left"
+                  style={{ backgroundColor: "#131313" }}
                 >
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent px-2.5 pb-2 pt-8">
-                    <p className="truncate text-[11px] font-bold">{p.title}</p>
-                    <p className="text-[10px] text-muted-foreground">{p.date}</p>
+                  {/* Camera icon placeholder */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Camera size={24} className="text-foreground/20" />
+                  </div>
+                  {/* Bottom gradient overlay */}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-2.5 pb-2 pt-6">
+                    <p className="truncate text-[11px] font-bold text-white">{p.title}</p>
+                    <p className="text-[10px] text-white/70">{p.date}</p>
                   </div>
                 </button>
               ))}
@@ -114,37 +137,31 @@ function TeamMediaScreen() {
         </>
       )}
 
-      {/* Preview Modal */}
-      {previewId && (
+      {/* Fullscreen Preview */}
+      {previewId && previewType && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm"
-          onClick={() => {
-            setPreviewId(null);
-            setPreviewType(null);
-          }}
+          className="fixed inset-0 z-50 flex flex-col bg-black"
+          onClick={closePreview}
         >
-          <div
-            className="relative mx-4 w-full max-w-md rounded-2xl border border-border bg-surface p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
+          {/* Close button */}
+          <div className="absolute top-0 right-0 z-10 p-4">
             <button
-              onClick={() => {
-                setPreviewId(null);
-                setPreviewType(null);
-              }}
-              className="absolute top-3 right-3"
+              onClick={closePreview}
+              className="grid h-9 w-9 place-items-center rounded-full bg-white/10 backdrop-blur-sm"
             >
-              <X size={16} className="text-muted-foreground" />
+              <X size={18} className="text-white" />
             </button>
-            <div className="flex flex-col items-center gap-3 py-8">
-              <div className="grid h-14 w-14 place-items-center rounded-full bg-surface-2">
-                {previewType === "video" ? (
-                  <Play size={24} className="text-teal" />
-                ) : (
-                  <Upload size={24} className="text-teal" />
-                )}
-              </div>
-              <p className="text-sm font-semibold">
+          </div>
+
+          {/* Content area */}
+          <div className="flex flex-1 items-center justify-center p-6">
+            <div className="flex flex-col items-center gap-4 text-center">
+              {previewType === "video" ? (
+                <Film size={48} className="text-foreground/30" />
+              ) : (
+                <Camera size={48} className="text-foreground/30" />
+              )}
+              <p className="text-sm font-semibold text-white">
                 {previewType === "video" ? "Video Preview" : "Photo Preview"}
               </p>
               <p className="text-xs text-muted-foreground">
