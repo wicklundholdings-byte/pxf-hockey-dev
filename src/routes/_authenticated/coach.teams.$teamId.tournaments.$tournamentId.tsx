@@ -302,24 +302,37 @@ const ROSTER = [
 ];
 
 const SEED: { day: string; items: ItineraryItem[] }[] = [
-  { day: "JUL 18 — FRIDAY", items: [
-    mkItem("bus1", "Transport", "Bus departs Surrey Sport & Leisure", "6:30 AM", "Surrey Sport & Leisure", { busCapacity: 14, mix: { yes: 9, no: 2, maybe: 1 } }),
-    mkItem("g1", "Game", "GAME 1 vs. Burnaby Winter Club", "9:00 AM", "Rink 1 · Langley Events Centre"),
-    mkItem("l1", "Meal", "Team lunch", "12:00 PM", "Boston Pizza Langley", { mix: { yes: 10, no: 1, maybe: 1 } }),
-    mkItem("h1", "Hotel", "Hotel check-in", "2:00 PM", "Sandman Hotel Langley · 8765 202 St", { mix: { yes: 10, no: 2 } }),
+  { day: "FRIDAY · JUL 18", items: [
+    mkItem("bus1", "Transport", "Bus Departure", "6:30 AM", "Surrey Sport & Leisure parking lot", { busCapacity: 14, mix: { yes: 9, no: 2, maybe: 1 } }),
+    mkItem("g1", "Game", "GAME 1 vs. Burnaby Winter Club", "9:00 AM", "Rink 1 · Langley Events Centre", { result: "3–1 WIN" }),
+    mkItem("l1", "Meal", "Team Lunch", "12:00 PM", "Boston Pizza Langley", { mix: { yes: 11, no: 1, maybe: 2 } }),
+    mkItem("h1", "Hotel", "Hotel Check-in", "2:00 PM", "Sandman Hotel Langley", { mix: { yes: 10, no: 2 } }),
+    mkItem("sk1", "Game", "Optional Skate", "5:30 PM", "Rink 3 · Langley Events Centre"),
+    mkItem("d1", "Meal", "Team Dinner", "7:00 PM", "Cactus Club · Families welcome", { mix: { yes: 13, no: 1 } }),
     mkItem("c1", "Curfew", "Curfew — players in rooms", "10:00 PM", "Hotel"),
   ]},
-  { day: "JUL 19 — SATURDAY", items: [
-    mkItem("br2", "Meal", "Team breakfast", "8:00 AM", "Hotel lobby", { mix: { yes: 11, no: 0, maybe: 1 } }),
+  { day: "SATURDAY · JUL 19", items: [
+    mkItem("br2", "Meal", "Team Breakfast", "8:00 AM", "Hotel Lobby"),
+    mkItem("bus2", "Transport", "Bus to Rink", "9:30 AM", "Hotel Lobby", { busCapacity: 14 }),
     mkItem("g2", "Game", "GAME 2 vs. Coquitlam Express", "2:00 PM", "Rink 3 · Langley Events Centre"),
-    mkItem("a2", "Activity", "Team bowling", "5:00 PM", "Langley Bowl & Entertainment", { mix: { yes: 8, no: 2, maybe: 2 } }),
+    mkItem("a2", "Activity", "Team Activity", "5:00 PM", "Langley Bowl", { mix: { yes: 8, no: 2, maybe: 2 } }),
+    mkItem("d2", "Meal", "Team Dinner", "8:00 PM", "The Keg"),
     mkItem("c2", "Curfew", "Curfew", "10:00 PM", "Hotel"),
+  ]},
+  { day: "SUNDAY · JUL 20", items: [
+    mkItem("br3", "Meal", "Team Breakfast", "8:30 AM", "Hotel Lobby"),
+    mkItem("g3", "Game", "GAME 3 vs. North Delta Lightning", "11:00 AM", "Rink 2 · Langley Events Centre"),
+    mkItem("po1", "Other", "Playoff TBD — based on standings", "2:30 PM", ""),
+  ]},
+  { day: "MONDAY · JUL 21", items: [
+    mkItem("po2", "Game", "Playoff Games (if advancing)", "TBD", "Langley Events Centre"),
+    mkItem("busr", "Transport", "Bus Return", "6:00 PM", "Departs Langley Events Centre", { busCapacity: 14 }),
   ]},
 ];
 
 function mkItem(
   id: string, type: ItemType, title: string, time: string, location: string,
-  extra?: { busCapacity?: number; mix?: { yes: number; no: number; maybe?: number } }
+  extra?: { busCapacity?: number; mix?: { yes: number; no: number; maybe?: number }; result?: string }
 ): ItineraryItem {
   const options = defaultOptions(type);
   const responses: Record<string, RsvpStatus> = {};
@@ -333,6 +346,7 @@ function mkItem(
     id, type, title, time, location,
     rsvp: RSVP_DEFAULTS[type], options, responses,
     busCapacity: extra?.busCapacity,
+    result: extra?.result,
   };
 }
 
