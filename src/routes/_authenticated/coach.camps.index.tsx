@@ -160,7 +160,7 @@ function CampsPage() {
   );
 
   // All-tab merged list
-  type Merged = { key: string; sortDate: string; sortTime: string; node: JSX.Element };
+  type Merged = { key: string; sortDate: string; sortTime: string; node: React.ReactNode };
   const merged: Merged[] = useMemo(() => {
     const items: Merged[] = [];
     filteredCamps.forEach((c) => {
