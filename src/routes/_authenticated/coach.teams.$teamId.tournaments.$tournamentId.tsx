@@ -61,7 +61,7 @@ function TournamentDetail() {
 
       <div className="pt-4">
         {tab === "Overview" && <OverviewTab onJumpStandings={() => setTab("Schedule")} />}
-        {tab === "Schedule" && <ScheduleTab readonly={t.readonly} />}
+        {tab === "Schedule" && <ScheduleTab editMode={editMode} setEditMode={setEditMode} />}
         {tab === "Roster" && <RosterTab />}
         {tab === "Logistics" && <LogisticsTab />}
         {tab === "Payments" && <PaymentsTab />}
