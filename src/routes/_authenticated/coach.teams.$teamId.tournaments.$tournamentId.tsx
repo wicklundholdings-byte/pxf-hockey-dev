@@ -22,6 +22,7 @@ function TournamentDetail() {
   const { teamId, tournamentId } = Route.useParams();
   const t = DATA[tournamentId] ?? { name: "Tournament", dates: "", city: "", status: "" };
   const [tab, setTab] = useState<Tab>("Overview");
+  const [editMode, setEditMode] = useState(false);
 
   return (
     <div className="pb-10">
@@ -38,9 +39,20 @@ function TournamentDetail() {
             <h2 className="font-display text-xl font-bold leading-tight">{t.name}</h2>
             <p className="mt-1 text-xs text-muted-foreground">{t.dates} · {t.city}</p>
           </div>
-          {t.status && (
-            <span className="shrink-0 rounded-full bg-teal/20 px-2 py-1 text-[10px] font-bold text-teal">{t.status}</span>
-          )}
+          <div className="flex items-center gap-2">
+            {tab === "Schedule" && !IS_PARENT && (
+              <button
+                onClick={() => setEditMode((v) => !v)}
+                className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-surface text-muted-foreground"
+                aria-label={editMode ? "Done editing" : "Edit schedule"}
+              >
+                {editMode ? <Check size={14} className="text-teal" /> : <Pencil size={14} />}
+              </button>
+            )}
+            {t.status && (
+              <span className="shrink-0 rounded-full bg-teal/20 px-2 py-1 text-[10px] font-bold text-teal">{t.status}</span>
+            )}
+          </div>
         </div>
 
         <div className="mt-3 -mx-1 flex gap-1 overflow-x-auto border-b border-border no-scrollbar">
@@ -61,7 +73,7 @@ function TournamentDetail() {
 
       <div className="pt-4">
         {tab === "Overview" && <OverviewTab onJumpStandings={() => setTab("Schedule")} />}
-        {tab === "Schedule" && <ScheduleTab readonly={t.readonly} />}
+        {tab === "Schedule" && <ScheduleTab editMode={editMode} setEditMode={setEditMode} />}
         {tab === "Roster" && <RosterTab />}
         {tab === "Logistics" && <LogisticsTab />}
         {tab === "Payments" && <PaymentsTab />}
@@ -354,7 +366,7 @@ function mkItem(
   };
 }
 
-type ScheduleFilter = "All" | "Games" | "Transport" | "Accommodation" | "Team Functions" | "My RSVPs";
+type ScheduleFilter = "All" | "Games" | "Transport" | "Accommodation" | "Team Functions";
 
 function itemMatchesFilter(it: ItineraryItem, f: ScheduleFilter): boolean {
   switch (f) {
@@ -363,13 +375,11 @@ function itemMatchesFilter(it: ItineraryItem, f: ScheduleFilter): boolean {
     case "Transport": return it.type === "Transport";
     case "Accommodation": return it.type === "Hotel";
     case "Team Functions": return it.type === "Meal" || it.type === "Activity" || it.type === "Curfew" || it.type === "Other";
-    case "My RSVPs": return it.rsvp;
   }
 }
 
-function ScheduleTab({ readonly: _readonly }: { readonly?: boolean }) {
+function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode: React.Dispatch<React.SetStateAction<boolean>> }) {
   const [days, setDays] = useState(SEED);
-  const [editMode, setEditMode] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [editing, setEditing] = useState<{ dayIdx: number; itemIdx: number } | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -411,27 +421,19 @@ function ScheduleTab({ readonly: _readonly }: { readonly?: boolean }) {
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-2">
-        <div className="-mx-1 flex flex-1 gap-1.5 overflow-x-auto no-scrollbar">
-          {(["All", "Games", "Transport", "Accommodation", "Team Functions", "My RSVPs"] as ScheduleFilter[]).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={
-                "shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors " +
-                (filter === f ? "bg-teal text-background" : "border border-border bg-surface text-muted-foreground")
-              }
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-        <button
-          onClick={() => setEditMode((v) => !v)}
-          className={"shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold " + (editMode ? "border-teal bg-teal text-background" : "border-teal text-teal")}
-        >
-          {editMode ? "Done" : <><Pencil size={12} className="mr-1 inline" /> Edit Schedule</>}
-        </button>
+      <div className="-mx-1 flex gap-1.5 overflow-x-auto no-scrollbar">
+        {(["All", "Games", "Transport", "Accommodation", "Team Functions"] as ScheduleFilter[]).map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={
+              "shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors " +
+              (filter === f ? "bg-teal text-background" : "border border-border bg-surface text-muted-foreground")
+            }
+          >
+            {f}
+          </button>
+        ))}
       </div>
 
       <button onClick={() => setCalOpen(true)} className="inline-flex items-center gap-1 text-[11px] font-bold text-teal">
