@@ -638,7 +638,7 @@ function TeamEventsFeed() {
           <section>
             <h3 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Upcoming</h3>
             <div className="mt-2 space-y-2">
-              {upcoming.map((event) => <CampsTeamEventCard key={`up-${event.id}`} event={event} showSource />)}
+              {upcoming.map((event) => <FeedTeamEventCard key={`up-${event.id}`} event={event} showSource />)}
             </div>
           </section>
 
@@ -646,7 +646,7 @@ function TeamEventsFeed() {
             <section key={key}>
               <h3 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">{group.label}</h3>
               <div className="mt-2 space-y-2">
-                {group.items.slice(0, 3).map((event) => <CampsTeamEventCard key={`${key}-${event.id}`} event={event} />)}
+                {group.items.slice(0, 3).map((event) => <FeedTeamEventCard key={`${key}-${event.id}`} event={event} />)}
               </div>
             </section>
           ))}
@@ -656,7 +656,7 @@ function TeamEventsFeed() {
   );
 }
 
-function CampsTeamEventCard({ event, showSource }: { event: FeedEvent; showSource?: boolean }) {
+function FeedTeamEventCard({ event, showSource }: { event: FeedEvent; showSource?: boolean }) {
   const meta = FEED_META[event.kind];
   const Icon = meta.icon;
   return (
