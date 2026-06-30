@@ -1036,7 +1036,7 @@ const SEED_BILLETS: Billet[] = [
   },
 ];
 
-const ROSTER = [
+const BILLET_ROSTER = [
   "Liam Carter", "Owen Brooks", "Jake Andersson", "Mason Wong",
   "Ethan Reid", "Noah Park", "Lucas Tremblay", "Aiden Singh",
 ];
@@ -1262,7 +1262,7 @@ function BilletFormModal({
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Assign players</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
-              {ROSTER.map((p) => {
+              {BILLET_ROSTER.map((p) => {
                 const on = players.includes(p);
                 return (
                   <button
@@ -1291,7 +1291,7 @@ function BilletFormModal({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function BilletField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
       <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
