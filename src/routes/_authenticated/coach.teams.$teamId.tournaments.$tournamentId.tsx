@@ -73,8 +73,22 @@ function TournamentDetail() {
 /* =================== OVERVIEW =================== */
 
 function OverviewTab({ onJumpStandings }: { onJumpStandings: () => void }) {
+  const [calOpen, setCalOpen] = useState(false);
+  const [outOfSync, setOutOfSync] = useState(true);
   return (
     <div className="space-y-4">
+      {outOfSync && (
+        <div className="flex items-start justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3">
+          <div className="flex items-start gap-2">
+            <AlertTriangle size={14} className="mt-0.5 text-amber-400" />
+            <div>
+              <p className="text-xs font-bold text-amber-300">Schedule updated since you last synced</p>
+              <button onClick={() => { setCalOpen(true); setOutOfSync(false); }} className="mt-1 text-[11px] font-bold text-teal">Re-sync Calendar</button>
+            </div>
+          </div>
+          <button onClick={() => setOutOfSync(false)} className="text-amber-300/70"><X size={14} /></button>
+        </div>
+      )}
       {/* Next Game */}
       <div className="rounded-2xl border border-teal/40 bg-teal/10 p-4">
         <p className="text-[10px] font-bold uppercase tracking-wider text-teal">Next Game</p>
@@ -127,6 +141,12 @@ function OverviewTab({ onJumpStandings }: { onJumpStandings: () => void }) {
       <button className="flex w-full items-center justify-center gap-2 rounded-full border border-teal py-2.5 text-xs font-bold text-teal">
         <Link2 size={14} /> Tournament Website
       </button>
+
+      <button onClick={() => setCalOpen(true)} className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-brand py-2.5 text-xs font-bold text-background shadow-glow-teal active:opacity-90">
+        <CalendarIcon size={14} /> Add to Calendar
+      </button>
+
+      {calOpen && <CalendarExportSheet onClose={() => setCalOpen(false)} />}
     </div>
   );
 }
