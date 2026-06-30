@@ -45,12 +45,12 @@ function CoachLayout() {
           <BackButton />
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[10px] font-bold tracking-wider text-teal">COACH</span>
-            <Link to="/coach/broadcast" className="rounded-full bg-gradient-brand p-1.5 text-primary-foreground" aria-label="Broadcast">
+            <Link to="/coach/broadcast" className="rounded-full border border-border bg-surface p-1.5 text-muted-foreground hover:text-foreground" aria-label="Broadcast">
               <Megaphone size={14} />
             </Link>
             <button
               onClick={() => setRecorderOpen(true)}
-              className="rounded-full bg-gradient-brand p-1.5 text-primary-foreground"
+              className="rounded-full border border-border bg-surface p-1.5 text-muted-foreground hover:text-foreground"
               aria-label="Record film"
             >
               <Camera size={14} />
