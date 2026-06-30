@@ -7,9 +7,9 @@ export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/stats"
   component: TeamStats,
 });
 
-type SortKey = keyof Pick<SkaterAgg, "gp"|"g"|"a"|"pts"|"pm"|"pim"|"sog">;
+type SortKey = "gp" | "g" | "a" | "pts" | "ppg" | "pm" | "pim";
 
-type MockSkater = { id: string; name: string; gp: number; g: number; a: number; pts: number; pm: number; pim: number; sog: number };
+type MockSkater = { id: string; name: string; gp: number; g: number; a: number; pts: number; ppg: number; pm: number; pim: number };
 type MockGoalie = { id: string; name: string; gp: number; w: number; l: number; gaa: string; svp: string; so: number };
 
 const mockSkaters: MockSkater[] = [
