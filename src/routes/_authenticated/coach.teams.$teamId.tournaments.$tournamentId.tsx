@@ -1,5 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
 import React, { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -25,6 +24,11 @@ function TournamentDetail() {
   const t = DATA[tournamentId] ?? { name: "Tournament", dates: "", city: "", status: "" };
   const [tab, setTab] = useState<Tab>("Overview");
   const [editMode, setEditMode] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const base = `/coach/teams/${teamId}/tournaments/${tournamentId}`;
+  if (pathname.replace(/\/+$/, "") !== base) {
+    return <Outlet />;
+  }
 
   return (
     <div className="pb-10">
