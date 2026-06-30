@@ -269,8 +269,11 @@ function PlayerRow({
 /* =================== TRAVEL =================== */
 
 type ItemType = "Game" | "Transport" | "Hotel" | "Meal" | "Activity" | "Curfew" | "Other";
-const TYPE_ICON: Record<ItemType, string> = {
-  Game: "🏒", Transport: "🚌", Hotel: "🏨", Meal: "🍽", Activity: "🎳", Curfew: "🔒", Other: "📋",
+const TYPE_BORDER: Record<ItemType, string> = {
+  Game: "#00BFA5", Transport: "#F59E0B", Hotel: "#3B82F6", Meal: "#8B5CF6", Activity: "#22C55E", Curfew: "#6B7280", Other: "#6B7280",
+};
+const TYPE_LABEL: Record<ItemType, string> = {
+  Game: "GAME", Transport: "TRANSPORT", Hotel: "HOTEL", Meal: "MEAL", Activity: "ACTIVITY", Curfew: "CURFEW", Other: "OTHER",
 };
 const RSVP_DEFAULTS: Record<ItemType, boolean> = {
   Transport: true, Meal: true, Activity: true, Hotel: true, Curfew: false, Game: false, Other: false,
@@ -590,7 +593,10 @@ function ItemRow({
       : "bg-amber-500/20 text-amber-400";
 
   return (
-    <div className="group relative my-1 rounded-lg border border-border bg-surface-2/40">
+    <div
+      className="group relative my-1 rounded-lg border border-border border-l-[3px] bg-surface-2/40"
+      style={{ borderLeftColor: TYPE_BORDER[item.type] }}
+    >
       <div className="flex items-center gap-2 px-2 py-2">
         {editMode && <GripVertical size={14} className="shrink-0 text-muted-foreground" />}
         <button
@@ -598,9 +604,9 @@ function ItemRow({
           className="flex flex-1 items-center gap-2 text-left"
         >
           <span className="w-14 shrink-0 text-[10px] font-semibold text-muted-foreground">{item.time}</span>
-          <span className="text-base leading-none">{TYPE_ICON[item.type]}</span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-semibold">{item.title}</p>
+            <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wider text-white/60">{TYPE_LABEL[item.type]}</p>
             {item.location && (
               <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{item.location}</p>
             )}
@@ -634,17 +640,17 @@ function ItemRow({
 
       {!editMode && expanded && item.rsvp && (
         <div className="space-y-3 border-t border-border px-3 py-3">
-          {item.location && <p className="text-[11px] text-muted-foreground">📍 {item.location}</p>}
+          {item.location && <p className="text-[11px] text-muted-foreground">{item.location}</p>}
           {item.notes && <p className="text-[11px] text-foreground/80">{item.notes}</p>}
 
           {item.type === "Transport" && item.busCapacity && (
             <div>
-              <p className="text-[11px] font-bold text-teal">🚌 Seats needed: {seatsNeeded} / Bus capacity: {item.busCapacity}</p>
+              <p className="text-[11px] font-bold text-teal">Seats needed: {seatsNeeded} / Bus capacity: {item.busCapacity}</p>
               <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-2">
                 <div className={"h-full " + (overCapacity ? "bg-amber-400" : "bg-teal")} style={{ width: `${Math.min(100, (seatsNeeded / item.busCapacity) * 100)}%` }} />
               </div>
               {overCapacity && (
-                <p className="mt-1 text-[10px] font-bold text-amber-400">⚠ Over capacity — {seatsNeeded - item.busCapacity} unaccounted for</p>
+                <p className="mt-1 text-[10px] font-bold text-amber-400">Over capacity — {seatsNeeded - item.busCapacity} unaccounted for</p>
               )}
             </div>
           )}
@@ -712,13 +718,13 @@ function EditItemModal({
         <div className="mt-3">
           <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Type</label>
           <div className="mt-1 flex flex-wrap gap-1.5">
-            {(Object.keys(TYPE_ICON) as ItemType[]).map((t) => (
+            {(Object.keys(TYPE_LABEL) as ItemType[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setForm({ ...form, type: t, rsvp: RSVP_DEFAULTS[t], options: defaultOptions(t) })}
                 className={"rounded-full px-2.5 py-1 text-[10px] font-bold " + (form.type === t ? "bg-teal text-background" : "border border-border")}
               >
-                {TYPE_ICON[t]} {t}
+                {TYPE_LABEL[t]}
               </button>
             ))}
           </div>
