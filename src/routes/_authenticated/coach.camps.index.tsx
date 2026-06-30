@@ -193,7 +193,7 @@ function CampsPage() {
         key: "t-" + e.id,
         sortDate: e.event_date,
         sortTime: e.start_time ?? "00:00",
-        node: <TeamEventCard key={"t-" + e.id} event={e} />,
+        node: <CampsTeamEventCard key={"t-" + e.id} event={e} />,
       });
     });
     items.sort((a, b) => a.sortDate.localeCompare(b.sortDate) || a.sortTime.localeCompare(b.sortTime));
@@ -403,7 +403,7 @@ function PrivateCard({ item: p }: { item: PrivateLite }) {
   );
 }
 
-function TeamEventCard({ event: e }: { event: TeamEventLite }) {
+function CampsTeamEventCard({ event: e }: { event: TeamEventLite }) {
   const isGame = e.event_type === "game";
   const title = isGame ? `vs ${e.opponent_name || "TBD"}` : (e.title || "Practice");
   return (
@@ -453,7 +453,7 @@ function TeamsTab({ events }: { events: TeamEventLite[] }) {
   }
 
   if (groups.length === 1) {
-    return <div className="space-y-3">{events.map((e) => <TeamEventCard key={e.id} event={e} />)}</div>;
+    return <div className="space-y-3">{events.map((e) => <CampsTeamEventCard key={e.id} event={e} />)}</div>;
   }
 
   return (
@@ -462,7 +462,7 @@ function TeamsTab({ events }: { events: TeamEventLite[] }) {
         <section key={key}>
           <h3 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">{g.label}</h3>
           <div className="mt-2 space-y-3">
-            {g.items.map((e) => <TeamEventCard key={e.id} event={e} />)}
+            {g.items.map((e) => <CampsTeamEventCard key={e.id} event={e} />)}
           </div>
         </section>
       ))}
@@ -638,7 +638,7 @@ function TeamEventsFeed() {
           <section>
             <h3 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Upcoming</h3>
             <div className="mt-2 space-y-2">
-              {upcoming.map((event) => <TeamEventCard key={`up-${event.id}`} event={event} showSource />)}
+              {upcoming.map((event) => <CampsTeamEventCard key={`up-${event.id}`} event={event} showSource />)}
             </div>
           </section>
 
@@ -646,7 +646,7 @@ function TeamEventsFeed() {
             <section key={key}>
               <h3 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">{group.label}</h3>
               <div className="mt-2 space-y-2">
-                {group.items.slice(0, 3).map((event) => <TeamEventCard key={`${key}-${event.id}`} event={event} />)}
+                {group.items.slice(0, 3).map((event) => <CampsTeamEventCard key={`${key}-${event.id}`} event={event} />)}
               </div>
             </section>
           ))}
@@ -656,7 +656,7 @@ function TeamEventsFeed() {
   );
 }
 
-function TeamEventCard({ event, showSource }: { event: FeedEvent; showSource?: boolean }) {
+function CampsTeamEventCard({ event, showSource }: { event: FeedEvent; showSource?: boolean }) {
   const meta = FEED_META[event.kind];
   const Icon = meta.icon;
   return (
