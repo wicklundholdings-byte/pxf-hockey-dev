@@ -1,11 +1,11 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { createEvent } from "@/lib/teams.functions";
 import { loadTeamSeasonStats, type TeamRecord, type SkaterAgg } from "@/lib/team-stats";
 import { mockRecord, mockSkaters } from "@/lib/mock-team-stats";
-import { Swords, Dumbbell, MapPin, Users, Plus, Flame, Medal, ChevronRight, AlertTriangle, X, Film } from "lucide-react";
+import { MapPin, Plus, Flame, Medal, X, Trophy, AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/")({
   component: TeamDashboard,
