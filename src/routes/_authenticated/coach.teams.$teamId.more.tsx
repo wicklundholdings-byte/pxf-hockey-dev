@@ -12,18 +12,17 @@ function TeamMoreTab() {
   const { teamId } = Route.useParams();
   const [createOpen, setCreateOpen] = useState(false);
 
-  const rows: { to: any; label: string; Icon: any }[] = [
-    { to: "/coach/teams/$teamId/playbook", label: "Media", Icon: Camera },
-    { to: "/coach/teams/$teamId/payments", label: "Payments", Icon: DollarSign },
-    { to: "/coach/teams/$teamId/schedule", label: "Tournaments", Icon: Trophy },
-    { to: "/coach/teams/$teamId/schedule", label: "Practice Plans", Icon: ClipboardList },
-    
+  const rows: { to: any; label: string; subtitle: string; Icon: any }[] = [
+    { to: "/coach/teams/$teamId/playbook", label: "Media", subtitle: "2 videos · 4 photos", Icon: Camera },
+    { to: "/coach/teams/$teamId/payments", label: "Payments", subtitle: "$700 outstanding", Icon: DollarSign },
+    { to: "/coach/teams/$teamId/schedule", label: "Tournaments", subtitle: "0 active tournaments", Icon: Trophy },
+    { to: "/coach/teams/$teamId/schedule", label: "Practice Plans", subtitle: "3 saved plans", Icon: ClipboardList },
   ];
 
   return (
     <div className="space-y-3 pb-10">
       <div className="overflow-hidden rounded-2xl border border-border bg-surface">
-        {rows.map(({ to, label, Icon }, i) => (
+        {rows.map(({ to, label, subtitle, Icon }, i) => (
           <Link
             key={label}
             to={to}
@@ -36,7 +35,10 @@ function TeamMoreTab() {
             <div className="grid h-9 w-9 place-items-center rounded-lg bg-surface-2">
               <Icon size={16} className="text-teal" />
             </div>
-            <span className="flex-1 text-sm font-bold">{label}</span>
+            <div className="flex-1">
+              <span className="block text-sm font-bold">{label}</span>
+              <span className="block text-xs text-muted-foreground">{subtitle}</span>
+            </div>
             <ChevronRight size={16} className="text-muted-foreground" />
           </Link>
         ))}
