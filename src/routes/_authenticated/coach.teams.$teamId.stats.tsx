@@ -423,13 +423,13 @@ function UploadReview({ onClose }: { onClose: () => void }) {
       <div className="mt-2 overflow-x-auto rounded-2xl border border-border bg-background">
         <table className="w-full min-w-[420px] text-[11px]">
           <thead className="text-[9px] uppercase tracking-wider text-muted-foreground">
-            <tr><th className="p-2 text-left">Player</th><th>G</th><th>A</th><th>+/-</th><th>PIM</th><th>SOG</th></tr>
+            <tr><th className="p-2 text-left">Player</th><th>G</th><th>A</th><th>+/-</th><th>PIM</th></tr>
           </thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.id} className="border-t border-border">
                 <td className="p-2 font-semibold">{r.name}</td>
-                {(["g","a","pm","pim","sog"] as const).map((k) => (
+                {(["g","a","pm","pim"] as const).map((k) => (
                   <td key={k} className="p-1 text-center">
                     <input
                       type="number"
