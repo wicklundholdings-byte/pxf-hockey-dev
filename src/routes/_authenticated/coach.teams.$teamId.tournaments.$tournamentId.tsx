@@ -354,7 +354,7 @@ function mkItem(
   };
 }
 
-type ScheduleFilter = "All" | "Games" | "Transport" | "Accommodation" | "Team Functions" | "My RSVPs";
+type ScheduleFilter = "All" | "Games" | "Transport" | "Accommodation" | "Team Functions";
 
 function itemMatchesFilter(it: ItineraryItem, f: ScheduleFilter): boolean {
   switch (f) {
