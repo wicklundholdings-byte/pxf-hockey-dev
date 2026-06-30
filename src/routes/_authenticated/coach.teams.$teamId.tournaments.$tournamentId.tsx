@@ -485,6 +485,8 @@ function itemMatchesFilter(it: ItineraryItem, f: ScheduleFilter): boolean {
 }
 
 function ScheduleTab({ editMode, setEditMode, tournamentName }: { editMode: boolean; setEditMode: React.Dispatch<React.SetStateAction<boolean>>; tournamentName: string }) {
+  const { teamId, tournamentId } = Route.useParams();
+  const navigate = useNavigate();
   const [days, setDays] = useState(SEED);
   const [dirty, setDirty] = useState(false);
   const [editing, setEditing] = useState<{ dayIdx: number; itemIdx: number } | null>(null);
@@ -601,6 +603,15 @@ function ScheduleTab({ editMode, setEditMode, tournamentName }: { editMode: bool
                   responses: { ...d.items[itemIdx].responses, [key]: status },
                 })
               }
+              onOpenItem={(itemIdx) => {
+                const it = d.items[itemIdx];
+                if (it.type === "Game") {
+                  navigate({
+                    to: "/coach/teams/$teamId/tournaments/$tournamentId/game/$gameId",
+                    params: { teamId, tournamentId, gameId: it.id },
+                  });
+                }
+              }}
             />
           );
         })}
