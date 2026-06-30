@@ -911,6 +911,7 @@ function CampSchedule({
               <Plus size={12} /> Assign from Library
             </button>
           )}
+          <DayRsvpPanel sessionId={expandedSession.id} campId={campId} />
         </div>
       )}
 
