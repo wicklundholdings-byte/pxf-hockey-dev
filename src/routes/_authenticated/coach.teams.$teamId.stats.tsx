@@ -7,23 +7,23 @@ export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/stats"
   component: TeamStats,
 });
 
-type SortKey = keyof Pick<SkaterAgg, "gp"|"g"|"a"|"pts"|"pm"|"pim"|"sog">;
+type SortKey = "gp" | "g" | "a" | "pts" | "ppg" | "pm" | "pim";
 
-type MockSkater = { id: string; name: string; gp: number; g: number; a: number; pts: number; pm: number; pim: number; sog: number };
+type MockSkater = { id: string; name: string; gp: number; g: number; a: number; pts: number; ppg: number; pm: number; pim: number };
 type MockGoalie = { id: string; name: string; gp: number; w: number; l: number; gaa: string; svp: string; so: number };
 
 const mockSkaters: MockSkater[] = [
-  { id: "p-carter", name: "Carter", gp: 14, g: 12, a: 14, pts: 26, pm: 8, pim: 4, sog: 87 },
-  { id: "p-brooks", name: "Brooks", gp: 14, g: 9, a: 11, pts: 20, pm: 5, pim: 6, sog: 62 },
-  { id: "p-jensen", name: "Jensen", gp: 13, g: 5, a: 6, pts: 11, pm: 2, pim: 2, sog: 44 },
-  { id: "p-petrov", name: "Petrov", gp: 14, g: 4, a: 5, pts: 9, pm: -1, pim: 8, sog: 38 },
-  { id: "p-callahan", name: "Callahan", gp: 12, g: 3, a: 4, pts: 7, pm: 1, pim: 4, sog: 31 },
-  { id: "p-reilly", name: "Reilly", gp: 14, g: 3, a: 4, pts: 7, pm: 3, pim: 12, sog: 28 },
-  { id: "p-macdonald", name: "MacDonald", gp: 11, g: 2, a: 3, pts: 5, pm: -2, pim: 6, sog: 24 },
-  { id: "p-nguyen", name: "Nguyen", gp: 14, g: 1, a: 2, pts: 3, pm: 1, pim: 2, sog: 18 },
-  { id: "p-marchetti", name: "Marchetti", gp: 14, g: 1, a: 1, pts: 2, pm: 4, pim: 14, sog: 22 },
-  { id: "p-kowalski", name: "Kowalski", gp: 14, g: 0, a: 3, pts: 3, pm: 6, pim: 10, sog: 19 },
-  { id: "p-thompson", name: "Thompson", gp: 14, g: 0, a: 2, pts: 2, pm: 3, pim: 8, sog: 17 },
+  { id: "p-carter", name: "Carter", gp: 14, g: 12, a: 14, pts: 26, ppg: 1.86, pm: 8, pim: 4 },
+  { id: "p-brooks", name: "Brooks", gp: 14, g: 9, a: 11, pts: 20, ppg: 1.43, pm: 5, pim: 6 },
+  { id: "p-jensen", name: "Jensen", gp: 13, g: 5, a: 6, pts: 11, ppg: 0.85, pm: 2, pim: 2 },
+  { id: "p-petrov", name: "Petrov", gp: 14, g: 4, a: 5, pts: 9, ppg: 0.64, pm: -1, pim: 8 },
+  { id: "p-callahan", name: "Callahan", gp: 12, g: 3, a: 4, pts: 7, ppg: 0.58, pm: 1, pim: 4 },
+  { id: "p-reilly", name: "Reilly", gp: 14, g: 3, a: 4, pts: 7, ppg: 0.50, pm: 3, pim: 12 },
+  { id: "p-macdonald", name: "MacDonald", gp: 11, g: 2, a: 3, pts: 5, ppg: 0.45, pm: -2, pim: 6 },
+  { id: "p-nguyen", name: "Nguyen", gp: 14, g: 1, a: 2, pts: 3, ppg: 0.21, pm: 1, pim: 2 },
+  { id: "p-marchetti", name: "Marchetti", gp: 14, g: 1, a: 1, pts: 2, ppg: 0.14, pm: 4, pim: 14 },
+  { id: "p-kowalski", name: "Kowalski", gp: 14, g: 0, a: 3, pts: 3, ppg: 0.21, pm: 6, pim: 10 },
+  { id: "p-thompson", name: "Thompson", gp: 14, g: 0, a: 2, pts: 2, ppg: 0.14, pm: 3, pim: 8 },
 ];
 
 const mockGoalies: MockGoalie[] = [
@@ -39,18 +39,17 @@ const mockPendingGames = [
 
 function genGameLogSkater(s: MockSkater) {
   // Distribute totals across GP games deterministically.
-  const rows: { opp: string; g: number; a: number; pm: number; pim: number; sog: number }[] = [];
+  const rows: { opp: string; g: number; a: number; pm: number; pim: number }[] = [];
   const opps = ["vs Trappers","@ Lightning","vs Sockeyes","@ Warriors","vs Hawks","@ Wolves","vs Bruins","@ Kings","vs Stars","@ Jets","vs Flames","@ Ducks","vs Sharks","@ Oilers"];
-  let gL = s.g, aL = s.a, pmL = s.pm, pimL = s.pim, sogL = s.sog;
+  let gL = s.g, aL = s.a, pmL = s.pm, pimL = s.pim;
   for (let i = 0; i < s.gp; i++) {
     const last = i === s.gp - 1;
     const g = last ? gL : Math.min(gL, i % 3 === 0 ? 1 : 0);
     const a = last ? aL : Math.min(aL, i % 2 === 0 ? 1 : 0);
     const pim = last ? pimL : Math.min(pimL, i % 4 === 0 ? 2 : 0);
-    const sog = last ? sogL : Math.min(sogL, Math.max(1, Math.floor(s.sog / s.gp)));
     const pm = last ? pmL : Math.sign(s.pm) * (i % 5 === 0 ? 1 : 0);
-    rows.push({ opp: opps[i % opps.length], g, a, pm, pim, sog });
-    gL -= g; aL -= a; pimL -= pim; sogL -= sog; pmL -= pm;
+    rows.push({ opp: opps[i % opps.length], g, a, pm, pim });
+    gL -= g; aL -= a; pimL -= pim; pmL -= pm;
   }
   return rows;
 }
@@ -111,12 +110,19 @@ function TeamStats() {
       </div>
 
       <h4 className="mt-4 text-xs font-bold">Skaters</h4>
+      <div className="mt-2 flex gap-2">
+        {(["pts","g","a","ppg"] as const).map((k) => (
+          <button key={k} onClick={() => setSort(k)} className={"rounded-full px-3 py-1 text-[10px] font-bold " + (sort === k ? "bg-teal text-background" : "bg-surface text-muted-foreground")}>
+            {k.toUpperCase()}
+          </button>
+        ))}
+      </div>
       <div className="mt-2 overflow-x-auto rounded-2xl border border-border bg-surface">
         <table className="w-full min-w-[480px] text-[11px]">
           <thead className="text-[9px] uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="p-2 text-left">Player</th>
-              {(["gp","g","a","pts","pm","pim","sog"] as SortKey[]).map((k) => (
+              {(["gp","g","a","pts","ppg","pm","pim"] as SortKey[]).map((k) => (
                 <th key={k} className="p-2 cursor-pointer" onClick={() => setSort(k)}>
                   <span className={sort === k ? "text-teal" : ""}>{k === "pm" ? "+/-" : k.toUpperCase()}</span>
                 </th>
@@ -131,9 +137,9 @@ function TeamStats() {
                 <td className="p-2 text-center">{s.g}</td>
                 <td className="p-2 text-center">{s.a}</td>
                 <td className="p-2 text-center font-bold text-teal">{s.pts}</td>
+                <td className="p-2 text-center">{s.ppg.toFixed(2)}</td>
                 <td className="p-2 text-center">{s.pm > 0 ? "+" : ""}{s.pm}</td>
                 <td className="p-2 text-center">{s.pim}</td>
-                <td className="p-2 text-center">{s.sog}</td>
               </tr>
             ))}
           </tbody>
@@ -206,7 +212,7 @@ function SkaterGameLogSheet({ skater, onClose }: { skater: MockSkater; onClose: 
       <div className="mt-2 overflow-x-auto rounded-2xl border border-border bg-background">
         <table className="w-full min-w-[420px] text-[11px]">
           <thead className="text-[9px] uppercase tracking-wider text-muted-foreground">
-            <tr><th className="p-2 text-left">Game</th><th>G</th><th>A</th><th>+/-</th><th>PIM</th><th>SOG</th></tr>
+            <tr><th className="p-2 text-left">Game</th><th>G</th><th>A</th><th>+/-</th><th>PIM</th></tr>
           </thead>
           <tbody>
             {rows.map((r, i) => (
@@ -216,7 +222,6 @@ function SkaterGameLogSheet({ skater, onClose }: { skater: MockSkater; onClose: 
                 <td className="p-2 text-center">{r.a}</td>
                 <td className="p-2 text-center">{r.pm > 0 ? "+" : ""}{r.pm}</td>
                 <td className="p-2 text-center">{r.pim}</td>
-                <td className="p-2 text-center">{r.sog}</td>
               </tr>
             ))}
           </tbody>
@@ -327,9 +332,9 @@ function EnterStatsFlow({
 
 function ManualEntry({ onClose }: { onClose: () => void }) {
   const [rows, setRows] = useState(() =>
-    mockSkaters.map((s) => ({ id: s.id, name: s.name, g: 0, a: 0, pm: 0, pim: 0, sog: 0 }))
+    mockSkaters.map((s) => ({ id: s.id, name: s.name, g: 0, a: 0, pm: 0, pim: 0 }))
   );
-  function upd(id: string, k: "g"|"a"|"pm"|"pim"|"sog", v: string) {
+  function upd(id: string, k: "g"|"a"|"pm"|"pim", v: string) {
     const n = parseInt(v) || 0;
     setRows((r) => r.map((row) => row.id === id ? { ...row, [k]: n } : row));
   }
@@ -339,13 +344,13 @@ function ManualEntry({ onClose }: { onClose: () => void }) {
       <div className="mt-2 overflow-x-auto rounded-2xl border border-border bg-background">
         <table className="w-full min-w-[420px] text-[11px]">
           <thead className="text-[9px] uppercase tracking-wider text-muted-foreground">
-            <tr><th className="p-2 text-left">Player</th><th>G</th><th>A</th><th>+/-</th><th>PIM</th><th>SOG</th></tr>
+            <tr><th className="p-2 text-left">Player</th><th>G</th><th>A</th><th>+/-</th><th>PIM</th></tr>
           </thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.id} className="border-t border-border">
                 <td className="p-2 font-semibold">{r.name}</td>
-                {(["g","a","pm","pim","sog"] as const).map((k) => (
+                {(["g","a","pm","pim"] as const).map((k) => (
                   <td key={k} className="p-1 text-center">
                     <input
                       type="number"
@@ -374,14 +379,14 @@ function UploadReview({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState<"upload" | "review">("upload");
   // Mock AI-extracted rows; some with low confidence flagged
   const [rows, setRows] = useState(() => [
-    { id: "p-carter", name: "Carter", g: 1, a: 2, pm: 1, pim: 0, sog: 6, low: false },
-    { id: "p-brooks", name: "Brooks", g: 1, a: 0, pm: 1, pim: 2, sog: 5, low: false },
-    { id: "p-jensen", name: "Jensen", g: 0, a: 1, pm: 0, pim: 0, sog: 3, low: true },
-    { id: "p-petrov", name: "Petrov", g: 0, a: 0, pm: -1, pim: 0, sog: 2, low: false },
-    { id: "p-reilly", name: "Reilly", g: 1, a: 0, pm: 2, pim: 2, sog: 3, low: true },
-    { id: "p-kowalski", name: "Kowalski", g: 0, a: 1, pm: 1, pim: 0, sog: 1, low: false },
+    { id: "p-carter", name: "Carter", g: 1, a: 2, pm: 1, pim: 0, low: false },
+    { id: "p-brooks", name: "Brooks", g: 1, a: 0, pm: 1, pim: 2, low: false },
+    { id: "p-jensen", name: "Jensen", g: 0, a: 1, pm: 0, pim: 0, low: true },
+    { id: "p-petrov", name: "Petrov", g: 0, a: 0, pm: -1, pim: 0, low: false },
+    { id: "p-reilly", name: "Reilly", g: 1, a: 0, pm: 2, pim: 2, low: true },
+    { id: "p-kowalski", name: "Kowalski", g: 0, a: 1, pm: 1, pim: 0, low: false },
   ]);
-  function upd(id: string, k: "g"|"a"|"pm"|"pim"|"sog", v: string) {
+  function upd(id: string, k: "g"|"a"|"pm"|"pim", v: string) {
     const n = parseInt(v) || 0;
     setRows((r) => r.map((row) => row.id === id ? { ...row, [k]: n, low: false } : row));
   }
@@ -418,13 +423,13 @@ function UploadReview({ onClose }: { onClose: () => void }) {
       <div className="mt-2 overflow-x-auto rounded-2xl border border-border bg-background">
         <table className="w-full min-w-[420px] text-[11px]">
           <thead className="text-[9px] uppercase tracking-wider text-muted-foreground">
-            <tr><th className="p-2 text-left">Player</th><th>G</th><th>A</th><th>+/-</th><th>PIM</th><th>SOG</th></tr>
+            <tr><th className="p-2 text-left">Player</th><th>G</th><th>A</th><th>+/-</th><th>PIM</th></tr>
           </thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.id} className="border-t border-border">
                 <td className="p-2 font-semibold">{r.name}</td>
-                {(["g","a","pm","pim","sog"] as const).map((k) => (
+                {(["g","a","pm","pim"] as const).map((k) => (
                   <td key={k} className="p-1 text-center">
                     <input
                       type="number"
