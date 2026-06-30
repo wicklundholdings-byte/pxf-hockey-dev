@@ -1250,13 +1250,17 @@ function Info({ icon: Icon, label, value }: { icon: typeof Calendar; label: stri
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone: "green" | "amber" | "teal" }) {
+function Stat({ label, value, tone, onClick }: { label: string; value: string; tone: "green" | "amber" | "teal"; onClick?: () => void }) {
   const color = tone === "green" ? "text-emerald-400" : tone === "amber" ? "text-amber-400" : "text-teal";
+  const Comp: any = onClick ? "button" : "div";
   return (
-    <div className="rounded-2xl border border-border bg-card p-3 text-center">
+    <Comp
+      onClick={onClick}
+      className={"rounded-2xl border border-border bg-card p-3 text-center transition " + (onClick ? "hover:border-teal/40 active:scale-[0.98]" : "")}
+    >
       <p className={"font-display text-lg font-bold " + color}>{value}</p>
       <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{label}</p>
-    </div>
+    </Comp>
   );
 }
 
