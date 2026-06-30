@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Play, X, ChevronLeft, ChevronRight, Film, Camera } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/media")({
+export const Route = createFileRoute("/_authenticated/coach/teams/media")({
   component: TeamMediaScreen,
 });
 
