@@ -107,6 +107,7 @@ function CampDetailPage() {
   const [todayAttendance, setTodayAttendance] = useState<Map<string, boolean>>(new Map());
   const [completions, setCompletions] = useState<Record<string, SessionRunRecord>>({});
   const [statsView, setStatsView] = useState<null | "paid" | "pending">(null);
+  const [tab, setTab] = useState<"overview" | "schedule" | "athletes" | "media" | "more">("overview");
 
   useEffect(() => {
     setCompletions(readCampCompletions(campId));
@@ -234,208 +235,239 @@ function CampDetailPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <Link to="/coach/camps" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-        <ArrowLeft size={12} /> All events
-      </Link>
+    <div className="-mx-5 -mt-2">
+      <div className="px-5 pt-2">
+        <Link to="/coach/camps" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+          <ArrowLeft size={12} /> Events
+        </Link>
 
-      {/* Hero */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-card">
-        {camp.hero_image ? (
-          <div className="relative h-32 w-full">
-            <img src={camp.hero_image} alt={camp.name} className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
+        {/* Hero */}
+        <div className="mt-2 relative h-32 w-full overflow-hidden rounded-2xl border border-border bg-card">
+          {camp.hero_image ? (
+            <img src={camp.hero_image} alt={camp.name} className="absolute inset-0 h-full w-full object-cover" />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-teal/30 via-surface to-transparent" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+          <div className="absolute right-2 top-2 flex items-center gap-1.5">
+            {isLive ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-red-500/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" /> Live
+              </span>
+            ) : (
+              <StatusBadge status={camp.status} />
+            )}
           </div>
-        ) : (
-          <div className="h-20 w-full bg-gradient-to-br from-teal/20 to-transparent" />
-        )}
-        <div className="p-4">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="font-display text-xl font-bold text-foreground">{camp.name}</h1>
-                {isLive && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-400">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" /> Live
-                  </span>
-                )}
+          <div className="absolute bottom-2 left-3 right-3">
+            <h1 className="font-display text-lg font-bold leading-tight text-white drop-shadow">{camp.name}</h1>
+            <p className="mt-0.5 flex items-center gap-1 text-[11px] text-white/85">
+              <MapPin size={11} /> {camp.venue_name ?? (camp.location_type === "online" ? "Online" : "TBA")}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Sticky tab bar */}
+      <div className="sticky top-0 z-30 mt-3 border-b border-border bg-background/95 backdrop-blur">
+        <div className="flex gap-1 overflow-x-auto px-5 no-scrollbar">
+          {([
+            { id: "overview", label: "Overview" },
+            { id: "schedule", label: "Schedule" },
+            { id: "athletes", label: "Athletes" },
+            { id: "media", label: "Media" },
+            { id: "more", label: "More" },
+          ] as const).map((t) => {
+            const active = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={
+                  "shrink-0 border-b-2 px-3 py-3 text-sm font-bold transition-colors " +
+                  (active ? "border-teal text-teal" : "border-transparent text-muted-foreground")
+                }
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="mt-3 space-y-4 px-5 pb-6">
+        {tab === "overview" && (
+          <>
+            {/* Stats row */}
+            <div className="grid grid-cols-3 gap-2">
+              <Stat label="Paid" value={String(stats.paid)} tone="green" onClick={() => setStatsView("paid")} />
+              <Stat label="Pending" value={String(stats.pending)} tone="amber" onClick={() => setStatsView("pending")} />
+              <Stat
+                label="Revenue"
+                value={`$${(stats.revenue / 100).toLocaleString()}`}
+                tone="teal"
+                onClick={() => setTab("more")}
+              />
+            </div>
+
+            {/* Info grid */}
+            <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <Info icon={Calendar} label="Dates" value={`${fmt(camp.start_date)} → ${fmt(camp.end_date)}`} />
+              <Info icon={Clock} label="Time" value={camp.start_time ? `${camp.start_time.slice(0, 5)}–${camp.end_time?.slice(0, 5) ?? ""}` : "TBA"} />
+              <Info icon={Users} label="Capacity" value={`${stats.paid}/${camp.capacity}`} />
+              <Info icon={DollarSign} label="Price" value={`$${(camp.price_cents / 100).toFixed(0)}`} />
+            </div>
+
+            {/* Capacity bar */}
+            <div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-surface">
+                <div className="h-full rounded-full bg-teal" style={{ width: pct + "%" }} />
               </div>
-              <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
-                <MapPin size={11} /> {camp.venue_name ?? (camp.location_type === "online" ? "Online" : "TBA")}
-                {camp.address ? <span className="text-muted-foreground/70"> · {camp.address}</span> : null}
-              </p>
+              <p className="mt-1 text-[10px] text-muted-foreground">{Math.round(pct)}% full · {camp.capacity - stats.paid} spots left</p>
             </div>
-            <StatusBadge status={camp.status} />
-          </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
-            <Info icon={Calendar} label="Dates" value={`${fmt(camp.start_date)} → ${fmt(camp.end_date)}`} />
-            <Info icon={Clock} label="Time" value={camp.start_time ? `${camp.start_time.slice(0, 5)}–${camp.end_time?.slice(0, 5) ?? ""}` : "TBA"} />
-            <Info icon={Users} label="Capacity" value={`${stats.paid}/${camp.capacity}`} />
-            <Info icon={DollarSign} label="Price" value={`$${(camp.price_cents / 100).toFixed(0)}`} />
-          </div>
-
-          <div className="mt-3">
-            <div className="h-1.5 overflow-hidden rounded-full bg-surface">
-              <div className="h-full rounded-full bg-teal" style={{ width: pct + "%" }} />
+            {/* Action buttons 2x2 */}
+            <div className="grid grid-cols-2 gap-2">
+              <PublishLinkButtons slug={camp.slug} />
             </div>
-            <p className="mt-1 text-[10px] text-muted-foreground">{Math.round(pct)}% full · {camp.capacity - stats.paid} spots left</p>
-          </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button className="flex items-center justify-center gap-1 rounded-full border border-border bg-surface px-3 py-2 text-[11px] font-semibold text-foreground">
+                <Pencil size={12} /> Edit Camp
+              </button>
+              <Link
+                to="/coach/broadcast"
+                search={{ campId } as never}
+                className="flex items-center justify-center gap-1 rounded-full border border-border bg-surface px-3 py-2 text-[11px] font-semibold text-foreground"
+              >
+                <MessageSquare size={12} /> Message Group
+              </Link>
+            </div>
 
-          <div className="mt-3 flex gap-2">
-            <PublishLinkButtons slug={camp.slug} />
-            <button className="flex items-center justify-center gap-1 rounded-full border border-border bg-surface px-3 py-2 text-[11px] font-semibold text-foreground">
-              <Pencil size={12} /> Edit
+            <CampStaffSection campId={campId} />
+
+            <CampProgress sessions={sessions} completions={completions} />
+
+            {(camp.venue_name || camp.address) && camp.location_type !== "online" && (
+              <VenueMap venueName={camp.venue_name} address={camp.address} />
+            )}
+
+            {/* Today RSVP summary */}
+            <TodayRsvpCard
+              attending={todayAttending}
+              notAttending={todayNotAttending}
+              noResponse={todayNoResponse}
+              hasSession={!!todaySession}
+              campId={campId}
+              startDate={camp.start_date}
+            />
+
+            {/* Start check-in */}
+            <button
+              onClick={() => setScannerOpen(true)}
+              disabled={!todaySession || paidRegs.length === 0}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-card py-3 text-sm font-bold text-teal disabled:opacity-40"
+            >
+              <Camera size={16} /> Start Check-in
             </button>
+            {scanFlash && (
+              <div className="rounded-xl border border-border bg-surface px-3 py-2 text-center text-xs font-semibold text-foreground">
+                {scanFlash}
+              </div>
+            )}
+          </>
+        )}
+
+        {tab === "schedule" && (
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[10px] font-bold uppercase tracking-wider text-foreground">Camp schedule</h2>
+              <span className="text-[10px] text-muted-foreground">{sessions.length} {sessions.length === 1 ? "day" : "days"}</span>
+            </div>
+            <CampProgress sessions={sessions} completions={completions} />
+            <CampSchedule
+              sessions={sessions}
+              campId={campId}
+              completions={completions}
+              registeredCount={regs.filter((r) => r.status === "paid").length}
+              onSessionsChange={(next) => setSessions(next)}
+              onCompleted={(sessionId, rec) => {
+                writeCampCompletion(campId, sessionId, rec);
+                setCompletions((prev) => ({ ...prev, [sessionId]: rec }));
+              }}
+            />
+            <div className="pt-2">
+              <ApplyCampTemplate
+                campSessions={sessions.map((s) => ({ id: s.id }))}
+                planKey={`pxf:camp-plans:${campId}`}
+                onApplied={() => setCompletions(readCampCompletions(campId))}
+              />
+            </div>
+          </section>
+        )}
+
+        {tab === "athletes" && (
+          <div className="space-y-5">
+            <section className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h2 className="text-[10px] font-bold uppercase tracking-wider text-foreground">Registered · {regs.length}</h2>
+                <button className="inline-flex items-center gap-1 text-[11px] font-semibold text-teal">
+                  <Plus size={12} /> Invite Athlete
+                </button>
+              </div>
+              <RosterTab regs={regs} />
+            </section>
+            <section className="space-y-2">
+              <h2 className="text-[10px] font-bold uppercase tracking-wider text-foreground">Waitlist · {wait.length}</h2>
+              <WaitlistTab entries={wait} />
+            </section>
           </div>
-        </div>
+        )}
+
+        {tab === "media" && (
+          <div className="space-y-5">
+            <section className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h2 className="text-[10px] font-bold uppercase tracking-wider text-foreground">Film &amp; Photos</h2>
+                <button className="inline-flex items-center gap-1 text-[11px] font-semibold text-teal">
+                  <Plus size={12} /> Upload
+                </button>
+              </div>
+              <MediaTab media={media} />
+            </section>
+          </div>
+        )}
+
+        {tab === "more" && (
+          <section id="camp-more-section" className="space-y-2">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card">
+              <MoreRow icon={Wallet} label="Financials" count={stats.paid} open={more === "financials"} onClick={() => setMore(more === "financials" ? null : "financials")} />
+              {more === "financials" && <div className="border-t border-border p-3"><FinancialsPanel regs={regs} /></div>}
+              <MoreRow icon={Star} label="Evaluations" count={regs.length} open={more === "evaluations"} onClick={() => setMore(more === "evaluations" ? null : "evaluations")} />
+              {more === "evaluations" && <div className="border-t border-border p-3"><EvaluationsTab regs={regs} campId={campId} /></div>}
+              <MoreRow icon={FileText} label="Description & Details" open={more === ("description" as any)} onClick={() => setMore((more === ("description" as any) ? null : ("description" as any)))} />
+              {(more as any) === "description" && <div className="border-t border-border p-3"><OverviewTab camp={camp} /></div>}
+              <MoreRow icon={Settings2} label="Settings & Pricing" open={(more as any) === "settings"} onClick={() => setMore(((more as any) === "settings" ? null : ("settings" as any)))} />
+              {(more as any) === "settings" && <div className="border-t border-border p-3"><OptionsTab camp={camp} /></div>}
+              <Link
+                to="/coach/broadcast"
+                search={{ campId } as never}
+                className="flex w-full items-center gap-3 border-t border-border px-3 py-3 text-left"
+              >
+                <Bell size={16} className="text-muted-foreground" />
+                <span className="flex-1 text-sm font-semibold text-foreground">Send Update</span>
+                <ChevronRight size={14} className="text-muted-foreground" />
+              </Link>
+            </div>
+
+            <div className="pt-2">
+              <ApplyCampTemplate
+                campSessions={sessions.map((s) => ({ id: s.id }))}
+                planKey={`pxf:camp-plans:${campId}`}
+                onApplied={() => setCompletions(readCampCompletions(campId))}
+              />
+            </div>
+          </section>
+        )}
       </div>
-
-      {/* Quick stats */}
-      <div className="grid grid-cols-3 gap-2">
-        <Stat label="Paid" value={String(stats.paid)} tone="green" onClick={() => setStatsView("paid")} />
-        <Stat label="Pending" value={String(stats.pending)} tone="amber" onClick={() => setStatsView("pending")} />
-        <Stat
-          label="Revenue"
-          value={`$${(stats.revenue / 100).toLocaleString()}`}
-          tone="teal"
-          onClick={() => {
-            setMore("financials");
-            requestAnimationFrame(() => {
-              document.getElementById("camp-more-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
-            });
-          }}
-        />
-      </div>
-
-      {(camp.venue_name || camp.address) && camp.location_type !== "online" && (
-        <VenueMap venueName={camp.venue_name} address={camp.address} />
-      )}
-
-      {/* Primary actions */}
-      <div className="grid grid-cols-2 gap-2">
-        <Link
-          to="/coach/camps/$campId/session-plans"
-          params={{ campId }}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-brand py-4 text-sm font-bold text-primary-foreground"
-        >
-          <ClipboardList size={16} /> Session Plans
-        </Link>
-        <Link
-          to="/coach/broadcast"
-          search={{ campId } as never}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-brand py-4 text-sm font-bold text-primary-foreground"
-        >
-          <MessageSquare size={16} /> Message Group
-        </Link>
-      </div>
-
-      <CampStaffSection campId={campId} />
-
-      {/* Quick links to dedicated sub-routes */}
-      <div className="grid grid-cols-3 gap-2">
-        <Link
-          to="/coach/camps/$campId/checkin"
-          params={{ campId }}
-          className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-card py-3 text-[11px] font-semibold text-foreground hover:border-teal/40"
-        >
-          <QrCode size={16} className="text-teal" /> Check-in
-        </Link>
-        <Link
-          to="/coach/camps/$campId/attendance"
-          params={{ campId }}
-          className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-card py-3 text-[11px] font-semibold text-foreground hover:border-teal/40"
-        >
-          <ClipboardList size={16} className="text-teal" /> Attendance
-        </Link>
-        <Link
-          to="/coach/camps/$campId/photos"
-          params={{ campId }}
-          className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-card py-3 text-[11px] font-semibold text-foreground hover:border-teal/40"
-        >
-          <Camera size={16} className="text-teal" /> Photos
-        </Link>
-        <Link
-          to="/coach/camps/$campId/updates"
-          params={{ campId }}
-          className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-card py-3 text-[11px] font-semibold text-foreground hover:border-teal/40"
-        >
-          <Bell size={16} className="text-teal" /> Updates
-        </Link>
-      </div>
-
-      {/* Visual camp schedule */}
-      <section id="session-plans" className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h2 className="text-[10px] font-bold uppercase tracking-wider text-foreground">Camp schedule</h2>
-          <span className="text-[10px] text-muted-foreground">{sessions.length} {sessions.length === 1 ? "day" : "days"}</span>
-        </div>
-        <CampProgress sessions={sessions} completions={completions} />
-        <CampSchedule
-          sessions={sessions}
-          campId={campId}
-          completions={completions}
-          registeredCount={regs.filter((r) => r.status === "paid").length}
-          onSessionsChange={(next) => setSessions(next)}
-          onCompleted={(sessionId, rec) => {
-            writeCampCompletion(campId, sessionId, rec);
-            setCompletions((prev) => ({ ...prev, [sessionId]: rec }));
-          }}
-        />
-      </section>
-
-      {/* Roster + Today's RSVP */}
-      <div className="grid grid-cols-2 gap-2">
-        <RosterCard regs={regs} />
-        <TodayRsvpCard
-          attending={todayAttending}
-          notAttending={todayNotAttending}
-          noResponse={todayNoResponse}
-          hasSession={!!todaySession}
-          campId={campId}
-          startDate={camp.start_date}
-        />
-      </div>
-
-      {/* QR check-in */}
-      <button
-        onClick={() => setScannerOpen(true)}
-        disabled={!todaySession || paidRegs.length === 0}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-card py-3 text-sm font-bold text-teal disabled:opacity-40"
-      >
-        <Camera size={16} /> Start Check-in
-      </button>
-      {scanFlash && (
-        <div className="rounded-xl border border-border bg-surface px-3 py-2 text-center text-xs font-semibold text-foreground">
-          {scanFlash}
-        </div>
-      )}
-
-      {/* More section */}
-      <section id="camp-more-section" className="space-y-2 pt-2">
-        <h2 className="text-[10px] font-bold uppercase tracking-wider text-foreground">More</h2>
-        <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          <MoreRow icon={Hourglass} label="Waitlist" count={wait.length} open={more === "waitlist"} onClick={() => setMore(more === "waitlist" ? null : "waitlist")} />
-          {more === "waitlist" && <div className="border-t border-border p-3"><WaitlistTab entries={wait} /></div>}
-          <MoreRow icon={ImageIcon} label="Media" count={media.length} open={more === "media"} onClick={() => setMore(more === "media" ? null : "media")} />
-          {more === "media" && <div className="border-t border-border p-3"><MediaTab media={media} /></div>}
-          <MoreRow icon={Star} label="Evaluations" count={regs.length} open={more === "evaluations"} onClick={() => setMore(more === "evaluations" ? null : "evaluations")} />
-          {more === "evaluations" && <div className="border-t border-border p-3"><EvaluationsTab regs={regs} campId={campId} /></div>}
-          <MoreRow icon={Wallet} label="Financials" count={stats.paid} open={more === "financials"} onClick={() => setMore(more === "financials" ? null : "financials")} last />
-          {more === "financials" && <div className="border-t border-border p-3"><FinancialsPanel regs={regs} /></div>}
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 pt-2">
-          <details className="overflow-hidden rounded-2xl border border-border bg-card">
-            <summary className="cursor-pointer list-none px-3 py-3 text-[11px] font-semibold text-foreground">Description & details</summary>
-            <div className="border-t border-border p-3"><OverviewTab camp={camp} /></div>
-          </details>
-          <details className="overflow-hidden rounded-2xl border border-border bg-card">
-            <summary className="cursor-pointer list-none px-3 py-3 text-[11px] font-semibold text-foreground">Settings & pricing</summary>
-            <div className="border-t border-border p-3"><OptionsTab camp={camp} /></div>
-          </details>
-        </div>
-      </section>
 
       {scannerOpen && (
         <QRScannerModal onScan={handleScan} onClose={() => setScannerOpen(false)} />
