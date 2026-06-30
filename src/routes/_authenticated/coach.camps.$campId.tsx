@@ -12,6 +12,7 @@ import { ArrowUp, ArrowDown, Trash2 } from "lucide-react";
 import { useHasFeature } from "@/hooks/use-tier";
 import { gateMessage } from "@/lib/tiers";
 import { BlockForStaff } from "@/components/block-for-staff";
+import { useHasStaff } from "@/hooks/use-has-staff";
 
 function PublishLinkButtons({ slug }: { slug: string }) {
   const { allowed } = useHasFeature("publicRegistration");
@@ -105,6 +106,7 @@ function CampDetailPage() {
   const [scanFlash, setScanFlash] = useState<string | null>(null);
   const [todayAttendance, setTodayAttendance] = useState<Map<string, boolean>>(new Map());
   const [completions, setCompletions] = useState<Record<string, SessionRunRecord>>({});
+  const [statsView, setStatsView] = useState<null | "paid" | "pending">(null);
 
   useEffect(() => {
     setCompletions(readCampCompletions(campId));
@@ -291,9 +293,19 @@ function CampDetailPage() {
 
       {/* Quick stats */}
       <div className="grid grid-cols-3 gap-2">
-        <Stat label="Paid" value={String(stats.paid)} tone="green" />
-        <Stat label="Pending" value={String(stats.pending)} tone="amber" />
-        <Stat label="Revenue" value={`$${(stats.revenue / 100).toLocaleString()}`} tone="teal" />
+        <Stat label="Paid" value={String(stats.paid)} tone="green" onClick={() => setStatsView("paid")} />
+        <Stat label="Pending" value={String(stats.pending)} tone="amber" onClick={() => setStatsView("pending")} />
+        <Stat
+          label="Revenue"
+          value={`$${(stats.revenue / 100).toLocaleString()}`}
+          tone="teal"
+          onClick={() => {
+            setMore("financials");
+            requestAnimationFrame(() => {
+              document.getElementById("camp-more-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+          }}
+        />
       </div>
 
       {(camp.venue_name || camp.address) && camp.location_type !== "online" && (
@@ -381,6 +393,7 @@ function CampDetailPage() {
           noResponse={todayNoResponse}
           hasSession={!!todaySession}
           campId={campId}
+          startDate={camp.start_date}
         />
       </div>
 
@@ -399,7 +412,7 @@ function CampDetailPage() {
       )}
 
       {/* More section */}
-      <section className="space-y-2 pt-2">
+      <section id="camp-more-section" className="space-y-2 pt-2">
         <h2 className="text-[10px] font-bold uppercase tracking-wider text-foreground">More</h2>
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
           <MoreRow icon={Hourglass} label="Waitlist" count={wait.length} open={more === "waitlist"} onClick={() => setMore(more === "waitlist" ? null : "waitlist")} />
@@ -427,6 +440,67 @@ function CampDetailPage() {
       {scannerOpen && (
         <QRScannerModal onScan={handleScan} onClose={() => setScannerOpen(false)} />
       )}
+
+      {statsView && (
+        <PaymentStatusSheet
+          view={statsView}
+          regs={regs}
+          onClose={() => setStatsView(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function PaymentStatusSheet({ view, regs, onClose }: { view: "paid" | "pending"; regs: Reg[]; onClose: () => void }) {
+  const rows = regs.filter((r) => (view === "paid" ? r.status === "paid" : r.status === "pending"));
+  const [sent, setSent] = useState<Set<string>>(new Set());
+  function sendReminder(reg: Reg) {
+    setSent((p) => new Set(p).add(reg.id));
+    toast.success(`Reminder sent to ${reg.contacts?.full_name ?? "parent"}`);
+  }
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-4" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-bold text-foreground">{view === "paid" ? "Paid athletes" : "Pending payments"}</h3>
+          <button onClick={onClose} className="text-muted-foreground"><X size={14} /></button>
+        </div>
+        {rows.length === 0 ? (
+          <p className="py-6 text-center text-xs text-muted-foreground">Nothing here yet.</p>
+        ) : (
+          <ul className="max-h-[60vh] space-y-2 overflow-y-auto">
+            {rows.map((r) => {
+              const name = r.attendees?.full_name ?? r.contacts?.full_name ?? "Athlete";
+              const initials = name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+              const amount = `$${((r.amount_cents ?? 0) / 100).toFixed(0)}`;
+              const date = new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+              return (
+                <li key={r.id} className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3">
+                  <div className={"grid h-9 w-9 place-items-center rounded-full text-[11px] font-bold " + (view === "paid" ? "bg-emerald-400/15 text-emerald-400" : "bg-amber-400/15 text-amber-400")}>{initials}</div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-foreground">{name}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {view === "paid" ? `Paid ${amount} · ${date}` : `Owes ${amount} · registered ${date}`}
+                    </p>
+                  </div>
+                  {view === "paid" ? (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-teal">View</span>
+                  ) : (
+                    <button
+                      onClick={() => sendReminder(r)}
+                      disabled={sent.has(r.id)}
+                      className={"rounded-full px-3 py-1.5 text-[10px] font-bold " + (sent.has(r.id) ? "bg-emerald-400/15 text-emerald-400" : "bg-gradient-brand text-primary-foreground")}
+                    >
+                      {sent.has(r.id) ? "Sent ✓" : "Send Reminder"}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
@@ -449,6 +523,20 @@ function MoreRow({ icon: Icon, label, count, open, onClick, last }: { icon: type
 
 function CampProgress({ sessions, completions }: { sessions: Session[]; completions: Record<string, SessionRunRecord> }) {
   if (sessions.length === 0) return null;
+  const today = new Date().toISOString().slice(0, 10);
+  const firstDate = sessions[0]?.session_date;
+  const isPreCamp = firstDate && firstDate > today;
+  if (isPreCamp) {
+    const start = new Date(firstDate + "T00:00:00");
+    return (
+      <div className="rounded-2xl border border-teal/30 bg-teal/5 p-3">
+        <p className="text-[11px] font-bold text-teal">
+          Pre-camp · Starts {start.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+        </p>
+        <p className="mt-0.5 text-[10px] text-muted-foreground">Day counting begins on the first day of the camp.</p>
+      </div>
+    );
+  }
   const completedCount = sessions.filter((s) => completions[s.id]).length;
   const pct = (completedCount / sessions.length) * 100;
   return (
@@ -823,6 +911,7 @@ function CampSchedule({
               <Plus size={12} /> Assign from Library
             </button>
           )}
+          <DayRsvpPanel sessionId={expandedSession.id} campId={campId} />
         </div>
       )}
 
@@ -937,6 +1026,47 @@ function CampSchedule({
 }
 
 function CampStaffSection({ campId }: { campId: string }) {
+  const { hasStaff, ownerId, loading: hasStaffLoading } = useHasStaff();
+  const [owner, setOwner] = useState<{ full_name: string | null; avatar_url: string | null; email: string | null } | null>(null);
+  useEffect(() => {
+    if (!ownerId || hasStaff) return;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("profiles")
+        .select("full_name, avatar_url, email")
+        .eq("id", ownerId)
+        .maybeSingle();
+      if (data) setOwner(data);
+    })();
+  }, [ownerId, hasStaff]);
+
+  if (!hasStaffLoading && !hasStaff) {
+    const name = owner?.full_name ?? owner?.email ?? "Head Coach";
+    const initials = name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+    return (
+      <section className="rounded-2xl border border-teal/30 bg-teal/5 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Staff</h2>
+            <span className="rounded-full bg-teal/20 px-2 py-0.5 text-[10px] font-bold text-teal">1</span>
+          </div>
+        </div>
+        <div className="mt-3 flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5">
+          {owner?.avatar_url ? (
+            <img src={owner.avatar_url} alt={name} className="h-9 w-9 rounded-full object-cover" />
+          ) : (
+            <div className="grid h-9 w-9 place-items-center rounded-full bg-teal/15 text-[11px] font-bold text-teal">{initials}</div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="truncate text-sm font-semibold text-foreground">{name}</p>
+            <p className="truncate text-[11px] text-muted-foreground">Head Coach</p>
+          </div>
+          <span className="rounded-full bg-surface px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Owner</span>
+        </div>
+      </section>
+    );
+  }
+
   type TM = { id: string; email: string; title: string; permission_level: "owner" | "coach" | "assistant"; status: string };
   const [team, setTeam] = useState<TM[]>([]);
   const [assigned, setAssigned] = useState<Array<{ id: string; team_member_id: string }>>([]);
@@ -1100,8 +1230,12 @@ function RosterCard({ regs }: { regs: Reg[] }) {
   );
 }
 
-function TodayRsvpCard({ attending, notAttending, noResponse, hasSession, campId: _campId }: { attending: number; notAttending: number; noResponse: number; hasSession: boolean; campId: string }) {
+function TodayRsvpCard({ attending, notAttending, noResponse, hasSession, campId: _campId, startDate }: { attending: number; notAttending: number; noResponse: number; hasSession: boolean; campId: string; startDate?: string | null }) {
   const [sent, setSent] = useState(false);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const start = startDate ? new Date(startDate + "T00:00:00") : null;
+  const isPreCamp = !hasSession && !!start && start > today;
+  const daysAway = start ? Math.ceil((start.getTime() - today.getTime()) / 86400000) : 0;
   return (
     <div className="rounded-2xl border border-border bg-card p-3">
       <div className="flex items-center justify-between">
@@ -1114,16 +1248,25 @@ function TodayRsvpCard({ attending, notAttending, noResponse, hasSession, campId
           <RsvpRow color="bg-red-400" label="Not Attending" value={notAttending} />
           <RsvpRow color="bg-muted-foreground" label="No Response" value={noResponse} />
         </div>
+      ) : isPreCamp && start ? (
+        <div className="mt-2">
+          <p className="text-[11px] font-semibold text-foreground">
+            Camp starts {start.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+          </p>
+          <p className="text-[10px] text-muted-foreground">{daysAway} {daysAway === 1 ? "day" : "days"} away</p>
+        </div>
       ) : (
         <p className="mt-2 text-[11px] text-muted-foreground">No session today.</p>
       )}
-      <button
-        onClick={() => setSent(true)}
-        disabled={!hasSession || noResponse === 0}
-        className={"mt-3 w-full rounded-full px-3 py-1.5 text-[10px] font-bold disabled:opacity-40 " + (sent ? "bg-emerald-400/15 text-emerald-400" : "bg-gradient-brand text-primary-foreground")}
-      >
-        {sent ? "Sent ✓" : "Send Reminder"}
-      </button>
+      {hasSession && (
+        <button
+          onClick={() => setSent(true)}
+          disabled={noResponse === 0}
+          className={"mt-3 w-full rounded-full px-3 py-1.5 text-[10px] font-bold disabled:opacity-40 " + (sent ? "bg-emerald-400/15 text-emerald-400" : "bg-gradient-brand text-primary-foreground")}
+        >
+          {sent ? "Sent ✓" : "Send Reminder"}
+        </button>
+      )}
     </div>
   );
 }
@@ -1134,6 +1277,86 @@ function RsvpRow({ color, label, value }: { color: string; label: string; value:
       <span className={"h-2 w-2 rounded-full " + color} />
       <span className="flex-1 text-muted-foreground">{label}</span>
       <span className="font-bold text-foreground">{value}</span>
+    </div>
+  );
+}
+
+function DayRsvpPanel({ sessionId, campId }: { sessionId: string; campId: string }) {
+  type Row = {
+    id: string;
+    status: string;
+    responded_at: string | null;
+    registration_id: string;
+  };
+  const [rows, setRows] = useState<Row[] | null>(null);
+  const [names, setNames] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setRows(null);
+      const { data } = await (supabase as any)
+        .from("daily_rsvps")
+        .select("id,status,responded_at,registration_id")
+        .eq("camp_session_id", sessionId);
+      if (cancelled) return;
+      const list = (data ?? []) as Row[];
+      setRows(list);
+      const regIds = list.map((r) => r.registration_id);
+      if (regIds.length) {
+        const { data: regs } = await supabase
+          .from("registrations")
+          .select("id, attendees(full_name), contacts(full_name)")
+          .in("id", regIds)
+          .eq("camp_id", campId);
+        const map: Record<string, string> = {};
+        ((regs ?? []) as any[]).forEach((r) => {
+          map[r.id] = r.attendees?.full_name ?? r.contacts?.full_name ?? "Athlete";
+        });
+        if (!cancelled) setNames(map);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [sessionId, campId]);
+
+  if (rows === null) {
+    return <p className="mt-3 text-center text-[10px] text-muted-foreground">Loading RSVPs…</p>;
+  }
+  const attending = rows.filter((r) => r.status === "attending" || r.status === "yes");
+  const notAttending = rows.filter((r) => r.status !== "attending" && r.status !== "yes");
+  function row(r: Row, tone: "green" | "grey") {
+    const name = names[r.registration_id] ?? "Athlete";
+    const initials = name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+    const time = r.responded_at ? new Date(r.responded_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "No response";
+    return (
+      <li key={r.id} className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2">
+        <div className={"grid h-7 w-7 place-items-center rounded-full text-[10px] font-bold " + (tone === "green" ? "bg-emerald-400/15 text-emerald-400" : "bg-muted/30 text-muted-foreground")}>{initials}</div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[12px] font-semibold text-foreground">{name}</p>
+          <p className="text-[10px] text-muted-foreground">{r.status} · {time}</p>
+        </div>
+        {tone === "green" ? <Check size={14} className="text-emerald-400" /> : <Circle size={12} className="text-muted-foreground" />}
+      </li>
+    );
+  }
+  return (
+    <div className="mt-4 border-t border-border pt-3">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Day RSVPs</p>
+      {rows.length === 0 ? (
+        <p className="mt-2 text-center text-[11px] text-muted-foreground">No RSVPs yet.</p>
+      ) : (
+        <div className="mt-2 space-y-3">
+          <div>
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400">Attending ({attending.length})</p>
+            <ul className="space-y-1">{attending.map((r) => row(r, "green"))}</ul>
+            {attending.length === 0 && <p className="text-[10px] text-muted-foreground">None yet.</p>}
+          </div>
+          <div>
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Not Attending / No Response ({notAttending.length})</p>
+            <ul className="space-y-1">{notAttending.map((r) => row(r, "grey"))}</ul>
+            {notAttending.length === 0 && <p className="text-[10px] text-muted-foreground">None.</p>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1176,13 +1399,17 @@ function Info({ icon: Icon, label, value }: { icon: typeof Calendar; label: stri
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone: "green" | "amber" | "teal" }) {
+function Stat({ label, value, tone, onClick }: { label: string; value: string; tone: "green" | "amber" | "teal"; onClick?: () => void }) {
   const color = tone === "green" ? "text-emerald-400" : tone === "amber" ? "text-amber-400" : "text-teal";
+  const Comp: any = onClick ? "button" : "div";
   return (
-    <div className="rounded-2xl border border-border bg-card p-3 text-center">
+    <Comp
+      onClick={onClick}
+      className={"rounded-2xl border border-border bg-card p-3 text-center transition " + (onClick ? "hover:border-teal/40 active:scale-[0.98]" : "")}
+    >
       <p className={"font-display text-lg font-bold " + color}>{value}</p>
       <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{label}</p>
-    </div>
+    </Comp>
   );
 }
 

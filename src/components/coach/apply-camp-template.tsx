@@ -95,7 +95,7 @@ export function ApplyCampTemplate({ campSessions, planKey, onApplied }: Props) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex w-full items-center justify-center gap-1.5 rounded-full border border-volt/50 bg-volt/15 py-2 text-[11px] font-bold tracking-wider text-volt"
+        className="flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-brand py-2 text-[11px] font-bold tracking-wider text-primary-foreground shadow-glow-teal"
       >
         <Layers size={12} /> APPLY CAMP TEMPLATE
       </button>
