@@ -1094,27 +1094,47 @@ function AccommodationSection() {
 }
 
 function HotelCard() {
+  const [showRooms, setShowRooms] = useState(false);
   return (
     <div className="rounded-xl border border-border bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Hotel</p>
           <p className="mt-1 text-sm font-bold">Sandman Hotel Langley</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">8765 202 St, Langley, BC</p>
+          <a
+            href="https://maps.google.com/?q=8765+202+St,+Langley,+BC"
+            target="_blank" rel="noreferrer"
+            className="mt-0.5 inline-block text-xs text-muted-foreground active:opacity-70"
+          >
+            8765 202 St, Langley, BC
+          </a>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Check-in: <span className="font-semibold text-foreground">Jul 17</span> · Check-out:{" "}
+            <span className="font-semibold text-foreground">Jul 21</span>
+          </p>
         </div>
         <Home size={16} className="text-teal" />
       </div>
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        <a href="https://maps.google.com/?q=Sandman+Hotel+Langley" target="_blank" rel="noreferrer" className="flex items-center justify-center gap-1 rounded-md bg-surface-2 py-2 text-[11px] font-bold">
-          <MapPin size={12} /> Maps
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <a href="https://maps.google.com/?q=Sandman+Hotel+Langley" target="_blank" rel="noreferrer" className="flex items-center justify-center gap-1 rounded-full border border-teal py-2 text-[11px] font-bold text-teal">
+          <MapPin size={12} /> Get Directions
         </a>
-        <a href="tel:6045300050" className="flex items-center justify-center gap-1 rounded-md bg-surface-2 py-2 text-[11px] font-bold">
-          <Phone size={12} /> Call
+        <a href="tel:6045300050" className="flex items-center justify-center gap-1 rounded-full border border-teal py-2 text-[11px] font-bold text-teal">
+          <Phone size={12} /> Call Hotel
         </a>
-        <button className="flex items-center justify-center gap-1 rounded-md bg-surface-2 py-2 text-[11px] font-bold text-muted-foreground">
-          Confirmation #
-        </button>
       </div>
+
+      <label className="mt-3 flex items-center justify-between rounded-md border border-border bg-surface-2 px-3 py-2">
+        <span className="text-[11px] font-semibold">Show room assignments</span>
+        <input type="checkbox" checked={showRooms} onChange={(e) => setShowRooms(e.target.checked)} className="h-4 w-4 accent-teal" />
+      </label>
+      {showRooms && (
+        <div className="mt-2 space-y-1 rounded-md border border-border bg-surface-2 p-3 text-[11px]">
+          <p><span className="font-bold text-teal">Room 201:</span> Carter, Brooks</p>
+          <p><span className="font-bold text-teal">Room 203:</span> Jensen, Petrov, Callahan</p>
+          <p><span className="font-bold text-teal">Room 205:</span> Coaching Staff</p>
+        </div>
+      )}
     </div>
   );
 }
