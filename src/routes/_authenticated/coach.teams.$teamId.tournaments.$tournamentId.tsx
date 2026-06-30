@@ -462,9 +462,19 @@ function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode
         ))}
       </div>
 
-      <button onClick={() => setCalOpen(true)} className="inline-flex items-center gap-1 text-[11px] font-bold text-teal">
-        <CalendarIcon size={12} /> + Add to Calendar
-      </button>
+      <div className="flex items-center justify-between">
+        <button onClick={() => setCalOpen(true)} className="inline-flex items-center gap-1 text-[11px] font-bold text-teal">
+          <CalendarIcon size={12} /> + Add to Calendar
+        </button>
+        <button
+          onClick={() => setEditMode((v) => !v)}
+          className="inline-flex items-center gap-1 rounded-full border border-teal/60 bg-teal/10 px-2.5 py-1 text-[10px] font-bold text-teal"
+          aria-label={editMode ? "Done editing" : "Edit schedule"}
+        >
+          {editMode ? <Check size={12} /> : <Pencil size={12} />}
+          {editMode ? "Done" : "Edit Schedule"}
+        </button>
+      </div>
 
       <div className="space-y-4">
         {days.map((d, dayIdx) => {
