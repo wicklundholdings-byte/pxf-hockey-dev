@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { TeamEventRow } from "@/components/teams/team-event-row";
 import { useCurrentTier } from "@/hooks/use-tier";
 import { useAuth } from "@/hooks/use-auth";
+import { useHasStaff } from "@/hooks/use-has-staff";
 import { useEliteRole } from "@/hooks/use-elite-role";
 import { LocationPicker } from "@/components/coach/location-picker";
 
