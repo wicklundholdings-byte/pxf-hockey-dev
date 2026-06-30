@@ -750,7 +750,7 @@ function DaySection({
 
 function ItemRow({
   item, editMode, onEdit, onDelete, onRsvp,
-  draggable, onDragStart, onDragOver, onDrop, isDragging, flashTime, onTimeChange,
+  draggable, onDragStart, onDragOver, onDrop, isDragging, flashTime, onTimeChange, onOpen,
 }: {
   item: ItineraryItem;
   editMode: boolean;
@@ -764,6 +764,7 @@ function ItemRow({
   isDragging?: boolean;
   flashTime?: boolean;
   onTimeChange?: (time: string) => void;
+  onOpen?: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -821,7 +822,7 @@ function ItemRow({
           </span>
         )}
         <button
-          onClick={() => editMode ? onEdit() : item.rsvp && setExpanded((v) => !v)}
+          onClick={() => editMode ? onEdit() : onOpen ? onOpen() : item.rsvp && setExpanded((v) => !v)}
           className="flex flex-1 items-center gap-2 text-left"
         >
           {editMode && onTimeChange ? (
@@ -866,6 +867,8 @@ function ItemRow({
           <button onClick={() => setShowDelete((v) => !v)} className="rounded p-1 text-muted-foreground">
             <Trash2 size={14} />
           </button>
+        ) : onOpen ? (
+          <ChevronRight size={14} className="text-muted-foreground" />
         ) : item.rsvp ? (
           expanded ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />
         ) : null}
