@@ -61,7 +61,7 @@ function TeamLayout() {
               <Link
                 key={t.label}
                 to={t.to}
-                params={{ teamId }}
+                params={{ teamId } as any}
                 className={
                   "shrink-0 border-b-2 px-3 py-3 text-sm font-bold transition-colors " +
                   (active ? "border-teal text-teal" : "border-transparent text-muted-foreground")
