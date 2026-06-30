@@ -22,7 +22,7 @@ function TeamMoreTab() {
   return (
     <div className="space-y-3 pb-10">
       <div className="overflow-hidden rounded-2xl border border-border bg-surface">
-        {rows.map(({ to, label, Icon }, i) => (
+        {rows.map(({ to, label, subtitle, Icon }, i) => (
           <Link
             key={label}
             to={to}
@@ -35,7 +35,10 @@ function TeamMoreTab() {
             <div className="grid h-9 w-9 place-items-center rounded-lg bg-surface-2">
               <Icon size={16} className="text-teal" />
             </div>
-            <span className="flex-1 text-sm font-bold">{label}</span>
+            <div className="flex-1">
+              <span className="block text-sm font-bold">{label}</span>
+              <span className="block text-xs text-muted-foreground">{subtitle}</span>
+            </div>
             <ChevronRight size={16} className="text-muted-foreground" />
           </Link>
         ))}
