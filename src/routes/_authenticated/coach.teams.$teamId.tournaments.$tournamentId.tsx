@@ -630,8 +630,13 @@ function ItemRow({
         >
           <span className="w-14 shrink-0 text-[10px] font-semibold text-muted-foreground">{item.time}</span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold">{item.title}</p>
-            <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wider text-white/60">{TYPE_LABEL[item.type]}</p>
+            <p className="flex items-center gap-1.5 truncate text-xs font-semibold">
+              {item.isPrivate && <Lock size={11} className="shrink-0 text-amber-400" />}
+              <span className="truncate">{item.title}</span>
+            </p>
+            <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wider text-white/60">
+              {item.isPrivate ? `PRIVATE · ${audienceLabel(item.audience)}` : TYPE_LABEL[item.type]}
+            </p>
             {item.location && (
               <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{item.location}</p>
             )}
