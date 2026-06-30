@@ -39,9 +39,20 @@ function TournamentDetail() {
             <h2 className="font-display text-xl font-bold leading-tight">{t.name}</h2>
             <p className="mt-1 text-xs text-muted-foreground">{t.dates} · {t.city}</p>
           </div>
-          {t.status && (
-            <span className="shrink-0 rounded-full bg-teal/20 px-2 py-1 text-[10px] font-bold text-teal">{t.status}</span>
-          )}
+          <div className="flex items-center gap-2">
+            {tab === "Schedule" && !IS_PARENT && (
+              <button
+                onClick={() => setEditMode((v) => !v)}
+                className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-surface text-muted-foreground"
+                aria-label={editMode ? "Done editing" : "Edit schedule"}
+              >
+                {editMode ? <Check size={14} className="text-teal" /> : <Pencil size={14} />}
+              </button>
+            )}
+            {t.status && (
+              <span className="shrink-0 rounded-full bg-teal/20 px-2 py-1 text-[10px] font-bold text-teal">{t.status}</span>
+            )}
+          </div>
         </div>
 
         <div className="mt-3 -mx-1 flex gap-1 overflow-x-auto border-b border-border no-scrollbar">
