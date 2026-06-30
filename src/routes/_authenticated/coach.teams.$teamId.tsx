@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Calendar, Users, BarChart3, Camera, DollarSign, Trophy } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId")({
   component: TeamLayout,
@@ -21,16 +21,15 @@ function TeamLayout() {
     })();
   }, [teamId]);
 
-  const tabs = [
-    { to: "/coach/teams/$teamId/schedule", label: "Schedule" },
-    { to: "/coach/teams/$teamId/roster", label: "Roster" },
-    { to: "/coach/teams/$teamId/dryland", label: "Dryland" },
-    { to: "/coach/teams/$teamId/playbook", label: "Playbook" },
-    { to: "/coach/teams/$teamId/stats", label: "Stats" },
-    { to: "/coach/teams/$teamId/messages", label: "Messages" },
+  const base = `/coach/teams/${teamId}`;
+  const isOverview = pathname === base || pathname === base + "/";
+  const tabs: { to: any; label: string; match: (p: string) => boolean }[] = [
+    { to: "/coach/teams/$teamId", label: "Overview", match: (p) => p === base || p === base + "/" },
+    { to: "/coach/teams/$teamId/schedule", label: "Schedule", match: (p) => p.startsWith(base + "/schedule") },
+    { to: "/coach/teams/$teamId/roster", label: "Roster", match: (p) => p.startsWith(base + "/roster") },
+    { to: "/coach/teams/$teamId/stats", label: "Stats", match: (p) => p.startsWith(base + "/stats") },
+    { to: "/coach/teams/$teamId/more", label: "More", match: (p) => p.startsWith(base + "/more") },
   ];
-
-  const isOverview = pathname === `/coach/teams/${teamId}` || pathname === `/coach/teams/${teamId}/`;
 
   return (
     <div className="-mx-5 -mt-2">
@@ -53,28 +52,26 @@ function TeamLayout() {
             <p className="text-[11px] text-muted-foreground">{team?.season || ""}</p>
           </div>
         </div>
-        {isOverview && (
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {[
-              { to: "/coach/teams/$teamId/schedule" as const, label: "Schedule", Icon: Calendar },
-              { to: "/coach/teams/$teamId/roster" as const, label: "Roster", Icon: Users },
-              { to: "/coach/teams/$teamId/stats" as const, label: "Stats", Icon: BarChart3 },
-              { to: "/coach/teams/$teamId/playbook" as const, label: "Media", Icon: Camera },
-              { to: "/coach/teams/$teamId/payments" as const, label: "Payments", Icon: DollarSign },
-              { to: "/coach/teams/$teamId/schedule" as const, label: "Tournaments", Icon: Trophy },
-            ].map(({ to, label, Icon }) => (
+      </div>
+      <div className="sticky top-0 z-30 mt-3 border-b border-border bg-background/95 backdrop-blur">
+        <div className="flex gap-1 overflow-x-auto px-5 no-scrollbar">
+          {tabs.map((t) => {
+            const active = t.match(pathname);
+            return (
               <Link
-                key={label}
-                to={to}
+                key={t.label}
+                to={t.to}
                 params={{ teamId }}
-                className="flex items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 shadow-glow-teal active:opacity-90"
+                className={
+                  "shrink-0 border-b-2 px-3 py-3 text-sm font-bold transition-colors " +
+                  (active ? "border-teal text-teal" : "border-transparent text-muted-foreground")
+                }
               >
-                <Icon size={18} className="text-background" />
-                <span className="text-sm font-bold text-background">{label}</span>
+                {t.label}
               </Link>
-            ))}
-          </div>
-        )}
+            );
+          })}
+        </div>
       </div>
       <div id="team-tab-content" className="mt-3 px-5 scroll-mt-4">
         <Outlet />
