@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { createEvent } from "@/lib/teams.functions";
-import { Plus, X, Swords, Dumbbell, Star } from "lucide-react";
+import { Plus, X, Disc, Dumbbell, ChevronDown } from "lucide-react";
 import { maskName } from "@/lib/team-stats";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedule/")({
@@ -13,12 +13,29 @@ export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedu
 type EventRow = { id: string; event_type: "game" | "practice" | "team_event"; title: string | null; opponent_name: string | null; home_away: string | null; venue: string | null; event_date: string; start_time: string | null };
 type RsvpCounts = { yes: number; no: number; maybe: number; none: number };
 type ResultRow = { team_score: number; opponent_score: number; result: string | null; leader: { name: string; g: number; a: number; pts: number } | null; shutout: { name: string; svpct: string } | null };
+type FilterTab = "all" | "games" | "practices";
 
-const TYPE_META: Record<string, { label: string; icon: typeof Swords; bg: string; color: string }> = {
-  game: { label: "GAME", icon: Swords, bg: "bg-red-500/15", color: "text-red-400" },
-  practice: { label: "PRACTICE", icon: Dumbbell, bg: "bg-emerald-500/15", color: "text-emerald-400" },
-  team_event: { label: "EVENT", icon: Star, bg: "bg-surface-2", color: "text-muted-foreground" },
-};
+// Mock data shown alongside real events so empty demo teams still feel populated.
+const MOCK_UPCOMING: Array<{
+  id: string;
+  kind: "game" | "practice";
+  opponent?: string;
+  date: string;
+  time: string;
+  venue: string;
+  going?: number;
+  pending?: number;
+  out?: number;
+}> = [
+  { id: "mock-up-1", kind: "game", opponent: "Burnaby Winter Club", date: "Sat, Jul 5", time: "6:00 PM", venue: "Cloverdale Arena", going: 9, pending: 2, out: 1 },
+  { id: "mock-up-2", kind: "practice", date: "Thu, Jul 9", time: "7:45 AM", venue: "Surrey Sport and Leisure" },
+  { id: "mock-up-3", kind: "game", opponent: "Coquitlam Express", date: "Sat, Jul 12", time: "4:30 PM", venue: "Poirier Sport Centre", going: 11, pending: 1, out: 0 },
+];
+const MOCK_PAST: Array<{ id: string; opponent: string; date: string; teamScore: number; oppScore: number; result: "WIN" | "LOSS" | "OT" }> = [
+  { id: "mock-past-1", opponent: "Langley Trappers", date: "Jun 22", teamScore: 4, oppScore: 2, result: "WIN" },
+  { id: "mock-past-2", opponent: "North Delta Lightning", date: "Jun 18", teamScore: 1, oppScore: 3, result: "LOSS" },
+  { id: "mock-past-3", opponent: "Richmond Sockeyes", date: "Jun 14", teamScore: 2, oppScore: 2, result: "OT" },
+];
 
 function fmtDate(d: string) {
   try { return new Date(d + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }); } catch { return d; }
@@ -28,8 +45,27 @@ function fmtTime(t: string) {
   const hr = parseInt(h, 10); const ap = hr >= 12 ? "PM" : "AM"; const h12 = ((hr + 11) % 12) + 1;
   return `${h12}:${m} ${ap}`;
 }
-function mapsUrl(venue: string) {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue)}`;
+function todayISO() { return new Date().toISOString().slice(0, 10); }
+
+function resultBadgeClass(r: string) {
+  const up = r.toUpperCase();
+  if (up === "WIN") return "bg-emerald-500/15 text-emerald-400";
+  if (up === "LOSS") return "bg-red-500/15 text-red-400";
+  return "bg-teal/15 text-teal";
+}
+
+function Dot({ className }: { className: string }) {
+  return <span className={"inline-block h-1.5 w-1.5 rounded-full " + className} />;
+}
+
+function AvailabilityRow({ going, pending, out }: { going: number; pending: number; out: number }) {
+  return (
+    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+      <span className="inline-flex items-center gap-1"><Dot className="bg-emerald-400" /> <span className="font-semibold text-foreground">{going}</span> going</span>
+      <span className="inline-flex items-center gap-1"><Dot className="bg-amber-400" /> <span className="font-semibold text-foreground">{pending}</span> pending</span>
+      <span className="inline-flex items-center gap-1"><Dot className="bg-red-400" /> <span className="font-semibold text-foreground">{out}</span> out</span>
+    </div>
+  );
 }
 
 function Schedule() {
@@ -37,7 +73,9 @@ function Schedule() {
   const [events, setEvents] = useState<EventRow[]>([]);
   const [counts, setCounts] = useState<Record<string, RsvpCounts>>({});
   const [results, setResults] = useState<Record<string, ResultRow>>({});
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding] = useState<null | "game" | "practice">(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [filter, setFilter] = useState<FilterTab>("all");
 
   async function refresh() {
     const { data } = await supabase
@@ -105,95 +143,204 @@ function Schedule() {
   }
   useEffect(() => { refresh(); }, [teamId]);
 
+  const today = todayISO();
+  const filterFn = (e: EventRow) => {
+    if (filter === "games") return e.event_type === "game";
+    if (filter === "practices") return e.event_type === "practice";
+    return e.event_type === "game" || e.event_type === "practice";
+  };
+  const upcomingReal = events.filter((e) => e.event_date >= today && filterFn(e));
+  const pastReal = events
+    .filter((e) => e.event_date < today && e.event_type === "game" && filter !== "practices")
+    .sort((a, b) => (a.event_date < b.event_date ? 1 : -1));
+
+  const mockUpcomingFiltered = MOCK_UPCOMING.filter((m) =>
+    filter === "all" ? true : filter === "games" ? m.kind === "game" : m.kind === "practice"
+  );
+  const mockPastFiltered = filter === "practices" ? [] : MOCK_PAST;
+
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold">Upcoming</h3>
-        <button onClick={() => setAdding(true)} className="inline-flex items-center gap-1 rounded-full bg-teal px-3 py-1 text-[11px] font-bold text-background">
-          <Plus size={12} /> Add event
-        </button>
+    <div className="space-y-4">
+      {/* Header row */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+          {([
+            { id: "all", label: "All" },
+            { id: "games", label: "Games" },
+            { id: "practices", label: "Practices" },
+          ] as const).map((c) => {
+            const active = filter === c.id;
+            return (
+              <button
+                key={c.id}
+                onClick={() => setFilter(c.id)}
+                className={
+                  "shrink-0 border-b-2 px-2 py-1.5 text-[12px] font-bold transition-colors " +
+                  (active ? "border-teal text-teal" : "border-transparent text-muted-foreground")
+                }
+              >
+                {c.label}
+              </button>
+            );
+          })}
+        </div>
+        <div className="relative">
+          <button
+            onClick={() => setPickerOpen((v) => !v)}
+            className="inline-flex items-center gap-1 rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-primary-foreground"
+          >
+            <Plus size={12} /> Add <ChevronDown size={11} />
+          </button>
+          {pickerOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setPickerOpen(false)} />
+              <div className="absolute right-0 top-full z-50 mt-1 w-40 overflow-hidden rounded-xl border border-border bg-surface shadow-xl">
+                <button
+                  onClick={() => { setPickerOpen(false); setAdding("game"); }}
+                  className="block w-full px-3 py-2 text-left text-xs font-semibold hover:bg-surface-2"
+                >
+                  Add Game
+                </button>
+                <button
+                  onClick={() => { setPickerOpen(false); setAdding("practice"); }}
+                  className="block w-full border-t border-border px-3 py-2 text-left text-xs font-semibold hover:bg-surface-2"
+                >
+                  Add Practice
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-      <div className="mt-3 space-y-3">
-        {events.length === 0 && (
-          <p className="rounded-xl border border-dashed border-border bg-surface p-4 text-center text-xs text-muted-foreground">No upcoming events.</p>
-        )}
-        {events.map((e) => {
-          const meta = TYPE_META[e.event_type] ?? TYPE_META.team_event;
-          const Icon = meta.icon;
-          const res = results[e.id];
-          const label = e.event_type === "game"
-            ? `${e.home_away === "away" ? "@" : "vs"} ${e.opponent_name || "TBD"}`
-            : e.title || meta.label;
-          const c = counts[e.id];
-          return (
-            <div key={e.id}>
+
+      {/* Upcoming */}
+      <div>
+        <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Upcoming</h3>
+        <div className="mt-2 space-y-2.5">
+          {upcomingReal.map((e) => {
+            const c = counts[e.id];
+            const isGame = e.event_type === "game";
+            const label = isGame
+              ? `${e.home_away === "away" ? "@ " : "vs. "}${e.opponent_name || "TBD"}`
+              : e.title || "Practice";
+            const sub = `${fmtDate(e.event_date)}${e.start_time ? " · " + fmtTime(e.start_time) : ""}${e.venue ? " · " + e.venue : ""}`;
+            return (
               <Link
+                key={e.id}
                 to="/coach/teams/$teamId/schedule/$eventId"
                 params={{ teamId, eventId: e.id }}
                 className="block rounded-2xl border border-border bg-surface p-3"
               >
-                <div className="flex items-center gap-3">
-                  <div className={"grid h-10 w-10 place-items-center rounded-xl " + meta.bg}>
-                    <Icon size={16} className={meta.color} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className={"rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider " + meta.bg + " " + meta.color}>{meta.label}</span>
-                      {res?.result && (
-                        <span className={"rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider " +
-                          (res.result === "win" ? "bg-emerald-500/15 text-emerald-400"
-                            : res.result === "loss" ? "bg-red-500/15 text-red-400"
-                            : res.result.startsWith("ot") ? "bg-teal/15 text-teal"
-                            : "bg-surface-2 text-muted-foreground")}>
-                          {res.result.toUpperCase().replace("_", " ")}
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-1 truncate text-sm font-semibold">{label}</p>
-                    {res && (
-                      <p className="text-[11px] font-bold">Final: {res.team_score} — {res.opponent_score}</p>
-                    )}
-                    {res?.leader && (
-                      <p className="truncate text-[10px] text-amber-400">⭐ {res.leader.name} — {res.leader.g}G {res.leader.a}A {res.leader.pts}PTS</p>
-                    )}
-                    {res?.shutout && (
-                      <p className="truncate text-[10px] text-teal">🥅 Shutout — {res.shutout.name} {res.shutout.svpct}</p>
-                    )}
-                    <p className="text-[11px] text-muted-foreground">
-                      {fmtDate(e.event_date)}{e.start_time ? " · " + fmtTime(e.start_time) : ""}{e.venue ? " · " + e.venue : ""}
-                    </p>
-                    {c && (
-                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px] font-bold">
-                        <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-emerald-400">{c.yes} IN</span>
-                        <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-amber-400">{c.maybe} MAYBE</span>
-                        <span className="rounded-full bg-red-500/15 px-1.5 py-0.5 text-red-400">{c.no} OUT</span>
-                        <span className="rounded-full bg-surface-2 px-1.5 py-0.5 text-muted-foreground">{c.none} NO REPLY</span>
-                      </div>
-                    )}
-                  </div>
+                <div className="flex items-center gap-2">
+                  {isGame ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-teal/15 px-2 py-0.5 text-[9px] font-bold tracking-wider text-teal">
+                      <Disc size={10} /> GAME
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-[9px] font-bold tracking-wider text-muted-foreground">
+                      <Dumbbell size={10} /> PRACTICE
+                    </span>
+                  )}
                 </div>
-                {e.venue && (
-                  <button
-                    onClick={(ev) => { ev.preventDefault(); ev.stopPropagation(); window.open(mapsUrl(e.venue!), "_blank"); }}
-                    className="mt-2 inline-flex w-full items-center justify-center rounded-lg border border-border bg-background py-1.5 text-[11px] font-semibold text-muted-foreground"
-                  >
-                    Open in Google Maps
-                  </button>
+                <p className="mt-1.5 truncate text-sm font-semibold">{label}</p>
+                <p className="text-[11px] text-muted-foreground">{sub}</p>
+                {isGame && c && <AvailabilityRow going={c.yes} pending={c.maybe} out={c.no} />}
+              </Link>
+            );
+          })}
+          {mockUpcomingFiltered.map((m) => (
+            <div key={m.id} className="rounded-2xl border border-border bg-surface p-3">
+              <div className="flex items-center gap-2">
+                {m.kind === "game" ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-teal/15 px-2 py-0.5 text-[9px] font-bold tracking-wider text-teal">
+                    <Disc size={10} /> GAME
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-[9px] font-bold tracking-wider text-muted-foreground">
+                    <Dumbbell size={10} /> PRACTICE
+                  </span>
+                )}
+              </div>
+              <p className="mt-1.5 truncate text-sm font-semibold">
+                {m.kind === "game" ? `vs. ${m.opponent}` : "Practice"}
+              </p>
+              <p className="text-[11px] text-muted-foreground">{m.date} · {m.time} · {m.venue}</p>
+              {m.kind === "game" && (
+                <AvailabilityRow going={m.going ?? 0} pending={m.pending ?? 0} out={m.out ?? 0} />
+              )}
+            </div>
+          ))}
+          {upcomingReal.length === 0 && mockUpcomingFiltered.length === 0 && (
+            <p className="rounded-xl border border-dashed border-border bg-surface p-4 text-center text-xs text-muted-foreground">No upcoming events.</p>
+          )}
+        </div>
+      </div>
+
+      {/* Past */}
+      <div>
+        <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Past</h3>
+        <div className="mt-2 space-y-2.5">
+          {pastReal.map((e) => {
+            const res = results[e.id];
+            const opp = e.opponent_name || "Opponent";
+            return (
+              <Link
+                key={e.id}
+                to="/coach/teams/$teamId/schedule/$eventId"
+                params={{ teamId, eventId: e.id }}
+                className="flex items-center justify-between rounded-2xl border border-border bg-surface p-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">vs. {opp}</p>
+                  <p className="text-[11px] text-muted-foreground">{fmtDate(e.event_date)}</p>
+                </div>
+                {res && (
+                  <div className="flex items-center gap-2">
+                    <span className="font-display text-lg font-bold leading-none">{res.team_score} — {res.opponent_score}</span>
+                    {res.result && (
+                      <span className={"rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider " + resultBadgeClass(res.result === "win" ? "WIN" : res.result === "loss" ? "LOSS" : "OT")}>
+                        {res.result === "win" ? "WIN" : res.result === "loss" ? "LOSS" : "OT"}
+                      </span>
+                    )}
+                  </div>
                 )}
               </Link>
+            );
+          })}
+          {mockPastFiltered.map((m) => (
+            <div key={m.id} className="flex items-center justify-between rounded-2xl border border-border bg-surface p-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">vs. {m.opponent}</p>
+                <p className="text-[11px] text-muted-foreground">{m.date}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-display text-lg font-bold leading-none">{m.teamScore} — {m.oppScore}</span>
+                <span className={"rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider " + resultBadgeClass(m.result)}>{m.result}</span>
+              </div>
             </div>
-          );
-        })}
+          ))}
+          {pastReal.length === 0 && mockPastFiltered.length === 0 && (
+            <p className="rounded-xl border border-dashed border-border bg-surface p-4 text-center text-xs text-muted-foreground">No past games.</p>
+          )}
+        </div>
       </div>
-      {adding && <AddEventSheet teamId={teamId} onClose={() => setAdding(false)} onSaved={() => { setAdding(false); refresh(); }} />}
+
+      {adding && (
+        <AddEventSheet
+          teamId={teamId}
+          defaultType={adding}
+          onClose={() => setAdding(null)}
+          onSaved={() => { setAdding(null); refresh(); }}
+        />
+      )}
     </div>
   );
 }
 
-function AddEventSheet({ teamId, onClose, onSaved }: { teamId: string; onClose: () => void; onSaved: () => void }) {
+function AddEventSheet({ teamId, defaultType, onClose, onSaved }: { teamId: string; defaultType: "game" | "practice"; onClose: () => void; onSaved: () => void }) {
   const create = useServerFn(createEvent);
   const [form, setForm] = useState({
-    eventType: "practice" as "game" | "practice" | "team_event",
+    eventType: defaultType as "game" | "practice" | "team_event",
     title: "", opponentName: "", homeAway: "home" as "home" | "away" | "neutral",
     venue: "", eventDate: new Date().toISOString().slice(0, 10), startTime: "", notes: "",
   });
@@ -217,18 +364,10 @@ function AddEventSheet({ teamId, onClose, onSaved }: { teamId: string; onClose: 
       <div className="mx-auto w-full max-w-[480px] rounded-t-3xl border-t border-border bg-surface px-5 pt-4 pb-[max(env(safe-area-inset-bottom),1rem)]" onClick={(e) => e.stopPropagation()}>
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border" />
         <div className="flex items-center justify-between">
-          <h3 className="font-bold">Add event</h3>
+          <h3 className="font-bold">{defaultType === "game" ? "Add Game" : "Add Practice"}</h3>
           <button onClick={onClose}><X size={16} /></button>
         </div>
         <form onSubmit={submit} className="mt-3 space-y-3">
-          <div className="grid grid-cols-3 gap-1 rounded-full bg-background p-1">
-            {(["practice", "game", "team_event"] as const).map((t) => (
-              <button key={t} type="button" onClick={() => setForm({ ...form, eventType: t })}
-                className={"rounded-full py-1.5 text-[11px] font-bold " + (form.eventType === t ? "bg-teal text-background" : "text-muted-foreground")}>
-                {t === "team_event" ? "Event" : t.charAt(0).toUpperCase() + t.slice(1)}
-              </button>
-            ))}
-          </div>
           {form.eventType === "game" && (
             <>
               <Field label="Opponent" value={form.opponentName} onChange={(v) => setForm({ ...form, opponentName: v })} />
@@ -241,9 +380,6 @@ function AddEventSheet({ teamId, onClose, onSaved }: { teamId: string; onClose: 
                 ))}
               </div>
             </>
-          )}
-          {form.eventType === "team_event" && (
-            <Field label="Title" value={form.title} onChange={(v) => setForm({ ...form, title: v })} placeholder="Team dinner" />
           )}
           <Field label="Venue" value={form.venue} onChange={(v) => setForm({ ...form, venue: v })} />
           <div className="grid grid-cols-2 gap-2">
