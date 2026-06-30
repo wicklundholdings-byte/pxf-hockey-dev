@@ -364,7 +364,7 @@ function EliteCoachDashboard() {
         }
       }
     })();
-  }, [user?.id]);
+  }, [user?.id, hasStaff]);
 
   // Revenue MTD + trend vs last month-to-day
   const revenue = useMemo(() => {
