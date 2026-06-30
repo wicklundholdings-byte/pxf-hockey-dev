@@ -1026,6 +1026,47 @@ function CampSchedule({
 }
 
 function CampStaffSection({ campId }: { campId: string }) {
+  const { hasStaff, ownerId, loading: hasStaffLoading } = useHasStaff();
+  const [owner, setOwner] = useState<{ full_name: string | null; avatar_url: string | null; email: string | null } | null>(null);
+  useEffect(() => {
+    if (!ownerId || hasStaff) return;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("profiles")
+        .select("full_name, avatar_url, email")
+        .eq("id", ownerId)
+        .maybeSingle();
+      if (data) setOwner(data);
+    })();
+  }, [ownerId, hasStaff]);
+
+  if (!hasStaffLoading && !hasStaff) {
+    const name = owner?.full_name ?? owner?.email ?? "Head Coach";
+    const initials = name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+    return (
+      <section className="rounded-2xl border border-teal/30 bg-teal/5 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Staff</h2>
+            <span className="rounded-full bg-teal/20 px-2 py-0.5 text-[10px] font-bold text-teal">1</span>
+          </div>
+        </div>
+        <div className="mt-3 flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5">
+          {owner?.avatar_url ? (
+            <img src={owner.avatar_url} alt={name} className="h-9 w-9 rounded-full object-cover" />
+          ) : (
+            <div className="grid h-9 w-9 place-items-center rounded-full bg-teal/15 text-[11px] font-bold text-teal">{initials}</div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="truncate text-sm font-semibold text-foreground">{name}</p>
+            <p className="truncate text-[11px] text-muted-foreground">Head Coach</p>
+          </div>
+          <span className="rounded-full bg-surface px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Owner</span>
+        </div>
+      </section>
+    );
+  }
+
   type TM = { id: string; email: string; title: string; permission_level: "owner" | "coach" | "assistant"; status: string };
   const [team, setTeam] = useState<TM[]>([]);
   const [assigned, setAssigned] = useState<Array<{ id: string; team_member_id: string }>>([]);
