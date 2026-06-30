@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
 import React, { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -24,6 +24,11 @@ function TournamentDetail() {
   const t = DATA[tournamentId] ?? { name: "Tournament", dates: "", city: "", status: "" };
   const [tab, setTab] = useState<Tab>("Overview");
   const [editMode, setEditMode] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const base = `/coach/teams/${teamId}/tournaments/${tournamentId}`;
+  if (pathname.replace(/\/+$/, "") !== base) {
+    return <Outlet />;
+  }
 
   return (
     <div className="pb-10">
@@ -484,6 +489,8 @@ function itemMatchesFilter(it: ItineraryItem, f: ScheduleFilter): boolean {
 }
 
 function ScheduleTab({ editMode, setEditMode, tournamentName }: { editMode: boolean; setEditMode: React.Dispatch<React.SetStateAction<boolean>>; tournamentName: string }) {
+  const { teamId, tournamentId } = Route.useParams();
+  const navigate = useNavigate();
   const [days, setDays] = useState(SEED);
   const [dirty, setDirty] = useState(false);
   const [editing, setEditing] = useState<{ dayIdx: number; itemIdx: number } | null>(null);
@@ -600,6 +607,15 @@ function ScheduleTab({ editMode, setEditMode, tournamentName }: { editMode: bool
                   responses: { ...d.items[itemIdx].responses, [key]: status },
                 })
               }
+              onOpenItem={(itemIdx) => {
+                const it = d.items[itemIdx];
+                if (it.type === "Game") {
+                  navigate({
+                    to: "/coach/teams/$teamId/tournaments/$tournamentId/game/$gameId",
+                    params: { teamId, tournamentId, gameId: it.id },
+                  });
+                }
+              }}
             />
           );
         })}
@@ -655,7 +671,7 @@ function ScheduleTab({ editMode, setEditMode, tournamentName }: { editMode: bool
 
 function DaySection({
   day, dayIdx, visibleIdx, editMode, drag, setDrag, onMove, flashTimeId, onTimeChange,
-  onEditItem, onDeleteItem, onAddItem, onRsvp,
+  onEditItem, onDeleteItem, onAddItem, onRsvp, onOpenItem,
 }: {
   day: { day: string; items: ItineraryItem[] };
   dayIdx: number;
@@ -670,6 +686,7 @@ function DaySection({
   onDeleteItem: (i: number) => void;
   onAddItem: (atIdx?: number) => void;
   onRsvp: (itemIdx: number, key: string, status: RsvpStatus) => void;
+  onOpenItem?: (itemIdx: number) => void;
 }) {
   const [open, setOpen] = useState(true);
   const [hover, setHover] = useState<number | null>(null);
@@ -713,6 +730,7 @@ function DaySection({
                 onEdit={() => onEditItem(i)}
                 onDelete={() => onDeleteItem(i)}
                 onRsvp={(key, status) => onRsvp(i, key, status)}
+                onOpen={onOpenItem && it.type === "Game" ? () => onOpenItem(i) : undefined}
               />
             </div>
           )})}
@@ -736,7 +754,7 @@ function DaySection({
 
 function ItemRow({
   item, editMode, onEdit, onDelete, onRsvp,
-  draggable, onDragStart, onDragOver, onDrop, isDragging, flashTime, onTimeChange,
+  draggable, onDragStart, onDragOver, onDrop, isDragging, flashTime, onTimeChange, onOpen,
 }: {
   item: ItineraryItem;
   editMode: boolean;
@@ -750,6 +768,7 @@ function ItemRow({
   isDragging?: boolean;
   flashTime?: boolean;
   onTimeChange?: (time: string) => void;
+  onOpen?: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -807,7 +826,7 @@ function ItemRow({
           </span>
         )}
         <button
-          onClick={() => editMode ? onEdit() : item.rsvp && setExpanded((v) => !v)}
+          onClick={() => editMode ? onEdit() : onOpen ? onOpen() : item.rsvp && setExpanded((v) => !v)}
           className="flex flex-1 items-center gap-2 text-left"
         >
           {editMode && onTimeChange ? (
@@ -852,6 +871,8 @@ function ItemRow({
           <button onClick={() => setShowDelete((v) => !v)} className="rounded p-1 text-muted-foreground">
             <Trash2 size={14} />
           </button>
+        ) : onOpen ? (
+          <ChevronRight size={14} className="text-muted-foreground" />
         ) : item.rsvp ? (
           expanded ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />
         ) : null}

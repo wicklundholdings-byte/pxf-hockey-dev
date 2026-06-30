@@ -1,105 +1,47 @@
-## Elite Coach Dashboard + Staff Permission Model
+## What's actually in the codebase
 
-### Scope
-- Only Elite tier ($49.99). Team/Association/Academy unaffected.
-- Owner = paying account. Staff = invited coaches tied to owner.
-- Track-only billing (no Stripe charge yet). Show "3 included · X additional at $9.99/mo each" copy.
+There is **no separate Tournament Game Detail screen** built yet. In the Tournament Schedule tab, GAME rows just expand inline for RSVP — tapping a game doesn't navigate anywhere.
 
-### Database (migration)
-New table `elite_staff_coaches`:
-- `owner_id` (uuid, FK auth.users) — Elite account holder
-- `staff_user_id` (uuid, nullable until invite accepted)
-- `email`, `full_name`
-- `status` ('invited' | 'active' | 'removed')
-- `invite_token` (uuid), `invited_at`, `accepted_at`, `removed_at`
-- Unique (owner_id, email) where status != 'removed'
+The existing **Team Schedule Game Detail** lives at `src/routes/_authenticated/coach.teams.$teamId.schedule.$eventId.index.tsx`. It is **not tabbed**. It renders, top to bottom:
 
-New table `elite_staff_team_assignments`:
-- `staff_id` (FK elite_staff_coaches), `team_id` (FK teams)
-- Unique (staff_id, team_id)
+- `‹ Back` link to Team Schedule
+- Event header card (type, title, date/time/venue, notes)
+- 4-stat RSVP grid (YES / NO / MAYBE / NONE)
+- Action buttons (`Game Prep`, `Stats`)
+- Attendance list with present/late/absent toggles
+- Inline `GameStats` post-game entry (G / A / PIM)
+- `GameMediaTab`
 
-Security-definer helpers:
-- `is_elite_staff_of(_owner uuid)` — is auth.uid() an active staff of owner
-- `elite_owner_for(_user uuid)` — returns owner_id for a staff, or self
-- `staff_assigned_team_ids(_user uuid)` — uuid[] of team ids visible to staff
+Sibling routes handle the deeper flows:
+- `…/schedule/$eventId/game-prep.tsx`
+- `…/schedule/$eventId/stats.tsx` (full stats entry)
+- `…/schedule/$eventId/game-summary.tsx`
 
-RLS:
-- `elite_staff_coaches`: owner sees own rows; staff sees their own row
-- `elite_staff_team_assignments`: owner manages; staff reads own
-- Public token lookup RPC `get_staff_invite_by_token(_token uuid)` (SECURITY DEFINER) for invite-accept page
-- RPC `accept_staff_invite(_token uuid)` — binds auth.uid() to invite
+There is no Lines tab or tabbed layout anywhere on this screen today.
 
-GRANTs to authenticated and service_role on both tables.
+## What you described vs. what exists
 
-### Server functions (`src/lib/staff.functions.ts`)
-- `listMyStaff()` — owner: list staff + assigned teams + included/additional counts
-- `inviteStaffCoach({ email, fullName, teamIds[] })` — owner: create row, send email via existing transactional email or Resend, return invite link
-- `removeStaffCoach({ staffId })`
-- `updateStaffTeams({ staffId, teamIds[] })`
-- `acceptStaffInvite({ token })` — uses RPC
-- `getMyEliteRole()` — returns `{ kind: 'owner' | 'staff' | 'none', ownerId, assignedTeamIds }` for the dashboard dispatcher
+Your prompt mentions "tabs, score card, lines builder, stats table" on the existing screen. None of those exist yet. So "reuse the existing component" and "add Lines/Stats tabs to both so they stay in sync" describe two different things:
 
-### Email (Resend, simple HTML)
-- Use existing RESEND_API_KEY via server function. Email body: "You've been invited to join {Owner Name}'s coaching staff on PXF Hockey" + link to `/staff-invite/{token}`.
+- **Option A — Mirror what exists today.** Make tournament game rows tappable, open a new route that renders the same sectioned layout (header card, RSVP counts, attendance, post-game stats, media), with `‹ Schedule` back to the Tournament Schedule tab and the tournament name as a muted subtitle. No new tabs added anywhere.
+- **Option B — Redesign the Team Game Detail into a tabbed layout (Overview / Lines / Stats), then reuse it for tournaments.** Larger refactor; touches the working team flow and the existing `game-prep` / `stats` sibling routes.
 
-### Routes
-- `src/routes/_authenticated/coach.staff.tsx` — staff management UI (owner only). List, invite modal with team multi-select, remove, edit teams. Show "3 included · N extra @ $9.99/mo".
-- `src/routes/staff-invite.$token.tsx` — public-ish accept page. If not authed → redirect to /auth with redirect back; if authed → call accept RPC → /coach.
-- Settings page: link "Manage staff coaches" → /coach/staff (owner only).
+## Other things I need to confirm before building
 
-### Dashboard dispatcher (`src/routes/_authenticated/coach.index.tsx`)
-```
-tier !== 'elite' → existing TeamCoachDashboard
-tier === 'elite' + role.kind === 'staff' → <EliteStaffDashboard assignedTeamIds=... />
-tier === 'elite' + role.kind === 'owner' → <EliteOwnerDashboard /> (full rebuild)
-```
+1. Tournament games are **mock SEED data** inside `coach.teams.$teamId.tournaments.$tournamentId.tsx` (no DB rows), while team schedule games are **Supabase-backed** (`team_events`, `team_event_rsvps`, `team_event_attendance`, `game_player_stats`). The existing component can't be dropped in unchanged because it queries Supabase by `eventId`. Two paths:
+   - **A1.** Extract the sectioned JSX into a presentational component (`<GameDetailView />`) that takes plain props, then feed it Supabase data on the team route and mock data on the tournament route.
+   - **A2.** Build the tournament game route as a static mock screen that visually copies the same JSX/Tailwind classes.
+2. Where should the tournament game route live and what should it match? Suggested: `coach.teams.$teamId.tournaments.$tournamentId.game.$gameId.tsx`, with tap target on `GAME`-type schedule rows.
 
-### Owner dashboard — full rebuild
-Sections in order, each its own subcomponent in `src/components/coach/elite-owner/`:
-1. `GreetingHeader` — "Hey {first}," / "Here's what's happening."
-2. `AlertsStack` — query: unassigned camp coaches, missing health forms (athletes in active camps without `athlete_health_profiles`), camps <50% enrollment, unpaid registrations. Amber cards. Hide whole section if zero alerts.
-3. `RevenueSnapshot` — gross + net MTD, trend arrow vs same range last month. Click → `/coach/financials`.
-4. `ActiveCampsScroll` — horizontal scroll cards (name, date range, `filled/capacity`, revenue). Trailing "Add Camp" card → `/coach/camps/new`.
-5. `RegistrationsCard` — total this month + confirmed/pending split. Click → registrations list.
-6. `MyAthletesRow` — owner's children only. Hide if none.
-7. `NextUp7Days` — merge team_events + camp_sessions next 7d, badge GAME/PRACTICE/CAMP, sort by date+time.
-8. `MyTeamsList` — coached + child-on-roster. Role badge COACH/PARENT routes accordingly.
-9. `DrylandTop3` — top 3 across all owned teams via `get_team_dryland_leaderboard` aggregated.
-10. `RecentMediaScroll` — last 3 from `game_media` + `camp_media` across owner's teams/camps.
-11. `ActionButtons` — Add Ice Times + Create Session (teal outline).
+## Recommended path
 
-### Staff dashboard — limited
-Same component primitives, scoped to `assignedTeamIds`:
-1. Greeting
-2. My Athletes (children, if any)
-3. Next Up — team_events filtered to assignedTeamIds only (no camp_sessions)
-4. My Teams — assignedTeamIds only, no parent variant
-5. Dryland This Week — across assignedTeamIds
-6. Recent Media — game_media for assignedTeamIds
-7. Action buttons
+**Option A + A1**: extract `<GameDetailView />` from the existing screen, leave the Team Schedule game detail visually unchanged, add the new tournament game route that renders the same component with mock data, `‹ Schedule` back link, and tournament-name subtitle. No new tabs. Smallest blast radius, exact visual match guaranteed.
 
-No revenue, camps, registrations, financials. Hide nav entries to `/coach/camps`, `/coach/financials`, `/coach/staff` for staff via `coach.tsx` layout (check role).
+## Question
 
-### Layout/nav gating (`src/routes/_authenticated/coach.tsx`)
-- Fetch role once; if staff: remove Events nav item (or replace label "Schedule" pointing to team list), hide Broadcast button, hide Staff settings link.
+Confirm one:
 
-### Files to create
-- supabase migration
-- src/lib/staff.functions.ts
-- src/lib/email/staff-invite.ts (Resend helper)
-- src/routes/_authenticated/coach.staff.tsx
-- src/routes/staff-invite.$token.tsx
-- src/components/coach/elite-owner/{greeting,alerts,revenue,active-camps,registrations,my-athletes,next-up,my-teams,dryland-top3,recent-media,action-buttons}.tsx
-- src/components/coach/elite-staff/dashboard.tsx
-- src/hooks/use-elite-role.ts
+1. **Option A** — mirror the existing sectioned screen exactly. No Lines tab, no Stats tab added. (Recommended.)
+2. **Option B** — redesign the Team Game Detail into Overview / Lines / Stats tabs first, then reuse for tournaments. Bigger change to a working flow.
 
-### Files to modify
-- src/routes/_authenticated/coach.index.tsx — dispatcher + full owner layout
-- src/routes/_authenticated/coach.tsx — nav gating for staff
-- src/routes/settings.tsx — add "Manage staff coaches" link for owner
-
-### Out of scope (explicit)
-- Actual Stripe billing for extra staff
-- Per-permission granularity beyond team assignments
-- Notifying staff when teams change
-- Editing staff after acceptance beyond team list + remove
+And confirm the route path `…/tournaments/$tournamentId/game/$gameId` is OK.
