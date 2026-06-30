@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Calendar, Users, BarChart3, Camera, DollarSign } from "lucide-react";
+import { ArrowLeft, Calendar, Users, BarChart3, Camera, DollarSign, Trophy } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId")({
   component: TeamLayout,
@@ -54,34 +54,26 @@ function TeamLayout() {
           </div>
         </div>
         {isOverview && (
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {[
-            { to: "/coach/teams/$teamId/schedule" as const, label: "Schedule", Icon: Calendar },
-            { to: "/coach/teams/$teamId/roster" as const, label: "Roster", Icon: Users },
-            { to: "/coach/teams/$teamId/stats" as const, label: "Stats", Icon: BarChart3 },
-            { to: "/coach/teams/$teamId/playbook" as const, label: "Media", Icon: Camera },
-          ].map(({ to, label, Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              params={{ teamId }}
-              className="flex items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 shadow-glow-teal active:opacity-90"
-            >
-              <Icon size={18} className="text-background" />
-              <span className="text-sm font-bold text-background">{label}</span>
-            </Link>
-          ))}
-        </div>
-        )}
-        {isOverview && (
-          <Link
-            to="/coach/teams/$teamId/payments"
-            params={{ teamId }}
-            className="mt-2 flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal py-3 active:opacity-90"
-          >
-            <DollarSign size={18} className="text-background" />
-            <span className="text-sm font-bold text-background">Payments</span>
-          </Link>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {[
+              { to: "/coach/teams/$teamId/schedule" as const, label: "Schedule", Icon: Calendar },
+              { to: "/coach/teams/$teamId/roster" as const, label: "Roster", Icon: Users },
+              { to: "/coach/teams/$teamId/stats" as const, label: "Stats", Icon: BarChart3 },
+              { to: "/coach/teams/$teamId/playbook" as const, label: "Media", Icon: Camera },
+              { to: "/coach/teams/$teamId/payments" as const, label: "Payments", Icon: DollarSign },
+              { to: "/coach/teams/$teamId/schedule" as const, label: "Tournaments", Icon: Trophy },
+            ].map(({ to, label, Icon }) => (
+              <Link
+                key={label}
+                to={to}
+                params={{ teamId }}
+                className="flex items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 shadow-glow-teal active:opacity-90"
+              >
+                <Icon size={18} className="text-background" />
+                <span className="text-sm font-bold text-background">{label}</span>
+              </Link>
+            ))}
+          </div>
         )}
       </div>
       <div id="team-tab-content" className="mt-3 px-5 scroll-mt-4">
