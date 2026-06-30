@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import React, { useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   ChevronLeft, ChevronDown, ChevronRight, Plus, Link2, ChevronUp,
   Pencil, Trash2, GripVertical, Calendar as CalendarIcon, X,
@@ -62,7 +63,7 @@ function TournamentDetail() {
 
       <div className="pt-4">
         {tab === "Overview" && <OverviewTab onJumpStandings={() => setTab("Schedule")} />}
-        {tab === "Schedule" && <ScheduleTab editMode={editMode} setEditMode={setEditMode} />}
+        {tab === "Schedule" && <ScheduleTab editMode={editMode} setEditMode={setEditMode} tournamentName={t.name} />}
         {tab === "Roster" && <RosterTab />}
         {tab === "Logistics" && <LogisticsTab />}
         {tab === "Payments" && <PaymentsTab />}
