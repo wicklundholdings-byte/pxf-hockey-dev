@@ -43,10 +43,11 @@ function TournamentDetail() {
             {tab === "Schedule" && !IS_PARENT && (
               <button
                 onClick={() => setEditMode((v) => !v)}
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-surface text-muted-foreground"
+                className="inline-flex items-center gap-1 rounded-full border border-teal/60 bg-teal/10 px-2.5 py-1 text-[10px] font-bold text-teal"
                 aria-label={editMode ? "Done editing" : "Edit schedule"}
               >
-                {editMode ? <Check size={14} className="text-teal" /> : <Pencil size={14} />}
+                {editMode ? <Check size={12} /> : <Pencil size={12} />}
+                {editMode ? "Done" : "Edit"}
               </button>
             )}
             {t.status && (
