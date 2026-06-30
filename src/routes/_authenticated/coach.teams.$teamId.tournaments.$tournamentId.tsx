@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ChevronLeft, ChevronDown, ChevronRight, Plus, Link2, ChevronUp,
   Pencil, Trash2, GripVertical, Calendar as CalendarIcon, X,
@@ -43,10 +43,11 @@ function TournamentDetail() {
             {tab === "Schedule" && !IS_PARENT && (
               <button
                 onClick={() => setEditMode((v) => !v)}
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-surface text-muted-foreground"
+                className="inline-flex items-center gap-1 rounded-full border border-teal/60 bg-teal/10 px-2.5 py-1 text-[10px] font-bold text-teal"
                 aria-label={editMode ? "Done editing" : "Edit schedule"}
               >
-                {editMode ? <Check size={14} className="text-teal" /> : <Pencil size={14} />}
+                {editMode ? <Check size={12} /> : <Pencil size={12} />}
+                {editMode ? "Done" : "Edit"}
               </button>
             )}
             {t.status && (
@@ -407,6 +408,23 @@ function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [filter, setFilter] = useState<ScheduleFilter>("All");
   const [calOpen, setCalOpen] = useState(false);
+  const [baseline, setBaseline] = useState(SEED);
+  const [flashTimeId, setFlashTimeId] = useState<string | null>(null);
+  const [drag, setDrag] = useState<{ dayIdx: number; itemIdx: number } | null>(null);
+
+  function moveItem(from: { dayIdx: number; itemIdx: number }, toDay: number, toIdx: number) {
+    setDays((d) => {
+      const next = d.map((day) => ({ ...day, items: [...day.items] }));
+      const [moved] = next[from.dayIdx].items.splice(from.itemIdx, 1);
+      let insertIdx = toIdx;
+      if (from.dayIdx === toDay && from.itemIdx < toIdx) insertIdx = toIdx - 1;
+      next[toDay].items.splice(Math.max(0, Math.min(insertIdx, next[toDay].items.length)), 0, moved);
+      return next;
+    });
+    setDirty(true);
+    // auto-highlight time field after a short delay so the new row renders
+    setTimeout(() => setFlashTimeId(null), 2200);
+  }
 
   function updateItem(dayIdx: number, itemIdx: number, patch: Partial<ItineraryItem>) {
     setDays((d) => d.map((day, di) => di !== dayIdx ? day : {
@@ -431,15 +449,13 @@ function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode
     setDirty(true);
   }
 
+  const changeSummary = useMemo(() => summarizeChanges(baseline, days), [baseline, days]);
+
   return (
     <div className="space-y-4">
-      {dirty && (
-        <div className="sticky top-[140px] z-10 flex items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/15 px-3 py-2 backdrop-blur">
-          <p className="text-[11px] font-bold text-amber-300">Draft — changes not yet sent to team</p>
-          <div className="flex gap-2">
-            <button onClick={() => { setDays(SEED); setDirty(false); }} className="rounded-full border border-border px-3 py-1 text-[10px] font-bold">Discard</button>
-            <button onClick={() => setConfirmOpen(true)} className="rounded-full bg-gradient-brand px-3 py-1 text-[10px] font-bold text-background shadow-glow-teal">Notify Team →</button>
-          </div>
+      {editMode && dirty && (
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2">
+          <p className="text-[11px] font-bold text-amber-300">Draft — not sent to team yet</p>
         </div>
       )}
 
@@ -473,8 +489,14 @@ function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode
             <DaySection
               key={d.day}
               day={d}
+              dayIdx={dayIdx}
               visibleIdx={visible.map((v) => v.i)}
               editMode={editMode}
+              drag={drag}
+              setDrag={setDrag}
+              onMove={(toIdx) => { if (drag) { moveItem(drag, dayIdx, toIdx); const moved = days[drag.dayIdx].items[drag.itemIdx]; setFlashTimeId(moved.id); setDrag(null); } }}
+              flashTimeId={flashTimeId}
+              onTimeChange={(itemIdx, time) => updateItem(dayIdx, itemIdx, { time })}
               onEditItem={(itemIdx) => setEditing({ dayIdx, itemIdx })}
               onDeleteItem={(itemIdx) => deleteItem(dayIdx, itemIdx)}
               onAddItem={(atIdx) => addItem(dayIdx, atIdx)}
@@ -514,33 +536,58 @@ function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode
 
       {confirmOpen && (
         <NotifyConfirmSheet
-          changeCount={3}
+          changes={changeSummary}
           onClose={() => setConfirmOpen(false)}
-          onPublish={() => { setDirty(false); setEditMode(false); setConfirmOpen(false); }}
+          onPublish={() => { setBaseline(days); setDirty(false); setEditMode(false); setConfirmOpen(false); }}
         />
       )}
 
       {calOpen && <CalendarExportSheet onClose={() => setCalOpen(false)} />}
+
+      {editMode && dirty && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 px-3 py-3 backdrop-blur">
+          <p className="text-center text-[11px] font-bold text-amber-300">You have unsaved changes</p>
+          <div className="mt-2 flex items-center justify-center gap-2">
+            <button onClick={() => { setDays(baseline); setDirty(false); }} className="rounded-full border border-border px-3 py-1.5 text-[11px] font-bold">Discard</button>
+            <button onClick={() => { setBaseline(days); setDirty(false); }} className="rounded-full border border-teal/60 bg-teal/10 px-3 py-1.5 text-[11px] font-bold text-teal">Save Draft</button>
+            <button onClick={() => setConfirmOpen(true)} className="rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-background shadow-glow-teal">Notify Team →</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function DaySection({
-  day, visibleIdx, editMode, onEditItem, onDeleteItem, onAddItem, onRsvp,
+  day, dayIdx, visibleIdx, editMode, drag, setDrag, onMove, flashTimeId, onTimeChange,
+  onEditItem, onDeleteItem, onAddItem, onRsvp,
 }: {
   day: { day: string; items: ItineraryItem[] };
+  dayIdx: number;
   visibleIdx: number[];
   editMode: boolean;
+  drag: { dayIdx: number; itemIdx: number } | null;
+  setDrag: (d: { dayIdx: number; itemIdx: number } | null) => void;
+  onMove: (toIdx: number) => void;
+  flashTimeId: string | null;
+  onTimeChange: (itemIdx: number, time: string) => void;
   onEditItem: (i: number) => void;
   onDeleteItem: (i: number) => void;
   onAddItem: (atIdx?: number) => void;
   onRsvp: (itemIdx: number, key: string, status: RsvpStatus) => void;
 }) {
   const [open, setOpen] = useState(true);
+  const [hover, setHover] = useState<number | null>(null);
   const indices = editMode ? day.items.map((_, i) => i) : visibleIdx;
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-surface">
-      <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between px-3 py-3 text-left">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        onDragOver={(e) => { if (editMode && drag) { e.preventDefault(); setHover(-1); } }}
+        onDragLeave={() => setHover(null)}
+        onDrop={(e) => { if (editMode && drag) { e.preventDefault(); onMove(0); setHover(null); } }}
+        className={"flex w-full items-center justify-between px-3 py-3 text-left " + (hover === -1 ? "bg-teal/10" : "")}
+      >
         <span className="text-xs font-bold uppercase tracking-wider">{day.day}</span>
         {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
       </button>
@@ -555,15 +602,32 @@ function DaySection({
                   <Plus size={10} /> Add Item
                 </button>
               )}
+              {editMode && hover === i && drag && (drag.dayIdx !== dayIdx || drag.itemIdx !== i) && (
+                <div className="my-1 h-8 rounded-md border-2 border-dashed border-teal/60 bg-teal/10" />
+              )}
               <ItemRow
                 item={it}
                 editMode={editMode}
+                draggable={editMode}
+                onDragStart={() => setDrag({ dayIdx, itemIdx: i })}
+                onDragOver={(e) => { if (editMode && drag) { e.preventDefault(); setHover(i); } }}
+                onDrop={(e) => { if (editMode && drag) { e.preventDefault(); onMove(i); setHover(null); } }}
+                isDragging={!!drag && drag.dayIdx === dayIdx && drag.itemIdx === i}
+                flashTime={flashTimeId === it.id}
+                onTimeChange={(time) => onTimeChange(i, time)}
                 onEdit={() => onEditItem(i)}
                 onDelete={() => onDeleteItem(i)}
                 onRsvp={(key, status) => onRsvp(i, key, status)}
               />
             </div>
           )})}
+          {editMode && drag && (
+            <div
+              onDragOver={(e) => { e.preventDefault(); setHover(day.items.length); }}
+              onDrop={(e) => { e.preventDefault(); onMove(day.items.length); setHover(null); }}
+              className={"my-1 h-6 rounded-md border border-dashed " + (hover === day.items.length ? "border-teal/60 bg-teal/10" : "border-border/40")}
+            />
+          )}
           {editMode && (
             <button onClick={() => onAddItem()} className="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-teal/50 py-2 text-[11px] font-bold text-teal">
               <Plus size={12} /> Add Item
@@ -577,15 +641,30 @@ function DaySection({
 
 function ItemRow({
   item, editMode, onEdit, onDelete, onRsvp,
+  draggable, onDragStart, onDragOver, onDrop, isDragging, flashTime, onTimeChange,
 }: {
   item: ItineraryItem;
   editMode: boolean;
   onEdit: () => void;
   onDelete: () => void;
   onRsvp: (key: string, status: RsvpStatus) => void;
+  draggable?: boolean;
+  onDragStart?: () => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
+  isDragging?: boolean;
+  flashTime?: boolean;
+  onTimeChange?: (time: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const timeRef = React.useRef<HTMLInputElement>(null);
+  React.useEffect(() => {
+    if (flashTime && timeRef.current) {
+      timeRef.current.focus();
+      timeRef.current.select();
+    }
+  }, [flashTime]);
   const counts = useMemo(() => {
     const c = { yes: 0, no: 0, maybe: 0, none: 0 };
     for (const name of ROSTER) {
@@ -619,16 +698,34 @@ function ItemRow({
 
   return (
     <div
-      className="group relative my-1 rounded-lg border border-border border-l-[3px] bg-surface-2/40"
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      className={"group relative my-1 rounded-lg border border-border border-l-[3px] bg-surface-2/40 " + (isDragging ? "opacity-40" : "") + (flashTime ? " ring-2 ring-teal" : "")}
       style={{ borderLeftColor: TYPE_BORDER[item.type] }}
     >
       <div className="flex items-center gap-2 px-2 py-2">
-        {editMode && <GripVertical size={14} className="shrink-0 text-muted-foreground" />}
+        {editMode && (
+          <span className="cursor-grab touch-none rounded-md bg-teal/15 p-1 text-teal" title="Drag to reorder">
+            <GripVertical size={14} />
+          </span>
+        )}
         <button
           onClick={() => editMode ? onEdit() : item.rsvp && setExpanded((v) => !v)}
           className="flex flex-1 items-center gap-2 text-left"
         >
-          <span className="w-14 shrink-0 text-[10px] font-semibold text-muted-foreground">{item.time}</span>
+          {editMode && onTimeChange ? (
+            <input
+              ref={timeRef}
+              value={item.time}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => onTimeChange(e.target.value)}
+              className={"w-16 shrink-0 rounded border bg-surface-2 px-1 py-0.5 text-[10px] font-semibold " + (flashTime ? "border-teal text-teal" : "border-border text-muted-foreground")}
+            />
+          ) : (
+            <span className="w-14 shrink-0 text-[10px] font-semibold text-muted-foreground">{item.time}</span>
+          )}
           <div className="min-w-0 flex-1">
             <p className="flex items-center gap-1.5 truncate text-xs font-semibold">
               {item.isPrivate && <Lock size={11} className="shrink-0 text-amber-400" />}
@@ -873,8 +970,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function NotifyConfirmSheet({
-  changeCount, onClose, onPublish,
-}: { changeCount: number; onClose: () => void; onPublish: () => void }) {
+  changes, onClose, onPublish,
+}: { changes: string[]; onClose: () => void; onPublish: () => void }) {
   const [sendPush, setSendPush] = useState(true);
   const [urgent, setUrgent] = useState(false);
   return (
@@ -884,15 +981,17 @@ function NotifyConfirmSheet({
           <h3 className="font-display text-base font-bold">Notify team</h3>
           <button onClick={onClose}><X size={16} /></button>
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">{changeCount} events updated</p>
-
-        <label className="mt-3 flex items-center justify-between rounded-md border border-border bg-surface-2 px-3 py-2">
-          <span className="text-xs font-semibold">Send push notification to all members</span>
-          <input type="checkbox" checked={sendPush} onChange={(e) => setSendPush(e.target.checked)} className="h-4 w-4 accent-teal" />
-        </label>
+        <p className="mt-2 text-xs text-muted-foreground">{changes.length} change{changes.length === 1 ? "" : "s"}</p>
+        {changes.length > 0 && (
+          <ul className="mt-2 space-y-1 rounded-md border border-border bg-surface-2 p-3">
+            {changes.map((c, i) => (
+              <li key={i} className="text-[11px] text-foreground/80">• {c}</li>
+            ))}
+          </ul>
+        )}
 
         <label className="mt-2 flex items-center justify-between rounded-md border border-border bg-surface-2 px-3 py-2">
-          <span className="text-xs font-semibold">Urgent update</span>
+          <span className="text-xs font-semibold">Urgent update <span className="text-[10px] text-muted-foreground">(same-day — sends push immediately)</span></span>
           <input type="checkbox" checked={urgent} onChange={(e) => setUrgent(e.target.checked)} className="h-4 w-4 accent-amber-400" />
         </label>
 
@@ -904,15 +1003,38 @@ function NotifyConfirmSheet({
           </p>
         </div>
 
-        <button onClick={onPublish} className="mt-4 w-full rounded-full bg-gradient-brand py-2.5 text-xs font-bold text-background shadow-glow-teal">
-          {sendPush ? "Publish & Notify" : "Publish"}
-        </button>
-        <button onClick={onPublish} className="mt-2 w-full rounded-full border border-border bg-surface-2 py-2.5 text-xs font-bold">
-          Publish Silently
-        </button>
+        <div className="mt-4 flex gap-2">
+          <button onClick={onClose} className="flex-1 rounded-full border border-border py-2.5 text-xs font-bold">Cancel</button>
+          <button onClick={onPublish} className="flex-1 rounded-full bg-gradient-brand py-2.5 text-xs font-bold text-background shadow-glow-teal">Publish &amp; Notify</button>
+        </div>
       </div>
     </div>
   );
+}
+
+function summarizeChanges(base: typeof SEED, next: typeof SEED): string[] {
+  const out: string[] = [];
+  const baseMap = new Map<string, { day: string; item: ItineraryItem }>();
+  base.forEach((d) => d.items.forEach((it) => baseMap.set(it.id, { day: d.day, item: it })));
+  const nextMap = new Map<string, { day: string; item: ItineraryItem }>();
+  next.forEach((d) => d.items.forEach((it) => nextMap.set(it.id, { day: d.day, item: it })));
+
+  nextMap.forEach((cur, id) => {
+    const prev = baseMap.get(id);
+    if (!prev) {
+      out.push(`${cur.item.title} added ${cur.day}`);
+      return;
+    }
+    if (prev.day !== cur.day) {
+      out.push(`${cur.item.title} moved to ${cur.day} ${cur.item.time}`);
+    } else if (prev.item.time !== cur.item.time) {
+      out.push(`${cur.item.title} moved to ${cur.item.time}`);
+    }
+  });
+  baseMap.forEach((prev, id) => {
+    if (!nextMap.has(id)) out.push(`${prev.item.title} removed`);
+  });
+  return out;
 }
 
 /* =================== CALENDAR EXPORT =================== */
