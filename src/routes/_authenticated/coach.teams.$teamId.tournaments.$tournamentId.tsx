@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ChevronLeft, ChevronDown, ChevronRight, Plus, Link2, ChevronUp,
   Pencil, Trash2, GripVertical, Calendar as CalendarIcon, X,
