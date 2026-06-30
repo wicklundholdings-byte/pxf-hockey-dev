@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import React, { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
