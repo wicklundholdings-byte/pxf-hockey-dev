@@ -22,6 +22,7 @@ function TournamentDetail() {
   const { teamId, tournamentId } = Route.useParams();
   const t = DATA[tournamentId] ?? { name: "Tournament", dates: "", city: "", status: "" };
   const [tab, setTab] = useState<Tab>("Overview");
+  const [editMode, setEditMode] = useState(false);
 
   return (
     <div className="pb-10">
