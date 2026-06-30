@@ -970,8 +970,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function NotifyConfirmSheet({
-  changeCount, onClose, onPublish,
-}: { changeCount: number; onClose: () => void; onPublish: () => void }) {
+  changes, onClose, onPublish,
+}: { changes: string[]; onClose: () => void; onPublish: () => void }) {
   const [sendPush, setSendPush] = useState(true);
   const [urgent, setUrgent] = useState(false);
   return (
@@ -981,15 +981,17 @@ function NotifyConfirmSheet({
           <h3 className="font-display text-base font-bold">Notify team</h3>
           <button onClick={onClose}><X size={16} /></button>
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">{changeCount} events updated</p>
-
-        <label className="mt-3 flex items-center justify-between rounded-md border border-border bg-surface-2 px-3 py-2">
-          <span className="text-xs font-semibold">Send push notification to all members</span>
-          <input type="checkbox" checked={sendPush} onChange={(e) => setSendPush(e.target.checked)} className="h-4 w-4 accent-teal" />
-        </label>
+        <p className="mt-2 text-xs text-muted-foreground">{changes.length} change{changes.length === 1 ? "" : "s"}</p>
+        {changes.length > 0 && (
+          <ul className="mt-2 space-y-1 rounded-md border border-border bg-surface-2 p-3">
+            {changes.map((c, i) => (
+              <li key={i} className="text-[11px] text-foreground/80">• {c}</li>
+            ))}
+          </ul>
+        )}
 
         <label className="mt-2 flex items-center justify-between rounded-md border border-border bg-surface-2 px-3 py-2">
-          <span className="text-xs font-semibold">Urgent update</span>
+          <span className="text-xs font-semibold">Urgent update <span className="text-[10px] text-muted-foreground">(same-day — sends push immediately)</span></span>
           <input type="checkbox" checked={urgent} onChange={(e) => setUrgent(e.target.checked)} className="h-4 w-4 accent-amber-400" />
         </label>
 
@@ -1001,15 +1003,38 @@ function NotifyConfirmSheet({
           </p>
         </div>
 
-        <button onClick={onPublish} className="mt-4 w-full rounded-full bg-gradient-brand py-2.5 text-xs font-bold text-background shadow-glow-teal">
-          {sendPush ? "Publish & Notify" : "Publish"}
-        </button>
-        <button onClick={onPublish} className="mt-2 w-full rounded-full border border-border bg-surface-2 py-2.5 text-xs font-bold">
-          Publish Silently
-        </button>
+        <div className="mt-4 flex gap-2">
+          <button onClick={onClose} className="flex-1 rounded-full border border-border py-2.5 text-xs font-bold">Cancel</button>
+          <button onClick={onPublish} className="flex-1 rounded-full bg-gradient-brand py-2.5 text-xs font-bold text-background shadow-glow-teal">Publish &amp; Notify</button>
+        </div>
       </div>
     </div>
   );
+}
+
+function summarizeChanges(base: typeof SEED, next: typeof SEED): string[] {
+  const out: string[] = [];
+  const baseMap = new Map<string, { day: string; item: ItineraryItem }>();
+  base.forEach((d) => d.items.forEach((it) => baseMap.set(it.id, { day: d.day, item: it })));
+  const nextMap = new Map<string, { day: string; item: ItineraryItem }>();
+  next.forEach((d) => d.items.forEach((it) => nextMap.set(it.id, { day: d.day, item: it })));
+
+  nextMap.forEach((cur, id) => {
+    const prev = baseMap.get(id);
+    if (!prev) {
+      out.push(`${cur.item.title} added ${cur.day}`);
+      return;
+    }
+    if (prev.day !== cur.day) {
+      out.push(`${cur.item.title} moved to ${cur.day} ${cur.item.time}`);
+    } else if (prev.item.time !== cur.item.time) {
+      out.push(`${cur.item.title} moved to ${cur.item.time}`);
+    }
+  });
+  baseMap.forEach((prev, id) => {
+    if (!nextMap.has(id)) out.push(`${prev.item.title} removed`);
+  });
+  return out;
 }
 
 /* =================== CALENDAR EXPORT =================== */
