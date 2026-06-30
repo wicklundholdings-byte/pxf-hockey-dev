@@ -235,7 +235,6 @@ function CampDetailPage() {
   }
 
   return (
-    <div className="space-y-4">
     <div className="-mx-5 -mt-2">
       <div className="px-5 pt-2">
         <Link to="/coach/camps" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
