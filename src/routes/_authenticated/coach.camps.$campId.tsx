@@ -523,6 +523,20 @@ function MoreRow({ icon: Icon, label, count, open, onClick, last }: { icon: type
 
 function CampProgress({ sessions, completions }: { sessions: Session[]; completions: Record<string, SessionRunRecord> }) {
   if (sessions.length === 0) return null;
+  const today = new Date().toISOString().slice(0, 10);
+  const firstDate = sessions[0]?.session_date;
+  const isPreCamp = firstDate && firstDate > today;
+  if (isPreCamp) {
+    const start = new Date(firstDate + "T00:00:00");
+    return (
+      <div className="rounded-2xl border border-teal/30 bg-teal/5 p-3">
+        <p className="text-[11px] font-bold text-teal">
+          Pre-camp · Starts {start.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+        </p>
+        <p className="mt-0.5 text-[10px] text-muted-foreground">Day counting begins on the first day of the camp.</p>
+      </div>
+    );
+  }
   const completedCount = sessions.filter((s) => completions[s.id]).length;
   const pct = (completedCount / sessions.length) * 100;
   return (
