@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_authenticated/coach/teams/$teamId")({
   component: TeamLayout,
 });
 
-type Team = { id: string; name: string; season: string | null; primary_color: string | null };
+type Team = { id: string; name: string; season: string | null; primary_color: string | null; division: string | null; age_group: string | null };
 
 function TeamLayout() {
   const { teamId } = Route.useParams();
@@ -16,13 +16,12 @@ function TeamLayout() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("teams").select("id,name,season,primary_color").eq("id", teamId).maybeSingle();
+      const { data } = await supabase.from("teams").select("id,name,season,primary_color,division,age_group").eq("id", teamId).maybeSingle();
       setTeam((data as Team) ?? null);
     })();
   }, [teamId]);
 
   const base = `/coach/teams/${teamId}`;
-  const isOverview = pathname === base || pathname === base + "/";
   const tabs: { to: any; label: string; match: (p: string) => boolean }[] = [
     { to: "/coach/teams/$teamId", label: "Overview", match: (p) => p === base || p === base + "/" },
     { to: "/coach/teams/$teamId/schedule", label: "Schedule", match: (p) => p.startsWith(base + "/schedule") },
@@ -34,15 +33,9 @@ function TeamLayout() {
   return (
     <div className="-mx-5 -mt-2">
       <div className="px-5 pt-2">
-        {isOverview ? (
-          <Link to="/coach/teams" className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-            <ArrowLeft size={14} /> All teams
-          </Link>
-        ) : (
-          <Link to="/coach/teams/$teamId" params={{ teamId }} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-            <ArrowLeft size={14} /> {team?.name || "Team"}
-          </Link>
-        )}
+        <Link to="/coach/teams" className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+          <ArrowLeft size={14} /> Teams
+        </Link>
         <div className="mt-2 flex items-center gap-3">
           <div className="grid h-10 w-10 place-items-center rounded-xl text-xs font-bold text-background" style={{ background: team?.primary_color || "var(--color-teal)" }}>
             {team?.name?.slice(0, 2).toUpperCase() || "—"}
@@ -50,6 +43,11 @@ function TeamLayout() {
           <div>
             <h2 className="font-display text-lg font-bold leading-tight">{team?.name || "Team"}</h2>
             <p className="text-[11px] text-muted-foreground">{team?.season || ""}</p>
+            {(team?.division || team?.age_group) && (
+              <p className="text-[11px] font-semibold text-muted-foreground/90">
+                {[team?.division, team?.age_group].filter(Boolean).join(" · ")}
+              </p>
+            )}
           </div>
         </div>
       </div>
