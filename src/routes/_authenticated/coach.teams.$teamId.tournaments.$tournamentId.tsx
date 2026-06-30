@@ -763,25 +763,25 @@ function EditItemModal({
           </div>
         </div>
 
-        <Field label="Title">
+        <BilletField label="Title">
           <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full rounded-md border border-border bg-surface-2 px-2 py-1.5 text-xs" />
-        </Field>
+        </BilletField>
         <div className="grid grid-cols-2 gap-2">
-          <Field label="Time">
+          <BilletField label="Time">
             <input value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} className="w-full rounded-md border border-border bg-surface-2 px-2 py-1.5 text-xs" />
-          </Field>
+          </BilletField>
           {form.type === "Transport" && (
-            <Field label="Bus capacity">
+            <BilletField label="Bus capacity">
               <input type="number" value={form.busCapacity ?? ""} onChange={(e) => setForm({ ...form, busCapacity: Number(e.target.value) || undefined })} className="w-full rounded-md border border-border bg-surface-2 px-2 py-1.5 text-xs" />
-            </Field>
+            </BilletField>
           )}
         </div>
-        <Field label="Location">
+        <BilletField label="Location">
           <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className="w-full rounded-md border border-border bg-surface-2 px-2 py-1.5 text-xs" />
-        </Field>
-        <Field label="Notes">
+        </BilletField>
+        <BilletField label="Notes">
           <textarea value={form.notes ?? ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full rounded-md border border-border bg-surface-2 px-2 py-1.5 text-xs" />
-        </Field>
+        </BilletField>
 
         <label className="mt-3 flex items-center justify-between rounded-md border border-border bg-surface-2 px-3 py-2">
           <span className="text-xs font-semibold">Require RSVP for this event</span>
@@ -808,11 +808,11 @@ function EditItemModal({
           </div>
         )}
 
-        <Field label="Move to different day">
+        <BilletField label="Move to different day">
           <select value={moveTo} onChange={(e) => setMoveTo(Number(e.target.value))} className="w-full rounded-md border border-border bg-surface-2 px-2 py-1.5 text-xs">
             {dayLabels.map((l, i) => <option key={l} value={i}>{l}</option>)}
           </select>
-        </Field>
+        </BilletField>
 
         <button onClick={() => onSave(form, moveTo)} className="mt-4 w-full rounded-full bg-gradient-brand py-2.5 text-xs font-bold text-background shadow-glow-teal">Save</button>
       </div>
@@ -1241,23 +1241,23 @@ function BilletFormModal({
         </div>
 
         <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
-          <Field label="Family name">
+          <BilletField label="Family name">
             <input value={family} onChange={(e) => setFamily(e.target.value)} placeholder="The Henderson Family" className="w-full rounded-md border border-border bg-surface-2 px-2 py-2 text-xs" />
-          </Field>
-          <Field label="Address">
+          </BilletField>
+          <BilletField label="Address">
             <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="42 Willowbrook Dr, Langley, BC" className="w-full rounded-md border border-border bg-surface-2 px-2 py-2 text-xs" />
-          </Field>
+          </BilletField>
           <div className="grid grid-cols-2 gap-2">
-            <Field label="Phone">
+            <BilletField label="Phone">
               <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="604-555-0000" className="w-full rounded-md border border-border bg-surface-2 px-2 py-2 text-xs" />
-            </Field>
-            <Field label="Email">
+            </BilletField>
+            <BilletField label="Email">
               <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="family@email.com" className="w-full rounded-md border border-border bg-surface-2 px-2 py-2 text-xs" />
-            </Field>
+            </BilletField>
           </div>
-          <Field label="Notes (optional)">
+          <BilletField label="Notes (optional)">
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Pets, allergies, parking…" className="w-full rounded-md border border-border bg-surface-2 px-2 py-2 text-xs" />
-          </Field>
+          </BilletField>
 
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Assign players</p>
