@@ -379,14 +379,14 @@ function UploadReview({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState<"upload" | "review">("upload");
   // Mock AI-extracted rows; some with low confidence flagged
   const [rows, setRows] = useState(() => [
-    { id: "p-carter", name: "Carter", g: 1, a: 2, pm: 1, pim: 0, sog: 6, low: false },
-    { id: "p-brooks", name: "Brooks", g: 1, a: 0, pm: 1, pim: 2, sog: 5, low: false },
-    { id: "p-jensen", name: "Jensen", g: 0, a: 1, pm: 0, pim: 0, sog: 3, low: true },
-    { id: "p-petrov", name: "Petrov", g: 0, a: 0, pm: -1, pim: 0, sog: 2, low: false },
-    { id: "p-reilly", name: "Reilly", g: 1, a: 0, pm: 2, pim: 2, sog: 3, low: true },
-    { id: "p-kowalski", name: "Kowalski", g: 0, a: 1, pm: 1, pim: 0, sog: 1, low: false },
+    { id: "p-carter", name: "Carter", g: 1, a: 2, pm: 1, pim: 0, low: false },
+    { id: "p-brooks", name: "Brooks", g: 1, a: 0, pm: 1, pim: 2, low: false },
+    { id: "p-jensen", name: "Jensen", g: 0, a: 1, pm: 0, pim: 0, low: true },
+    { id: "p-petrov", name: "Petrov", g: 0, a: 0, pm: -1, pim: 0, low: false },
+    { id: "p-reilly", name: "Reilly", g: 1, a: 0, pm: 2, pim: 2, low: true },
+    { id: "p-kowalski", name: "Kowalski", g: 0, a: 1, pm: 1, pim: 0, low: false },
   ]);
-  function upd(id: string, k: "g"|"a"|"pm"|"pim"|"sog", v: string) {
+  function upd(id: string, k: "g"|"a"|"pm"|"pim", v: string) {
     const n = parseInt(v) || 0;
     setRows((r) => r.map((row) => row.id === id ? { ...row, [k]: n, low: false } : row));
   }
