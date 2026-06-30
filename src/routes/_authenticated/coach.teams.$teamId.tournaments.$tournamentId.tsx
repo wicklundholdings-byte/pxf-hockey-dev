@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import React, { useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   ChevronLeft, ChevronDown, ChevronRight, Plus, Link2, ChevronUp,
   Pencil, Trash2, GripVertical, Calendar as CalendarIcon, X,
@@ -62,7 +63,7 @@ function TournamentDetail() {
 
       <div className="pt-4">
         {tab === "Overview" && <OverviewTab onJumpStandings={() => setTab("Schedule")} />}
-        {tab === "Schedule" && <ScheduleTab editMode={editMode} setEditMode={setEditMode} />}
+        {tab === "Schedule" && <ScheduleTab editMode={editMode} setEditMode={setEditMode} tournamentName={t.name} />}
         {tab === "Roster" && <RosterTab />}
         {tab === "Logistics" && <LogisticsTab />}
         {tab === "Payments" && <PaymentsTab />}
@@ -379,6 +380,99 @@ function mkItem(
 
 type ScheduleFilter = "All" | "Games" | "Transport" | "Accommodation" | "Team Functions";
 
+/* ---- ICS export ---- */
+const MONTHS: Record<string, number> = {
+  JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5,
+  JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11,
+};
+function parseDayHeader(header: string): { month: number; day: number } | null {
+  // e.g. "FRIDAY · JUL 18"
+  const m = header.match(/([A-Z]{3})\s+(\d{1,2})/);
+  if (!m) return null;
+  const month = MONTHS[m[1]];
+  if (month === undefined) return null;
+  return { month, day: parseInt(m[2], 10) };
+}
+function parseTime(t: string): { h: number; m: number } | null {
+  // e.g. "6:30 AM", "10:00 PM"
+  const m = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  const mm = parseInt(m[2], 10);
+  const ap = m[3].toUpperCase();
+  if (ap === "PM" && h !== 12) h += 12;
+  if (ap === "AM" && h === 12) h = 0;
+  return { h, m: mm };
+}
+function icsDate(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    d.getUTCFullYear().toString() +
+    pad(d.getUTCMonth() + 1) +
+    pad(d.getUTCDate()) +
+    "T" +
+    pad(d.getUTCHours()) +
+    pad(d.getUTCMinutes()) +
+    pad(d.getUTCSeconds()) +
+    "Z"
+  );
+}
+function escIcs(s: string): string {
+  return (s || "").replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+}
+function buildTournamentIcs(tournamentName: string, days: { day: string; items: ItineraryItem[] }[]): string {
+  const year = new Date().getFullYear();
+  const stamp = icsDate(new Date());
+  const lines: string[] = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//PXF Hockey//Tournament//EN",
+    "CALSCALE:GREGORIAN",
+  ];
+  for (const d of days) {
+    const dh = parseDayHeader(d.day);
+    if (!dh) continue;
+    for (const it of d.items) {
+      const tm = parseTime(it.time);
+      if (!tm) continue; // skip TBD
+      const start = new Date(year, dh.month, dh.day, tm.h, tm.m, 0);
+      const end = new Date(start.getTime() + 60 * 60 * 1000);
+      lines.push(
+        "BEGIN:VEVENT",
+        `UID:${it.id}-${year}@pxfhockey`,
+        `DTSTAMP:${stamp}`,
+        `DTSTART:${icsDate(start)}`,
+        `DTEND:${icsDate(end)}`,
+        `SUMMARY:${escIcs(`${it.title} — ${tournamentName}`)}`,
+        `LOCATION:${escIcs(it.location)}`,
+        `DESCRIPTION:${escIcs(`${tournamentName} · ${TYPE_LABEL[it.type]}`)}`,
+        "END:VEVENT",
+      );
+    }
+  }
+  lines.push("END:VCALENDAR");
+  return lines.join("\r\n");
+}
+function downloadTournamentIcs(tournamentName: string, days: { day: string; items: ItineraryItem[] }[]) {
+  const ics = buildTournamentIcs(tournamentName, days);
+  const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const filename = tournamentName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + ".ics";
+  const isIOS = typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
+  if (isIOS) {
+    window.open(url, "_blank");
+  } else {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  toast.success("Opening in Calendar…");
+}
+
 function itemMatchesFilter(it: ItineraryItem, f: ScheduleFilter): boolean {
   switch (f) {
     case "All": return true;
@@ -389,7 +483,7 @@ function itemMatchesFilter(it: ItineraryItem, f: ScheduleFilter): boolean {
   }
 }
 
-function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode: React.Dispatch<React.SetStateAction<boolean>> }) {
+function ScheduleTab({ editMode, setEditMode, tournamentName }: { editMode: boolean; setEditMode: React.Dispatch<React.SetStateAction<boolean>>; tournamentName: string }) {
   const [days, setDays] = useState(SEED);
   const [dirty, setDirty] = useState(false);
   const [editing, setEditing] = useState<{ dayIdx: number; itemIdx: number } | null>(null);
@@ -463,7 +557,10 @@ function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode
       </div>
 
       <div className="flex items-center justify-between">
-        <button onClick={() => setCalOpen(true)} className="inline-flex items-center gap-1 text-[11px] font-bold text-teal">
+        <button
+          onClick={() => downloadTournamentIcs(tournamentName, days)}
+          className="inline-flex items-center gap-1 text-[11px] font-bold text-teal"
+        >
           <CalendarIcon size={12} /> + Add to Calendar
         </button>
         <button
