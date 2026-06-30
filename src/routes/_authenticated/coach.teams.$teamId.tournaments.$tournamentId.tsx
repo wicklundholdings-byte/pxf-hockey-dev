@@ -390,7 +390,7 @@ function itemMatchesFilter(it: ItineraryItem, f: ScheduleFilter): boolean {
   }
 }
 
-function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode: React.Dispatch<React.SetStateAction<boolean>> }) {
+function ScheduleTab({ editMode, setEditMode, tournamentName }: { editMode: boolean; setEditMode: React.Dispatch<React.SetStateAction<boolean>>; tournamentName: string }) {
   const [days, setDays] = useState(SEED);
   const [dirty, setDirty] = useState(false);
   const [editing, setEditing] = useState<{ dayIdx: number; itemIdx: number } | null>(null);
@@ -464,7 +464,10 @@ function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode
       </div>
 
       <div className="flex items-center justify-between">
-        <button onClick={() => setCalOpen(true)} className="inline-flex items-center gap-1 text-[11px] font-bold text-teal">
+        <button
+          onClick={() => downloadTournamentIcs(tournamentName, days)}
+          className="inline-flex items-center gap-1 text-[11px] font-bold text-teal"
+        >
           <CalendarIcon size={12} /> + Add to Calendar
         </button>
         <button
