@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Camera, DollarSign, Trophy, ClipboardList, LayoutGrid, ChevronRight, Plus, X } from "lucide-react";
+import { Camera, DollarSign, Trophy, ClipboardList, ChevronRight, Plus, X } from "lucide-react";
 import { createEvent } from "@/lib/teams.functions";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/more")({
@@ -17,7 +17,7 @@ function TeamMoreTab() {
     { to: "/coach/teams/$teamId/payments", label: "Payments", Icon: DollarSign },
     { to: "/coach/teams/$teamId/schedule", label: "Tournaments", Icon: Trophy },
     { to: "/coach/teams/$teamId/schedule", label: "Practice Plans", Icon: ClipboardList },
-    { to: "/coach/teams/$teamId/playbook", label: "Lines Builder", Icon: LayoutGrid },
+    
   ];
 
   return (
