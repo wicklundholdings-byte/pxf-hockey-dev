@@ -366,7 +366,7 @@ function itemMatchesFilter(it: ItineraryItem, f: ScheduleFilter): boolean {
   }
 }
 
-function ScheduleTab({ editMode }: { editMode: boolean }) {
+function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode: React.Dispatch<React.SetStateAction<boolean>> }) {
   const [days, setDays] = useState(SEED);
   const [dirty, setDirty] = useState(false);
   const [editing, setEditing] = useState<{ dayIdx: number; itemIdx: number } | null>(null);
