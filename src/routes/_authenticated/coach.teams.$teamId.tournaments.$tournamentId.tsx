@@ -640,17 +640,17 @@ function ItemRow({
 
       {!editMode && expanded && item.rsvp && (
         <div className="space-y-3 border-t border-border px-3 py-3">
-          {item.location && <p className="text-[11px] text-muted-foreground">📍 {item.location}</p>}
+          {item.location && <p className="text-[11px] text-muted-foreground">{item.location}</p>}
           {item.notes && <p className="text-[11px] text-foreground/80">{item.notes}</p>}
 
           {item.type === "Transport" && item.busCapacity && (
             <div>
-              <p className="text-[11px] font-bold text-teal">🚌 Seats needed: {seatsNeeded} / Bus capacity: {item.busCapacity}</p>
+              <p className="text-[11px] font-bold text-teal">Seats needed: {seatsNeeded} / Bus capacity: {item.busCapacity}</p>
               <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-2">
                 <div className={"h-full " + (overCapacity ? "bg-amber-400" : "bg-teal")} style={{ width: `${Math.min(100, (seatsNeeded / item.busCapacity) * 100)}%` }} />
               </div>
               {overCapacity && (
-                <p className="mt-1 text-[10px] font-bold text-amber-400">⚠ Over capacity — {seatsNeeded - item.busCapacity} unaccounted for</p>
+                <p className="mt-1 text-[10px] font-bold text-amber-400">Over capacity — {seatsNeeded - item.busCapacity} unaccounted for</p>
               )}
             </div>
           )}
