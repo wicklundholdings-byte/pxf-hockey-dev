@@ -393,170 +393,531 @@ function PlayerRow({
 
 /* =================== TRAVEL =================== */
 
-type ItineraryItem = { time: string; icon: string; text: string };
-const ITINERARY: { day: string; items: ItineraryItem[] }[] = [
+type ItemType = "Game" | "Transport" | "Hotel" | "Meal" | "Activity" | "Curfew" | "Other";
+const TYPE_ICON: Record<ItemType, string> = {
+  Game: "🏒", Transport: "🚌", Hotel: "🏨", Meal: "🍽", Activity: "🎳", Curfew: "🔒", Other: "📋",
+};
+const RSVP_DEFAULTS: Record<ItemType, boolean> = {
+  Transport: true, Meal: true, Activity: true, Hotel: true, Curfew: false, Game: false, Other: false,
+};
+function defaultOptions(type: ItemType): [string, string, string] {
+  if (type === "Transport") return ["Taking bus", "Driving myself", "Not sure"];
+  if (type === "Hotel") return ["Team hotel", "Own arrangements", "Not sure"];
+  return ["Going", "Not going", "Not sure"];
+}
+
+type RsvpStatus = "yes" | "no" | "maybe" | "none";
+type ItineraryItem = {
+  id: string;
+  type: ItemType;
+  title: string;
+  time: string;
+  location: string;
+  notes?: string;
+  rsvp: boolean;
+  options: [string, string, string];
+  responses: Record<string, RsvpStatus>;
+  busCapacity?: number;
+};
+
+const ROSTER = [
+  "Carter", "Brooks", "Jensen", "Petrov", "Callahan", "Reilly",
+  "MacDonald", "Nguyen", "Eriksson", "Yamamoto", "Thompson", "Marchetti",
+  "Kowalski", "O'Sullivan",
+];
+
+const SEED: { day: string; items: ItineraryItem[] }[] = [
   { day: "JUL 18 — FRIDAY", items: [
-    { time: "6:30 AM", icon: "🚌", text: "Bus departs Surrey Sport & Leisure" },
-    { time: "9:00 AM", icon: "🏒", text: "GAME 1 vs. Burnaby Winter Club · Rink 1" },
-    { time: "12:00 PM", icon: "🍽", text: "Team lunch · Boston Pizza Langley" },
-    { time: "2:00 PM", icon: "🏨", text: "Hotel check-in · Sandman Hotel Langley" },
-    { time: "5:30 PM", icon: "🏒", text: "Optional team skate · Rink 3" },
-    { time: "7:00 PM", icon: "🍽", text: "Team dinner · Cactus Club · families welcome" },
-    { time: "10:00 PM", icon: "🔒", text: "Curfew — players in rooms" },
+    mkItem("bus1", "Transport", "Bus departs Surrey Sport & Leisure", "6:30 AM", "Surrey Sport & Leisure", { busCapacity: 14, mix: { yes: 9, no: 2, maybe: 1 } }),
+    mkItem("g1", "Game", "GAME 1 vs. Burnaby Winter Club", "9:00 AM", "Rink 1 · Langley Events Centre"),
+    mkItem("l1", "Meal", "Team lunch", "12:00 PM", "Boston Pizza Langley", { mix: { yes: 10, no: 1, maybe: 1 } }),
+    mkItem("h1", "Hotel", "Hotel check-in", "2:00 PM", "Sandman Hotel Langley · 8765 202 St", { mix: { yes: 10, no: 2 } }),
+    mkItem("c1", "Curfew", "Curfew — players in rooms", "10:00 PM", "Hotel"),
   ]},
   { day: "JUL 19 — SATURDAY", items: [
-    { time: "8:00 AM", icon: "🍽", text: "Team breakfast · hotel lobby" },
-    { time: "9:30 AM", icon: "🚌", text: "Bus to rink" },
-    { time: "2:00 PM", icon: "🏒", text: "GAME 2 vs. Coquitlam Express · Rink 3" },
-    { time: "5:00 PM", icon: "🎳", text: "Team activity · Langley Bowl & Entertainment" },
-    { time: "8:00 PM", icon: "🍽", text: "Team dinner · The Keg" },
-    { time: "10:00 PM", icon: "🔒", text: "Curfew" },
-  ]},
-  { day: "JUL 20 — SUNDAY", items: [
-    { time: "8:30 AM", icon: "🍽", text: "Team breakfast" },
-    { time: "11:00 AM", icon: "🏒", text: "GAME 3 vs. North Delta Lightning · Rink 2" },
-    { time: "2:30 PM", icon: "·", text: "TBD based on standings · Playoff or free time" },
-    { time: "6:00 PM", icon: "🍽", text: "Team dinner · TBD" },
-  ]},
-  { day: "JUL 21 — MONDAY", items: [
-    { time: "TBD", icon: "🏒", text: "Playoff games or departure" },
-    { time: "6:00 PM", icon: "🚌", text: "Bus departs for home" },
+    mkItem("br2", "Meal", "Team breakfast", "8:00 AM", "Hotel lobby", { mix: { yes: 11, no: 0, maybe: 1 } }),
+    mkItem("g2", "Game", "GAME 2 vs. Coquitlam Express", "2:00 PM", "Rink 3 · Langley Events Centre"),
+    mkItem("a2", "Activity", "Team bowling", "5:00 PM", "Langley Bowl & Entertainment", { mix: { yes: 8, no: 2, maybe: 2 } }),
+    mkItem("c2", "Curfew", "Curfew", "10:00 PM", "Hotel"),
   ]},
 ];
 
+function mkItem(
+  id: string, type: ItemType, title: string, time: string, location: string,
+  extra?: { busCapacity?: number; mix?: { yes: number; no: number; maybe?: number } }
+): ItineraryItem {
+  const options = defaultOptions(type);
+  const responses: Record<string, RsvpStatus> = {};
+  if (extra?.mix) {
+    let i = 0;
+    for (let n = 0; n < extra.mix.yes; n++) responses[ROSTER[i++]] = "yes";
+    for (let n = 0; n < extra.mix.no; n++) responses[ROSTER[i++]] = "no";
+    for (let n = 0; n < (extra.mix.maybe ?? 0); n++) responses[ROSTER[i++]] = "maybe";
+  }
+  return {
+    id, type, title, time, location,
+    rsvp: RSVP_DEFAULTS[type], options, responses,
+    busCapacity: extra?.busCapacity,
+  };
+}
+
 function TravelTab() {
-  const today = "JUL 18 — FRIDAY";
-  const [openDay, setOpenDay] = useState<Record<string, boolean>>({ [today]: true });
-  const [assignRooms, setAssignRooms] = useState(true);
-  const [equipOpen, setEquipOpen] = useState(false);
+  const [days, setDays] = useState(SEED);
+  const [editMode, setEditMode] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [editing, setEditing] = useState<{ dayIdx: number; itemIdx: number } | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  function updateItem(dayIdx: number, itemIdx: number, patch: Partial<ItineraryItem>) {
+    setDays((d) => d.map((day, di) => di !== dayIdx ? day : {
+      ...day, items: day.items.map((it, ii) => ii !== itemIdx ? it : { ...it, ...patch }),
+    }));
+    setDirty(true);
+  }
+  function deleteItem(dayIdx: number, itemIdx: number) {
+    setDays((d) => d.map((day, di) => di !== dayIdx ? day : {
+      ...day, items: day.items.filter((_, ii) => ii !== itemIdx),
+    }));
+    setDirty(true);
+  }
+  function addItem(dayIdx: number, atIdx?: number) {
+    const newItem = mkItem(`new-${Date.now()}`, "Other", "New item", "12:00 PM", "");
+    setDays((d) => d.map((day, di) => {
+      if (di !== dayIdx) return day;
+      const next = [...day.items];
+      next.splice(atIdx ?? next.length, 0, newItem);
+      return { ...day, items: next };
+    }));
+    setDirty(true);
+  }
 
   return (
-    <div className="space-y-5">
-      {/* Hotel */}
-      <section>
-        <p className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-          <Hotel size={12} /> Hotel
-        </p>
-        <div className="rounded-xl border border-border bg-surface p-4">
-          <p className="text-sm font-bold">Sandman Hotel Langley</p>
-          <p className="mt-1 text-xs text-muted-foreground">8765 202 St, Langley, BC</p>
-          <p className="mt-1 text-xs text-muted-foreground">Check-in: Jul 17 · Check-out: Jul 21</p>
-          <div className="mt-3 flex gap-2">
-            <button className="inline-flex items-center gap-1 rounded-full border border-teal px-3 py-1.5 text-[11px] font-bold text-teal">
-              <MapPin size={12} /> Get Directions
-            </button>
-            <button className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-[11px] font-bold text-foreground">
-              <Phone size={12} /> Call Hotel
-            </button>
+    <div className="space-y-4">
+      {dirty && (
+        <div className="sticky top-[140px] z-10 flex items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/15 px-3 py-2 backdrop-blur">
+          <p className="text-[11px] font-bold text-amber-300">Draft — changes not yet sent to team</p>
+          <div className="flex gap-2">
+            <button onClick={() => { setDays(SEED); setDirty(false); }} className="rounded-full border border-border px-3 py-1 text-[10px] font-bold">Discard</button>
+            <button onClick={() => setConfirmOpen(true)} className="rounded-full bg-gradient-brand px-3 py-1 text-[10px] font-bold text-background shadow-glow-teal">Notify Team →</button>
           </div>
         </div>
+      )}
 
-        <div className="mt-3 rounded-xl border border-border bg-surface p-3">
-          <label className="flex items-center justify-between">
-            <span className="text-sm font-semibold">Assign rooms</span>
-            <button
-              onClick={() => setAssignRooms((v) => !v)}
-              className={"relative h-5 w-9 rounded-full transition-colors " + (assignRooms ? "bg-teal" : "bg-surface-2")}
-              aria-pressed={assignRooms}
-            >
-              <span className={"absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all " + (assignRooms ? "left-4" : "left-0.5")} />
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Day-by-day Itinerary</p>
+        <button
+          onClick={() => setEditMode((v) => !v)}
+          className={"rounded-full border px-3 py-1.5 text-[11px] font-bold " + (editMode ? "border-teal bg-teal text-background" : "border-teal text-teal")}
+        >
+          {editMode ? "Done" : <><Pencil size={12} className="mr-1 inline" /> Edit Itinerary</>}
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        {days.map((d, dayIdx) => (
+          <DaySection
+            key={d.day}
+            day={d}
+            editMode={editMode}
+            onEditItem={(itemIdx) => setEditing({ dayIdx, itemIdx })}
+            onDeleteItem={(itemIdx) => deleteItem(dayIdx, itemIdx)}
+            onAddItem={(atIdx) => addItem(dayIdx, atIdx)}
+            onRsvp={(itemIdx, key, status) =>
+              updateItem(dayIdx, itemIdx, {
+                responses: { ...d.items[itemIdx].responses, [key]: status },
+              })
+            }
+          />
+        ))}
+      </div>
+
+      {editing && (
+        <EditItemModal
+          item={days[editing.dayIdx].items[editing.itemIdx]}
+          dayLabels={days.map((x) => x.day)}
+          currentDay={editing.dayIdx}
+          onClose={() => setEditing(null)}
+          onSave={(patch, moveToDay) => {
+            const e = editing;
+            if (moveToDay !== undefined && moveToDay !== e.dayIdx) {
+              const item = { ...days[e.dayIdx].items[e.itemIdx], ...patch };
+              setDays((d) => d.map((day, di) => {
+                if (di === e.dayIdx) return { ...day, items: day.items.filter((_, ii) => ii !== e.itemIdx) };
+                if (di === moveToDay) return { ...day, items: [...day.items, item] };
+                return day;
+              }));
+              setDirty(true);
+            } else {
+              updateItem(e.dayIdx, e.itemIdx, patch);
+            }
+            setEditing(null);
+          }}
+        />
+      )}
+
+      {confirmOpen && (
+        <NotifyConfirmSheet
+          changeCount={3}
+          onClose={() => setConfirmOpen(false)}
+          onPublish={() => { setDirty(false); setEditMode(false); setConfirmOpen(false); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function DaySection({
+  day, editMode, onEditItem, onDeleteItem, onAddItem, onRsvp,
+}: {
+  day: { day: string; items: ItineraryItem[] };
+  editMode: boolean;
+  onEditItem: (i: number) => void;
+  onDeleteItem: (i: number) => void;
+  onAddItem: (atIdx?: number) => void;
+  onRsvp: (itemIdx: number, key: string, status: RsvpStatus) => void;
+}) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-surface">
+      <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between px-3 py-3 text-left">
+        <span className="text-xs font-bold uppercase tracking-wider">{day.day}</span>
+        {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+      </button>
+      {open && (
+        <div className="border-t border-border px-3 py-3">
+          {day.items.map((it, i) => (
+            <div key={it.id}>
+              {editMode && i > 0 && (
+                <button onClick={() => onAddItem(i)} className="my-1 flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-border py-1 text-[10px] font-bold text-muted-foreground">
+                  <Plus size={10} /> Add Item
+                </button>
+              )}
+              <ItemRow
+                item={it}
+                editMode={editMode}
+                onEdit={() => onEditItem(i)}
+                onDelete={() => onDeleteItem(i)}
+                onRsvp={(key, status) => onRsvp(i, key, status)}
+              />
+            </div>
+          ))}
+          {editMode && (
+            <button onClick={() => onAddItem()} className="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-teal/50 py-2 text-[11px] font-bold text-teal">
+              <Plus size={12} /> Add Item
             </button>
-          </label>
-          {assignRooms ? (
-            <ul className="mt-3 space-y-1.5 text-xs">
-              <li><span className="font-bold">Room 201:</span> Carter, Brooks</li>
-              <li><span className="font-bold">Room 203:</span> Jensen, Petrov, Callahan</li>
-              <li><span className="font-bold">Room 205:</span> Coaching Staff</li>
-            </ul>
-          ) : (
-            <p className="mt-2 text-[11px] text-muted-foreground">
-              Room assignments not set — coordinate with your team directly
-            </p>
           )}
         </div>
-      </section>
+      )}
+    </div>
+  );
+}
 
-      {/* Transportation */}
-      <section>
-        <p className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-          <Bus size={12} /> Transportation
-        </p>
-        <div className="rounded-xl border border-border bg-surface p-4">
-          <p className="text-sm font-bold">🚌 Team Bus</p>
-          <p className="mt-2 text-xs"><span className="text-muted-foreground">Departure:</span> Surrey Sport & Leisure parking lot · 6:30 AM · Jul 18</p>
-          <p className="mt-1 text-xs"><span className="text-muted-foreground">Return:</span> Departs Langley Events Centre · 6:00 PM · Jul 21</p>
-          <p className="mt-2 text-[11px] font-semibold text-teal">Seats: 14 players + 2 staff confirmed</p>
-        </div>
-      </section>
+function ItemRow({
+  item, editMode, onEdit, onDelete, onRsvp,
+}: {
+  item: ItineraryItem;
+  editMode: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+  onRsvp: (key: string, status: RsvpStatus) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const counts = useMemo(() => {
+    const c = { yes: 0, no: 0, maybe: 0, none: 0 };
+    for (const name of ROSTER) {
+      const s = item.responses[name] ?? "none";
+      c[s]++;
+    }
+    return c;
+  }, [item.responses]);
 
-      {/* Itinerary */}
-      <section>
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Day-by-day Itinerary</p>
-        <div className="space-y-2">
-          {ITINERARY.map((d) => {
-            const open = openDay[d.day] ?? false;
+  const seatsNeeded = item.type === "Transport" ? counts.yes : 0;
+  const overCapacity = item.busCapacity && seatsNeeded > item.busCapacity;
+
+  return (
+    <div className="group relative my-1 rounded-lg border border-border bg-surface-2/40">
+      <div className="flex items-center gap-2 px-2 py-2">
+        {editMode && <GripVertical size={14} className="shrink-0 text-muted-foreground" />}
+        <button
+          onClick={() => editMode ? onEdit() : item.rsvp && setExpanded((v) => !v)}
+          className="flex flex-1 items-center gap-2 text-left"
+        >
+          <span className="w-14 shrink-0 text-[10px] font-semibold text-muted-foreground">{item.time}</span>
+          <span className="text-base leading-none">{TYPE_ICON[item.type]}</span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-semibold">{item.title}</p>
+            {item.rsvp && !editMode && (
+              <p className="mt-0.5 flex gap-2 text-[10px]">
+                <span className="text-teal">✓ {counts.yes}</span>
+                <span className="text-amber-400">~ {counts.maybe}</span>
+                <span className="text-red-400">✗ {counts.no}</span>
+                <span className="text-muted-foreground">? {counts.none}</span>
+              </p>
+            )}
+          </div>
+        </button>
+        {editMode ? (
+          <button onClick={() => setShowDelete((v) => !v)} className="rounded p-1 text-muted-foreground">
+            <Trash2 size={14} />
+          </button>
+        ) : item.rsvp ? (
+          expanded ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />
+        ) : null}
+        {showDelete && (
+          <button onClick={onDelete} className="rounded-md bg-red-500 px-2 py-1 text-[10px] font-bold text-white">Delete</button>
+        )}
+      </div>
+
+      {!editMode && expanded && item.rsvp && (
+        <div className="space-y-3 border-t border-border px-3 py-3">
+          {item.location && <p className="text-[11px] text-muted-foreground">📍 {item.location}</p>}
+          {item.notes && <p className="text-[11px] text-foreground/80">{item.notes}</p>}
+
+          {item.type === "Transport" && item.busCapacity && (
+            <div>
+              <p className="text-[11px] font-bold text-teal">🚌 Seats needed: {seatsNeeded} / Bus capacity: {item.busCapacity}</p>
+              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-2">
+                <div className={"h-full " + (overCapacity ? "bg-amber-400" : "bg-teal")} style={{ width: `${Math.min(100, (seatsNeeded / item.busCapacity) * 100)}%` }} />
+              </div>
+              {overCapacity && (
+                <p className="mt-1 text-[10px] font-bold text-amber-400">⚠ Over capacity — {seatsNeeded - item.busCapacity} unaccounted for</p>
+              )}
+            </div>
+          )}
+
+          {(["yes", "no", "maybe", "none"] as const).map((status) => {
+            const list = ROSTER.filter((n) => (item.responses[n] ?? "none") === status);
+            if (list.length === 0) return null;
+            const label =
+              status === "yes" ? item.options[0].toUpperCase() :
+              status === "no" ? item.options[1].toUpperCase() :
+              status === "maybe" ? item.options[2].toUpperCase() : "NO REPLY";
             return (
-              <div key={d.day} className="overflow-hidden rounded-xl border border-border bg-surface">
-                <button
-                  onClick={() => setOpenDay((s) => ({ ...s, [d.day]: !open }))}
-                  className="flex w-full items-center justify-between px-3 py-3 text-left"
-                >
-                  <span className="text-xs font-bold uppercase tracking-wider">{d.day}</span>
-                  {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                </button>
-                {open && (
-                  <div className="space-y-2 border-t border-border px-3 py-3">
-                    {d.items.map((it, i) => (
-                      <div key={i} className="flex gap-3">
-                        <span className="w-16 shrink-0 text-[11px] font-semibold text-muted-foreground">{it.time}</span>
-                        <span className="text-base leading-none">{it.icon}</span>
-                        <span className="flex-1 text-xs leading-snug">{it.text}</span>
-                      </div>
-                    ))}
-                  </div>
+              <div key={status}>
+                <p className="text-[10px] font-bold tracking-wider text-muted-foreground">{label} ({list.length})</p>
+                <p className="mt-1 text-[11px] leading-relaxed">{list.join(" · ")}</p>
+                {status === "none" && (
+                  <button className="mt-1 text-[10px] font-bold text-amber-400">Send Reminder to No Reply →</button>
                 )}
               </div>
             );
           })}
-        </div>
-      </section>
 
-      {/* Equipment checklist */}
-      <section>
-        <div className="overflow-hidden rounded-xl border border-border bg-surface">
-          <button
-            onClick={() => setEquipOpen((v) => !v)}
-            className="flex w-full items-center justify-between px-3 py-3 text-left"
-          >
-            <span className="flex items-center gap-2 text-sm font-bold">
-              <ClipboardList size={14} className="text-teal" /> Equipment Checklist
-            </span>
-            {equipOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
-          {equipOpen && <EquipmentChecklist />}
+          {/* parent-side quick toggle (demo) */}
+          <div className="mt-2 rounded-md bg-surface px-2 py-2">
+            <p className="text-[10px] font-bold text-muted-foreground">YOUR RSVP (demo)</p>
+            <div className="mt-2 flex gap-2">
+              {item.options.map((opt, idx) => {
+                const status: RsvpStatus = idx === 0 ? "yes" : idx === 1 ? "no" : "maybe";
+                const mine = item.responses["__me"] === status;
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => onRsvp("__me", status)}
+                    className={"rounded-full px-3 py-1 text-[10px] font-bold " + (mine ? "bg-teal text-background" : "border border-border text-foreground")}
+                  >
+                    {mine && <Check size={10} className="mr-1 inline" />}{opt}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </section>
+      )}
+    </div>
+  );
+}
 
-      {/* Notes */}
-      <section>
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tournament Notes</p>
-        <div className="rounded-xl border border-border bg-surface p-3">
-          <p className="text-xs leading-relaxed text-foreground">
-            White jerseys for game 2. Dress sharp for team dinner Friday — no hoodies. Bring your own tape.
+function EditItemModal({
+  item, dayLabels, currentDay, onClose, onSave,
+}: {
+  item: ItineraryItem; dayLabels: string[]; currentDay: number;
+  onClose: () => void;
+  onSave: (patch: Partial<ItineraryItem>, moveToDay?: number) => void;
+}) {
+  const [form, setForm] = useState(item);
+  const [moveTo, setMoveTo] = useState(currentDay);
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70" onClick={onClose}>
+      <div className="w-full max-w-md rounded-t-3xl border border-border bg-card p-5" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <h3 className="font-display text-base font-bold">Edit item</h3>
+          <button onClick={onClose}><X size={16} /></button>
+        </div>
+
+        <div className="mt-3">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Type</label>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {(Object.keys(TYPE_ICON) as ItemType[]).map((t) => (
+              <button
+                key={t}
+                onClick={() => setForm({ ...form, type: t, rsvp: RSVP_DEFAULTS[t], options: defaultOptions(t) })}
+                className={"rounded-full px-2.5 py-1 text-[10px] font-bold " + (form.type === t ? "bg-teal text-background" : "border border-border")}
+              >
+                {TYPE_ICON[t]} {t}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <Field label="Title">
+          <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full rounded-md border border-border bg-surface-2 px-2 py-1.5 text-xs" />
+        </Field>
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="Time">
+            <input value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} className="w-full rounded-md border border-border bg-surface-2 px-2 py-1.5 text-xs" />
+          </Field>
+          {form.type === "Transport" && (
+            <Field label="Bus capacity">
+              <input type="number" value={form.busCapacity ?? ""} onChange={(e) => setForm({ ...form, busCapacity: Number(e.target.value) || undefined })} className="w-full rounded-md border border-border bg-surface-2 px-2 py-1.5 text-xs" />
+            </Field>
+          )}
+        </div>
+        <Field label="Location">
+          <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className="w-full rounded-md border border-border bg-surface-2 px-2 py-1.5 text-xs" />
+        </Field>
+        <Field label="Notes">
+          <textarea value={form.notes ?? ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full rounded-md border border-border bg-surface-2 px-2 py-1.5 text-xs" />
+        </Field>
+
+        <label className="mt-3 flex items-center justify-between rounded-md border border-border bg-surface-2 px-3 py-2">
+          <span className="text-xs font-semibold">Require RSVP for this event</span>
+          <input type="checkbox" checked={form.rsvp} onChange={(e) => setForm({ ...form, rsvp: e.target.checked })} className="h-4 w-4 accent-teal" />
+        </label>
+
+        {form.rsvp && (
+          <div className="mt-3">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">RSVP options</label>
+            <div className="mt-1 grid grid-cols-3 gap-1.5">
+              {form.options.map((opt, i) => (
+                <input
+                  key={i}
+                  value={opt}
+                  onChange={(e) => {
+                    const next = [...form.options] as [string, string, string];
+                    next[i] = e.target.value;
+                    setForm({ ...form, options: next });
+                  }}
+                  className="rounded-md border border-border bg-surface-2 px-2 py-1.5 text-[11px]"
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <Field label="Move to different day">
+          <select value={moveTo} onChange={(e) => setMoveTo(Number(e.target.value))} className="w-full rounded-md border border-border bg-surface-2 px-2 py-1.5 text-xs">
+            {dayLabels.map((l, i) => <option key={l} value={i}>{l}</option>)}
+          </select>
+        </Field>
+
+        <button onClick={() => onSave(form, moveTo)} className="mt-4 w-full rounded-full bg-gradient-brand py-2.5 text-xs font-bold text-background shadow-glow-teal">Save</button>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="mt-3">
+      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</label>
+      <div className="mt-1">{children}</div>
+    </div>
+  );
+}
+
+function NotifyConfirmSheet({
+  changeCount, onClose, onPublish,
+}: { changeCount: number; onClose: () => void; onPublish: () => void }) {
+  const [sendPush, setSendPush] = useState(true);
+  const [urgent, setUrgent] = useState(false);
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70" onClick={onClose}>
+      <div className="w-full max-w-md rounded-t-3xl border border-border bg-card p-5" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <h3 className="font-display text-base font-bold">Notify team</h3>
+          <button onClick={onClose}><X size={16} /></button>
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">{changeCount} events updated</p>
+
+        <label className="mt-3 flex items-center justify-between rounded-md border border-border bg-surface-2 px-3 py-2">
+          <span className="text-xs font-semibold">Send push notification to all members</span>
+          <input type="checkbox" checked={sendPush} onChange={(e) => setSendPush(e.target.checked)} className="h-4 w-4 accent-teal" />
+        </label>
+
+        <label className="mt-2 flex items-center justify-between rounded-md border border-border bg-surface-2 px-3 py-2">
+          <span className="text-xs font-semibold">Urgent update</span>
+          <input type="checkbox" checked={urgent} onChange={(e) => setUrgent(e.target.checked)} className="h-4 w-4 accent-amber-400" />
+        </label>
+
+        <div className="mt-3 rounded-md border border-border bg-surface-2 p-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Notification preview</p>
+          <p className="mt-1 flex items-start gap-2 text-xs">
+            <BellRing size={14} className="mt-0.5 text-teal" />
+            {urgent ? "⚠ URGENT: Tournament schedule changed" : "Coach updated the tournament schedule — tap to view"}
           </p>
-          <button className="mt-3 text-[11px] font-bold text-teal">Edit notes</button>
         </div>
-      </section>
 
-      {/* Attachments */}
-      <section className="space-y-2">
-        <button className="flex w-full items-center gap-2 rounded-xl bg-surface-2 px-3 py-3 text-xs font-bold text-foreground">
-          <Paperclip size={14} className="text-teal" /> Tournament Package
+        <button onClick={onPublish} className="mt-4 w-full rounded-full bg-gradient-brand py-2.5 text-xs font-bold text-background shadow-glow-teal">
+          {sendPush ? "Publish & Notify" : "Publish"}
         </button>
-        <button className="flex w-full items-center gap-2 rounded-xl bg-surface-2 px-3 py-3 text-xs font-bold text-foreground">
-          <Paperclip size={14} className="text-teal" /> Rules & Regulations
+        <button onClick={onPublish} className="mt-2 w-full rounded-full border border-border bg-surface-2 py-2.5 text-xs font-bold">
+          Publish Silently
         </button>
-      </section>
+      </div>
+    </div>
+  );
+}
+
+/* =================== CALENDAR EXPORT =================== */
+
+function CalendarExportSheet({ onClose }: { onClose: () => void }) {
+  const events = [
+    { id: "g1", title: "GAME 1 vs. Burnaby Winter Club", when: "Jul 18 · 9:00 AM", loc: "Rink 1 · Langley Events Centre", locked: true, checked: true, rsvpNote: undefined as string | undefined },
+    { id: "bus1", title: "🚌 Team bus departs", when: "Jul 18 · 6:30 AM", loc: "Surrey Sport & Leisure", locked: false, checked: false, rsvpNote: "You RSVPed Driving Myself" },
+    { id: "h1", title: "🏨 Hotel check-in", when: "Jul 18 · 2:00 PM", loc: "Sandman Hotel Langley", locked: false, checked: false, rsvpNote: "You RSVPed Own Arrangements" },
+    { id: "l1", title: "🍽 Team lunch", when: "Jul 18 · 12:00 PM", loc: "Boston Pizza Langley", locked: false, checked: true, rsvpNote: undefined },
+    { id: "g2", title: "GAME 2 vs. Coquitlam Express", when: "Jul 19 · 2:00 PM", loc: "Rink 3 · Langley Events Centre", locked: true, checked: true, rsvpNote: undefined },
+  ];
+  const [checked, setChecked] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(events.map((e) => [e.id, e.checked])),
+  );
+  const count = Object.values(checked).filter(Boolean).length;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70" onClick={onClose}>
+      <div className="flex max-h-[85vh] w-full max-w-md flex-col rounded-t-3xl border border-border bg-card" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <h3 className="font-display text-base font-bold">Add to Calendar</h3>
+          <button onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className="flex-1 space-y-2 overflow-y-auto px-5 py-3">
+          {events.map((e) => (
+            <label key={e.id} className="flex gap-2 rounded-md border border-border bg-surface-2 p-2">
+              <input
+                type="checkbox"
+                checked={!!checked[e.id]}
+                disabled={e.locked}
+                onChange={() => setChecked((s) => ({ ...s, [e.id]: !s[e.id] }))}
+                className="mt-0.5 h-4 w-4 accent-teal disabled:opacity-50"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold">{e.title}</p>
+                <p className="text-[10px] text-muted-foreground">{e.when}</p>
+                <p className="text-[10px] text-muted-foreground">📍 {e.loc}</p>
+                {e.rsvpNote && <p className="text-[10px] text-amber-400">{e.rsvpNote}</p>}
+                {e.locked && <p className="text-[10px] font-bold text-teal">Required</p>}
+              </div>
+            </label>
+          ))}
+        </div>
+        <div className="space-y-2 border-t border-border px-5 py-4">
+          <p className="text-[10px] text-muted-foreground">{count} of {events.length} events will be added</p>
+          <button className="w-full rounded-full bg-gradient-brand py-2.5 text-xs font-bold text-background shadow-glow-teal">Add to Apple Calendar</button>
+          <button className="w-full rounded-full border border-border bg-surface-2 py-2.5 text-xs font-bold">Add to Google Calendar</button>
+        </div>
+      </div>
     </div>
   );
 }
