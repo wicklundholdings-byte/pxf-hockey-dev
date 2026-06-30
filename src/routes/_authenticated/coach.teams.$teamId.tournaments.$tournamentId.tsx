@@ -466,7 +466,8 @@ function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode
         {days.map((d, dayIdx) => {
           const visible = d.items
             .map((it, i) => ({ it, i }))
-            .filter(({ it }) => itemMatchesFilter(it, filter));
+            .filter(({ it }) => itemMatchesFilter(it, filter))
+            .filter(({ it }) => !it.isPrivate || !IS_PARENT || isInvited(it));
           if (visible.length === 0 && !editMode) return null;
           return (
             <DaySection
