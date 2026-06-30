@@ -11,7 +11,7 @@ const ACTIVE = [
     name: "BC Minor AAA Spring Classic",
     dates: "Jul 18–21, 2026",
     location: "Langley Events Centre",
-    status: "REGISTERED",
+    status: "IN PROGRESS",
     record: "1W · 0L · 0OT",
   },
 ];
