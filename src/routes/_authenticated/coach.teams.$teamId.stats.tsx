@@ -110,12 +110,19 @@ function TeamStats() {
       </div>
 
       <h4 className="mt-4 text-xs font-bold">Skaters</h4>
+      <div className="mt-2 flex gap-2">
+        {(["pts","g","a","ppg"] as const).map((k) => (
+          <button key={k} onClick={() => setSort(k)} className={"rounded-full px-3 py-1 text-[10px] font-bold " + (sort === k ? "bg-teal text-background" : "bg-surface text-muted-foreground")}>
+            {k.toUpperCase()}
+          </button>
+        ))}
+      </div>
       <div className="mt-2 overflow-x-auto rounded-2xl border border-border bg-surface">
         <table className="w-full min-w-[480px] text-[11px]">
           <thead className="text-[9px] uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="p-2 text-left">Player</th>
-              {(["gp","g","a","pts","pm","pim","sog"] as SortKey[]).map((k) => (
+              {(["gp","g","a","pts","ppg","pm","pim"] as SortKey[]).map((k) => (
                 <th key={k} className="p-2 cursor-pointer" onClick={() => setSort(k)}>
                   <span className={sort === k ? "text-teal" : ""}>{k === "pm" ? "+/-" : k.toUpperCase()}</span>
                 </th>
@@ -130,9 +137,9 @@ function TeamStats() {
                 <td className="p-2 text-center">{s.g}</td>
                 <td className="p-2 text-center">{s.a}</td>
                 <td className="p-2 text-center font-bold text-teal">{s.pts}</td>
+                <td className="p-2 text-center">{s.ppg.toFixed(2)}</td>
                 <td className="p-2 text-center">{s.pm > 0 ? "+" : ""}{s.pm}</td>
                 <td className="p-2 text-center">{s.pim}</td>
-                <td className="p-2 text-center">{s.sog}</td>
               </tr>
             ))}
           </tbody>
@@ -205,7 +212,7 @@ function SkaterGameLogSheet({ skater, onClose }: { skater: MockSkater; onClose: 
       <div className="mt-2 overflow-x-auto rounded-2xl border border-border bg-background">
         <table className="w-full min-w-[420px] text-[11px]">
           <thead className="text-[9px] uppercase tracking-wider text-muted-foreground">
-            <tr><th className="p-2 text-left">Game</th><th>G</th><th>A</th><th>+/-</th><th>PIM</th><th>SOG</th></tr>
+            <tr><th className="p-2 text-left">Game</th><th>G</th><th>A</th><th>+/-</th><th>PIM</th></tr>
           </thead>
           <tbody>
             {rows.map((r, i) => (
@@ -215,7 +222,6 @@ function SkaterGameLogSheet({ skater, onClose }: { skater: MockSkater; onClose: 
                 <td className="p-2 text-center">{r.a}</td>
                 <td className="p-2 text-center">{r.pm > 0 ? "+" : ""}{r.pm}</td>
                 <td className="p-2 text-center">{r.pim}</td>
-                <td className="p-2 text-center">{r.sog}</td>
               </tr>
             ))}
           </tbody>
