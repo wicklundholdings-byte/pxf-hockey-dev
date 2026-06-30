@@ -559,21 +559,35 @@ function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode
 }
 
 function DaySection({
-  day, visibleIdx, editMode, onEditItem, onDeleteItem, onAddItem, onRsvp,
+  day, dayIdx, visibleIdx, editMode, drag, setDrag, onMove, flashTimeId, onTimeChange,
+  onEditItem, onDeleteItem, onAddItem, onRsvp,
 }: {
   day: { day: string; items: ItineraryItem[] };
+  dayIdx: number;
   visibleIdx: number[];
   editMode: boolean;
+  drag: { dayIdx: number; itemIdx: number } | null;
+  setDrag: (d: { dayIdx: number; itemIdx: number } | null) => void;
+  onMove: (toIdx: number) => void;
+  flashTimeId: string | null;
+  onTimeChange: (itemIdx: number, time: string) => void;
   onEditItem: (i: number) => void;
   onDeleteItem: (i: number) => void;
   onAddItem: (atIdx?: number) => void;
   onRsvp: (itemIdx: number, key: string, status: RsvpStatus) => void;
 }) {
   const [open, setOpen] = useState(true);
+  const [hover, setHover] = useState<number | null>(null);
   const indices = editMode ? day.items.map((_, i) => i) : visibleIdx;
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-surface">
-      <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between px-3 py-3 text-left">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        onDragOver={(e) => { if (editMode && drag) { e.preventDefault(); setHover(-1); } }}
+        onDragLeave={() => setHover(null)}
+        onDrop={(e) => { if (editMode && drag) { e.preventDefault(); onMove(0); setHover(null); } }}
+        className={"flex w-full items-center justify-between px-3 py-3 text-left " + (hover === -1 ? "bg-teal/10" : "")}
+      >
         <span className="text-xs font-bold uppercase tracking-wider">{day.day}</span>
         {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
       </button>
@@ -588,15 +602,32 @@ function DaySection({
                   <Plus size={10} /> Add Item
                 </button>
               )}
+              {editMode && hover === i && drag && (drag.dayIdx !== dayIdx || drag.itemIdx !== i) && (
+                <div className="my-1 h-8 rounded-md border-2 border-dashed border-teal/60 bg-teal/10" />
+              )}
               <ItemRow
                 item={it}
                 editMode={editMode}
+                draggable={editMode}
+                onDragStart={() => setDrag({ dayIdx, itemIdx: i })}
+                onDragOver={(e) => { if (editMode && drag) { e.preventDefault(); setHover(i); } }}
+                onDrop={(e) => { if (editMode && drag) { e.preventDefault(); onMove(i); setHover(null); } }}
+                isDragging={!!drag && drag.dayIdx === dayIdx && drag.itemIdx === i}
+                flashTime={flashTimeId === it.id}
+                onTimeChange={(time) => onTimeChange(i, time)}
                 onEdit={() => onEditItem(i)}
                 onDelete={() => onDeleteItem(i)}
                 onRsvp={(key, status) => onRsvp(i, key, status)}
               />
             </div>
           )})}
+          {editMode && drag && (
+            <div
+              onDragOver={(e) => { e.preventDefault(); setHover(day.items.length); }}
+              onDrop={(e) => { e.preventDefault(); onMove(day.items.length); setHover(null); }}
+              className={"my-1 h-6 rounded-md border border-dashed " + (hover === day.items.length ? "border-teal/60 bg-teal/10" : "border-border/40")}
+            />
+          )}
           {editMode && (
             <button onClick={() => onAddItem()} className="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-dashed border-teal/50 py-2 text-[11px] font-bold text-teal">
               <Plus size={12} /> Add Item
@@ -610,15 +641,30 @@ function DaySection({
 
 function ItemRow({
   item, editMode, onEdit, onDelete, onRsvp,
+  draggable, onDragStart, onDragOver, onDrop, isDragging, flashTime, onTimeChange,
 }: {
   item: ItineraryItem;
   editMode: boolean;
   onEdit: () => void;
   onDelete: () => void;
   onRsvp: (key: string, status: RsvpStatus) => void;
+  draggable?: boolean;
+  onDragStart?: () => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
+  isDragging?: boolean;
+  flashTime?: boolean;
+  onTimeChange?: (time: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const timeRef = React.useRef<HTMLInputElement>(null);
+  React.useEffect(() => {
+    if (flashTime && timeRef.current) {
+      timeRef.current.focus();
+      timeRef.current.select();
+    }
+  }, [flashTime]);
   const counts = useMemo(() => {
     const c = { yes: 0, no: 0, maybe: 0, none: 0 };
     for (const name of ROSTER) {
@@ -652,16 +698,34 @@ function ItemRow({
 
   return (
     <div
-      className="group relative my-1 rounded-lg border border-border border-l-[3px] bg-surface-2/40"
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      className={"group relative my-1 rounded-lg border border-border border-l-[3px] bg-surface-2/40 " + (isDragging ? "opacity-40" : "") + (flashTime ? " ring-2 ring-teal" : "")}
       style={{ borderLeftColor: TYPE_BORDER[item.type] }}
     >
       <div className="flex items-center gap-2 px-2 py-2">
-        {editMode && <GripVertical size={14} className="shrink-0 text-muted-foreground" />}
+        {editMode && (
+          <span className="cursor-grab touch-none rounded-md bg-teal/15 p-1 text-teal" title="Drag to reorder">
+            <GripVertical size={14} />
+          </span>
+        )}
         <button
           onClick={() => editMode ? onEdit() : item.rsvp && setExpanded((v) => !v)}
           className="flex flex-1 items-center gap-2 text-left"
         >
-          <span className="w-14 shrink-0 text-[10px] font-semibold text-muted-foreground">{item.time}</span>
+          {editMode && onTimeChange ? (
+            <input
+              ref={timeRef}
+              value={item.time}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => onTimeChange(e.target.value)}
+              className={"w-16 shrink-0 rounded border bg-surface-2 px-1 py-0.5 text-[10px] font-semibold " + (flashTime ? "border-teal text-teal" : "border-border text-muted-foreground")}
+            />
+          ) : (
+            <span className="w-14 shrink-0 text-[10px] font-semibold text-muted-foreground">{item.time}</span>
+          )}
           <div className="min-w-0 flex-1">
             <p className="flex items-center gap-1.5 truncate text-xs font-semibold">
               {item.isPrivate && <Lock size={11} className="shrink-0 text-amber-400" />}
