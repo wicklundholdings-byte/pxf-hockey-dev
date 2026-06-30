@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import {
   ChevronLeft, ChevronDown, ChevronRight, Plus, Link2, ChevronUp,
   Pencil, Trash2, GripVertical, Calendar as CalendarIcon, X,
-  AlertTriangle, BellRing, Check, MapPin, Phone, Mail, Home,
+  AlertTriangle, BellRing, Check, MapPin, Phone, Mail, Home, Lock,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/tournaments/$tournamentId")({
@@ -297,6 +297,8 @@ function defaultOptions(type: ItemType): [string, string, string] {
 }
 
 type RsvpStatus = "yes" | "no" | "maybe" | "none";
+type AudienceGroup = "Forwards" | "Defence" | "Goalies" | "Coaching Staff" | "All Staff";
+type Audience = { groups: AudienceGroup[]; people: string[] };
 type ItineraryItem = {
   id: string;
   type: ItemType;
@@ -309,6 +311,8 @@ type ItineraryItem = {
   responses: Record<string, RsvpStatus>;
   busCapacity?: number;
   result?: string;
+  isPrivate?: boolean;
+  audience?: Audience;
 };
 
 const ROSTER = [
@@ -317,6 +321,20 @@ const ROSTER = [
   "Kowalski", "O'Sullivan",
 ];
 
+const AUDIENCE_GROUPS: AudienceGroup[] = ["Forwards", "Defence", "Goalies", "Coaching Staff", "All Staff"];
+function audienceLabel(a?: Audience): string {
+  if (!a) return "Invited only";
+  const parts: string[] = [];
+  if (a.groups.length) parts.push(a.groups.join(" + "));
+  if (a.people.length) parts.push(`${a.people.length} individual${a.people.length === 1 ? "" : "s"}`);
+  return parts.length ? parts.join(" · ") : "Invited only";
+}
+// Demo: parent sim is not on any private audience → uninvited
+function isInvited(_item: ItineraryItem): boolean {
+  // Coach sees all (handled at call site); parent demo: never invited.
+  return false;
+}
+
 const SEED: { day: string; items: ItineraryItem[] }[] = [
   { day: "FRIDAY · JUL 18", items: [
     mkItem("bus1", "Transport", "Bus Departure", "6:30 AM", "Surrey Sport & Leisure parking lot", { busCapacity: 14, mix: { yes: 9, no: 2, maybe: 1 } }),
@@ -324,10 +342,12 @@ const SEED: { day: string; items: ItineraryItem[] }[] = [
     mkItem("l1", "Meal", "Team Lunch", "12:00 PM", "Boston Pizza Langley", { mix: { yes: 11, no: 1, maybe: 2 } }),
     mkItem("h1", "Hotel", "Hotel Check-in", "2:00 PM", "Sandman Hotel Langley", { mix: { yes: 10, no: 2 } }),
     mkItem("sk1", "Game", "Optional Skate", "5:30 PM", "Rink 3 · Langley Events Centre"),
+    mkItem("pf1", "Other", "Forwards Meeting", "4:00 PM", "Room 204 · Sandman Hotel", { mix: { yes: 4 }, isPrivate: true, audience: { groups: ["Forwards"], people: [] } }),
     mkItem("d1", "Meal", "Team Dinner", "7:00 PM", "Cactus Club · Families welcome", { mix: { yes: 13, no: 1 } }),
     mkItem("c1", "Curfew", "Curfew — players in rooms", "10:00 PM", "Hotel"),
   ]},
   { day: "SATURDAY · JUL 19", items: [
+    mkItem("pd1", "Other", "D-Core Breakfast Meeting", "7:00 AM", "Hotel Lobby · Table reserved", { mix: { yes: 3 }, isPrivate: true, audience: { groups: ["Defence", "Coaching Staff"], people: [] } }),
     mkItem("br2", "Meal", "Team Breakfast", "8:00 AM", "Hotel Lobby"),
     mkItem("bus2", "Transport", "Bus to Rink", "9:30 AM", "Hotel Lobby", { busCapacity: 14 }),
     mkItem("g2", "Game", "GAME 2 vs. Coquitlam Express", "2:00 PM", "Rink 3 · Langley Events Centre"),
@@ -348,21 +368,23 @@ const SEED: { day: string; items: ItineraryItem[] }[] = [
 
 function mkItem(
   id: string, type: ItemType, title: string, time: string, location: string,
-  extra?: { busCapacity?: number; mix?: { yes: number; no: number; maybe?: number }; result?: string }
+  extra?: { busCapacity?: number; mix?: { yes: number; no?: number; maybe?: number }; result?: string; isPrivate?: boolean; audience?: Audience }
 ): ItineraryItem {
   const options = defaultOptions(type);
   const responses: Record<string, RsvpStatus> = {};
   if (extra?.mix) {
     let i = 0;
     for (let n = 0; n < extra.mix.yes; n++) responses[ROSTER[i++]] = "yes";
-    for (let n = 0; n < extra.mix.no; n++) responses[ROSTER[i++]] = "no";
+    for (let n = 0; n < (extra.mix.no ?? 0); n++) responses[ROSTER[i++]] = "no";
     for (let n = 0; n < (extra.mix.maybe ?? 0); n++) responses[ROSTER[i++]] = "maybe";
   }
   return {
     id, type, title, time, location,
-    rsvp: RSVP_DEFAULTS[type], options, responses,
+    rsvp: extra?.isPrivate ? true : RSVP_DEFAULTS[type], options, responses,
     busCapacity: extra?.busCapacity,
     result: extra?.result,
+    isPrivate: extra?.isPrivate,
+    audience: extra?.audience,
   };
 }
 
@@ -444,7 +466,8 @@ function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode
         {days.map((d, dayIdx) => {
           const visible = d.items
             .map((it, i) => ({ it, i }))
-            .filter(({ it }) => itemMatchesFilter(it, filter));
+            .filter(({ it }) => itemMatchesFilter(it, filter))
+            .filter(({ it }) => !it.isPrivate || !IS_PARENT || isInvited(it));
           if (visible.length === 0 && !editMode) return null;
           return (
             <DaySection
@@ -607,8 +630,13 @@ function ItemRow({
         >
           <span className="w-14 shrink-0 text-[10px] font-semibold text-muted-foreground">{item.time}</span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold">{item.title}</p>
-            <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wider text-white/60">{TYPE_LABEL[item.type]}</p>
+            <p className="flex items-center gap-1.5 truncate text-xs font-semibold">
+              {item.isPrivate && <Lock size={11} className="shrink-0 text-amber-400" />}
+              <span className="truncate">{item.title}</span>
+            </p>
+            <p className="mt-0.5 text-[11px] font-bold uppercase tracking-wider text-white/60">
+              {item.isPrivate ? `PRIVATE · ${audienceLabel(item.audience)}` : TYPE_LABEL[item.type]}
+            </p>
             {item.location && (
               <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{item.location}</p>
             )}
@@ -756,6 +784,52 @@ function EditItemModal({
           <span className="text-xs font-semibold">Require RSVP for this event</span>
           <input type="checkbox" checked={form.rsvp} onChange={(e) => setForm({ ...form, rsvp: e.target.checked })} className="h-4 w-4 accent-teal" />
         </label>
+
+        <label className="mt-2 flex items-center justify-between rounded-md border border-border bg-surface-2 px-3 py-2">
+          <span className="flex items-center gap-1.5 text-xs font-semibold">
+            <Lock size={12} className="text-amber-400" /> Private event (invite only)
+          </span>
+          <input
+            type="checkbox"
+            checked={!!form.isPrivate}
+            onChange={(e) => setForm({
+              ...form,
+              isPrivate: e.target.checked,
+              audience: e.target.checked ? (form.audience ?? { groups: [], people: [] }) : undefined,
+            })}
+            className="h-4 w-4 accent-teal"
+          />
+        </label>
+
+        {form.isPrivate && (
+          <div className="mt-2 rounded-md border border-border bg-surface-2 px-3 py-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Who can see this?</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {AUDIENCE_GROUPS.map((g) => {
+                const on = form.audience?.groups.includes(g);
+                return (
+                  <button
+                    key={g}
+                    onClick={() => {
+                      const cur = form.audience ?? { groups: [], people: [] };
+                      const groups = on ? cur.groups.filter((x) => x !== g) : [...cur.groups, g];
+                      setForm({ ...form, audience: { ...cur, groups } });
+                    }}
+                    className={"rounded-full px-2.5 py-1 text-[10px] font-bold " + (on ? "bg-teal text-background" : "border border-border")}
+                  >
+                    {g}
+                  </button>
+                );
+              })}
+            </div>
+            <button className="mt-2 text-[10px] font-bold text-teal">
+              + Select individuals
+            </button>
+            {form.audience && (form.audience.groups.length > 0 || form.audience.people.length > 0) && (
+              <p className="mt-2 text-[10px] text-muted-foreground">Visible to: {audienceLabel(form.audience)}</p>
+            )}
+          </div>
+        )}
 
         {form.rsvp && (
           <div className="mt-3">
