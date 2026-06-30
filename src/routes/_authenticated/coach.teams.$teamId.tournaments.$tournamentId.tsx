@@ -998,3 +998,304 @@ function PaymentsTab() {
     </div>
   );
 }
+
+// ============================================================
+// Accommodation: Hotel · Billets · Both
+// ============================================================
+
+type AccomMode = "Hotel" | "Billets" | "Both";
+
+type Billet = {
+  id: string;
+  family: string;
+  address: string;
+  phone: string;
+  email: string;
+  notes?: string;
+  players: string[];
+};
+
+const SEED_BILLETS: Billet[] = [
+  {
+    id: "b1",
+    family: "The Henderson Family",
+    address: "42 Willowbrook Dr, Langley, BC",
+    phone: "604-555-0182",
+    email: "henderson@gmail.com",
+    notes: "1 small dog, street parking",
+    players: ["Liam Carter", "Owen Brooks"],
+  },
+  {
+    id: "b2",
+    family: "The Nguyen Family",
+    address: "88 Fraser Hwy, Langley, BC",
+    phone: "604-555-0241",
+    email: "nguyen.family@gmail.com",
+    notes: "Nut allergy in home — no nut products",
+    players: ["Jake Andersson"],
+  },
+];
+
+const ROSTER = [
+  "Liam Carter", "Owen Brooks", "Jake Andersson", "Mason Wong",
+  "Ethan Reid", "Noah Park", "Lucas Tremblay", "Aiden Singh",
+];
+
+// Toggle to simulate parent view; coach by default.
+const IS_PARENT = false;
+const PARENT_CHILD_NAME = "Liam Carter";
+
+function AccommodationSection() {
+  const [mode, setMode] = useState<AccomMode>("Hotel");
+  const [billets, setBillets] = useState<Billet[]>(SEED_BILLETS);
+  const [addOpen, setAddOpen] = useState(false);
+  const [editing, setEditing] = useState<Billet | null>(null);
+
+  function upsert(b: Billet) {
+    setBillets((prev) => {
+      const idx = prev.findIndex((x) => x.id === b.id);
+      if (idx === -1) return [...prev, b];
+      const next = [...prev]; next[idx] = b; return next;
+    });
+  }
+
+  const showHotel = mode === "Hotel" || mode === "Both";
+  const showBillets = mode === "Billets" || mode === "Both";
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Accommodation</p>
+        <div className="mt-2 inline-flex rounded-full border border-border bg-surface p-0.5">
+          {(["Hotel", "Billets", "Both"] as AccomMode[]).map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={
+                "rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors " +
+                (mode === m ? "bg-teal text-background" : "text-muted-foreground")
+              }
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {showHotel && <HotelCard />}
+
+      {showBillets && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Billets</p>
+            {!IS_PARENT && (
+              <button onClick={() => setAddOpen(true)} className="text-[11px] font-bold text-teal">
+                + Add Billet Family
+              </button>
+            )}
+          </div>
+
+          {IS_PARENT ? (
+            (() => {
+              const mine = billets.find((b) => b.players.includes(PARENT_CHILD_NAME));
+              if (!mine) {
+                return (
+                  <div className="rounded-xl border border-border bg-surface p-4 text-xs text-muted-foreground">
+                    No billet assignment yet. Your coach will update this once arrangements are confirmed.
+                  </div>
+                );
+              }
+              return <BilletCard billet={mine} parentView onEdit={() => {}} />;
+            })()
+          ) : (
+            billets.map((b) => (
+              <BilletCard key={b.id} billet={b} onEdit={() => setEditing(b)} />
+            ))
+          )}
+        </div>
+      )}
+
+      {addOpen && (
+        <BilletFormModal
+          onClose={() => setAddOpen(false)}
+          onSave={(b) => { upsert(b); setAddOpen(false); }}
+        />
+      )}
+      {editing && (
+        <BilletFormModal
+          initial={editing}
+          onClose={() => setEditing(null)}
+          onSave={(b) => { upsert(b); setEditing(null); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function HotelCard() {
+  return (
+    <div className="rounded-xl border border-border bg-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Hotel</p>
+          <p className="mt-1 text-sm font-bold">Sandman Hotel Langley</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">8765 202 St, Langley, BC</p>
+        </div>
+        <Home size={16} className="text-teal" />
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        <a href="https://maps.google.com/?q=Sandman+Hotel+Langley" target="_blank" rel="noreferrer" className="flex items-center justify-center gap-1 rounded-md bg-surface-2 py-2 text-[11px] font-bold">
+          <MapPin size={12} /> Maps
+        </a>
+        <a href="tel:6045300050" className="flex items-center justify-center gap-1 rounded-md bg-surface-2 py-2 text-[11px] font-bold">
+          <Phone size={12} /> Call
+        </a>
+        <button className="flex items-center justify-center gap-1 rounded-md bg-surface-2 py-2 text-[11px] font-bold text-muted-foreground">
+          Confirmation #
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function BilletCard({ billet, parentView, onEdit }: { billet: Billet; parentView?: boolean; onEdit: () => void }) {
+  return (
+    <div className="rounded-xl border border-border bg-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          {parentView && (
+            <p className="text-[10px] font-bold uppercase tracking-wider text-teal">Your Billet</p>
+          )}
+          <p className={(parentView ? "mt-1 " : "") + "text-sm font-bold"}>{billet.family}</p>
+        </div>
+        {!parentView && (
+          <button onClick={onEdit} className="text-[11px] font-bold text-teal">Edit</button>
+        )}
+      </div>
+
+      <div className="mt-3 space-y-2">
+        <a
+          href={`https://maps.google.com/?q=${encodeURIComponent(billet.address)}`}
+          target="_blank" rel="noreferrer"
+          className="flex items-center gap-2 text-xs text-foreground active:opacity-70"
+        >
+          <MapPin size={12} className="text-muted-foreground" /> {billet.address}
+        </a>
+        <a href={`tel:${billet.phone.replace(/[^\d+]/g, "")}`} className="flex items-center gap-2 text-xs text-foreground active:opacity-70">
+          <Phone size={12} className="text-muted-foreground" /> {billet.phone}
+        </a>
+        <a href={`mailto:${billet.email}`} className="flex items-center gap-2 text-xs text-foreground active:opacity-70">
+          <Mail size={12} className="text-muted-foreground" /> {billet.email}
+        </a>
+      </div>
+
+      {billet.notes && (
+        <p className="mt-3 rounded-md bg-surface-2 px-2 py-1.5 text-[11px] text-muted-foreground">
+          {billet.notes}
+        </p>
+      )}
+
+      {!parentView && billet.players.length > 0 && (
+        <div className="mt-3 border-t border-border pt-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Assigned Players</p>
+          <p className="mt-1 text-xs font-bold">{billet.players.join(" · ")}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BilletFormModal({
+  initial, onClose, onSave,
+}: { initial?: Billet; onClose: () => void; onSave: (b: Billet) => void }) {
+  const [family, setFamily] = useState(initial?.family ?? "");
+  const [address, setAddress] = useState(initial?.address ?? "");
+  const [phone, setPhone] = useState(initial?.phone ?? "");
+  const [email, setEmail] = useState(initial?.email ?? "");
+  const [notes, setNotes] = useState(initial?.notes ?? "");
+  const [players, setPlayers] = useState<string[]>(initial?.players ?? []);
+
+  function togglePlayer(p: string) {
+    setPlayers((prev) => prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]);
+  }
+
+  function save() {
+    if (!family.trim()) return;
+    onSave({
+      id: initial?.id ?? `b-${Date.now()}`,
+      family: family.trim(),
+      address: address.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
+      notes: notes.trim() || undefined,
+      players,
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70" onClick={onClose}>
+      <div className="flex max-h-[88vh] w-full max-w-md flex-col rounded-t-3xl border border-border bg-card" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <h3 className="font-display text-base font-bold">{initial ? "Edit Billet Family" : "Add Billet Family"}</h3>
+          <button onClick={onClose}><X size={16} /></button>
+        </div>
+
+        <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
+          <Field label="Family name">
+            <input value={family} onChange={(e) => setFamily(e.target.value)} placeholder="The Henderson Family" className="w-full rounded-md border border-border bg-surface-2 px-2 py-2 text-xs" />
+          </Field>
+          <Field label="Address">
+            <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="42 Willowbrook Dr, Langley, BC" className="w-full rounded-md border border-border bg-surface-2 px-2 py-2 text-xs" />
+          </Field>
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="Phone">
+              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="604-555-0000" className="w-full rounded-md border border-border bg-surface-2 px-2 py-2 text-xs" />
+            </Field>
+            <Field label="Email">
+              <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="family@email.com" className="w-full rounded-md border border-border bg-surface-2 px-2 py-2 text-xs" />
+            </Field>
+          </div>
+          <Field label="Notes (optional)">
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Pets, allergies, parking…" className="w-full rounded-md border border-border bg-surface-2 px-2 py-2 text-xs" />
+          </Field>
+
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Assign players</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {ROSTER.map((p) => {
+                const on = players.includes(p);
+                return (
+                  <button
+                    key={p}
+                    onClick={() => togglePlayer(p)}
+                    className={
+                      "rounded-full border px-2.5 py-1 text-[11px] font-bold " +
+                      (on ? "border-teal bg-teal text-background" : "border-border text-foreground")
+                    }
+                  >
+                    {on && <Check size={10} className="mr-1 inline" />}{p}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-border px-5 py-4">
+          <button onClick={save} className="w-full rounded-full bg-gradient-brand py-2.5 text-xs font-bold text-background shadow-glow-teal">
+            {initial ? "Save Changes" : "Add Billet Family"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
+      <div className="mt-1">{children}</div>
+    </label>
+  );
+}
