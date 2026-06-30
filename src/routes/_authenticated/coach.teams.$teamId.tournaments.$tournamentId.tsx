@@ -363,7 +363,6 @@ function itemMatchesFilter(it: ItineraryItem, f: ScheduleFilter): boolean {
     case "Transport": return it.type === "Transport";
     case "Accommodation": return it.type === "Hotel";
     case "Team Functions": return it.type === "Meal" || it.type === "Activity" || it.type === "Curfew" || it.type === "Other";
-    case "My RSVPs": return it.rsvp;
   }
 }
 
