@@ -15,7 +15,7 @@ const DATA: Record<string, { name: string; dates: string; city: string; status: 
   "winter-invitational": { name: "Lower Mainland Winter Invitational", dates: "Feb 14–16", city: "Burnaby, BC", status: "UPCOMING", readonly: true },
 };
 
-const TABS = ["Overview", "Games", "Roster", "Travel", "Payments"] as const;
+const TABS = ["Overview", "Schedule", "Roster", "Logistics", "Payments"] as const;
 type Tab = (typeof TABS)[number];
 
 function TournamentDetail() {
@@ -60,10 +60,10 @@ function TournamentDetail() {
       </div>
 
       <div className="pt-4">
-        {tab === "Overview" && <OverviewTab onJumpStandings={() => setTab("Games")} />}
-        {tab === "Games" && <GamesTab readonly={t.readonly} />}
+        {tab === "Overview" && <OverviewTab onJumpStandings={() => setTab("Schedule")} />}
+        {tab === "Schedule" && <ScheduleTab readonly={t.readonly} />}
         {tab === "Roster" && <RosterTab />}
-        {tab === "Travel" && <TravelTab />}
+        {tab === "Logistics" && <LogisticsTab />}
         {tab === "Payments" && <PaymentsTab />}
       </div>
     </div>
