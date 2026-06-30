@@ -131,6 +131,7 @@ import { Route as ParentTeamsTeamIdMediaRouteImport } from './routes/parent.team
 import { Route as ParentTeamsTeamIdLeaderboardRouteImport } from './routes/parent.teams.$teamId.leaderboard'
 import { Route as ParentTeamEventEventIdRouteImport } from './routes/parent.team.event.$eventId'
 import { Route as ApiPublicHooksRsvpRemindersRouteImport } from './routes/api/public/hooks/rsvp-reminders'
+import { Route as AuthenticatedCoachTeamsTournamentsRouteImport } from './routes/_authenticated/coach.teams..tournaments'
 import { Route as AuthenticatedCoachTeamsNewRouteImport } from './routes/_authenticated/coach.teams.new'
 import { Route as AuthenticatedCoachTeamsTeamIdRouteImport } from './routes/_authenticated/coach.teams.$teamId'
 import { Route as AuthenticatedCoachContactsContactIdRouteImport } from './routes/_authenticated/coach.contacts.$contactId'
@@ -806,6 +807,12 @@ const ApiPublicHooksRsvpRemindersRoute =
     path: '/api/public/hooks/rsvp-reminders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedCoachTeamsTournamentsRoute =
+  AuthenticatedCoachTeamsTournamentsRouteImport.update({
+    id: '/tournaments',
+    path: '/tournaments',
+    getParentRoute: () => AuthenticatedCoachTeamsRoute,
+  } as any)
 const AuthenticatedCoachTeamsNewRoute =
   AuthenticatedCoachTeamsNewRouteImport.update({
     id: '/new',
@@ -1126,6 +1133,7 @@ export interface FileRoutesByFullPath {
   '/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
   '/coach/teams/$teamId': typeof AuthenticatedCoachTeamsTeamIdRouteWithChildren
   '/coach/teams/new': typeof AuthenticatedCoachTeamsNewRoute
+  '/coach/teams/tournaments': typeof AuthenticatedCoachTeamsTournamentsRoute
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/parent/team/event/$eventId': typeof ParentTeamEventEventIdRoute
   '/parent/teams/$teamId/leaderboard': typeof ParentTeamsTeamIdLeaderboardRouteWithChildren
@@ -1275,6 +1283,7 @@ export interface FileRoutesByTo {
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
   '/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
   '/coach/teams/new': typeof AuthenticatedCoachTeamsNewRoute
+  '/coach/teams/tournaments': typeof AuthenticatedCoachTeamsTournamentsRoute
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/parent/team/event/$eventId': typeof ParentTeamEventEventIdRoute
   '/parent/teams/$teamId/leaderboard': typeof ParentTeamsTeamIdLeaderboardRouteWithChildren
@@ -1432,6 +1441,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
   '/_authenticated/coach/teams/$teamId': typeof AuthenticatedCoachTeamsTeamIdRouteWithChildren
   '/_authenticated/coach/teams/new': typeof AuthenticatedCoachTeamsNewRoute
+  '/_authenticated/coach/teams/tournaments': typeof AuthenticatedCoachTeamsTournamentsRoute
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
   '/parent/team/event/$eventId': typeof ParentTeamEventEventIdRoute
   '/parent/teams/$teamId/leaderboard': typeof ParentTeamsTeamIdLeaderboardRouteWithChildren
@@ -1591,6 +1601,7 @@ export interface FileRouteTypes {
     | '/coach/contacts/$contactId'
     | '/coach/teams/$teamId'
     | '/coach/teams/new'
+    | '/coach/teams/tournaments'
     | '/api/public/hooks/rsvp-reminders'
     | '/parent/team/event/$eventId'
     | '/parent/teams/$teamId/leaderboard'
@@ -1740,6 +1751,7 @@ export interface FileRouteTypes {
     | '/coach/camps/new'
     | '/coach/contacts/$contactId'
     | '/coach/teams/new'
+    | '/coach/teams/tournaments'
     | '/api/public/hooks/rsvp-reminders'
     | '/parent/team/event/$eventId'
     | '/parent/teams/$teamId/leaderboard'
@@ -1896,6 +1908,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach/contacts/$contactId'
     | '/_authenticated/coach/teams/$teamId'
     | '/_authenticated/coach/teams/new'
+    | '/_authenticated/coach/teams/tournaments'
     | '/api/public/hooks/rsvp-reminders'
     | '/parent/team/event/$eventId'
     | '/parent/teams/$teamId/leaderboard'
@@ -2849,6 +2862,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksRsvpRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/coach/teams/tournaments': {
+      id: '/_authenticated/coach/teams/tournaments'
+      path: '/tournaments'
+      fullPath: '/coach/teams/tournaments'
+      preLoaderRoute: typeof AuthenticatedCoachTeamsTournamentsRouteImport
+      parentRoute: typeof AuthenticatedCoachTeamsRoute
+    }
     '/_authenticated/coach/teams/new': {
       id: '/_authenticated/coach/teams/new'
       path: '/new'
@@ -3229,6 +3249,7 @@ const AuthenticatedCoachTeamsTeamIdRouteWithChildren =
 interface AuthenticatedCoachTeamsRouteChildren {
   AuthenticatedCoachTeamsTeamIdRoute: typeof AuthenticatedCoachTeamsTeamIdRouteWithChildren
   AuthenticatedCoachTeamsNewRoute: typeof AuthenticatedCoachTeamsNewRoute
+  AuthenticatedCoachTeamsTournamentsRoute: typeof AuthenticatedCoachTeamsTournamentsRoute
   AuthenticatedCoachTeamsIndexRoute: typeof AuthenticatedCoachTeamsIndexRoute
 }
 
@@ -3237,6 +3258,8 @@ const AuthenticatedCoachTeamsRouteChildren: AuthenticatedCoachTeamsRouteChildren
     AuthenticatedCoachTeamsTeamIdRoute:
       AuthenticatedCoachTeamsTeamIdRouteWithChildren,
     AuthenticatedCoachTeamsNewRoute: AuthenticatedCoachTeamsNewRoute,
+    AuthenticatedCoachTeamsTournamentsRoute:
+      AuthenticatedCoachTeamsTournamentsRoute,
     AuthenticatedCoachTeamsIndexRoute: AuthenticatedCoachTeamsIndexRoute,
   }
 
