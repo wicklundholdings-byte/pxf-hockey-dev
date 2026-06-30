@@ -158,6 +158,7 @@ function Schedule() {
     filter === "all" ? true : filter === "games" ? m.kind === "game" : m.kind === "practice"
   );
   const mockPastFiltered = filter === "practices" ? [] : MOCK_PAST;
+  const fallbackEventId = events[0]?.id ?? null;
 
   return (
     <div className="space-y-4">
@@ -248,8 +249,9 @@ function Schedule() {
               </Link>
             );
           })}
-          {mockUpcomingFiltered.map((m) => (
-            <div key={m.id} className="rounded-2xl border border-border bg-surface p-3">
+          {mockUpcomingFiltered.map((m) => {
+            const card = (
+              <>
               <div className="flex items-center gap-2">
                 {m.kind === "game" ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-teal/15 px-2 py-0.5 text-[9px] font-bold tracking-wider text-teal">
@@ -268,8 +270,17 @@ function Schedule() {
               {m.kind === "game" && (
                 <AvailabilityRow going={m.going ?? 0} pending={m.pending ?? 0} out={m.out ?? 0} />
               )}
-            </div>
-          ))}
+              </>
+            );
+            const cls = "block w-full text-left rounded-2xl border border-border bg-surface p-3 active:bg-surface-2";
+            return fallbackEventId ? (
+              <Link key={m.id} to="/coach/teams/$teamId/schedule/$eventId" params={{ teamId, eventId: fallbackEventId }} className={cls}>
+                {card}
+              </Link>
+            ) : (
+              <button key={m.id} type="button" className={cls}>{card}</button>
+            );
+          })}
           {upcomingReal.length === 0 && mockUpcomingFiltered.length === 0 && (
             <p className="rounded-xl border border-dashed border-border bg-surface p-4 text-center text-xs text-muted-foreground">No upcoming events.</p>
           )}
@@ -307,8 +318,9 @@ function Schedule() {
               </Link>
             );
           })}
-          {mockPastFiltered.map((m) => (
-            <div key={m.id} className="flex items-center justify-between rounded-2xl border border-border bg-surface p-3">
+          {mockPastFiltered.map((m) => {
+            const card = (
+              <>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">vs. {m.opponent}</p>
                 <p className="text-[11px] text-muted-foreground">{m.date}</p>
@@ -317,8 +329,17 @@ function Schedule() {
                 <span className="font-display text-lg font-bold leading-none">{m.teamScore} — {m.oppScore}</span>
                 <span className={"rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider " + resultBadgeClass(m.result)}>{m.result}</span>
               </div>
-            </div>
-          ))}
+              </>
+            );
+            const cls = "flex w-full items-center justify-between rounded-2xl border border-border bg-surface p-3 text-left active:bg-surface-2";
+            return fallbackEventId ? (
+              <Link key={m.id} to="/coach/teams/$teamId/schedule/$eventId" params={{ teamId, eventId: fallbackEventId }} className={cls}>
+                {card}
+              </Link>
+            ) : (
+              <button key={m.id} type="button" className={cls}>{card}</button>
+            );
+          })}
           {pastReal.length === 0 && mockPastFiltered.length === 0 && (
             <p className="rounded-xl border border-dashed border-border bg-surface p-4 text-center text-xs text-muted-foreground">No past games.</p>
           )}
