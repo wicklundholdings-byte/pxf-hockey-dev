@@ -785,6 +785,52 @@ function EditItemModal({
           <input type="checkbox" checked={form.rsvp} onChange={(e) => setForm({ ...form, rsvp: e.target.checked })} className="h-4 w-4 accent-teal" />
         </label>
 
+        <label className="mt-2 flex items-center justify-between rounded-md border border-border bg-surface-2 px-3 py-2">
+          <span className="flex items-center gap-1.5 text-xs font-semibold">
+            <Lock size={12} className="text-amber-400" /> Private event (invite only)
+          </span>
+          <input
+            type="checkbox"
+            checked={!!form.isPrivate}
+            onChange={(e) => setForm({
+              ...form,
+              isPrivate: e.target.checked,
+              audience: e.target.checked ? (form.audience ?? { groups: [], people: [] }) : undefined,
+            })}
+            className="h-4 w-4 accent-teal"
+          />
+        </label>
+
+        {form.isPrivate && (
+          <div className="mt-2 rounded-md border border-border bg-surface-2 px-3 py-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Who can see this?</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {AUDIENCE_GROUPS.map((g) => {
+                const on = form.audience?.groups.includes(g);
+                return (
+                  <button
+                    key={g}
+                    onClick={() => {
+                      const cur = form.audience ?? { groups: [], people: [] };
+                      const groups = on ? cur.groups.filter((x) => x !== g) : [...cur.groups, g];
+                      setForm({ ...form, audience: { ...cur, groups } });
+                    }}
+                    className={"rounded-full px-2.5 py-1 text-[10px] font-bold " + (on ? "bg-teal text-background" : "border border-border")}
+                  >
+                    {g}
+                  </button>
+                );
+              })}
+            </div>
+            <button className="mt-2 text-[10px] font-bold text-teal">
+              + Select individuals
+            </button>
+            {form.audience && (form.audience.groups.length > 0 || form.audience.people.length > 0) && (
+              <p className="mt-2 text-[10px] text-muted-foreground">Visible to: {audienceLabel(form.audience)}</p>
+            )}
+          </div>
+        )}
+
         {form.rsvp && (
           <div className="mt-3">
             <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">RSVP options</label>
