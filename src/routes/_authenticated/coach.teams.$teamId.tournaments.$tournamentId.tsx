@@ -293,6 +293,7 @@ type ItineraryItem = {
   options: [string, string, string];
   responses: Record<string, RsvpStatus>;
   busCapacity?: number;
+  result?: string;
 };
 
 const ROSTER = [
