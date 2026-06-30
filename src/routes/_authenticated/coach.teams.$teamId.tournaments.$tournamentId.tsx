@@ -1006,6 +1006,135 @@ const BILLET_ROSTER = [
 const IS_PARENT = false;
 const PARENT_CHILD_NAME = "Liam Carter";
 
+function LogisticsTab() {
+  return (
+    <div className="space-y-5">
+      <AccommodationSection />
+      <EquipmentChecklistCard />
+      <TournamentNotesCard />
+      <AttachmentsCard />
+      <TournamentWebsiteCard />
+    </div>
+  );
+}
+
+function EquipmentChecklistCard() {
+  const initial = [
+    "Home jersey (dark)", "Away jersey (white)",
+    "Helmet + cage", "Gloves",
+    "Skates", "Stick(s)",
+    "Hockey bag", "Water bottle",
+    "Mouth guard", "Shin/elbow pads",
+  ];
+  const [items, setItems] = useState(initial);
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [open, setOpen] = useState(false);
+  const [adding, setAdding] = useState("");
+  const done = items.filter((i) => checked[i]).length;
+  return (
+    <section className="overflow-hidden rounded-xl border border-border bg-surface">
+      <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between px-4 py-3 text-left">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Equipment Checklist</p>
+          <p className="mt-0.5 text-xs">{done} of {items.length} packed</p>
+        </div>
+        {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+      </button>
+      {open && (
+        <div className="border-t border-border px-4 py-3">
+          <div className="grid grid-cols-2 gap-2">
+            {items.map((it) => (
+              <label key={it} className="flex items-center gap-2 rounded-md border border-border bg-surface-2 px-2 py-2 text-[11px]">
+                <input
+                  type="checkbox"
+                  checked={!!checked[it]}
+                  onChange={() => setChecked((s) => ({ ...s, [it]: !s[it] }))}
+                  className="h-4 w-4 accent-teal"
+                />
+                <span className={checked[it] ? "line-through text-muted-foreground" : ""}>{it}</span>
+              </label>
+            ))}
+          </div>
+          <div className="mt-3 flex gap-2">
+            <input
+              value={adding}
+              onChange={(e) => setAdding(e.target.value)}
+              placeholder="Add item…"
+              className="flex-1 rounded-md border border-border bg-surface-2 px-2 py-1.5 text-xs"
+            />
+            <button
+              onClick={() => { if (adding.trim()) { setItems((x) => [...x, adding.trim()]); setAdding(""); } }}
+              className="rounded-full border border-teal px-3 py-1.5 text-[11px] font-bold text-teal"
+            >
+              <Plus size={12} className="mr-1 inline" /> Add
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function TournamentNotesCard() {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(
+    "White jerseys for game 2. Dress sharp for team dinner Friday — no hoodies. Bring your own tape.",
+  );
+  const [draft, setDraft] = useState(text);
+  return (
+    <section className="rounded-xl border border-border bg-surface p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tournament Notes</p>
+        {!editing ? (
+          <button onClick={() => { setDraft(text); setEditing(true); }} className="text-[11px] font-bold text-teal">Edit Notes</button>
+        ) : (
+          <div className="flex gap-2">
+            <button onClick={() => setEditing(false)} className="text-[11px] font-bold text-muted-foreground">Cancel</button>
+            <button onClick={() => { setText(draft); setEditing(false); }} className="text-[11px] font-bold text-teal">Save</button>
+          </div>
+        )}
+      </div>
+      {!editing ? (
+        <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed">{text}</p>
+      ) : (
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          rows={4}
+          className="mt-2 w-full rounded-md border border-border bg-surface-2 px-2 py-2 text-xs"
+        />
+      )}
+    </section>
+  );
+}
+
+function AttachmentsCard() {
+  const files = [
+    { name: "Tournament Package", icon: "📎" },
+    { name: "Rules & Regulations", icon: "📎" },
+  ];
+  return (
+    <section>
+      <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Attachments</p>
+      <div className="space-y-2">
+        {files.map((f) => (
+          <button key={f.name} className="flex w-full items-center gap-2 rounded-md border border-border bg-surface-2 px-3 py-2.5 text-left text-xs font-semibold">
+            <span>{f.icon}</span> {f.name}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function TournamentWebsiteCard() {
+  return (
+    <button className="flex w-full items-center justify-center gap-2 rounded-full border border-teal py-2.5 text-xs font-bold text-teal">
+      <Link2 size={14} /> 🔗 Tournament Website
+    </button>
+  );
+}
+
 function AccommodationSection() {
   const [mode, setMode] = useState<AccomMode>("Hotel");
   const [billets, setBillets] = useState<Billet[]>(SEED_BILLETS);
