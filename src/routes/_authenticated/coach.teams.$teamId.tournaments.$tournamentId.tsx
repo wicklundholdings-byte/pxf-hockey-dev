@@ -410,27 +410,19 @@ function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-2">
-        <div className="-mx-1 flex flex-1 gap-1.5 overflow-x-auto no-scrollbar">
-          {(["All", "Games", "Transport", "Accommodation", "Team Functions", "My RSVPs"] as ScheduleFilter[]).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={
-                "shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors " +
-                (filter === f ? "bg-teal text-background" : "border border-border bg-surface text-muted-foreground")
-              }
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-        <button
-          onClick={() => setEditMode((v) => !v)}
-          className={"shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold " + (editMode ? "border-teal bg-teal text-background" : "border-teal text-teal")}
-        >
-          {editMode ? "Done" : <><Pencil size={12} className="mr-1 inline" /> Edit Schedule</>}
-        </button>
+      <div className="-mx-1 flex gap-1.5 overflow-x-auto no-scrollbar">
+        {(["All", "Games", "Transport", "Accommodation", "Team Functions"] as ScheduleFilter[]).map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={
+              "shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors " +
+              (filter === f ? "bg-teal text-background" : "border border-border bg-surface text-muted-foreground")
+            }
+          >
+            {f}
+          </button>
+        ))}
       </div>
 
       <button onClick={() => setCalOpen(true)} className="inline-flex items-center gap-1 text-[11px] font-bold text-teal">
