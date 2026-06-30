@@ -39,21 +39,9 @@ function TournamentDetail() {
             <h2 className="font-display text-xl font-bold leading-tight">{t.name}</h2>
             <p className="mt-1 text-xs text-muted-foreground">{t.dates} · {t.city}</p>
           </div>
-          <div className="flex items-center gap-2">
-            {tab === "Schedule" && !IS_PARENT && (
-              <button
-                onClick={() => setEditMode((v) => !v)}
-                className="inline-flex items-center gap-1 rounded-full border border-teal/60 bg-teal/10 px-2.5 py-1 text-[10px] font-bold text-teal"
-                aria-label={editMode ? "Done editing" : "Edit schedule"}
-              >
-                {editMode ? <Check size={12} /> : <Pencil size={12} />}
-                {editMode ? "Done" : "Edit"}
-              </button>
-            )}
-            {t.status && (
-              <span className="shrink-0 rounded-full bg-teal/20 px-2 py-1 text-[10px] font-bold text-teal">{t.status}</span>
-            )}
-          </div>
+          {t.status && (
+            <span className="shrink-0 rounded-full bg-teal/20 px-2 py-1 text-[10px] font-bold text-teal">{t.status}</span>
+          )}
         </div>
 
         <div className="mt-3 -mx-1 flex gap-1 overflow-x-auto border-b border-border no-scrollbar">
@@ -474,9 +462,19 @@ function ScheduleTab({ editMode, setEditMode }: { editMode: boolean; setEditMode
         ))}
       </div>
 
-      <button onClick={() => setCalOpen(true)} className="inline-flex items-center gap-1 text-[11px] font-bold text-teal">
-        <CalendarIcon size={12} /> + Add to Calendar
-      </button>
+      <div className="flex items-center justify-between">
+        <button onClick={() => setCalOpen(true)} className="inline-flex items-center gap-1 text-[11px] font-bold text-teal">
+          <CalendarIcon size={12} /> + Add to Calendar
+        </button>
+        <button
+          onClick={() => setEditMode((v) => !v)}
+          className="inline-flex items-center gap-1 rounded-full border border-teal/60 bg-teal/10 px-2.5 py-1 text-[10px] font-bold text-teal"
+          aria-label={editMode ? "Done editing" : "Edit schedule"}
+        >
+          {editMode ? <Check size={12} /> : <Pencil size={12} />}
+          {editMode ? "Done" : "Edit Schedule"}
+        </button>
+      </div>
 
       <div className="space-y-4">
         {days.map((d, dayIdx) => {
