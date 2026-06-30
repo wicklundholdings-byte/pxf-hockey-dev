@@ -570,6 +570,25 @@ function ItemRow({
   const seatsNeeded = item.type === "Transport" ? counts.yes : 0;
   const overCapacity = item.busCapacity && seatsNeeded > item.busCapacity;
 
+  const myStatus: RsvpStatus = (item.responses["__me"] ?? "none") as RsvpStatus;
+  const myLabel =
+    !item.rsvp ? "" :
+    myStatus === "yes" ? item.options[0].toUpperCase() :
+    myStatus === "no" ? item.options[1].toUpperCase() :
+    myStatus === "maybe" ? item.options[2].toUpperCase() :
+    "NO REPLY";
+  const myCls =
+    myStatus === "yes" ? "bg-teal/20 text-teal" :
+    myStatus === "no" ? "bg-red-500/20 text-red-400" :
+    myStatus === "maybe" ? "bg-amber-500/20 text-amber-400" :
+    "bg-surface-2 text-muted-foreground";
+
+  const resultCls = item.result?.includes("WIN")
+    ? "bg-teal/20 text-teal"
+    : item.result?.includes("LOSS")
+      ? "bg-red-500/20 text-red-400"
+      : "bg-amber-500/20 text-amber-400";
+
   return (
     <div className="group relative my-1 rounded-lg border border-border bg-surface-2/40">
       <div className="flex items-center gap-2 px-2 py-2">
@@ -582,6 +601,9 @@ function ItemRow({
           <span className="text-base leading-none">{TYPE_ICON[item.type]}</span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-semibold">{item.title}</p>
+            {item.location && (
+              <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{item.location}</p>
+            )}
             {item.rsvp && !editMode && (
               <p className="mt-0.5 flex gap-2 text-[10px]">
                 <span className="text-teal">✓ {counts.yes}</span>
@@ -591,6 +613,12 @@ function ItemRow({
               </p>
             )}
           </div>
+          {item.result && (
+            <span className={"shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold " + resultCls}>{item.result}</span>
+          )}
+          {item.rsvp && !editMode && (
+            <span className={"shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold " + myCls}>{myLabel}</span>
+          )}
         </button>
         {editMode ? (
           <button onClick={() => setShowDelete((v) => !v)} className="rounded p-1 text-muted-foreground">
