@@ -152,7 +152,7 @@ function EliteCoachDashboard() {
       setRegs(regsRows);
       const staffed = new Set(((st.data as any[]) ?? []).map((row) => row.camp_id as string));
       const upcomingCamps = campsRows.filter((cc) => cc.status !== "ended");
-      setUnassignedCampIds(upcomingCamps.filter((cc) => !staffed.has(cc.id)).map((cc) => cc.id));
+      setUnassignedCampIds(hasStaff ? upcomingCamps.filter((cc) => !staffed.has(cc.id)).map((cc) => cc.id) : []);
 
       // Camp Day X of Y + next session
       const todayIso2 = new Date().toISOString().slice(0, 10);
@@ -622,7 +622,7 @@ function EliteCoachDashboard() {
                       {fmtEventDate(p.session_date)}{p.start_time ? ` · ${fmtTime(p.start_time)}` : ""}
                       {p.location ? ` · ${p.location}` : ""}
                     </p>
-                    {!p.assigned_coach_id && (
+                    {!p.assigned_coach_id && hasStaff && (
                       <p className="mt-0.5 text-[10px] font-semibold text-amber-400">⚠ Coach not assigned</p>
                     )}
                   </div>
