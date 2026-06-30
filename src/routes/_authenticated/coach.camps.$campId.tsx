@@ -107,6 +107,7 @@ function CampDetailPage() {
   const [todayAttendance, setTodayAttendance] = useState<Map<string, boolean>>(new Map());
   const [completions, setCompletions] = useState<Record<string, SessionRunRecord>>({});
   const [statsView, setStatsView] = useState<null | "paid" | "pending">(null);
+  const [tab, setTab] = useState<"overview" | "schedule" | "athletes" | "media" | "more">("overview");
 
   useEffect(() => {
     setCompletions(readCampCompletions(campId));
