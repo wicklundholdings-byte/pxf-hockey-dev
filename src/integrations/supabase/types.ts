@@ -3172,6 +3172,38 @@ export type Database = {
           },
         ]
       }
+      message_poll_votes: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+          option_index: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: string
+          option_index: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+          option_index?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_poll_votes_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           athlete_media_id: string | null
@@ -3180,8 +3212,11 @@ export type Database = {
           created_at: string
           id: string
           image_path: string | null
+          kind: string
+          metadata: Json
           pinned: boolean
           read_by: Json
+          scheduled_for: string | null
           sender_id: string
         }
         Insert: {
@@ -3191,8 +3226,11 @@ export type Database = {
           created_at?: string
           id?: string
           image_path?: string | null
+          kind?: string
+          metadata?: Json
           pinned?: boolean
           read_by?: Json
+          scheduled_for?: string | null
           sender_id: string
         }
         Update: {
@@ -3202,8 +3240,11 @@ export type Database = {
           created_at?: string
           id?: string
           image_path?: string | null
+          kind?: string
+          metadata?: Json
           pinned?: boolean
           read_by?: Json
+          scheduled_for?: string | null
           sender_id?: string
         }
         Relationships: [
