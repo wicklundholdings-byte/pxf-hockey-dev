@@ -202,15 +202,19 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
     if (!text) return;
     setSending(true);
     setBody("");
-    const { error } = await supabase.from("messages").insert({
+    const { data, error } = await supabase.from("messages").insert({
       conversation_id: convo.id,
       sender_id: currentUserId,
       body: text,
-    });
+    }).select("*").single();
     setSending(false);
     if (error) {
       setBody(text);
       alert(error.message);
+      return;
+    }
+    if (data) {
+      setMessages((prev) => (prev.some((m) => m.id === (data as Msg).id) ? prev : [...prev, data as Msg]));
     }
   }
 
