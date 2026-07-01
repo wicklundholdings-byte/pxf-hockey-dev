@@ -38,6 +38,7 @@ function InboxPage() {
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
   const [showBroadcast, setShowBroadcast] = useState(false);
+  const [tab, setTab] = useState<"channels" | "dms">("channels");
 
   async function load() {
     if (!user) return;
@@ -77,6 +78,10 @@ function InboxPage() {
     return <Thread convo={active} currentUserId={user!.id} onBack={() => { setActiveId(null); load(); }} />;
   }
 
+  const filtered = convos.filter((c) =>
+    tab === "channels" ? c.type !== "dm" : c.type === "dm",
+  );
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -100,12 +105,29 @@ function InboxPage() {
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-2 rounded-xl bg-surface p-1">
+        <button
+          onClick={() => setTab("channels")}
+          className={"rounded-lg py-1.5 text-[11px] font-bold " + (tab === "channels" ? "bg-background text-foreground shadow" : "text-muted-foreground")}
+        >
+          Channels
+        </button>
+        <button
+          onClick={() => setTab("dms")}
+          className={"rounded-lg py-1.5 text-[11px] font-bold " + (tab === "dms" ? "bg-background text-foreground shadow" : "text-muted-foreground")}
+        >
+          Direct messages
+        </button>
+      </div>
+
       {loading ? (
         <p className="py-10 text-center text-xs text-muted-foreground">Loading…</p>
-      ) : convos.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
           <MessageSquare size={28} className="mx-auto text-muted-foreground" />
-          <p className="mt-2 text-xs text-muted-foreground">No conversations yet.</p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {tab === "channels" ? "No team channels yet." : "No direct messages yet."}
+          </p>
           <button
             onClick={() => setShowNew(true)}
             className="mt-3 rounded-full bg-gradient-brand px-4 py-1.5 text-[11px] font-bold text-primary-foreground"
@@ -115,7 +137,7 @@ function InboxPage() {
         </div>
       ) : (
         <ul className="space-y-2">
-          {convos.map((c) => {
+          {filtered.map((c) => {
             const title =
               c.type === "team_group"
                 ? (c.teams?.name ?? "Team")
