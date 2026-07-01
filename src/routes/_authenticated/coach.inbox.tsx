@@ -198,6 +198,8 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
   const [sending, setSending] = useState(false);
   const [votes, setVotes] = useState<PollVote[]>([]);
   const [showRich, setShowRich] = useState<null | "poll" | "rsvp" | "schedule">(null);
+  const [openThread, setOpenThread] = useState<Msg | null>(null);
+  const [replyTo, setReplyTo] = useState<Msg | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   async function load() {
@@ -250,12 +252,15 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
     if (!text) return;
     setSending(true);
     setBody("");
-    const { data, error } = await supabase.from("messages").insert({
+    const parent = replyTo?.id ?? null;
+    const insertPayload: any = {
       conversation_id: convo.id,
       sender_id: currentUserId,
       body: text,
       kind: "text",
-    }).select("*").single();
+    };
+    if (parent) insertPayload.parent_message_id = parent;
+    const { data, error } = await supabase.from("messages").insert(insertPayload).select("*").single();
     setSending(false);
     if (error) {
       setBody(text);
@@ -264,6 +269,7 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
     }
     if (data) {
       setMessages((prev) => (prev.some((m) => m.id === (data as Msg).id) ? prev : [...prev, data as Msg]));
+      setReplyTo(null);
     }
   }
 
@@ -332,6 +338,11 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
         ? (convo.camps?.name ?? "Camp group")
         : "Direct message";
   const pinned = messages.filter((m) => m.pinned);
+  const topLevel = messages.filter((m) => !m.parent_message_id);
+  const replyCounts = messages.reduce<Record<string, number>>((acc, m) => {
+    if (m.parent_message_id) acc[m.parent_message_id] = (acc[m.parent_message_id] ?? 0) + 1;
+    return acc;
+  }, {});
 
   return (
     <div className="flex h-[calc(100vh-200px)] flex-col">
@@ -355,14 +366,15 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
       )}
 
       <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto py-3">
-        {messages.length === 0 ? (
+        {topLevel.length === 0 ? (
           <p className="py-8 text-center text-xs text-muted-foreground">No messages yet. Say hi.</p>
         ) : (
-          messages.map((m) => {
+          topLevel.map((m) => {
             const mine = m.sender_id === currentUserId;
             const isScheduledPending = m.scheduled_for && new Date(m.scheduled_for) > new Date();
             const pollVotes = (m.kind === "poll" || m.kind === "rsvp") ? votes.filter((v) => v.message_id === m.id) : [];
             const myVote = pollVotes.find((v) => v.user_id === currentUserId);
+            const rc = replyCounts[m.id] ?? 0;
             return (
               <div key={m.id} className={"flex " + (mine ? "justify-end" : "justify-start")}>
                 <div className="group flex max-w-[80%] items-end gap-1">
@@ -424,11 +436,19 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
                         </div>
                       </div>
                     ) : (
-                      <p className="whitespace-pre-wrap">{m.body}</p>
+                      <p className="whitespace-pre-wrap">{renderWithMentions(m.body)}</p>
                     )}
                     <p className={"mt-0.5 text-[9px] " + (mine ? "text-black/60" : "text-muted-foreground")}>
                       {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <button
+                        onClick={() => setOpenThread(m)}
+                        className={"flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold " + (mine ? "bg-black/10 text-black/70" : "bg-surface text-muted-foreground")}
+                      >
+                        <MessageCircle size={10} /> {rc > 0 ? `${rc} repl${rc === 1 ? "y" : "ies"}` : "Reply"}
+                      </button>
+                    </div>
                   </div>
                   <button
                     onClick={() => togglePin(m)}
@@ -442,6 +462,13 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
           })
         )}
       </div>
+
+      {replyTo && (
+        <div className="mb-1 flex items-center justify-between gap-2 rounded-xl border border-teal/30 bg-teal/5 px-3 py-1.5">
+          <p className="truncate text-[11px] text-muted-foreground"><span className="font-bold text-teal">Replying:</span> {replyTo.body?.slice(0, 60) ?? "message"}</p>
+          <button onClick={() => setReplyTo(null)} className="text-muted-foreground"><X size={12} /></button>
+        </div>
+      )}
 
       <div className="flex items-center gap-2 border-t border-border pt-2">
         <div className="relative">
@@ -503,6 +530,91 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
           onSubmit={(text, when) => { scheduleText(text, when); setShowRich(null); }}
         />
       )}
+      {openThread && (
+        <ThreadSheet
+          parent={openThread}
+          replies={messages.filter((m) => m.parent_message_id === openThread.id)}
+          currentUserId={currentUserId}
+          onClose={() => setOpenThread(null)}
+          onReplyInMain={() => { setReplyTo(openThread); setOpenThread(null); }}
+          onSend={async (text) => {
+            const { data } = await supabase.from("messages").insert({
+              conversation_id: convo.id, sender_id: currentUserId, body: text, kind: "text", parent_message_id: openThread.id,
+            }).select("*").single();
+            if (data) setMessages((prev) => (prev.some((m) => m.id === (data as Msg).id) ? prev : [...prev, data as Msg]));
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function renderWithMentions(text: string | null) {
+  if (!text) return null;
+  const parts = text.split(/(@[A-Za-z0-9_.-]+)/g);
+  return parts.map((p, i) =>
+    p.startsWith("@") ? <span key={i} className="rounded bg-teal/20 px-1 font-semibold text-teal">{p}</span> : <span key={i}>{p}</span>,
+  );
+}
+
+function ThreadSheet({ parent, replies, currentUserId, onClose, onSend, onReplyInMain }: {
+  parent: Msg; replies: Msg[]; currentUserId: string; onClose: () => void; onSend: (t: string) => Promise<void>; onReplyInMain: () => void;
+}) {
+  const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+  return (
+    <div onClick={onClose} className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm">
+      <div onClick={(e) => e.stopPropagation()} className="flex max-h-[80vh] w-full max-w-[480px] flex-col rounded-t-3xl border-t border-border bg-background p-5">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold text-foreground">Thread</h2>
+          <button onClick={onClose} className="rounded-full bg-surface p-1.5 text-muted-foreground"><X size={14} /></button>
+        </div>
+        <div className="mt-3 rounded-2xl border border-border bg-card p-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Original</p>
+          <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{renderWithMentions(parent.body)}</p>
+          <p className="mt-1 text-[9px] text-muted-foreground">{new Date(parent.created_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+        </div>
+        <div className="mt-3 flex-1 space-y-2 overflow-y-auto">
+          {replies.length === 0 ? (
+            <p className="py-6 text-center text-xs text-muted-foreground">No replies yet.</p>
+          ) : replies.map((r) => {
+            const mine = r.sender_id === currentUserId;
+            return (
+              <div key={r.id} className={"flex " + (mine ? "justify-end" : "justify-start")}>
+                <div className={"max-w-[80%] rounded-2xl px-3 py-2 text-sm " + (mine ? "bg-gradient-brand text-primary-foreground" : "border border-border bg-card text-foreground")}>
+                  <p className="whitespace-pre-wrap">{renderWithMentions(r.body)}</p>
+                  <p className={"mt-0.5 text-[9px] " + (mine ? "text-black/60" : "text-muted-foreground")}>{new Date(r.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={async (e) => {
+              if (e.key === "Enter" && !e.shiftKey && text.trim()) {
+                e.preventDefault();
+                setSending(true);
+                await onSend(text.trim());
+                setText("");
+                setSending(false);
+              }
+            }}
+            placeholder="Reply in thread… use @name to mention"
+            className="flex-1 rounded-full border border-border bg-surface px-4 py-2 text-sm text-foreground"
+          />
+          <button
+            disabled={!text.trim() || sending}
+            onClick={async () => { setSending(true); await onSend(text.trim()); setText(""); setSending(false); }}
+            className="grid h-10 w-10 place-items-center rounded-full bg-gradient-brand text-primary-foreground disabled:opacity-40"
+          >
+            <Send size={14} />
+          </button>
+        </div>
+        <button onClick={onReplyInMain} className="mt-2 text-[10px] font-semibold text-muted-foreground">Also send to main channel →</button>
+      </div>
     </div>
   );
 }
