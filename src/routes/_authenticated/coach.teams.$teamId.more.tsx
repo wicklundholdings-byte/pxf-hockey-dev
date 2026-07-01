@@ -16,7 +16,7 @@ function TeamMoreTab() {
     { to: "/coach/teams/$teamId/stats", label: "Stats", subtitle: "7W · 5L · 2OT · 14 GP", Icon: BarChart3 },
     { to: "/coach/teams/$teamId/media", label: "Media", subtitle: "2 videos · 4 photos", Icon: Camera },
     { to: "/coach/teams/$teamId/payments", label: "Payments", subtitle: "$700 outstanding", Icon: DollarSign },
-    { to: "/coach/teams/$teamId/schedule", label: "Practice Plans", subtitle: "3 saved plans", Icon: ClipboardList },
+    { to: "/coach/teams/$teamId/practice-plans", label: "Practice Plans", subtitle: "3 saved plans", Icon: ClipboardList },
   ];
 
   return (
