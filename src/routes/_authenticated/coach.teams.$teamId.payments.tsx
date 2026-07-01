@@ -1,321 +1,595 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
-import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Plus, DollarSign, Send, ChevronRight, X, Check } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import {
-  createPaymentRequest,
-  remindUnpaid,
-  markChargePaid,
-  closePaymentRequest,
-} from "@/lib/team-payments.functions";
+  ArrowLeft, Plus, DollarSign, Send, ChevronRight, X, Pencil, Check,
+  CreditCard, Banknote, Users, ShieldCheck, ExternalLink,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/payments")({
-  component: TeamPaymentsScreen,
+  component: PaymentsScreen,
 });
 
-type Player = { id: string; display_name: string; jersey_number: string | null };
-type Request = {
+// ---------- Mock data ----------
+
+type Roster = { id: string; jersey: number; name: string; pos: "F" | "D" | "G"; parent: string };
+
+const ROSTER: Roster[] = [
+  { id: "p1",  jersey: 9,  name: "Andersson", pos: "F", parent: "Sarah Andersson" },
+  { id: "p2",  jersey: 12, name: "Carter",    pos: "F", parent: "Mike Carter" },
+  { id: "p3",  jersey: 7,  name: "Brooks",    pos: "F", parent: "Jen Brooks" },
+  { id: "p4",  jersey: 21, name: "Jensen",    pos: "D", parent: "Kai Jensen" },
+  { id: "p5",  jersey: 4,  name: "Callahan",  pos: "D", parent: "Erin Callahan" },
+  { id: "p6",  jersey: 88, name: "Petrov",    pos: "F", parent: "Anya Petrov" },
+  { id: "p7",  jersey: 17, name: "Miller",    pos: "F", parent: "Sam Miller" },
+  { id: "p8",  jersey: 3,  name: "Nguyen",    pos: "D", parent: "Linh Nguyen" },
+  { id: "p9",  jersey: 30, name: "Kim",       pos: "G", parent: "Joon Kim" },
+  { id: "p10", jersey: 22, name: "Torres",    pos: "F", parent: "Luis Torres" },
+  { id: "p11", jersey: 5,  name: "Walsh",     pos: "D", parent: "Cara Walsh" },
+  { id: "p12", jersey: 14, name: "Davidson",  pos: "F", parent: "Tom Davidson" },
+  { id: "p13", jersey: 11, name: "Park",      pos: "F", parent: "Su Park" },
+  { id: "p14", jersey: 19, name: "Vella",     pos: "D", parent: "Rob Vella" },
+];
+
+type PayMethod = "Stripe" | "Manual";
+type PaidRec = { playerId: string; date: string; method: PayMethod };
+
+type Fee = {
   id: string;
-  request_type: "registration" | "one_off";
-  label: string;
-  description: string | null;
-  amount_cents: number;
-  due_date: string | null;
-  status: string;
-};
-type Charge = {
-  id: string;
-  request_id: string;
-  team_player_id: string;
-  amount_cents: number;
-  status: "pending" | "paid" | "cancelled";
-  paid_at: string | null;
-  last_reminder_at: string | null;
+  name: string;
+  amount: number; // dollars
+  due: string; // ISO date
+  description?: string;
+  assignedIds: string[];
+  paid: PaidRec[];
+  method: "Online" | "Cash" | "Both";
 };
 
-function money(c: number) {
-  return "$" + (c / 100).toFixed(2);
-}
-function isOverdue(due: string | null) {
-  if (!due) return false;
-  return new Date(due + "T23:59:59") < new Date();
+const initialFees: Fee[] = [
+  {
+    id: "f1",
+    name: "Spring Classic Bus Fee",
+    amount: 80,
+    due: "2026-07-15",
+    assignedIds: ROSTER.map((r) => r.id),
+    method: "Both",
+    paid: [
+      "p1","p2","p3","p4","p5","p6","p7","p8","p9","p10","p11","p12",
+    ].map((id) => ({ playerId: id, date: "2026-06-24", method: "Stripe" as PayMethod })),
+  },
+  {
+    id: "f2",
+    name: "2026-27 Team Fee",
+    amount: 1200,
+    due: "2026-09-01",
+    assignedIds: ROSTER.map((r) => r.id),
+    method: "Online",
+    paid: ["p1","p2","p3"].map((id) => ({ playerId: id, date: "2026-06-20", method: "Stripe" as PayMethod })),
+  },
+  {
+    id: "f3",
+    name: "Jersey Deposit",
+    amount: 150,
+    due: "2026-08-15",
+    assignedIds: ROSTER.map((r) => r.id),
+    method: "Cash",
+    paid: ROSTER.map((r) => ({ playerId: r.id, date: "2026-06-15", method: "Manual" as PayMethod })),
+  },
+];
+
+function money(n: number) { return "$" + n.toLocaleString(undefined, { minimumFractionDigits: 0 }); }
+function daysBetween(a: Date, b: Date) { return Math.floor((a.getTime() - b.getTime()) / 86400000); }
+function feeStats(fee: Fee) {
+  const total = fee.assignedIds.length;
+  const paidCount = fee.paid.length;
+  const collected = paidCount * fee.amount;
+  const outstanding = (total - paidCount) * fee.amount;
+  const dueDate = new Date(fee.due + "T23:59:59");
+  const today = new Date();
+  const overdue = paidCount < total && dueDate < today;
+  const daysOverdue = overdue ? daysBetween(today, dueDate) : 0;
+  const pct = total > 0 ? Math.round((paidCount / total) * 100) : 0;
+  return { total, paidCount, collected, outstanding, overdue, daysOverdue, pct };
 }
 
-function TeamPaymentsScreen() {
+// ---------- Screen ----------
+
+type View =
+  | { kind: "home" }
+  | { kind: "detail"; feeId: string }
+  | { kind: "create" };
+
+function PaymentsScreen() {
   const { teamId } = Route.useParams();
-  const router = useRouter();
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [requests, setRequests] = useState<Request[]>([]);
-  const [charges, setCharges] = useState<Charge[]>([]);
-  const [showCreate, setShowCreate] = useState(false);
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [fees, setFees] = useState<Fee[]>(initialFees);
+  const [view, setView] = useState<View>({ kind: "home" });
+  const [stripeConnected, setStripeConnected] = useState(false);
+  const [showStripePrompt, setShowStripePrompt] = useState(false);
 
-  const reload = async () => {
-    const [p, r, c] = await Promise.all([
-      supabase.from("team_players").select("id,display_name,jersey_number").eq("team_id", teamId).order("display_name"),
-      supabase.from("team_payment_requests").select("*").eq("team_id", teamId).order("created_at", { ascending: false }),
-      supabase.from("team_payment_charges").select("*").in("request_id",
-        ((await supabase.from("team_payment_requests").select("id").eq("team_id", teamId)).data ?? []).map((x: any) => x.id).concat(["00000000-0000-0000-0000-000000000000"])
-      ),
-    ]);
-    setPlayers((p.data ?? []) as Player[]);
-    setRequests((r.data ?? []) as Request[]);
-    setCharges((c.data ?? []) as Charge[]);
-  };
-
-  useEffect(() => { reload(); }, [teamId]);
-
-  const totals = requests.reduce(
-    (acc, r) => {
-      const rc = charges.filter((c) => c.request_id === r.id);
-      const collected = rc.filter((c) => c.status === "paid").reduce((s, c) => s + c.amount_cents, 0);
-      const outstanding = rc.filter((c) => c.status === "pending").reduce((s, c) => s + c.amount_cents, 0);
-      acc.collected += collected;
-      acc.outstanding += outstanding;
-      return acc;
-    },
-    { collected: 0, outstanding: 0 },
-  );
+  const headline = fees[0];
 
   return (
     <div className="px-5 pt-4 pb-28">
-      <Link to="/coach/teams/$teamId" params={{ teamId }} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-        <ArrowLeft size={14} /> Team
-      </Link>
-      <div className="mt-3 flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Payments</h1>
-        <button onClick={() => setShowCreate(true)} className="inline-flex items-center gap-1 rounded-full bg-gradient-brand px-3 py-2 text-xs font-bold text-background">
-          <Plus size={14} /> New
-        </button>
-      </div>
+      {view.kind === "home" && (
+        <>
+          <Link to="/coach/teams/$teamId/more" params={{ teamId }} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <ArrowLeft size={14} /> More
+          </Link>
+          <div className="mt-3 flex items-center justify-between">
+            <h1 className="font-display text-2xl font-bold">Payments</h1>
+            {stripeConnected && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[10px] font-bold text-emerald-400">
+                <ShieldCheck size={11} /> Stripe Connected
+              </span>
+            )}
+          </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3">
-          <p className="text-[10px] font-bold tracking-[0.2em] text-emerald-400">COLLECTED</p>
-          <p className="mt-1 font-display text-xl font-bold">{money(totals.collected)}</p>
-        </div>
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3">
-          <p className="text-[10px] font-bold tracking-[0.2em] text-amber-400">OUTSTANDING</p>
-          <p className="mt-1 font-display text-xl font-bold">{money(totals.outstanding)}</p>
-        </div>
-      </div>
+          {headline && <HeadlineCard fee={headline} />}
 
-      <div className="mt-5 space-y-3">
-        {requests.length === 0 && (
-          <p className="rounded-xl border border-dashed border-border bg-surface p-6 text-center text-xs text-muted-foreground">
-            No payment requests yet. Tap New to create one.
-          </p>
-        )}
-        {requests.map((r) => {
-          const rc = charges.filter((c) => c.request_id === r.id);
-          const paidCount = rc.filter((c) => c.status === "paid").length;
-          const collected = rc.filter((c) => c.status === "paid").reduce((s, c) => s + c.amount_cents, 0);
-          const outstanding = rc.filter((c) => c.status === "pending").reduce((s, c) => s + c.amount_cents, 0);
-          const total = collected + outstanding;
-          const pct = total > 0 ? Math.round((collected / total) * 100) : 0;
-          const overdue = isOverdue(r.due_date);
-          const open = expanded === r.id;
-          return (
-            <div key={r.id} className="rounded-2xl border border-border bg-surface">
-              <button onClick={() => setExpanded(open ? null : r.id)} className="flex w-full items-start gap-3 p-4 text-left">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-teal/15 text-teal">
-                  <DollarSign size={18} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-bold">{r.label}</p>
-                    <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[9px] font-bold tracking-wider text-muted-foreground">
-                      {r.request_type === "registration" ? "REG" : "ONE-OFF"}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">
-                    {money(r.amount_cents)}{r.due_date ? ` · due ${r.due_date}` : ""}{overdue ? " · overdue" : ""}
-                  </p>
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2">
-                    <div className="h-full rounded-full bg-emerald-500" style={{ width: pct + "%" }} />
-                  </div>
-                  <p className="mt-1 text-[10px] text-muted-foreground">
-                    {paidCount}/{rc.length} paid · {money(collected)} collected · {money(outstanding)} outstanding
-                  </p>
-                </div>
-                <ChevronRight size={16} className={"mt-2 text-muted-foreground transition-transform " + (open ? "rotate-90" : "")} />
-              </button>
-              {open && (
-                <div className="border-t border-border p-3">
-                  <div className="mb-2 flex items-center justify-between">
-                    <p className="text-[10px] font-bold tracking-wider text-muted-foreground">PLAYERS</p>
-                    <BulkRemindButton requestId={r.id} chargeIds={rc.filter((c) => c.status === "pending").map((c) => c.id)} onDone={reload} />
-                  </div>
-                  <div className="space-y-1.5">
-                    {rc.map((c) => {
-                      const p = players.find((pl) => pl.id === c.team_player_id);
-                      const overduePlayer = c.status === "pending" && overdue;
-                      const label = c.status === "paid" ? "PAID" : overduePlayer ? "OVERDUE" : "PENDING";
-                      const tone = c.status === "paid" ? "bg-emerald-500/15 text-emerald-400" : overduePlayer ? "bg-rose-500/15 text-rose-400" : "bg-amber-500/15 text-amber-400";
-                      return (
-                        <div key={c.id} className="flex items-center gap-2 rounded-xl bg-surface-2 px-3 py-2">
-                          <p className="min-w-0 flex-1 truncate text-sm font-medium">
-                            {p?.jersey_number ? `#${p.jersey_number} ` : ""}{p?.display_name ?? "—"}
-                          </p>
-                          <span className={"rounded-full px-2 py-0.5 text-[10px] font-bold " + tone}>{label}</span>
-                          {c.status === "pending" && (
-                            <ChargeActions chargeId={c.id} requestId={r.id} onDone={reload} />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {r.status === "active" && (
-                    <CloseButton requestId={r.id} onDone={reload} />
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+          <div className="mt-5 space-y-3">
+            {fees.map((f) => (
+              <FeeCard key={f.id} fee={f} onOpen={() => setView({ kind: "detail", feeId: f.id })} />
+            ))}
+          </div>
 
-      {showCreate && (
-        <CreateRequestModal
-          teamId={teamId}
-          players={players}
-          onClose={() => setShowCreate(false)}
-          onCreated={() => { setShowCreate(false); reload(); }}
+          <button
+            onClick={() => {
+              if (!stripeConnected) { setShowStripePrompt(true); return; }
+              setView({ kind: "create" });
+            }}
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 text-sm font-bold text-background shadow-glow-teal active:opacity-90"
+          >
+            <Plus size={16} /> Create Fee
+          </button>
+        </>
+      )}
+
+      {view.kind === "detail" && (
+        <FeeDetail
+          fee={fees.find((f) => f.id === view.feeId)!}
+          onBack={() => setView({ kind: "home" })}
+          onUpdate={(next) => setFees((prev) => prev.map((f) => (f.id === next.id ? next : f)))}
+        />
+      )}
+
+      {view.kind === "create" && (
+        <CreateFee
+          onBack={() => setView({ kind: "home" })}
+          onCreate={(f) => { setFees((p) => [f, ...p]); setView({ kind: "home" }); }}
+        />
+      )}
+
+      {showStripePrompt && (
+        <StripeConnectSheet
+          onClose={() => setShowStripePrompt(false)}
+          onConnected={() => { setStripeConnected(true); setShowStripePrompt(false); setView({ kind: "create" }); }}
         />
       )}
     </div>
   );
 }
 
-function ChargeActions({ chargeId, requestId, onDone }: { chargeId: string; requestId: string; onDone: () => void }) {
-  const remind = useServerFn(remindUnpaid);
-  const markPaid = useServerFn(markChargePaid);
+// ---------- Home cards ----------
+
+function HeadlineCard({ fee }: { fee: Fee }) {
+  const s = feeStats(fee);
   return (
-    <div className="flex items-center gap-1">
-      <button
-        onClick={async () => { await remind({ data: { requestId, chargeIds: [chargeId] } }); onDone(); }}
-        className="rounded-full bg-surface px-2 py-1 text-[10px] font-bold text-muted-foreground"
-        title="Remind"
-      >
-        <Send size={11} />
-      </button>
-      <button
-        onClick={async () => { await markPaid({ data: { chargeId } }); onDone(); }}
-        className="rounded-full bg-emerald-500/20 px-2 py-1 text-[10px] font-bold text-emerald-400"
-        title="Mark paid"
-      >
-        <Check size={11} />
-      </button>
+    <div className="mt-4 rounded-2xl border border-border bg-surface p-4">
+      <p className="text-[10px] font-bold tracking-[0.2em] text-teal">FEATURED</p>
+      <p className="mt-0.5 font-display text-lg font-bold">{fee.name}</p>
+      <p className="mt-1 text-xs text-foreground">
+        {money(s.collected)} collected · <span className="text-amber-400">{money(s.outstanding)} outstanding</span> · {s.paidCount}/{s.total} paid
+      </p>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-2">
+        <div className="h-full rounded-full bg-teal" style={{ width: s.pct + "%" }} />
+      </div>
     </div>
   );
 }
 
-function BulkRemindButton({ requestId, chargeIds, onDone }: { requestId: string; chargeIds: string[]; onDone: () => void }) {
-  const remind = useServerFn(remindUnpaid);
-  if (chargeIds.length === 0) return null;
+function FeeCard({ fee, onOpen }: { fee: Fee; onOpen: () => void }) {
+  const s = feeStats(fee);
+  const tone =
+    s.paidCount === s.total ? "bg-emerald-500/15 text-emerald-400" :
+    s.overdue ? "bg-rose-500/15 text-rose-400" :
+    "bg-amber-500/15 text-amber-400";
   return (
-    <button
-      onClick={async () => { await remind({ data: { requestId, chargeIds } }); onDone(); }}
-      className="inline-flex items-center gap-1 rounded-full bg-teal/15 px-2.5 py-1 text-[10px] font-bold text-teal"
-    >
-      <Send size={11} /> Remind all ({chargeIds.length})
+    <button onClick={onOpen} className="flex w-full items-start gap-3 rounded-2xl border border-border bg-surface p-4 text-left active:bg-surface-2">
+      <div className="grid h-10 w-10 place-items-center rounded-xl bg-teal/15 text-teal">
+        <DollarSign size={18} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <p className="truncate text-sm font-bold">{fee.name}</p>
+          <span className={"rounded-full px-2 py-0.5 text-[10px] font-bold " + tone}>
+            {s.paidCount}/{s.total} paid
+          </span>
+        </div>
+        <p className="mt-0.5 text-[11px] text-muted-foreground">
+          {money(fee.amount)} · due {fee.due}{s.overdue ? ` · ${s.daysOverdue}d overdue` : ""}
+        </p>
+      </div>
+      <ChevronRight size={16} className="mt-2 text-muted-foreground" />
     </button>
   );
 }
 
-function CloseButton({ requestId, onDone }: { requestId: string; onDone: () => void }) {
-  const close = useServerFn(closePaymentRequest);
-  return (
-    <button
-      onClick={async () => { await close({ data: { requestId } }); onDone(); }}
-      className="mt-3 w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold text-muted-foreground"
-    >
-      Close request
-    </button>
-  );
-}
+// ---------- Fee Detail ----------
 
-function CreateRequestModal({
-  teamId, players, onClose, onCreated,
-}: { teamId: string; players: Player[]; onClose: () => void; onCreated: () => void }) {
-  const create = useServerFn(createPaymentRequest);
-  const [type, setType] = useState<"registration" | "one_off">("registration");
-  const [label, setLabel] = useState("");
-  const [amount, setAmount] = useState("");
-  const [dueDate, setDueDate] = useState("");
-  const [desc, setDesc] = useState("");
-  const [target, setTarget] = useState<"all" | "select">("all");
+function FeeDetail({ fee, onBack, onUpdate }: { fee: Fee; onBack: () => void; onUpdate: (f: Fee) => void }) {
+  const [tab, setTab] = useState<"paid" | "unpaid">("unpaid");
   const [selected, setSelected] = useState<string[]>([]);
-  const [submitting, setSubmitting] = useState(false);
+  const [remindOpen, setRemindOpen] = useState<{ targets: string[] } | null>(null);
+  const [editing, setEditing] = useState(false);
+
+  const s = feeStats(fee);
+  const paidIds = new Set(fee.paid.map((p) => p.playerId));
+  const paidPlayers = fee.assignedIds.filter((id) => paidIds.has(id));
+  const unpaidPlayers = fee.assignedIds.filter((id) => !paidIds.has(id));
 
   const toggle = (id: string) =>
     setSelected((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
-  const submit = async () => {
-    const cents = Math.round(parseFloat(amount || "0") * 100);
-    if (!label || cents <= 0) return;
-    setSubmitting(true);
-    try {
-      await create({
-        data: {
-          teamId, requestType: type, label,
-          description: desc || undefined,
-          amountCents: cents,
-          dueDate: dueDate || null,
-          playerIds: target === "all" ? [] : selected,
-        },
-      });
-      onCreated();
-    } finally { setSubmitting(false); }
+  const markPaid = (ids: string[]) => {
+    const today = new Date().toISOString().slice(0, 10);
+    const additions = ids
+      .filter((id) => !paidIds.has(id))
+      .map<PaidRec>((id) => ({ playerId: id, date: today, method: "Manual" }));
+    onUpdate({ ...fee, paid: [...fee.paid, ...additions] });
+    setSelected([]);
+  };
+
+  const markUnpaid = (id: string) => {
+    onUpdate({ ...fee, paid: fee.paid.filter((p) => p.playerId !== id) });
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-[480px] rounded-t-3xl border-t border-border bg-surface px-5 pt-4 pb-[max(env(safe-area-inset-bottom),1.25rem)]" onClick={(e) => e.stopPropagation()}>
+    <>
+      <button onClick={onBack} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+        <ArrowLeft size={14} /> Payments
+      </button>
+
+      <div className="mt-3 rounded-2xl border border-border bg-surface p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="font-display text-xl font-bold">{fee.name}</h1>
+            <p className="mt-1 text-xs text-muted-foreground">{money(fee.amount)} · due {fee.due}</p>
+          </div>
+          <button onClick={() => setEditing(true)} className="grid h-9 w-9 place-items-center rounded-full bg-surface-2 text-teal">
+            <Pencil size={14} />
+          </button>
+        </div>
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-2">
+          <div className="h-full rounded-full bg-teal" style={{ width: s.pct + "%" }} />
+        </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          {money(s.collected)} collected · {money(s.outstanding)} outstanding · {s.paidCount}/{s.total} paid
+        </p>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-1 rounded-full border border-border bg-surface p-1">
+        {(["paid", "unpaid"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => { setTab(t); setSelected([]); }}
+            className={"rounded-full py-2 text-xs font-bold " + (tab === t ? "bg-gradient-brand text-background" : "text-muted-foreground")}
+          >
+            {t === "paid" ? `Paid (${paidPlayers.length})` : `Unpaid (${unpaidPlayers.length})`}
+          </button>
+        ))}
+      </div>
+
+      {tab === "paid" && (
+        <div className="mt-3 space-y-1.5">
+          {paidPlayers.length === 0 && (
+            <p className="rounded-xl border border-dashed border-border bg-surface p-6 text-center text-xs text-muted-foreground">No payments yet.</p>
+          )}
+          {paidPlayers.map((id) => {
+            const r = ROSTER.find((x) => x.id === id)!;
+            const rec = fee.paid.find((p) => p.playerId === id)!;
+            return (
+              <div key={id} className="flex items-center gap-3 rounded-xl bg-surface px-3 py-2.5">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-surface-2 text-[11px] font-bold text-teal">#{r.jersey}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{r.name}</p>
+                  <p className="text-[10px] text-emerald-400/80">Paid {rec.date} · {rec.method}</p>
+                </div>
+                <button onClick={() => markUnpaid(id)} className="rounded-full border border-border bg-surface-2 px-2.5 py-1 text-[10px] font-bold text-muted-foreground">
+                  Mark Unpaid
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {tab === "unpaid" && (
+        <div className="mt-3 space-y-2">
+          {unpaidPlayers.length > 0 && (
+            <button
+              onClick={() => setRemindOpen({ targets: unpaidPlayers })}
+              className="w-full rounded-full border border-teal py-2 text-xs font-bold text-teal active:bg-teal/10"
+            >
+              Send Reminder to All ({unpaidPlayers.length})
+            </button>
+          )}
+          {unpaidPlayers.length === 0 && (
+            <p className="rounded-xl border border-dashed border-border bg-surface p-6 text-center text-xs text-muted-foreground">Everyone has paid — nice.</p>
+          )}
+          <div className="space-y-1.5">
+            {unpaidPlayers.map((id) => {
+              const r = ROSTER.find((x) => x.id === id)!;
+              const checked = selected.includes(id);
+              return (
+                <label key={id} className="flex items-center gap-3 rounded-xl bg-surface px-3 py-2.5">
+                  <input type="checkbox" checked={checked} onChange={() => toggle(id)} className="h-4 w-4 accent-teal" />
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-surface-2 text-[11px] font-bold text-teal">#{r.jersey}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{r.name}</p>
+                    {s.overdue && <p className="text-[10px] font-semibold text-rose-400">{s.daysOverdue} days overdue</p>}
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {tab === "unpaid" && selected.length > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface px-4 pt-3 pb-[max(env(safe-area-inset-bottom),1rem)]">
+          <div className="mx-auto flex max-w-[480px] items-center gap-2">
+            <p className="flex-1 text-xs font-bold">{selected.length} selected</p>
+            <button
+              onClick={() => setRemindOpen({ targets: selected })}
+              className="inline-flex items-center gap-1 rounded-full border border-teal px-3 py-2 text-xs font-bold text-teal"
+            >
+              <Send size={12} /> Send Reminder
+            </button>
+            <button
+              onClick={() => markPaid(selected)}
+              className="inline-flex items-center gap-1 rounded-full bg-gradient-brand px-3 py-2 text-xs font-bold text-background"
+            >
+              <Check size={12} /> Mark as Paid
+            </button>
+          </div>
+        </div>
+      )}
+
+      {remindOpen && (
+        <SendReminderSheet fee={fee} targetIds={remindOpen.targets} onClose={() => setRemindOpen(null)} />
+      )}
+
+      {editing && (
+        <EditFeeSheet fee={fee} onClose={() => setEditing(false)} onSave={(f) => { onUpdate(f); setEditing(false); }} />
+      )}
+    </>
+  );
+}
+
+// ---------- Send Reminder Sheet ----------
+
+function SendReminderSheet({ fee, targetIds, onClose }: { fee: Fee; targetIds: string[]; onClose: () => void }) {
+  const first = ROSTER.find((r) => r.id === targetIds[0]);
+  const defaultMsg =
+    `Hi ${first?.parent ?? "[Parent name]"}, just a reminder that ${fee.name} of ${money(fee.amount)} is due ${fee.due}. Pay securely here: [link]`;
+  const [msg, setMsg] = useState(defaultMsg);
+  const [ch, setCh] = useState({ push: true, email: true, sms: true });
+  const [sent, setSent] = useState(false);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end bg-background/70 backdrop-blur-sm" onClick={onClose}>
+      <div className="mx-auto w-full max-w-[480px] rounded-t-3xl border-t border-border bg-surface px-5 pt-4 pb-[max(env(safe-area-inset-bottom),1.25rem)]" onClick={(e) => e.stopPropagation()}>
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border" />
         <div className="flex items-center justify-between">
-          <h3 className="font-display text-base font-bold">New payment request</h3>
+          <h3 className="font-display text-base font-bold">Remind {targetIds.length} {targetIds.length === 1 ? "family" : "families"} about {fee.name}</h3>
           <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-full bg-surface-2 text-muted-foreground"><X size={14} /></button>
         </div>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {(["registration", "one_off"] as const).map((t) => (
-            <button key={t} onClick={() => setType(t)} className={"rounded-xl border px-3 py-2 text-xs font-bold " + (type === t ? "border-teal bg-teal/15 text-teal" : "border-border bg-surface-2 text-muted-foreground")}>
-              {t === "registration" ? "Registration fee" : "One-off"}
+        <p className="mt-3 text-[10px] font-bold tracking-wider text-muted-foreground">MESSAGE</p>
+        <textarea
+          value={msg}
+          onChange={(e) => setMsg(e.target.value)}
+          rows={5}
+          className="mt-1 w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm text-foreground"
+        />
+        <p className="mt-3 text-[10px] font-bold tracking-wider text-muted-foreground">SEND VIA</p>
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          {([["push","Push"],["email","Email"],["sms","SMS"]] as const).map(([k, label]) => (
+            <button
+              key={k}
+              onClick={() => setCh((c) => ({ ...c, [k]: !c[k] }))}
+              className={"rounded-xl border px-3 py-2 text-xs font-bold " + (ch[k] ? "border-teal bg-teal/15 text-teal" : "border-border bg-surface-2 text-muted-foreground")}
+            >
+              {label}
             </button>
           ))}
         </div>
-        <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder={type === "registration" ? "e.g. Spring Rep Team 2026" : "e.g. Apparel Order"} className="mt-3 w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm" />
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" step="0.01" placeholder="Amount ($)" className="rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm" />
-          <input value={dueDate} onChange={(e) => setDueDate(e.target.value)} type="date" className="rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm" />
-        </div>
-        <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={2} placeholder="Description (optional)" className="mt-2 w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm" />
+        <button
+          disabled={sent}
+          onClick={() => { setSent(true); setTimeout(onClose, 700); }}
+          className="mt-4 w-full rounded-full bg-gradient-brand py-3 text-sm font-bold text-background disabled:opacity-60"
+        >
+          {sent ? "Sent ✓" : "Send Reminder"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
-        {type === "one_off" && (
-          <div className="mt-3">
-            <div className="grid grid-cols-2 gap-2">
-              {(["all", "select"] as const).map((t) => (
-                <button key={t} onClick={() => setTarget(t)} className={"rounded-xl border px-3 py-2 text-xs font-bold " + (target === t ? "border-teal bg-teal/15 text-teal" : "border-border bg-surface-2 text-muted-foreground")}>
-                  {t === "all" ? "Entire team" : "Select players"}
+// ---------- Create Fee ----------
+
+function CreateFee({ onBack, onCreate }: { onBack: () => void; onCreate: (f: Fee) => void }) {
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
+  const [due, setDue] = useState("");
+  const [desc, setDesc] = useState("");
+  const [assign, setAssign] = useState<"all" | "select" | "pos">("all");
+  const [posSel, setPosSel] = useState<Record<"F" | "D" | "G", boolean>>({ F: true, D: true, G: true });
+  const [picked, setPicked] = useState<string[]>([]);
+  const [method, setMethod] = useState<"Online" | "Cash" | "Both">("Online");
+
+  const assignedIds = useMemo(() => {
+    if (assign === "all") return ROSTER.map((r) => r.id);
+    if (assign === "select") return picked;
+    return ROSTER.filter((r) => posSel[r.pos]).map((r) => r.id);
+  }, [assign, picked, posSel]);
+
+  const canCreate = name.trim() && parseFloat(amount) > 0 && due && assignedIds.length > 0;
+
+  const submit = () => {
+    if (!canCreate) return;
+    onCreate({
+      id: "f" + Date.now(),
+      name: name.trim(),
+      amount: parseFloat(amount),
+      due,
+      description: desc || undefined,
+      assignedIds,
+      method,
+      paid: [],
+    });
+  };
+
+  return (
+    <>
+      <button onClick={onBack} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+        <ArrowLeft size={14} /> Payments
+      </button>
+      <h1 className="mt-3 font-display text-2xl font-bold">Create Fee</h1>
+
+      <div className="mt-4 space-y-3">
+        <Field label="Fee name">
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Spring Classic Bus Fee" className="w-full rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-sm" />
+        </Field>
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="Amount ($)">
+            <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" step="1" placeholder="80" className="w-full rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-sm" />
+          </Field>
+          <Field label="Due date">
+            <input value={due} onChange={(e) => setDue(e.target.value)} type="date" className="w-full rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-sm" />
+          </Field>
+        </div>
+        <Field label="Description (optional)">
+          <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={2} className="w-full rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-sm" />
+        </Field>
+
+        <div>
+          <p className="text-[10px] font-bold tracking-wider text-muted-foreground">ASSIGN TO</p>
+          <div className="mt-1 grid grid-cols-3 gap-2">
+            {([["all","All"],["select","Select"],["pos","By Position"]] as const).map(([v, label]) => (
+              <button key={v} onClick={() => setAssign(v)} className={"rounded-xl border px-2 py-2 text-xs font-bold " + (assign === v ? "border-teal bg-teal/15 text-teal" : "border-border bg-surface-2 text-muted-foreground")}>
+                {label}
+              </button>
+            ))}
+          </div>
+          {assign === "pos" && (
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {(["F","D","G"] as const).map((p) => (
+                <button key={p} onClick={() => setPosSel((s) => ({ ...s, [p]: !s[p] }))} className={"rounded-full border px-3 py-1.5 text-[11px] font-bold " + (posSel[p] ? "border-teal bg-teal/15 text-teal" : "border-border bg-surface-2 text-muted-foreground")}>
+                  {p === "F" ? "Forwards" : p === "D" ? "Defence" : "Goalies"}
                 </button>
               ))}
             </div>
-            {target === "select" && (
-              <div className="mt-2 max-h-48 space-y-1 overflow-y-auto rounded-xl border border-border bg-surface-2 p-2">
-                {players.map((p) => (
-                  <label key={p.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm">
-                    <input type="checkbox" checked={selected.includes(p.id)} onChange={() => toggle(p.id)} />
-                    <span>{p.jersey_number ? `#${p.jersey_number} ` : ""}{p.display_name}</span>
+          )}
+          {assign === "select" && (
+            <div className="mt-2 max-h-60 space-y-1 overflow-y-auto rounded-xl border border-border bg-surface-2 p-2">
+              {ROSTER.map((r) => {
+                const on = picked.includes(r.id);
+                return (
+                  <label key={r.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm">
+                    <input type="checkbox" checked={on} onChange={() => setPicked((p) => on ? p.filter((x) => x !== r.id) : [...p, r.id])} className="h-4 w-4 accent-teal" />
+                    <span>#{r.jersey} {r.name}</span>
                   </label>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+          <p className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+            <Users size={11} /> {assignedIds.length} player{assignedIds.length === 1 ? "" : "s"} assigned
+          </p>
+        </div>
 
-        <button disabled={submitting} onClick={submit} className="mt-4 w-full rounded-full bg-gradient-brand py-3 text-sm font-bold text-background disabled:opacity-50">
-          {submitting ? "Creating…" : "Send request"}
+        <div>
+          <p className="text-[10px] font-bold tracking-wider text-muted-foreground">PAYMENT METHOD</p>
+          <div className="mt-1 grid grid-cols-3 gap-2">
+            {([["Online", CreditCard],["Cash", Banknote],["Both", DollarSign]] as const).map(([v, Icon]) => (
+              <button key={v} onClick={() => setMethod(v)} className={"flex items-center justify-center gap-1 rounded-xl border px-2 py-2 text-xs font-bold " + (method === v ? "border-teal bg-teal/15 text-teal" : "border-border bg-surface-2 text-muted-foreground")}>
+                <Icon size={12} /> {v === "Online" ? "Online" : v === "Cash" ? "Cash" : "Both"}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <button
+        disabled={!canCreate}
+        onClick={submit}
+        className="mt-6 flex w-full items-center justify-center rounded-full bg-gradient-brand py-3 text-sm font-bold text-background shadow-glow-teal disabled:opacity-50"
+      >
+        Create & Notify Team
+      </button>
+    </>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="block text-[10px] font-bold tracking-wider text-muted-foreground">{label}</span>
+      <div className="mt-1">{children}</div>
+    </label>
+  );
+}
+
+// ---------- Edit Fee (light) ----------
+
+function EditFeeSheet({ fee, onClose, onSave }: { fee: Fee; onClose: () => void; onSave: (f: Fee) => void }) {
+  const [name, setName] = useState(fee.name);
+  const [amount, setAmount] = useState(String(fee.amount));
+  const [due, setDue] = useState(fee.due);
+  return (
+    <div className="fixed inset-0 z-50 flex items-end bg-background/70 backdrop-blur-sm" onClick={onClose}>
+      <div className="mx-auto w-full max-w-[480px] rounded-t-3xl border-t border-border bg-surface px-5 pt-4 pb-[max(env(safe-area-inset-bottom),1.25rem)]" onClick={(e) => e.stopPropagation()}>
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border" />
+        <div className="flex items-center justify-between">
+          <h3 className="font-display text-base font-bold">Edit Fee</h3>
+          <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-full bg-surface-2 text-muted-foreground"><X size={14} /></button>
+        </div>
+        <div className="mt-3 space-y-2">
+          <input value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm" />
+          <div className="grid grid-cols-2 gap-2">
+            <input value={amount} onChange={(e) => setAmount(e.target.value)} type="number" className="rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm" />
+            <input value={due} onChange={(e) => setDue(e.target.value)} type="date" className="rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm" />
+          </div>
+        </div>
+        <button onClick={() => onSave({ ...fee, name, amount: parseFloat(amount) || fee.amount, due })} className="mt-4 w-full rounded-full bg-gradient-brand py-3 text-sm font-bold text-background">Save</button>
+      </div>
+    </div>
+  );
+}
+
+// ---------- Stripe Connect prompt ----------
+
+function StripeConnectSheet({ onClose, onConnected }: { onClose: () => void; onConnected: () => void }) {
+  const [loading, setLoading] = useState(false);
+  return (
+    <div className="fixed inset-0 z-50 flex items-end bg-background/70 backdrop-blur-sm" onClick={onClose}>
+      <div className="mx-auto w-full max-w-[480px] rounded-t-3xl border-t border-border bg-surface px-5 pt-4 pb-[max(env(safe-area-inset-bottom),1.25rem)]" onClick={(e) => e.stopPropagation()}>
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border" />
+        <div className="flex items-center gap-2">
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-teal/15 text-teal"><CreditCard size={18} /></div>
+          <h3 className="font-display text-base font-bold">Connect your bank account to collect payments</h3>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Set up Stripe Connect to accept card payments from families. Funds land directly in your team account, usually within 2 business days.
+        </p>
+        <button
+          disabled={loading}
+          onClick={() => { setLoading(true); setTimeout(onConnected, 900); }}
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 text-sm font-bold text-background disabled:opacity-60"
+        >
+          {loading ? "Opening Stripe…" : (<><ExternalLink size={14} /> Set up Stripe</>)}
+        </button>
+        <button onClick={onClose} className="mt-2 w-full rounded-full border border-border py-2.5 text-xs font-bold text-muted-foreground">
+          Not now
         </button>
       </div>
     </div>
