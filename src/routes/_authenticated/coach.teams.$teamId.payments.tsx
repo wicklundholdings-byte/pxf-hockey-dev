@@ -71,7 +71,7 @@ const initialFees: Fee[] = [
     amount: 150,
     due: "2026-08-15",
     assignedIds: ROSTER.map((r) => r.id),
-    method: "Manual" as any === "Manual" ? "Cash" : "Cash",
+    method: "Cash",
     paid: ROSTER.map((r) => ({ playerId: r.id, date: "2026-06-15", method: "Manual" as PayMethod })),
   },
 ];

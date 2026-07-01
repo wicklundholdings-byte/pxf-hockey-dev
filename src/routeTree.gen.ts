@@ -148,6 +148,7 @@ import { Route as AuthenticatedCoachTeamsTeamIdStatsRouteImport } from './routes
 import { Route as AuthenticatedCoachTeamsTeamIdScheduleRouteImport } from './routes/_authenticated/coach.teams.$teamId.schedule'
 import { Route as AuthenticatedCoachTeamsTeamIdRosterRouteImport } from './routes/_authenticated/coach.teams.$teamId.roster'
 import { Route as AuthenticatedCoachTeamsTeamIdPlaybookRouteImport } from './routes/_authenticated/coach.teams.$teamId.playbook'
+import { Route as AuthenticatedCoachTeamsTeamIdPaymentsRouteImport } from './routes/_authenticated/coach.teams.$teamId.payments'
 import { Route as AuthenticatedCoachTeamsTeamIdMoreRouteImport } from './routes/_authenticated/coach.teams.$teamId.more'
 import { Route as AuthenticatedCoachTeamsTeamIdMessagesRouteImport } from './routes/_authenticated/coach.teams.$teamId.messages'
 import { Route as AuthenticatedCoachTeamsTeamIdMediaRouteImport } from './routes/_authenticated/coach.teams.$teamId.media'
@@ -914,6 +915,12 @@ const AuthenticatedCoachTeamsTeamIdPlaybookRoute =
     path: '/playbook',
     getParentRoute: () => AuthenticatedCoachTeamsTeamIdRoute,
   } as any)
+const AuthenticatedCoachTeamsTeamIdPaymentsRoute =
+  AuthenticatedCoachTeamsTeamIdPaymentsRouteImport.update({
+    id: '/payments',
+    path: '/payments',
+    getParentRoute: () => AuthenticatedCoachTeamsTeamIdRoute,
+  } as any)
 const AuthenticatedCoachTeamsTeamIdMoreRoute =
   AuthenticatedCoachTeamsTeamIdMoreRouteImport.update({
     id: '/more',
@@ -1198,6 +1205,7 @@ export interface FileRoutesByFullPath {
   '/coach/teams/$teamId/media': typeof AuthenticatedCoachTeamsTeamIdMediaRoute
   '/coach/teams/$teamId/messages': typeof AuthenticatedCoachTeamsTeamIdMessagesRoute
   '/coach/teams/$teamId/more': typeof AuthenticatedCoachTeamsTeamIdMoreRoute
+  '/coach/teams/$teamId/payments': typeof AuthenticatedCoachTeamsTeamIdPaymentsRoute
   '/coach/teams/$teamId/playbook': typeof AuthenticatedCoachTeamsTeamIdPlaybookRoute
   '/coach/teams/$teamId/roster': typeof AuthenticatedCoachTeamsTeamIdRosterRoute
   '/coach/teams/$teamId/schedule': typeof AuthenticatedCoachTeamsTeamIdScheduleRouteWithChildren
@@ -1352,6 +1360,7 @@ export interface FileRoutesByTo {
   '/coach/teams/$teamId/media': typeof AuthenticatedCoachTeamsTeamIdMediaRoute
   '/coach/teams/$teamId/messages': typeof AuthenticatedCoachTeamsTeamIdMessagesRoute
   '/coach/teams/$teamId/more': typeof AuthenticatedCoachTeamsTeamIdMoreRoute
+  '/coach/teams/$teamId/payments': typeof AuthenticatedCoachTeamsTeamIdPaymentsRoute
   '/coach/teams/$teamId/playbook': typeof AuthenticatedCoachTeamsTeamIdPlaybookRoute
   '/coach/teams/$teamId/roster': typeof AuthenticatedCoachTeamsTeamIdRosterRoute
   '/coach/teams/$teamId/stats': typeof AuthenticatedCoachTeamsTeamIdStatsRoute
@@ -1514,6 +1523,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/teams/$teamId/media': typeof AuthenticatedCoachTeamsTeamIdMediaRoute
   '/_authenticated/coach/teams/$teamId/messages': typeof AuthenticatedCoachTeamsTeamIdMessagesRoute
   '/_authenticated/coach/teams/$teamId/more': typeof AuthenticatedCoachTeamsTeamIdMoreRoute
+  '/_authenticated/coach/teams/$teamId/payments': typeof AuthenticatedCoachTeamsTeamIdPaymentsRoute
   '/_authenticated/coach/teams/$teamId/playbook': typeof AuthenticatedCoachTeamsTeamIdPlaybookRoute
   '/_authenticated/coach/teams/$teamId/roster': typeof AuthenticatedCoachTeamsTeamIdRosterRoute
   '/_authenticated/coach/teams/$teamId/schedule': typeof AuthenticatedCoachTeamsTeamIdScheduleRouteWithChildren
@@ -1679,6 +1689,7 @@ export interface FileRouteTypes {
     | '/coach/teams/$teamId/media'
     | '/coach/teams/$teamId/messages'
     | '/coach/teams/$teamId/more'
+    | '/coach/teams/$teamId/payments'
     | '/coach/teams/$teamId/playbook'
     | '/coach/teams/$teamId/roster'
     | '/coach/teams/$teamId/schedule'
@@ -1833,6 +1844,7 @@ export interface FileRouteTypes {
     | '/coach/teams/$teamId/media'
     | '/coach/teams/$teamId/messages'
     | '/coach/teams/$teamId/more'
+    | '/coach/teams/$teamId/payments'
     | '/coach/teams/$teamId/playbook'
     | '/coach/teams/$teamId/roster'
     | '/coach/teams/$teamId/stats'
@@ -1994,6 +2006,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach/teams/$teamId/media'
     | '/_authenticated/coach/teams/$teamId/messages'
     | '/_authenticated/coach/teams/$teamId/more'
+    | '/_authenticated/coach/teams/$teamId/payments'
     | '/_authenticated/coach/teams/$teamId/playbook'
     | '/_authenticated/coach/teams/$teamId/roster'
     | '/_authenticated/coach/teams/$teamId/schedule'
@@ -3045,6 +3058,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachTeamsTeamIdPlaybookRouteImport
       parentRoute: typeof AuthenticatedCoachTeamsTeamIdRoute
     }
+    '/_authenticated/coach/teams/$teamId/payments': {
+      id: '/_authenticated/coach/teams/$teamId/payments'
+      path: '/payments'
+      fullPath: '/coach/teams/$teamId/payments'
+      preLoaderRoute: typeof AuthenticatedCoachTeamsTeamIdPaymentsRouteImport
+      parentRoute: typeof AuthenticatedCoachTeamsTeamIdRoute
+    }
     '/_authenticated/coach/teams/$teamId/more': {
       id: '/_authenticated/coach/teams/$teamId/more'
       path: '/more'
@@ -3341,6 +3361,7 @@ interface AuthenticatedCoachTeamsTeamIdRouteChildren {
   AuthenticatedCoachTeamsTeamIdMediaRoute: typeof AuthenticatedCoachTeamsTeamIdMediaRoute
   AuthenticatedCoachTeamsTeamIdMessagesRoute: typeof AuthenticatedCoachTeamsTeamIdMessagesRoute
   AuthenticatedCoachTeamsTeamIdMoreRoute: typeof AuthenticatedCoachTeamsTeamIdMoreRoute
+  AuthenticatedCoachTeamsTeamIdPaymentsRoute: typeof AuthenticatedCoachTeamsTeamIdPaymentsRoute
   AuthenticatedCoachTeamsTeamIdPlaybookRoute: typeof AuthenticatedCoachTeamsTeamIdPlaybookRoute
   AuthenticatedCoachTeamsTeamIdRosterRoute: typeof AuthenticatedCoachTeamsTeamIdRosterRoute
   AuthenticatedCoachTeamsTeamIdScheduleRoute: typeof AuthenticatedCoachTeamsTeamIdScheduleRouteWithChildren
@@ -3359,6 +3380,8 @@ const AuthenticatedCoachTeamsTeamIdRouteChildren: AuthenticatedCoachTeamsTeamIdR
       AuthenticatedCoachTeamsTeamIdMessagesRoute,
     AuthenticatedCoachTeamsTeamIdMoreRoute:
       AuthenticatedCoachTeamsTeamIdMoreRoute,
+    AuthenticatedCoachTeamsTeamIdPaymentsRoute:
+      AuthenticatedCoachTeamsTeamIdPaymentsRoute,
     AuthenticatedCoachTeamsTeamIdPlaybookRoute:
       AuthenticatedCoachTeamsTeamIdPlaybookRoute,
     AuthenticatedCoachTeamsTeamIdRosterRoute:
