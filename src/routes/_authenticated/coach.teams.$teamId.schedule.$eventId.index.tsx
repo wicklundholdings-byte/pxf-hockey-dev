@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { markAttendance, recordGameStats } from "@/lib/teams.functions";
-import { ArrowLeft, CheckCircle2, XCircle, Clock, ClipboardList, Trophy, BarChart3 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, Clock, ClipboardList, Trophy, BarChart3, Users, Navigation, Camera, Video, Pencil } from "lucide-react";
 import { GameMediaTab } from "@/components/teams/game-media-tab";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -104,6 +104,22 @@ function EventDetail() {
   }
 
   if (!event) return <p className="text-xs text-muted-foreground">Loading…</p>;
+
+  if (event.event_type === "practice") {
+    return (
+      <PracticeDetail
+        teamId={teamId}
+        eventId={eventId}
+        event={event}
+        players={players}
+        rsvps={rsvps}
+        attendance={attendance}
+        onSetAttendance={set}
+        practiceSessionId={practiceSessionId}
+        currentUserId={user?.id ?? null}
+      />
+    );
+  }
 
   return (
     <div>
