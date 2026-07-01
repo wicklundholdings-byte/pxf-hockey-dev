@@ -3214,6 +3214,7 @@ export type Database = {
           image_path: string | null
           kind: string
           metadata: Json
+          parent_message_id: string | null
           pinned: boolean
           read_by: Json
           scheduled_for: string | null
@@ -3228,6 +3229,7 @@ export type Database = {
           image_path?: string | null
           kind?: string
           metadata?: Json
+          parent_message_id?: string | null
           pinned?: boolean
           read_by?: Json
           scheduled_for?: string | null
@@ -3242,6 +3244,7 @@ export type Database = {
           image_path?: string | null
           kind?: string
           metadata?: Json
+          parent_message_id?: string | null
           pinned?: boolean
           read_by?: Json
           scheduled_for?: string | null
@@ -3260,6 +3263,13 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_parent_message_id_fkey"
+            columns: ["parent_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
         ]
