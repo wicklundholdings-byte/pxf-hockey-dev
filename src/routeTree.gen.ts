@@ -147,6 +147,7 @@ import { Route as AuthenticatedCoachTeamsTeamIdTournamentsRouteImport } from './
 import { Route as AuthenticatedCoachTeamsTeamIdStatsRouteImport } from './routes/_authenticated/coach.teams.$teamId.stats'
 import { Route as AuthenticatedCoachTeamsTeamIdScheduleRouteImport } from './routes/_authenticated/coach.teams.$teamId.schedule'
 import { Route as AuthenticatedCoachTeamsTeamIdRosterRouteImport } from './routes/_authenticated/coach.teams.$teamId.roster'
+import { Route as AuthenticatedCoachTeamsTeamIdPracticePlansRouteImport } from './routes/_authenticated/coach.teams.$teamId.practice-plans'
 import { Route as AuthenticatedCoachTeamsTeamIdPlaybookRouteImport } from './routes/_authenticated/coach.teams.$teamId.playbook'
 import { Route as AuthenticatedCoachTeamsTeamIdPaymentsRouteImport } from './routes/_authenticated/coach.teams.$teamId.payments'
 import { Route as AuthenticatedCoachTeamsTeamIdMoreRouteImport } from './routes/_authenticated/coach.teams.$teamId.more'
@@ -909,6 +910,12 @@ const AuthenticatedCoachTeamsTeamIdRosterRoute =
     path: '/roster',
     getParentRoute: () => AuthenticatedCoachTeamsTeamIdRoute,
   } as any)
+const AuthenticatedCoachTeamsTeamIdPracticePlansRoute =
+  AuthenticatedCoachTeamsTeamIdPracticePlansRouteImport.update({
+    id: '/practice-plans',
+    path: '/practice-plans',
+    getParentRoute: () => AuthenticatedCoachTeamsTeamIdRoute,
+  } as any)
 const AuthenticatedCoachTeamsTeamIdPlaybookRoute =
   AuthenticatedCoachTeamsTeamIdPlaybookRouteImport.update({
     id: '/playbook',
@@ -1207,6 +1214,7 @@ export interface FileRoutesByFullPath {
   '/coach/teams/$teamId/more': typeof AuthenticatedCoachTeamsTeamIdMoreRoute
   '/coach/teams/$teamId/payments': typeof AuthenticatedCoachTeamsTeamIdPaymentsRoute
   '/coach/teams/$teamId/playbook': typeof AuthenticatedCoachTeamsTeamIdPlaybookRoute
+  '/coach/teams/$teamId/practice-plans': typeof AuthenticatedCoachTeamsTeamIdPracticePlansRoute
   '/coach/teams/$teamId/roster': typeof AuthenticatedCoachTeamsTeamIdRosterRoute
   '/coach/teams/$teamId/schedule': typeof AuthenticatedCoachTeamsTeamIdScheduleRouteWithChildren
   '/coach/teams/$teamId/stats': typeof AuthenticatedCoachTeamsTeamIdStatsRoute
@@ -1362,6 +1370,7 @@ export interface FileRoutesByTo {
   '/coach/teams/$teamId/more': typeof AuthenticatedCoachTeamsTeamIdMoreRoute
   '/coach/teams/$teamId/payments': typeof AuthenticatedCoachTeamsTeamIdPaymentsRoute
   '/coach/teams/$teamId/playbook': typeof AuthenticatedCoachTeamsTeamIdPlaybookRoute
+  '/coach/teams/$teamId/practice-plans': typeof AuthenticatedCoachTeamsTeamIdPracticePlansRoute
   '/coach/teams/$teamId/roster': typeof AuthenticatedCoachTeamsTeamIdRosterRoute
   '/coach/teams/$teamId/stats': typeof AuthenticatedCoachTeamsTeamIdStatsRoute
   '/parent/teams/$teamId/game/$eventId': typeof ParentTeamsTeamIdGameEventIdRoute
@@ -1525,6 +1534,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/teams/$teamId/more': typeof AuthenticatedCoachTeamsTeamIdMoreRoute
   '/_authenticated/coach/teams/$teamId/payments': typeof AuthenticatedCoachTeamsTeamIdPaymentsRoute
   '/_authenticated/coach/teams/$teamId/playbook': typeof AuthenticatedCoachTeamsTeamIdPlaybookRoute
+  '/_authenticated/coach/teams/$teamId/practice-plans': typeof AuthenticatedCoachTeamsTeamIdPracticePlansRoute
   '/_authenticated/coach/teams/$teamId/roster': typeof AuthenticatedCoachTeamsTeamIdRosterRoute
   '/_authenticated/coach/teams/$teamId/schedule': typeof AuthenticatedCoachTeamsTeamIdScheduleRouteWithChildren
   '/_authenticated/coach/teams/$teamId/stats': typeof AuthenticatedCoachTeamsTeamIdStatsRoute
@@ -1691,6 +1701,7 @@ export interface FileRouteTypes {
     | '/coach/teams/$teamId/more'
     | '/coach/teams/$teamId/payments'
     | '/coach/teams/$teamId/playbook'
+    | '/coach/teams/$teamId/practice-plans'
     | '/coach/teams/$teamId/roster'
     | '/coach/teams/$teamId/schedule'
     | '/coach/teams/$teamId/stats'
@@ -1846,6 +1857,7 @@ export interface FileRouteTypes {
     | '/coach/teams/$teamId/more'
     | '/coach/teams/$teamId/payments'
     | '/coach/teams/$teamId/playbook'
+    | '/coach/teams/$teamId/practice-plans'
     | '/coach/teams/$teamId/roster'
     | '/coach/teams/$teamId/stats'
     | '/parent/teams/$teamId/game/$eventId'
@@ -2008,6 +2020,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach/teams/$teamId/more'
     | '/_authenticated/coach/teams/$teamId/payments'
     | '/_authenticated/coach/teams/$teamId/playbook'
+    | '/_authenticated/coach/teams/$teamId/practice-plans'
     | '/_authenticated/coach/teams/$teamId/roster'
     | '/_authenticated/coach/teams/$teamId/schedule'
     | '/_authenticated/coach/teams/$teamId/stats'
@@ -3051,6 +3064,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachTeamsTeamIdRosterRouteImport
       parentRoute: typeof AuthenticatedCoachTeamsTeamIdRoute
     }
+    '/_authenticated/coach/teams/$teamId/practice-plans': {
+      id: '/_authenticated/coach/teams/$teamId/practice-plans'
+      path: '/practice-plans'
+      fullPath: '/coach/teams/$teamId/practice-plans'
+      preLoaderRoute: typeof AuthenticatedCoachTeamsTeamIdPracticePlansRouteImport
+      parentRoute: typeof AuthenticatedCoachTeamsTeamIdRoute
+    }
     '/_authenticated/coach/teams/$teamId/playbook': {
       id: '/_authenticated/coach/teams/$teamId/playbook'
       path: '/playbook'
@@ -3363,6 +3383,7 @@ interface AuthenticatedCoachTeamsTeamIdRouteChildren {
   AuthenticatedCoachTeamsTeamIdMoreRoute: typeof AuthenticatedCoachTeamsTeamIdMoreRoute
   AuthenticatedCoachTeamsTeamIdPaymentsRoute: typeof AuthenticatedCoachTeamsTeamIdPaymentsRoute
   AuthenticatedCoachTeamsTeamIdPlaybookRoute: typeof AuthenticatedCoachTeamsTeamIdPlaybookRoute
+  AuthenticatedCoachTeamsTeamIdPracticePlansRoute: typeof AuthenticatedCoachTeamsTeamIdPracticePlansRoute
   AuthenticatedCoachTeamsTeamIdRosterRoute: typeof AuthenticatedCoachTeamsTeamIdRosterRoute
   AuthenticatedCoachTeamsTeamIdScheduleRoute: typeof AuthenticatedCoachTeamsTeamIdScheduleRouteWithChildren
   AuthenticatedCoachTeamsTeamIdStatsRoute: typeof AuthenticatedCoachTeamsTeamIdStatsRoute
@@ -3384,6 +3405,8 @@ const AuthenticatedCoachTeamsTeamIdRouteChildren: AuthenticatedCoachTeamsTeamIdR
       AuthenticatedCoachTeamsTeamIdPaymentsRoute,
     AuthenticatedCoachTeamsTeamIdPlaybookRoute:
       AuthenticatedCoachTeamsTeamIdPlaybookRoute,
+    AuthenticatedCoachTeamsTeamIdPracticePlansRoute:
+      AuthenticatedCoachTeamsTeamIdPracticePlansRoute,
     AuthenticatedCoachTeamsTeamIdRosterRoute:
       AuthenticatedCoachTeamsTeamIdRosterRoute,
     AuthenticatedCoachTeamsTeamIdScheduleRoute:
