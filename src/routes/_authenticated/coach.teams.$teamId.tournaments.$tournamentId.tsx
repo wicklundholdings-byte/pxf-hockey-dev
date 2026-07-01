@@ -1504,6 +1504,11 @@ function AccommodationSection() {
               </button>
             )}
           </div>
+          {IS_PARENT && (
+            <p className="-mt-1 text-[11px] text-muted-foreground">
+              Your billet information is private to your family.
+            </p>
+          )}
 
           {IS_PARENT ? (
             (() => {
@@ -1623,6 +1628,13 @@ function BilletCard({ billet, parentView, onEdit }: { billet: Billet; parentView
         <p className="mt-3 rounded-md bg-surface-2 px-2 py-1.5 text-[11px] text-muted-foreground">
           {billet.notes}
         </p>
+      )}
+
+      {parentView && billet.players.length > 0 && (
+        <div className="mt-3 border-t border-border pt-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Your Player</p>
+          <p className="mt-1 text-xs font-bold">{billet.players.filter((p) => p === PARENT_CHILD_NAME).join(" · ") || billet.players.join(" · ")}</p>
+        </div>
       )}
 
       {!parentView && billet.players.length > 0 && (
