@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { MessageSquare, Send, ArrowLeft, Users, Plus, Pin, X, Megaphone, User } from "lucide-react";
+import { MessageSquare, Send, ArrowLeft, Users, Plus, Pin, X, Megaphone, User, BarChart3, CalendarClock, CheckCircle2, ChevronUp } from "lucide-react";
 import { listTeamMessageableContacts, type TeamContact } from "@/lib/messaging.functions";
 
 export const Route = createFileRoute("/_authenticated/coach/inbox")({
@@ -27,7 +27,11 @@ type Msg = {
   body: string | null;
   pinned: boolean;
   created_at: string;
+  kind?: "text" | "poll" | "rsvp";
+  metadata?: any;
+  scheduled_for?: string | null;
 };
+type PollVote = { message_id: string; user_id: string; option_index: number };
 type Camp = { id: string; name: string };
 type Team = { id: string; name: string };
 
@@ -191,6 +195,8 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
   const [messages, setMessages] = useState<Msg[]>([]);
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
+  const [votes, setVotes] = useState<PollVote[]>([]);
+  const [showRich, setShowRich] = useState<null | "poll" | "rsvp" | "schedule">(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   async function load() {
@@ -198,8 +204,19 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
       .from("messages")
       .select("*")
       .eq("conversation_id", convo.id)
+      .or(`scheduled_for.is.null,scheduled_for.lte.${new Date().toISOString()},sender_id.eq.${currentUserId}`)
       .order("created_at");
     setMessages((data ?? []) as Msg[]);
+    const pollIds = (data ?? []).filter((m: any) => m.kind === "poll").map((m: any) => m.id);
+    if (pollIds.length > 0) {
+      const { data: v } = await supabase
+        .from("message_poll_votes")
+        .select("message_id,user_id,option_index")
+        .in("message_id", pollIds);
+      setVotes((v ?? []) as PollVote[]);
+    } else {
+      setVotes([]);
+    }
   }
 
   useEffect(() => {
@@ -208,6 +225,14 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
       .channel(`conv:${convo.id}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${convo.id}` }, (payload) => {
         setMessages((prev) => [...prev, payload.new as Msg]);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "message_poll_votes" }, (payload) => {
+        const row = (payload.new ?? payload.old) as PollVote;
+        if (!row) return;
+        setVotes((prev) => {
+          const others = prev.filter((v) => !(v.message_id === row.message_id && v.user_id === row.user_id));
+          return payload.eventType === "DELETE" ? others : [...others, payload.new as PollVote];
+        });
       })
       .subscribe();
     return () => {
@@ -228,6 +253,7 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
       conversation_id: convo.id,
       sender_id: currentUserId,
       body: text,
+      kind: "text",
     }).select("*").single();
     setSending(false);
     if (error) {
@@ -243,6 +269,59 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
   async function togglePin(m: Msg) {
     await supabase.from("messages").update({ pinned: !m.pinned }).eq("id", m.id);
     setMessages((prev) => prev.map((x) => (x.id === m.id ? { ...x, pinned: !x.pinned } : x)));
+  }
+
+  async function vote(m: Msg, optionIndex: number) {
+    const existing = votes.find((v) => v.message_id === m.id && v.user_id === currentUserId);
+    if (existing) {
+      await supabase.from("message_poll_votes").update({ option_index: optionIndex }).eq("message_id", m.id).eq("user_id", currentUserId);
+    } else {
+      await supabase.from("message_poll_votes").insert({ message_id: m.id, user_id: currentUserId, option_index: optionIndex });
+    }
+    setVotes((prev) => {
+      const others = prev.filter((v) => !(v.message_id === m.id && v.user_id === currentUserId));
+      return [...others, { message_id: m.id, user_id: currentUserId, option_index: optionIndex }];
+    });
+  }
+
+  async function respondRsvp(m: Msg, response: "yes" | "no" | "maybe") {
+    const existing = votes.find((v) => v.message_id === m.id && v.user_id === currentUserId);
+    const idx = response === "yes" ? 0 : response === "no" ? 1 : 2;
+    if (existing) {
+      await supabase.from("message_poll_votes").update({ option_index: idx }).eq("message_id", m.id).eq("user_id", currentUserId);
+    } else {
+      await supabase.from("message_poll_votes").insert({ message_id: m.id, user_id: currentUserId, option_index: idx });
+    }
+    setVotes((prev) => {
+      const others = prev.filter((v) => !(v.message_id === m.id && v.user_id === currentUserId));
+      return [...others, { message_id: m.id, user_id: currentUserId, option_index: idx }];
+    });
+  }
+
+  async function createRich(kind: "poll" | "rsvp", metadata: any, when: string | null) {
+    const insertBody: any = {
+      conversation_id: convo.id,
+      sender_id: currentUserId,
+      body: metadata.question ?? metadata.title ?? null,
+      kind,
+      metadata,
+    };
+    if (when) insertBody.scheduled_for = when;
+    const { data, error } = await supabase.from("messages").insert(insertBody).select("*").single();
+    if (error) { alert(error.message); return; }
+    if (data) setMessages((prev) => (prev.some((m) => m.id === (data as Msg).id) ? prev : [...prev, data as Msg]));
+  }
+
+  async function scheduleText(text: string, when: string) {
+    const { data, error } = await supabase.from("messages").insert({
+      conversation_id: convo.id,
+      sender_id: currentUserId,
+      body: text,
+      kind: "text",
+      scheduled_for: when,
+    }).select("*").single();
+    if (error) { alert(error.message); return; }
+    if (data) setMessages((prev) => (prev.some((m) => m.id === (data as Msg).id) ? prev : [...prev, data as Msg]));
   }
 
   const title =
@@ -280,14 +359,72 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
         ) : (
           messages.map((m) => {
             const mine = m.sender_id === currentUserId;
+            const isScheduledPending = m.scheduled_for && new Date(m.scheduled_for) > new Date();
+            const pollVotes = (m.kind === "poll" || m.kind === "rsvp") ? votes.filter((v) => v.message_id === m.id) : [];
+            const myVote = pollVotes.find((v) => v.user_id === currentUserId);
             return (
               <div key={m.id} className={"flex " + (mine ? "justify-end" : "justify-start")}>
                 <div className="group flex max-w-[80%] items-end gap-1">
                   <div className={
-                    "rounded-2xl px-3 py-2 text-sm " +
+                    "rounded-2xl px-3 py-2 text-sm w-full " +
                     (mine ? "rounded-br-sm bg-gradient-brand text-primary-foreground" : "rounded-bl-sm bg-card text-foreground border border-border")
                   }>
-                    <p className="whitespace-pre-wrap">{m.body}</p>
+                    {isScheduledPending && (
+                      <p className={"mb-1 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider " + (mine ? "text-black/70" : "text-amber-500")}>
+                        <CalendarClock size={10} /> Scheduled · {new Date(m.scheduled_for!).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    )}
+                    {m.kind === "poll" && m.metadata?.options ? (
+                      <div>
+                        <p className="mb-2 font-semibold">📊 {m.metadata.question}</p>
+                        <div className="space-y-1.5">
+                          {(m.metadata.options as string[]).map((opt, i) => {
+                            const count = pollVotes.filter((v) => v.option_index === i).length;
+                            const total = pollVotes.length || 1;
+                            const pct = Math.round((count / total) * 100);
+                            const selected = myVote?.option_index === i;
+                            return (
+                              <button
+                                key={i}
+                                onClick={() => vote(m, i)}
+                                className={"relative w-full overflow-hidden rounded-lg border px-2.5 py-1.5 text-left text-[12px] " + (mine ? "border-black/20 bg-black/10" : "border-border bg-surface")}
+                              >
+                                <div className={"absolute inset-y-0 left-0 " + (selected ? "bg-teal/40" : "bg-teal/15")} style={{ width: `${pct}%` }} />
+                                <div className="relative flex items-center justify-between gap-2">
+                                  <span className="flex items-center gap-1.5">
+                                    {selected && <CheckCircle2 size={11} />} {opt}
+                                  </span>
+                                  <span className="text-[10px] opacity-70">{count} · {pct}%</span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className={"mt-1.5 text-[9px] " + (mine ? "text-black/60" : "text-muted-foreground")}>{pollVotes.length} vote{pollVotes.length === 1 ? "" : "s"}</p>
+                      </div>
+                    ) : m.kind === "rsvp" ? (
+                      <div>
+                        <p className="mb-2 font-semibold">🗓 {m.metadata?.title ?? "RSVP"}</p>
+                        {m.metadata?.when && <p className={"mb-2 text-[11px] " + (mine ? "text-black/70" : "text-muted-foreground")}>{m.metadata.when}</p>}
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {(["yes", "no", "maybe"] as const).map((r, i) => {
+                            const count = pollVotes.filter((v) => v.option_index === i).length;
+                            const selected = myVote?.option_index === i;
+                            return (
+                              <button
+                                key={r}
+                                onClick={() => respondRsvp(m, r)}
+                                className={"rounded-lg border py-1.5 text-[11px] font-bold uppercase " + (selected ? "border-teal bg-teal/20 text-teal" : mine ? "border-black/20 bg-black/10" : "border-border bg-surface text-muted-foreground")}
+                              >
+                                {r} · {count}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="whitespace-pre-wrap">{m.body}</p>
+                    )}
                     <p className={"mt-0.5 text-[9px] " + (mine ? "text-black/60" : "text-muted-foreground")}>
                       {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </p>
@@ -306,6 +443,31 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
       </div>
 
       <div className="flex items-center gap-2 border-t border-border pt-2">
+        <div className="relative">
+          <button
+            onClick={() => setShowRich(showRich ? null : "poll")}
+            className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-muted-foreground"
+            title="Poll · RSVP · Schedule"
+          >
+            <Plus size={16} className={showRich ? "rotate-45 transition" : "transition"} />
+          </button>
+          {showRich && (
+            <div className="absolute bottom-12 left-0 z-20 flex w-52 flex-col gap-1 rounded-2xl border border-border bg-card p-2 shadow-xl">
+              <button onClick={() => setShowRich("poll")} className={"flex items-center gap-2 rounded-lg px-2 py-2 text-left text-xs font-semibold " + (showRich === "poll" ? "bg-teal/10 text-teal" : "hover:bg-surface")}>
+                <BarChart3 size={13} /> Poll
+              </button>
+              <button onClick={() => setShowRich("rsvp")} className={"flex items-center gap-2 rounded-lg px-2 py-2 text-left text-xs font-semibold " + (showRich === "rsvp" ? "bg-teal/10 text-teal" : "hover:bg-surface")}>
+                <CheckCircle2 size={13} /> RSVP request
+              </button>
+              <button onClick={() => setShowRich("schedule")} className={"flex items-center gap-2 rounded-lg px-2 py-2 text-left text-xs font-semibold " + (showRich === "schedule" ? "bg-teal/10 text-teal" : "hover:bg-surface")}>
+                <CalendarClock size={13} /> Scheduled message
+              </button>
+              <button onClick={() => setShowRich(null)} className="mt-1 flex items-center justify-center gap-1 rounded-lg px-2 py-1 text-[10px] text-muted-foreground hover:bg-surface">
+                <ChevronUp size={11} /> Close
+              </button>
+            </div>
+          )}
+        </div>
         <input
           value={body}
           onChange={(e) => setBody(e.target.value)}
@@ -321,7 +483,101 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
           <Send size={14} />
         </button>
       </div>
+
+      {showRich === "poll" && (
+        <PollComposer
+          onCancel={() => setShowRich(null)}
+          onSubmit={(q, opts) => { createRich("poll", { question: q, options: opts }, null); setShowRich(null); }}
+        />
+      )}
+      {showRich === "rsvp" && (
+        <RsvpComposer
+          onCancel={() => setShowRich(null)}
+          onSubmit={(title, when) => { createRich("rsvp", { title, when }, null); setShowRich(null); }}
+        />
+      )}
+      {showRich === "schedule" && (
+        <ScheduleComposer
+          onCancel={() => setShowRich(null)}
+          onSubmit={(text, when) => { scheduleText(text, when); setShowRich(null); }}
+        />
+      )}
     </div>
+  );
+}
+
+function SheetShell({ title, children, onCancel }: { title: string; children: React.ReactNode; onCancel: () => void }) {
+  return (
+    <div onClick={onCancel} className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm">
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-[480px] rounded-t-3xl border-t border-border bg-background p-5">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-bold text-foreground">{title}</h2>
+          <button onClick={onCancel} className="rounded-full bg-surface p-1.5 text-muted-foreground"><X size={14} /></button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function PollComposer({ onSubmit, onCancel }: { onSubmit: (q: string, opts: string[]) => void; onCancel: () => void }) {
+  const [question, setQuestion] = useState("");
+  const [options, setOptions] = useState<string[]>(["", ""]);
+  const clean = options.map((o) => o.trim()).filter(Boolean);
+  const canSubmit = question.trim().length > 0 && clean.length >= 2;
+  return (
+    <SheetShell title="New poll" onCancel={onCancel}>
+      <label className="mt-4 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Question</label>
+      <input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="What time works best?" className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground" />
+      <label className="mt-4 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Options</label>
+      <div className="mt-1 space-y-2">
+        {options.map((o, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <input value={o} onChange={(e) => setOptions(options.map((x, j) => (i === j ? e.target.value : x)))} placeholder={`Option ${i + 1}`} className="flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground" />
+            {options.length > 2 && (
+              <button onClick={() => setOptions(options.filter((_, j) => j !== i))} className="rounded-full bg-surface p-1.5 text-muted-foreground"><X size={12} /></button>
+            )}
+          </div>
+        ))}
+        {options.length < 6 && (
+          <button onClick={() => setOptions([...options, ""])} className="text-[11px] font-semibold text-teal">+ Add option</button>
+        )}
+      </div>
+      <button disabled={!canSubmit} onClick={() => onSubmit(question.trim(), clean)} className="mt-5 w-full rounded-full bg-gradient-brand py-3 text-sm font-bold text-primary-foreground disabled:opacity-40">Post poll</button>
+    </SheetShell>
+  );
+}
+
+function RsvpComposer({ onSubmit, onCancel }: { onSubmit: (title: string, when: string) => void; onCancel: () => void }) {
+  const [title, setTitle] = useState("");
+  const [when, setWhen] = useState("");
+  return (
+    <SheetShell title="Request RSVP" onCancel={onCancel}>
+      <label className="mt-4 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">What are you asking about?</label>
+      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Saturday scrimmage" className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground" />
+      <label className="mt-4 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">When (optional)</label>
+      <input value={when} onChange={(e) => setWhen(e.target.value)} placeholder="Sat Jul 12 · 2:00 PM · Rink A" className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground" />
+      <p className="mt-2 text-[10px] text-muted-foreground">Members reply Yes · No · Maybe. Live count updates instantly.</p>
+      <button disabled={!title.trim()} onClick={() => onSubmit(title.trim(), when.trim())} className="mt-5 w-full rounded-full bg-gradient-brand py-3 text-sm font-bold text-primary-foreground disabled:opacity-40">Post RSVP</button>
+    </SheetShell>
+  );
+}
+
+function ScheduleComposer({ onSubmit, onCancel }: { onSubmit: (text: string, when: string) => void; onCancel: () => void }) {
+  const [text, setText] = useState("");
+  const defaultWhen = new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16);
+  const [when, setWhen] = useState(defaultWhen);
+  const iso = when ? new Date(when).toISOString() : "";
+  const valid = text.trim().length > 0 && iso && new Date(iso) > new Date();
+  return (
+    <SheetShell title="Schedule message" onCancel={onCancel}>
+      <label className="mt-4 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Message</label>
+      <textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} placeholder="Reminder: pre-game meal at 5pm." className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground" />
+      <label className="mt-4 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Send at</label>
+      <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground" />
+      <p className="mt-2 text-[10px] text-muted-foreground">Message becomes visible to the group at that time.</p>
+      <button disabled={!valid} onClick={() => onSubmit(text.trim(), iso)} className="mt-5 w-full rounded-full bg-gradient-brand py-3 text-sm font-bold text-primary-foreground disabled:opacity-40">Schedule</button>
+    </SheetShell>
   );
 }
 
