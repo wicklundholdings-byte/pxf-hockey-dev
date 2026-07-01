@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { MessageSquare, Send, ArrowLeft, Users, Plus, Pin, X, Megaphone, User, BarChart3, CalendarClock, CheckCircle2, ChevronUp } from "lucide-react";
+import { MessageSquare, Send, ArrowLeft, Users, Plus, Pin, X, Megaphone, User, BarChart3, CalendarClock, CheckCircle2, ChevronUp, MessageCircle } from "lucide-react";
 import { listTeamMessageableContacts, type TeamContact } from "@/lib/messaging.functions";
 
 export const Route = createFileRoute("/_authenticated/coach/inbox")({
@@ -30,6 +30,7 @@ type Msg = {
   kind?: "text" | "poll" | "rsvp";
   metadata?: any;
   scheduled_for?: string | null;
+  parent_message_id?: string | null;
 };
 type PollVote = { message_id: string; user_id: string; option_index: number };
 type Camp = { id: string; name: string };
