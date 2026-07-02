@@ -63,6 +63,10 @@ function longDate(d: Date) {
   return d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
 }
 function isSameDay(a: Date, b: Date) { return toDateKey(a) === toDateKey(b); }
+function eventCoversDay(e: CalEvent, dk: string) {
+  if (!e.endDate) return e.date === dk;
+  return dk >= e.date && dk <= e.endDate;
+}
 
 // ---------- Mock seed (fallback / demo) ----------
 function useMockSeed(): { entities: Entity[]; events: CalEvent[] } {
@@ -474,7 +478,7 @@ function DayView({
   onCreateAt: (time: string) => void;
 }) {
   const key = toDateKey(cursor);
-  const dayEvents = events.filter((e) => e.date === key);
+  const dayEvents = events.filter((e) => eventCoversDay(e, key));
   const isToday = isSameDay(cursor, new Date());
 
   const slots: string[] = [];
@@ -725,7 +729,7 @@ function WeekView({
             </div>
             {days.map((d) => {
               const dk = toDateKey(d);
-              const dayEvents = events.filter((e) => e.date === dk);
+              const dayEvents = events.filter((e) => eventCoversDay(e, dk));
               return (
                 <div key={dk} className="relative rounded-lg border border-border/40">
                   {Array.from({ length: (HOUR_END - HOUR_START) * 2 + 1 }, (_, i) => (
@@ -796,7 +800,7 @@ function MonthView({
       <div className="mt-1 grid grid-cols-7 gap-1">
         {cells.map((d) => {
           const dk = toDateKey(d);
-          const dayEvents = events.filter((e) => e.date === dk);
+          const dayEvents = events.filter((e) => eventCoversDay(e, dk));
           const inMonth = d.getMonth() === cursor.getMonth();
           const isToday = isSameDay(d, today);
           return (
