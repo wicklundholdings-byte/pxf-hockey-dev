@@ -11,6 +11,16 @@ type DrillRow = { id: string; title: string; duration_minutes: number | null; th
 type CampRow = { id: string; name: string; num_days: number };
 type SavedSession = { id: string; name: string; totalMins: number; blocks: { uid: string; drillId: string; mins: number }[] };
 
+const MOCK_DRILLS: { id: string; title: string; tag: string }[] = [
+  { id: "fav-mock-edge", title: "Edge Mastery Series", tag: "Skating" },
+  { id: "fav-mock-slip", title: "Slip Deke Figure 8", tag: "Slip Training" },
+  { id: "fav-mock-dzc", title: "Defensive Zone Coverage", tag: "GameIQ" },
+];
+
+const MOCK_SESSIONS: { id: string; name: string; meta: string }[] = [
+  { id: "fav-mock-elite", name: "Elite Demo — Thu Jul 3", meta: "90 min · 6 blocks" },
+];
+
 function readSessions(): SavedSession[] {
   if (typeof window === "undefined") return [];
   try { const r = window.localStorage.getItem("pxf:sessions:v2"); return r ? JSON.parse(r) : []; } catch { return []; }
@@ -44,7 +54,7 @@ export function PlaybookFavorites() {
     })();
   }, [pf.campIds]);
 
-  const total = drills.length + sessions.length + camps.length;
+  const total = drills.length + sessions.length + camps.length + MOCK_DRILLS.length + MOCK_SESSIONS.length;
   const showDrills = filter === "all" || filter === "drill";
   const showSessions = filter === "all" || filter === "session";
   const showCamps = filter === "all" || filter === "camp";
@@ -53,8 +63,8 @@ export function PlaybookFavorites() {
     <div className="pt-1">
       <div className="flex gap-1 overflow-x-auto pb-1">
         <Chip active={filter === "all"} onClick={() => setFilter("all")}>All ({total})</Chip>
-        <Chip active={filter === "drill"} onClick={() => setFilter("drill")}>Drills ({drills.length})</Chip>
-        <Chip active={filter === "session"} onClick={() => setFilter("session")}>Sessions ({sessions.length})</Chip>
+        <Chip active={filter === "drill"} onClick={() => setFilter("drill")}>Drills ({drills.length + MOCK_DRILLS.length})</Chip>
+        <Chip active={filter === "session"} onClick={() => setFilter("session")}>Sessions ({sessions.length + MOCK_SESSIONS.length})</Chip>
         <Chip active={filter === "camp"} onClick={() => setFilter("camp")}>Camps ({camps.length})</Chip>
       </div>
 
@@ -66,8 +76,18 @@ export function PlaybookFavorites() {
         </div>
       ) : (
         <div className="mt-3 space-y-4">
-          {showDrills && drills.length > 0 && (
+          {showDrills && (drills.length > 0 || MOCK_DRILLS.length > 0) && (
             <Section title="Drills">
+              {MOCK_DRILLS.map((d) => (
+                <div key={d.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface text-teal"><Dumbbell size={16} /></div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-foreground">{d.title}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-teal">{d.tag}</p>
+                  </div>
+                  <Heart size={14} className="fill-red-500 text-red-500" />
+                </div>
+              ))}
               {drills.map((d) => (
                 <Link key={d.id} to="/drill-detail/$drillId" params={{ drillId: d.id }} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface text-teal"><Dumbbell size={16} /></div>
@@ -80,8 +100,18 @@ export function PlaybookFavorites() {
               ))}
             </Section>
           )}
-          {showSessions && sessions.length > 0 && (
+          {showSessions && (sessions.length > 0 || MOCK_SESSIONS.length > 0) && (
             <Section title="Sessions">
+              {MOCK_SESSIONS.map((s) => (
+                <div key={s.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface text-teal"><Clock size={16} /></div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-foreground">{s.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{s.meta}</p>
+                  </div>
+                  <Heart size={14} className="fill-red-500 text-red-500" />
+                </div>
+              ))}
               {sessions.map((s) => (
                 <Link key={s.id} to="/session-detail/$sessionId" params={{ sessionId: s.id }} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface text-teal"><Clock size={16} /></div>
