@@ -60,7 +60,8 @@ const DRILLS: Record<string, MockDrill> = {
   "fav-mock-edge": DEFAULT_DRILL,
 };
 
-const BACK_LABEL: Record<NonNullable<z.infer<typeof searchSchema>["from"]>, string> = {
+type FromKey = "library" | "mydrills" | "favorites";
+const BACK_LABEL: Record<FromKey, string> = {
   library: "Library",
   mydrills: "My Drills",
   favorites: "Favorites",
@@ -76,7 +77,7 @@ function PlaybookDrillDetail() {
   const { from } = Route.useSearch();
   const router = useRouter();
   const drill = DRILLS[drillId] ?? DEFAULT_DRILL;
-  const backLabel = from ? BACK_LABEL[from] : "Playbook";
+  const backLabel = from ? BACK_LABEL[from as FromKey] : "Playbook";
 
   const [openIdx, setOpenIdx] = useState(0);
   const [notes, setNotes] = useState(drill.coachNotes);
