@@ -100,7 +100,7 @@ export function PlaybookSessions() {
   const fav = usePlaybookFavorites();
 
   useEffect(() => {
-    const sync = () => setSessions(read());
+    const sync = () => setSessions(readWithMocks());
     sync();
     window.addEventListener("pxf:sessions-changed", sync);
     window.addEventListener("storage", sync);
