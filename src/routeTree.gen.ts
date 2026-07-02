@@ -62,6 +62,7 @@ import { Route as ParentInboxRouteImport } from './routes/parent.inbox'
 import { Route as ParentCampsRouteImport } from './routes/parent.camps'
 import { Route as OnboardingParentRouteImport } from './routes/onboarding.parent'
 import { Route as OnboardingCoachRouteImport } from './routes/onboarding.coach'
+import { Route as DrylandProgressAssignmentIdRouteImport } from './routes/dryland-progress.$assignmentId'
 import { Route as DrillDetailDrillIdRouteImport } from './routes/drill-detail.$drillId'
 import { Route as CombineAthleteIdRouteImport } from './routes/combine.$athleteId'
 import { Route as CoachesSlugRouteImport } from './routes/coaches.$slug'
@@ -439,6 +440,12 @@ const OnboardingCoachRoute = OnboardingCoachRouteImport.update({
   path: '/coach',
   getParentRoute: () => OnboardingRoute,
 } as any)
+const DrylandProgressAssignmentIdRoute =
+  DrylandProgressAssignmentIdRouteImport.update({
+    id: '/dryland-progress/$assignmentId',
+    path: '/dryland-progress/$assignmentId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DrillDetailDrillIdRoute = DrillDetailDrillIdRouteImport.update({
   id: '/drill-detail/$drillId',
   path: '/drill-detail/$drillId',
@@ -1111,6 +1118,7 @@ export interface FileRoutesByFullPath {
   '/coaches/$slug': typeof CoachesSlugRoute
   '/combine/$athleteId': typeof CombineAthleteIdRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/dryland-progress/$assignmentId': typeof DrylandProgressAssignmentIdRoute
   '/onboarding/coach': typeof OnboardingCoachRoute
   '/onboarding/parent': typeof OnboardingParentRoute
   '/parent/camps': typeof ParentCampsRoute
@@ -1272,6 +1280,7 @@ export interface FileRoutesByTo {
   '/coaches/$slug': typeof CoachesSlugRoute
   '/combine/$athleteId': typeof CombineAthleteIdRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/dryland-progress/$assignmentId': typeof DrylandProgressAssignmentIdRoute
   '/onboarding/coach': typeof OnboardingCoachRoute
   '/onboarding/parent': typeof OnboardingParentRoute
   '/parent/camps': typeof ParentCampsRoute
@@ -1433,6 +1442,7 @@ export interface FileRoutesById {
   '/coaches/$slug': typeof CoachesSlugRoute
   '/combine/$athleteId': typeof CombineAthleteIdRoute
   '/drill-detail/$drillId': typeof DrillDetailDrillIdRoute
+  '/dryland-progress/$assignmentId': typeof DrylandProgressAssignmentIdRoute
   '/onboarding/coach': typeof OnboardingCoachRoute
   '/onboarding/parent': typeof OnboardingParentRoute
   '/parent/camps': typeof ParentCampsRoute
@@ -1601,6 +1611,7 @@ export interface FileRouteTypes {
     | '/coaches/$slug'
     | '/combine/$athleteId'
     | '/drill-detail/$drillId'
+    | '/dryland-progress/$assignmentId'
     | '/onboarding/coach'
     | '/onboarding/parent'
     | '/parent/camps'
@@ -1762,6 +1773,7 @@ export interface FileRouteTypes {
     | '/coaches/$slug'
     | '/combine/$athleteId'
     | '/drill-detail/$drillId'
+    | '/dryland-progress/$assignmentId'
     | '/onboarding/coach'
     | '/onboarding/parent'
     | '/parent/camps'
@@ -1922,6 +1934,7 @@ export interface FileRouteTypes {
     | '/coaches/$slug'
     | '/combine/$athleteId'
     | '/drill-detail/$drillId'
+    | '/dryland-progress/$assignmentId'
     | '/onboarding/coach'
     | '/onboarding/parent'
     | '/parent/camps'
@@ -2087,6 +2100,7 @@ export interface RootRouteChildren {
   CoachesSlugRoute: typeof CoachesSlugRoute
   CombineAthleteIdRoute: typeof CombineAthleteIdRoute
   DrillDetailDrillIdRoute: typeof DrillDetailDrillIdRoute
+  DrylandProgressAssignmentIdRoute: typeof DrylandProgressAssignmentIdRoute
   PaymentsCheckoutRoute: typeof PaymentsCheckoutRoute
   PaymentsConfirmationRoute: typeof PaymentsConfirmationRoute
   PaymentsConnectRoute: typeof PaymentsConnectRoute
@@ -2481,6 +2495,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/onboarding/coach'
       preLoaderRoute: typeof OnboardingCoachRouteImport
       parentRoute: typeof OnboardingRoute
+    }
+    '/dryland-progress/$assignmentId': {
+      id: '/dryland-progress/$assignmentId'
+      path: '/dryland-progress/$assignmentId'
+      fullPath: '/dryland-progress/$assignmentId'
+      preLoaderRoute: typeof DrylandProgressAssignmentIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/drill-detail/$drillId': {
       id: '/drill-detail/$drillId'
@@ -3787,6 +3808,7 @@ const rootRouteChildren: RootRouteChildren = {
   CoachesSlugRoute: CoachesSlugRoute,
   CombineAthleteIdRoute: CombineAthleteIdRoute,
   DrillDetailDrillIdRoute: DrillDetailDrillIdRoute,
+  DrylandProgressAssignmentIdRoute: DrylandProgressAssignmentIdRoute,
   PaymentsCheckoutRoute: PaymentsCheckoutRoute,
   PaymentsConfirmationRoute: PaymentsConfirmationRoute,
   PaymentsConnectRoute: PaymentsConnectRoute,
