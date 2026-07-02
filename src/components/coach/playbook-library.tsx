@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Search, Filter, Clock, Users, Snowflake, Zap, Brain, Dumbbell } from "lucide-react";
+import { Search, Filter, Clock, Users, Snowflake, Zap, Brain, Dumbbell, Clapperboard } from "lucide-react";
+import { toast } from "sonner";
 import { CoachDrylandLibrary } from "./dryland-library";
 
 type CatId = "all" | "skating" | "slip" | "gameiq" | "dryland";
@@ -198,28 +199,29 @@ export function PlaybookLibrary() {
       </div>
 
       <div className="mt-5 space-y-6">
-        {showSkating && (
+        {cat === "gameiq" && <GameIQComingSoon />}
+        {cat !== "gameiq" && showSkating && (
           <CategoryGroup
             title="Skating"
             blurb="Edge, crossover, and stride progressions for power and control."
             items={filter(SKATING)}
           />
         )}
-        {showSlip && (
+        {cat !== "gameiq" && showSlip && (
           <CategoryGroup
             title="Slip Training"
             blurb="Deceptive edge and puck-handling circuits built for game creativity."
             items={filter(SLIP)}
           />
         )}
-        {showGameIQ && (
+        {cat !== "gameiq" && showGameIQ && (
           <CategoryGroup
             title="GameIQ"
             blurb="Reads, positioning, and decision-making concepts for competitive play."
             items={filter(GAMEIQ)}
           />
         )}
-        {showDryland && (
+        {cat !== "gameiq" && showDryland && (
           <div>
             <CoachDrylandLibrary />
           </div>
@@ -275,6 +277,27 @@ function MockCardRow({ card }: { card: MockCard }) {
       <p className="mt-2 text-[11px] text-muted-foreground">{card.description}</p>
       <button className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-brand py-2 text-xs font-bold text-primary-foreground">
         <Users size={13} /> Assign to athletes
+      </button>
+    </div>
+  );
+}
+
+function GameIQComingSoon() {
+  return (
+    <div className="flex flex-col items-center rounded-2xl border border-teal/20 bg-card p-8 text-center">
+      <Clapperboard size={48} className="text-teal" />
+      <p className="mt-4 text-lg font-bold text-foreground">GameIQ</p>
+      <p className="mt-1 text-xs font-bold uppercase tracking-[0.3em] text-teal">COMING SOON</p>
+      <p className="mt-4 max-w-[260px] text-sm leading-relaxed text-muted-foreground">
+        Film review, play diagramming, and in-game decision training — built specifically for hockey coaches.
+        <br /><br />
+        Currently in development.
+      </p>
+      <button
+        onClick={() => toast("You'll be notified when GameIQ launches ✓")}
+        className="mt-6 inline-flex items-center gap-2 rounded-full border border-teal px-5 py-2 text-xs font-bold text-teal"
+      >
+        Notify me when it launches <span className="text-teal">→</span>
       </button>
     </div>
   );

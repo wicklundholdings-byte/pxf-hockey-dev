@@ -41,8 +41,8 @@ function writeAll(list: MyDrill[]) {
   window.dispatchEvent(new CustomEvent("pxf:my-drills-changed"));
 }
 
-const CATEGORIES = ["Skating", "Slip Training", "GameIQ", "Dryland", "Other"] as const;
-const FULL_CATEGORIES = ["Skating", "Slip Training", "GameIQ", "Dryland", "Offensive", "Defensive", "Other"] as const;
+const CATEGORIES = ["Skating", "Slip Training", "Dryland", "Other"] as const;
+const FULL_CATEGORIES = ["Skating", "Slip Training", "Dryland", "Offensive", "Defensive", "Other"] as const;
 const LEVELS = ["Beginner", "Intermediate", "Advanced"] as const;
 
 const MOCK_DRILLS: MyDrill[] = [
