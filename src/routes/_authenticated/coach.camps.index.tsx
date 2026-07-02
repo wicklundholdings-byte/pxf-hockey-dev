@@ -1,10 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Plus, ChevronLeft, ChevronRight, X, Star, Calendar as CalIcon,
-} from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, X, Star } from "lucide-react";
 import { BlockForStaff } from "@/components/block-for-staff";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/")({
