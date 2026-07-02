@@ -507,9 +507,49 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
                     ) : (
                       <p className="whitespace-pre-wrap">{renderWithMentions(m.body)}</p>
                     )}
+                    {Array.isArray(m.attachments) && m.attachments.length > 0 && (
+                      <div className="mt-2 grid grid-cols-2 gap-1.5">
+                        {(m.attachments as any[]).map((a, i) => (
+                          a.type?.startsWith("image/") ? (
+                            <a key={i} href={a.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-black/10">
+                              <img src={a.url} alt={a.name ?? "attachment"} className="h-32 w-full object-cover" />
+                            </a>
+                          ) : (
+                            <a key={i} href={a.url} target="_blank" rel="noreferrer" className={"flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-[11px] " + (mine ? "border-black/20 bg-black/10" : "border-border bg-surface")}>
+                              <Paperclip size={11} /> <span className="truncate">{a.name ?? "file"}</span>
+                            </a>
+                          )
+                        ))}
+                      </div>
+                    )}
                     <p className={"mt-0.5 text-[9px] " + (mine ? "text-black/60" : "text-muted-foreground")}>
                       {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      {mine && (() => {
+                        const others = reads.filter((r) => r.message_id === m.id && r.user_id !== currentUserId);
+                        return others.length > 0 ? (
+                          <span className="ml-1 inline-flex items-center gap-0.5"><CheckCheck size={10} /> {others.length}</span>
+                        ) : (
+                          <span className="ml-1 inline-flex items-center gap-0.5 opacity-60"><Check size={10} /></span>
+                        );
+                      })()}
                     </p>
+                    {(() => {
+                      const rx = reactions.filter((r) => r.message_id === m.id);
+                      if (rx.length === 0) return null;
+                      const grouped = rx.reduce<Record<string, Reaction[]>>((acc, r) => { (acc[r.emoji] ??= []).push(r); return acc; }, {});
+                      return (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {Object.entries(grouped).map(([emoji, list]) => {
+                            const mineReacted = list.some((r) => r.user_id === currentUserId);
+                            return (
+                              <button key={emoji} onClick={() => toggleReaction(m.id, emoji)} className={"flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] " + (mineReacted ? "border-teal bg-teal/20 text-teal" : mine ? "border-black/20 bg-black/10" : "border-border bg-surface")}>
+                                <span>{emoji}</span><span className="font-semibold">{list.length}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                     <div className="mt-1 flex items-center gap-2">
                       <button
                         onClick={() => setOpenThread(m)}
@@ -517,6 +557,18 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
                       >
                         <MessageCircle size={10} /> {rc > 0 ? `${rc} repl${rc === 1 ? "y" : "ies"}` : "Reply"}
                       </button>
+                      <div className="relative">
+                        <button onClick={() => setReactionFor(reactionFor === m.id ? null : m.id)} className={"flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] " + (mine ? "bg-black/10 text-black/70" : "bg-surface text-muted-foreground")}>
+                          <Smile size={10} />
+                        </button>
+                        {reactionFor === m.id && (
+                          <div className="absolute bottom-6 left-0 z-30 flex gap-1 rounded-full border border-border bg-card p-1 shadow-xl">
+                            {["👍","❤️","😂","🎉","🔥","👏"].map((e) => (
+                              <button key={e} onClick={() => toggleReaction(m.id, e)} className="grid h-7 w-7 place-items-center rounded-full text-sm hover:bg-surface">{e}</button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <button
@@ -536,6 +588,18 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
         <div className="mb-1 flex items-center justify-between gap-2 rounded-xl border border-teal/30 bg-teal/5 px-3 py-1.5">
           <p className="truncate text-[11px] text-muted-foreground"><span className="font-bold text-teal">Replying:</span> {replyTo.body?.slice(0, 60) ?? "message"}</p>
           <button onClick={() => setReplyTo(null)} className="text-muted-foreground"><X size={12} /></button>
+        </div>
+      )}
+
+      {pendingFiles.length > 0 && (
+        <div className="mb-1 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2">
+          {pendingFiles.map((f, i) => (
+            <div key={i} className="flex items-center gap-1 rounded-full bg-card px-2 py-1 text-[10px]">
+              <Paperclip size={10} /> <span className="max-w-[120px] truncate">{f.name}</span>
+              <button onClick={() => setPendingFiles((prev) => prev.filter((_, j) => j !== i))} className="text-muted-foreground"><X size={10} /></button>
+            </div>
+          ))}
+          {uploading && <span className="text-[10px] text-muted-foreground">Uploading…</span>}
         </div>
       )}
 
@@ -566,6 +630,25 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
           )}
         </div>
         <input
+          ref={fileRef}
+          type="file"
+          multiple
+          accept="image/*,application/pdf"
+          hidden
+          onChange={(e) => {
+            const files = Array.from(e.target.files ?? []);
+            if (files.length) setPendingFiles((prev) => [...prev, ...files].slice(0, 6));
+            if (fileRef.current) fileRef.current.value = "";
+          }}
+        />
+        <button
+          onClick={() => fileRef.current?.click()}
+          className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-muted-foreground"
+          title="Attach"
+        >
+          <Paperclip size={16} />
+        </button>
+        <input
           value={body}
           onChange={(e) => setBody(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), send())}
@@ -574,7 +657,7 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
         />
         <button
           onClick={send}
-          disabled={sending || !body.trim()}
+          disabled={sending || (!body.trim() && pendingFiles.length === 0)}
           className="grid h-10 w-10 place-items-center rounded-full bg-gradient-brand text-primary-foreground disabled:opacity-40"
         >
           <Send size={14} />
