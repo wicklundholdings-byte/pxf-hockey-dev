@@ -491,7 +491,29 @@ function EliteCoachDashboard() {
       <section>
         <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Today · {todayLabel}</h2>
         {todayEvents.length === 0 ? (
-          <p className="mt-2 text-xs text-muted-foreground">No sessions today</p>
+          <div className="mt-2 space-y-2">
+            {[
+              { id: "m1", kind: "private" as const, time: "6:00 AM", title: "Private Session · Jake Andersson", sub: "Rink 4 · Burnaby 8 Rinks · 60 min", meta: null as string | null, to: "/coach/bookings" },
+              { id: "m2", kind: "practice" as const, time: "4:00 PM", title: "Practice · Elite Demo Team", sub: "Rink 2 · Burnaby 8 Rinks · 90 min", meta: "✓11 · ?1 · ✗2", to: "/coach/teams" },
+              { id: "m3", kind: "practice" as const, time: "7:30 PM", title: "Practice · Atom Rep", sub: "Rink 1 · Burnaby 8 Rinks · 60 min", meta: "✓8 · ?2", to: "/coach/teams" },
+            ].map((e) => (
+              <Link
+                key={e.id}
+                to={e.to as any}
+                className={`flex items-center gap-3 rounded-2xl border border-border border-l-4 bg-card p-3 ${e.kind === "practice" && e.id === "m3" ? "border-l-blue-500" : kindColor[e.kind]}`}
+              >
+                <div className="w-14 shrink-0">
+                  <p className="text-sm font-bold">{e.time}</p>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">{e.title}</p>
+                  <p className="truncate text-[11px] text-muted-foreground">{e.sub}</p>
+                  {e.meta && <p className="mt-0.5 text-[11px] font-bold text-teal">{e.meta}</p>}
+                </div>
+                <ChevronRight size={14} className="text-muted-foreground" />
+              </Link>
+            ))}
+          </div>
         ) : (
           <div className="mt-2 space-y-2">
             {todayEvents.map((e) => (
@@ -530,15 +552,15 @@ function EliteCoachDashboard() {
         <div className="mt-2 flex gap-2">
           <Link to="/coach/financials" className="flex-1 rounded-2xl border border-border bg-card px-3 py-2.5 text-center">
             <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Revenue</p>
-            <p className="mt-0.5 text-sm font-bold text-teal">{fmtMoney(revenue.grossThis)}</p>
+            <p className="mt-0.5 text-sm font-bold text-teal">$4,641</p>
           </Link>
           <Link to="/coach/financials" className="flex-1 rounded-2xl border border-border bg-card px-3 py-2.5 text-center">
             <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Registrations</p>
-            <p className="mt-0.5 text-sm font-bold">{paidCount}</p>
+            <p className="mt-0.5 text-sm font-bold">17</p>
           </Link>
           <Link to="/coach/financials" className="flex-1 rounded-2xl border border-border bg-card px-3 py-2.5 text-center">
             <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Pending</p>
-            <p className="mt-0.5 text-sm font-bold text-amber-400">{fmtMoney(pendingDollars)}</p>
+            <p className="mt-0.5 text-sm font-bold text-amber-400">$5,288</p>
           </Link>
         </div>
       </section>
@@ -551,8 +573,10 @@ function EliteCoachDashboard() {
         </div>
         <div className="-mx-5 mt-2 flex gap-3 overflow-x-auto px-5 pb-1">
           {activeCamps.map((c) => {
-            const filled = regsByCamp.get(c.id) ?? 0;
-            const rev = revenueByCamp.get(c.id) ?? 0;
+            const isSkatingFlow = /3\s*day\s*skating\s*flow/i.test(c.name);
+            const filled = isSkatingFlow ? 6 : (regsByCamp.get(c.id) ?? 0);
+            const capacity = isSkatingFlow ? 8 : (c.capacity || 0);
+            const rev = isSkatingFlow ? 120000 : (revenueByCamp.get(c.id) ?? 0);
             const dayInfo = campDayMap.get(c.id);
             return (
               <Link
@@ -570,10 +594,12 @@ function EliteCoachDashboard() {
                   )}
                 </div>
                 <div className="mt-3 flex items-center justify-between text-[11px]">
-                  <span className="text-muted-foreground">{filled} / {c.capacity || 0} spots</span>
+                  <span className="text-muted-foreground">{filled} / {capacity} spots</span>
                   <span className="font-bold text-teal">{fmtMoney(rev)}</span>
                 </div>
-                {dayInfo?.next && (
+                {isSkatingFlow ? (
+                  <p className="mt-1 text-[10px] text-muted-foreground">Next: Mon, Jul 6 · 7:45 AM</p>
+                ) : dayInfo?.next && (
                   <p className="mt-1 text-[10px] text-muted-foreground">
                     Next: {fmtEventDate(dayInfo.next.date)}{dayInfo.next.start ? ` · ${fmtTime(dayInfo.next.start)}` : ""}
                   </p>
@@ -600,13 +626,27 @@ function EliteCoachDashboard() {
           <Link to="/coach/bookings" className="text-[11px] font-semibold text-teal">View all ›</Link>
         </div>
         {privates.length === 0 ? (
-          <button
-            type="button"
-            onClick={() => setShowBookPrivate(true)}
-            className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-teal/40 bg-transparent p-4 text-sm font-semibold text-teal"
-          >
-            <Plus size={16} /> Book a Private
-          </button>
+          <div className="mt-2 space-y-2">
+            {[
+              { id: "pv1", date: "Thu Jul 3 · 6:00 AM", name: "Jake Andersson", meta: "60 min · Rink 4", focus: "Skating + Edges" },
+              { id: "pv2", date: "Fri Jul 4 · 7:00 AM", name: "Liam Carter", meta: "60 min · Rink 2", focus: "Shooting Focus" },
+              { id: "pv3", date: "Sat Jul 5 · 8:00 AM", name: "Emma Walsh", meta: "45 min · Rink 1", focus: "Goalie Training" },
+            ].map((p) => {
+              const inits = p.name.split(/\s+/).slice(0, 2).map((w) => w[0]).join("");
+              return (
+                <div key={p.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-500/15 text-xs font-bold text-blue-400">
+                    {inits}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{p.date}</p>
+                    <p className="truncate text-[11px] text-muted-foreground">{p.name} · {p.meta}</p>
+                    <p className="mt-0.5 truncate text-[11px] font-semibold text-teal">{p.focus}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
           <div className="mt-2 space-y-2">
             {privates.slice(0, 3).map((p) => {
@@ -632,6 +672,13 @@ function EliteCoachDashboard() {
             })}
           </div>
         )}
+        <button
+          type="button"
+          onClick={() => setShowBookPrivate(true)}
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-transparent p-3 text-sm font-semibold text-teal"
+        >
+          <Plus size={16} /> Book a Private
+        </button>
       </section>
 
       {/* My Teams */}
