@@ -203,6 +203,12 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
   const [showRich, setShowRich] = useState<null | "poll" | "rsvp" | "schedule">(null);
   const [openThread, setOpenThread] = useState<Msg | null>(null);
   const [replyTo, setReplyTo] = useState<Msg | null>(null);
+  const [reactions, setReactions] = useState<Reaction[]>([]);
+  const [reads, setReads] = useState<ReadRow[]>([]);
+  const [reactionFor, setReactionFor] = useState<string | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   async function load() {
@@ -223,6 +229,17 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
     } else {
       setVotes([]);
     }
+    const msgIds = (data ?? []).map((m: any) => m.id);
+    if (msgIds.length > 0) {
+      const [{ data: rx }, { data: rd }] = await Promise.all([
+        supabase.from("message_reactions").select("id,message_id,user_id,emoji").in("message_id", msgIds),
+        supabase.from("message_reads").select("message_id,user_id,read_at").in("message_id", msgIds),
+      ]);
+      setReactions((rx ?? []) as Reaction[]);
+      setReads((rd ?? []) as ReadRow[]);
+    } else {
+      setReactions([]); setReads([]);
+    }
   }
 
   useEffect(() => {
@@ -240,11 +257,36 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
           return payload.eventType === "DELETE" ? others : [...others, payload.new as PollVote];
         });
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "message_reactions" }, (payload) => {
+        setReactions((prev) => {
+          if (payload.eventType === "DELETE") return prev.filter((r) => r.id !== (payload.old as any).id);
+          const row = payload.new as Reaction;
+          if (prev.some((r) => r.id === row.id)) return prev;
+          return [...prev, row];
+        });
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "message_reads" }, (payload) => {
+        const row = payload.new as ReadRow;
+        setReads((prev) => (prev.some((r) => r.message_id === row.message_id && r.user_id === row.user_id) ? prev : [...prev, row]));
+      })
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
   }, [convo.id]);
+
+  // Mark visible messages from others as read
+  useEffect(() => {
+    const unread = messages.filter((m) =>
+      m.sender_id !== currentUserId &&
+      !reads.some((r) => r.message_id === m.id && r.user_id === currentUserId),
+    );
+    if (unread.length === 0) return;
+    const rows = unread.map((m) => ({ message_id: m.id, user_id: currentUserId }));
+    supabase.from("message_reads").upsert(rows, { onConflict: "message_id,user_id", ignoreDuplicates: true }).then(() => {
+      setReads((prev) => [...prev, ...rows.map((r) => ({ ...r, read_at: new Date().toISOString() }))]);
+    });
+  }, [messages, currentUserId, reads.length]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -252,15 +294,27 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
 
   async function send() {
     const text = body.trim();
-    if (!text) return;
+    if (!text && pendingFiles.length === 0) return;
     setSending(true);
+    setUploading(pendingFiles.length > 0);
+    const attachments: Array<{ url: string; name: string; type: string }> = [];
+    for (const f of pendingFiles) {
+      const path = `${currentUserId}/${convo.id}/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+      const { error: upErr } = await supabase.storage.from("message-attachments").upload(path, f, { upsert: false });
+      if (upErr) { alert("Upload failed: " + upErr.message); setSending(false); setUploading(false); return; }
+      const { data: signed } = await supabase.storage.from("message-attachments").createSignedUrl(path, 60 * 60 * 24 * 7);
+      attachments.push({ url: signed?.signedUrl ?? "", name: f.name, type: f.type });
+    }
+    setUploading(false);
+    setPendingFiles([]);
     setBody("");
     const parent = replyTo?.id ?? null;
     const insertPayload: any = {
       conversation_id: convo.id,
       sender_id: currentUserId,
-      body: text,
+      body: text || null,
       kind: "text",
+      attachments,
     };
     if (parent) insertPayload.parent_message_id = parent;
     const { data, error } = await supabase.from("messages").insert(insertPayload).select("*").single();
@@ -274,6 +328,18 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
       setMessages((prev) => (prev.some((m) => m.id === (data as Msg).id) ? prev : [...prev, data as Msg]));
       setReplyTo(null);
     }
+  }
+
+  async function toggleReaction(messageId: string, emoji: string) {
+    const mine = reactions.find((r) => r.message_id === messageId && r.user_id === currentUserId && r.emoji === emoji);
+    if (mine) {
+      await supabase.from("message_reactions").delete().eq("id", mine.id);
+      setReactions((prev) => prev.filter((r) => r.id !== mine.id));
+    } else {
+      const { data } = await supabase.from("message_reactions").insert({ message_id: messageId, user_id: currentUserId, emoji }).select("*").single();
+      if (data) setReactions((prev) => [...prev, data as Reaction]);
+    }
+    setReactionFor(null);
   }
 
   async function togglePin(m: Msg) {
