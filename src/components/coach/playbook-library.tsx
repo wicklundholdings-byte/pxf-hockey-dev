@@ -281,3 +281,24 @@ function MockCardRow({ card }: { card: MockCard }) {
     </div>
   );
 }
+
+function GameIQComingSoon() {
+  return (
+    <div className="flex flex-col items-center rounded-2xl border border-teal/20 bg-card p-8 text-center">
+      <Clapperboard size={48} className="text-teal" />
+      <p className="mt-4 text-lg font-bold text-foreground">GameIQ</p>
+      <p className="mt-1 text-xs font-bold uppercase tracking-[0.3em] text-teal">COMING SOON</p>
+      <p className="mt-4 max-w-[260px] text-sm leading-relaxed text-muted-foreground">
+        Film review, play diagramming, and in-game decision training — built specifically for hockey coaches.
+        <br /><br />
+        Currently in development.
+      </p>
+      <button
+        onClick={() => toast("You'll be notified when GameIQ launches ✓")}
+        className="mt-6 inline-flex items-center gap-2 rounded-full border border-teal px-5 py-2 text-xs font-bold text-teal"
+      >
+        Notify me when it launches <span className="text-teal">→</span>
+      </button>
+    </div>
+  );
+}
