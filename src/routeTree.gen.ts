@@ -58,6 +58,7 @@ import { Route as ParentUpdatesRouteImport } from './routes/parent.updates'
 import { Route as ParentTrainRouteImport } from './routes/parent.train'
 import { Route as ParentScheduleRouteImport } from './routes/parent.schedule'
 import { Route as ParentProfileRouteImport } from './routes/parent.profile'
+import { Route as ParentPlaybookRouteImport } from './routes/parent.playbook'
 import { Route as ParentInboxRouteImport } from './routes/parent.inbox'
 import { Route as ParentCampsRouteImport } from './routes/parent.camps'
 import { Route as OnboardingParentRouteImport } from './routes/onboarding.parent'
@@ -123,6 +124,7 @@ import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_auth
 import { Route as ParentTeamsTeamIdIndexRouteImport } from './routes/parent.teams.$teamId.index'
 import { Route as AuthenticatedCoachTeamsIndexRouteImport } from './routes/_authenticated/coach.teams.index'
 import { Route as AuthenticatedCoachCampsIndexRouteImport } from './routes/_authenticated/coach.camps.index'
+import { Route as ParentTrainingSessionProgramIdSessionIdxRouteImport } from './routes/parent.training-session.$programId.$sessionIdx'
 import { Route as ParentTrainVideoVideoIdRouteImport } from './routes/parent.train.video.$videoId'
 import { Route as ParentTrainSessionSessionIdRouteImport } from './routes/parent.train.session.$sessionId'
 import { Route as ParentTeamsTeamIdStatsRouteImport } from './routes/parent.teams.$teamId.stats'
@@ -418,6 +420,11 @@ const ParentScheduleRoute = ParentScheduleRouteImport.update({
 const ParentProfileRoute = ParentProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => ParentRoute,
+} as any)
+const ParentPlaybookRoute = ParentPlaybookRouteImport.update({
+  id: '/playbook',
+  path: '/playbook',
   getParentRoute: () => ParentRoute,
 } as any)
 const ParentInboxRoute = ParentInboxRouteImport.update({
@@ -772,6 +779,12 @@ const AuthenticatedCoachCampsIndexRoute =
     path: '/camps/',
     getParentRoute: () => AuthenticatedCoachRoute,
   } as any)
+const ParentTrainingSessionProgramIdSessionIdxRoute =
+  ParentTrainingSessionProgramIdSessionIdxRouteImport.update({
+    id: '/training-session/$programId/$sessionIdx',
+    path: '/training-session/$programId/$sessionIdx',
+    getParentRoute: () => ParentRoute,
+  } as any)
 const ParentTrainVideoVideoIdRoute = ParentTrainVideoVideoIdRouteImport.update({
   id: '/video/$videoId',
   path: '/video/$videoId',
@@ -1123,6 +1136,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/parent': typeof OnboardingParentRoute
   '/parent/camps': typeof ParentCampsRoute
   '/parent/inbox': typeof ParentInboxRoute
+  '/parent/playbook': typeof ParentPlaybookRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
   '/parent/train': typeof ParentTrainRouteWithChildren
@@ -1212,6 +1226,7 @@ export interface FileRoutesByFullPath {
   '/parent/teams/$teamId/stats': typeof ParentTeamsTeamIdStatsRoute
   '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
   '/parent/train/video/$videoId': typeof ParentTrainVideoVideoIdRoute
+  '/parent/training-session/$programId/$sessionIdx': typeof ParentTrainingSessionProgramIdSessionIdxRoute
   '/coach/camps/': typeof AuthenticatedCoachCampsIndexRoute
   '/coach/teams/': typeof AuthenticatedCoachTeamsIndexRoute
   '/parent/teams/$teamId/': typeof ParentTeamsTeamIdIndexRoute
@@ -1285,6 +1300,7 @@ export interface FileRoutesByTo {
   '/onboarding/parent': typeof OnboardingParentRoute
   '/parent/camps': typeof ParentCampsRoute
   '/parent/inbox': typeof ParentInboxRoute
+  '/parent/playbook': typeof ParentPlaybookRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
   '/parent/train': typeof ParentTrainRouteWithChildren
@@ -1370,6 +1386,7 @@ export interface FileRoutesByTo {
   '/parent/teams/$teamId/stats': typeof ParentTeamsTeamIdStatsRoute
   '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
   '/parent/train/video/$videoId': typeof ParentTrainVideoVideoIdRoute
+  '/parent/training-session/$programId/$sessionIdx': typeof ParentTrainingSessionProgramIdSessionIdxRoute
   '/coach/camps': typeof AuthenticatedCoachCampsIndexRoute
   '/coach/teams': typeof AuthenticatedCoachTeamsIndexRoute
   '/parent/teams/$teamId': typeof ParentTeamsTeamIdIndexRoute
@@ -1447,6 +1464,7 @@ export interface FileRoutesById {
   '/onboarding/parent': typeof OnboardingParentRoute
   '/parent/camps': typeof ParentCampsRoute
   '/parent/inbox': typeof ParentInboxRoute
+  '/parent/playbook': typeof ParentPlaybookRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
   '/parent/train': typeof ParentTrainRouteWithChildren
@@ -1536,6 +1554,7 @@ export interface FileRoutesById {
   '/parent/teams/$teamId/stats': typeof ParentTeamsTeamIdStatsRoute
   '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
   '/parent/train/video/$videoId': typeof ParentTrainVideoVideoIdRoute
+  '/parent/training-session/$programId/$sessionIdx': typeof ParentTrainingSessionProgramIdSessionIdxRoute
   '/_authenticated/coach/camps/': typeof AuthenticatedCoachCampsIndexRoute
   '/_authenticated/coach/teams/': typeof AuthenticatedCoachTeamsIndexRoute
   '/parent/teams/$teamId/': typeof ParentTeamsTeamIdIndexRoute
@@ -1616,6 +1635,7 @@ export interface FileRouteTypes {
     | '/onboarding/parent'
     | '/parent/camps'
     | '/parent/inbox'
+    | '/parent/playbook'
     | '/parent/profile'
     | '/parent/schedule'
     | '/parent/train'
@@ -1705,6 +1725,7 @@ export interface FileRouteTypes {
     | '/parent/teams/$teamId/stats'
     | '/parent/train/session/$sessionId'
     | '/parent/train/video/$videoId'
+    | '/parent/training-session/$programId/$sessionIdx'
     | '/coach/camps/'
     | '/coach/teams/'
     | '/parent/teams/$teamId/'
@@ -1778,6 +1799,7 @@ export interface FileRouteTypes {
     | '/onboarding/parent'
     | '/parent/camps'
     | '/parent/inbox'
+    | '/parent/playbook'
     | '/parent/profile'
     | '/parent/schedule'
     | '/parent/train'
@@ -1863,6 +1885,7 @@ export interface FileRouteTypes {
     | '/parent/teams/$teamId/stats'
     | '/parent/train/session/$sessionId'
     | '/parent/train/video/$videoId'
+    | '/parent/training-session/$programId/$sessionIdx'
     | '/coach/camps'
     | '/coach/teams'
     | '/parent/teams/$teamId'
@@ -1939,6 +1962,7 @@ export interface FileRouteTypes {
     | '/onboarding/parent'
     | '/parent/camps'
     | '/parent/inbox'
+    | '/parent/playbook'
     | '/parent/profile'
     | '/parent/schedule'
     | '/parent/train'
@@ -2028,6 +2052,7 @@ export interface FileRouteTypes {
     | '/parent/teams/$teamId/stats'
     | '/parent/train/session/$sessionId'
     | '/parent/train/video/$videoId'
+    | '/parent/training-session/$programId/$sessionIdx'
     | '/_authenticated/coach/camps/'
     | '/_authenticated/coach/teams/'
     | '/parent/teams/$teamId/'
@@ -2466,6 +2491,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/parent/profile'
       preLoaderRoute: typeof ParentProfileRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/parent/playbook': {
+      id: '/parent/playbook'
+      path: '/playbook'
+      fullPath: '/parent/playbook'
+      preLoaderRoute: typeof ParentPlaybookRouteImport
       parentRoute: typeof ParentRoute
     }
     '/parent/inbox': {
@@ -2922,6 +2954,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/coach/camps/'
       preLoaderRoute: typeof AuthenticatedCoachCampsIndexRouteImport
       parentRoute: typeof AuthenticatedCoachRoute
+    }
+    '/parent/training-session/$programId/$sessionIdx': {
+      id: '/parent/training-session/$programId/$sessionIdx'
+      path: '/training-session/$programId/$sessionIdx'
+      fullPath: '/parent/training-session/$programId/$sessionIdx'
+      preLoaderRoute: typeof ParentTrainingSessionProgramIdSessionIdxRouteImport
+      parentRoute: typeof ParentRoute
     }
     '/parent/train/video/$videoId': {
       id: '/parent/train/video/$videoId'
@@ -3717,6 +3756,7 @@ const ParentTeamsTeamIdRouteWithChildren =
 interface ParentRouteChildren {
   ParentCampsRoute: typeof ParentCampsRoute
   ParentInboxRoute: typeof ParentInboxRoute
+  ParentPlaybookRoute: typeof ParentPlaybookRoute
   ParentProfileRoute: typeof ParentProfileRoute
   ParentScheduleRoute: typeof ParentScheduleRoute
   ParentTrainRoute: typeof ParentTrainRouteWithChildren
@@ -3730,11 +3770,13 @@ interface ParentRouteChildren {
   ParentTeamsTeamIdRoute: typeof ParentTeamsTeamIdRouteWithChildren
   ParentTeamsIndexRoute: typeof ParentTeamsIndexRoute
   ParentTeamEventEventIdRoute: typeof ParentTeamEventEventIdRoute
+  ParentTrainingSessionProgramIdSessionIdxRoute: typeof ParentTrainingSessionProgramIdSessionIdxRoute
 }
 
 const ParentRouteChildren: ParentRouteChildren = {
   ParentCampsRoute: ParentCampsRoute,
   ParentInboxRoute: ParentInboxRoute,
+  ParentPlaybookRoute: ParentPlaybookRoute,
   ParentProfileRoute: ParentProfileRoute,
   ParentScheduleRoute: ParentScheduleRoute,
   ParentTrainRoute: ParentTrainRouteWithChildren,
@@ -3748,6 +3790,8 @@ const ParentRouteChildren: ParentRouteChildren = {
   ParentTeamsTeamIdRoute: ParentTeamsTeamIdRouteWithChildren,
   ParentTeamsIndexRoute: ParentTeamsIndexRoute,
   ParentTeamEventEventIdRoute: ParentTeamEventEventIdRoute,
+  ParentTrainingSessionProgramIdSessionIdxRoute:
+    ParentTrainingSessionProgramIdSessionIdxRoute,
 }
 
 const ParentRouteWithChildren =
