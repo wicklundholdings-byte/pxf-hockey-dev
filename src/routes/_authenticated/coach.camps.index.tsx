@@ -187,28 +187,50 @@ function diffMin(a: string, b: string) {
 }
 
 // ---------- Default filter persistence ----------
-const DEFAULT_KEY = "events.defaultFilter";
+const DEFAULT_KEY = "events.defaultFilter.v2";
+
+type FilterCategory = "all" | "camp" | "privates" | "teams";
+type FilterState = { category: FilterCategory; teamId?: string };
+
+function serializeFilter(f: FilterState) {
+  return f.category === "teams" && f.teamId ? `teams:${f.teamId}` : f.category;
+}
+function parseFilter(s: string | null): FilterState {
+  if (!s) return { category: "all" };
+  if (s.startsWith("teams:")) return { category: "teams", teamId: s.slice(6) };
+  if (s === "camp" || s === "privates" || s === "teams" || s === "all") return { category: s };
+  return { category: "all" };
+}
+function filtersEqual(a: FilterState, b: FilterState) {
+  return a.category === b.category && (a.teamId ?? "") === (b.teamId ?? "");
+}
 
 // ---------- Main ----------
 function EventsCalendar() {
   const { entities, events, loading } = useLiveData();
-  const [view, setView] = useState<"day" | "week" | "month">("day");
+  const [view, setView] = useState<"day" | "week" | "month" | "list">("day");
   const [cursor, setCursor] = useState<Date>(new Date());
-  const [filter, setFilter] = useState<string>("all");
-  const [defaultFilter, setDefaultFilter] = useState<string>("all");
+  const [filter, setFilter] = useState<FilterState>({ category: "all" });
+  const [defaultFilter, setDefaultFilter] = useState<FilterState>({ category: "all" });
   const [longPressFor, setLongPressFor] = useState<string | null>(null);
+  const [teamsOpen, setTeamsOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [createAt, setCreateAt] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem(DEFAULT_KEY) : null;
-    if (saved) { setDefaultFilter(saved); setFilter(saved); }
+    if (saved) { const p = parseFilter(saved); setDefaultFilter(p); setFilter(p); }
   }, []);
 
   const visibleEvents = useMemo(() => {
-    if (filter === "all") return events;
-    return events.filter((e) => e.entityId === filter);
-  }, [events, filter]);
+    if (filter.category === "all") return events;
+    if (filter.category === "camp") return events.filter((e) => e.kind === "camp");
+    if (filter.category === "privates") return events.filter((e) => e.kind === "private");
+    // teams
+    if (filter.teamId) return events.filter((e) => e.entityId === filter.teamId);
+    const teamIds = new Set(entities.filter((x) => x.kind === "team").map((x) => x.id));
+    return events.filter((e) => teamIds.has(e.entityId));
+  }, [events, entities, filter]);
 
   const entityById = useMemo(() => {
     const m = new Map<string, Entity>();
@@ -216,16 +238,34 @@ function EventsCalendar() {
     return m;
   }, [entities]);
 
-  function setAsDefault(id: string) {
-    localStorage.setItem(DEFAULT_KEY, id);
-    setDefaultFilter(id);
+  const teamEntities = useMemo(() => entities.filter((e) => e.kind === "team"), [entities]);
+
+  function setAsDefault(f: FilterState) {
+    localStorage.setItem(DEFAULT_KEY, serializeFilter(f));
+    setDefaultFilter(f);
     setLongPressFor(null);
   }
   function removeDefault() {
     localStorage.removeItem(DEFAULT_KEY);
-    setDefaultFilter("all");
+    setDefaultFilter({ category: "all" });
     setLongPressFor(null);
   }
+
+  function longPressLabel(id: string) {
+    if (id === "all") return "All";
+    if (id === "camp") return "Camp";
+    if (id === "privates") return "Privates";
+    if (id === "teams") return filter.teamId ? (entityById.get(filter.teamId)?.name ?? "Teams") : "Teams";
+    return id;
+  }
+  const longPressFilterState = (id: string): FilterState => {
+    if (id === "teams") return { category: "teams", teamId: filter.teamId };
+    return { category: id as FilterCategory };
+  };
+  const isDefaultChip = (id: string) => {
+    if (id === "teams") return defaultFilter.category === "teams";
+    return defaultFilter.category === id;
+  };
 
   return (
     <div className="-mx-5 -mt-2 pb-24">
@@ -243,8 +283,8 @@ function EventsCalendar() {
 
       {/* View toggle */}
       <div className="mt-3 px-5">
-        <div className="grid grid-cols-3 gap-1 rounded-full border border-border bg-surface p-1">
-          {(["month", "week", "day"] as const).map((v) => (
+        <div className="grid grid-cols-4 gap-1 rounded-full border border-border bg-surface p-1">
+          {(["month", "week", "day", "list"] as const).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
@@ -260,21 +300,68 @@ function EventsCalendar() {
       </div>
 
       {/* Filter chips */}
-      <div className="mt-3 flex gap-2 overflow-x-auto px-5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="relative mt-3 flex gap-2 overflow-x-auto px-5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <FilterChip
-          label="All" active={filter === "all"} isDefault={defaultFilter === "all"}
-          onClick={() => setFilter("all")}
+          label="All" active={filter.category === "all"} isDefault={isDefaultChip("all")}
+          onClick={() => setFilter({ category: "all" })}
           onLongPress={() => setLongPressFor("all")}
         />
-        {entities.map((e) => (
-          <FilterChip
-            key={e.id} label={e.name} color={e.color}
-            active={filter === e.id} isDefault={defaultFilter === e.id}
-            onClick={() => setFilter(e.id)}
-            onLongPress={() => setLongPressFor(e.id)}
-          />
-        ))}
+        <FilterChip
+          label="Camp" color="#F59E0B" active={filter.category === "camp"} isDefault={isDefaultChip("camp")}
+          onClick={() => setFilter({ category: "camp" })}
+          onLongPress={() => setLongPressFor("camp")}
+        />
+        <FilterChip
+          label="Privates" color="#F43F5E" active={filter.category === "privates"} isDefault={isDefaultChip("privates")}
+          onClick={() => setFilter({ category: "privates" })}
+          onLongPress={() => setLongPressFor("privates")}
+        />
+        <FilterChip
+          label={filter.category === "teams" && filter.teamId ? (entityById.get(filter.teamId)?.name ?? "Teams") : "Teams"}
+          color={filter.category === "teams" && filter.teamId ? entityById.get(filter.teamId)?.color : undefined}
+          active={filter.category === "teams"} isDefault={isDefaultChip("teams")}
+          trailingIcon={<ChevronDown size={12} />}
+          onClick={() => {
+            if (filter.category !== "teams") setFilter({ category: "teams" });
+            setTeamsOpen((v) => !v);
+          }}
+          onLongPress={() => setLongPressFor("teams")}
+        />
       </div>
+
+      {/* Teams dropdown */}
+      {teamsOpen && (
+        <div className="fixed inset-0 z-40" onClick={() => setTeamsOpen(false)}>
+          <div
+            className="absolute right-5 top-[168px] w-56 overflow-hidden rounded-2xl border border-border bg-surface shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => { setFilter({ category: "teams" }); setTeamsOpen(false); }}
+              className="flex w-full items-center justify-between px-4 py-2.5 text-sm hover:bg-background/50"
+            >
+              <span className="font-semibold">All Teams</span>
+              {!filter.teamId && filter.category === "teams" && <Check size={14} className="text-teal" />}
+            </button>
+            {teamEntities.length === 0 && (
+              <p className="px-4 py-3 text-xs text-muted-foreground">No teams yet</p>
+            )}
+            {teamEntities.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => { setFilter({ category: "teams", teamId: t.id }); setTeamsOpen(false); }}
+                className="flex w-full items-center justify-between border-t border-border/40 px-4 py-2.5 text-sm hover:bg-background/50"
+              >
+                <span className="flex items-center gap-2">
+                  <span className="inline-block h-2 w-2 rounded-full" style={{ background: t.color }} />
+                  {t.name}
+                </span>
+                {filter.teamId === t.id && <Check size={14} className="text-teal" />}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Long-press default sheet */}
       {longPressFor && (
@@ -282,15 +369,15 @@ function EventsCalendar() {
           <div className="w-full rounded-t-3xl bg-surface p-5" onClick={(e) => e.stopPropagation()}>
             <p className="mb-3 text-xs text-muted-foreground">
               Filter: <span className="font-semibold text-foreground">
-                {longPressFor === "all" ? "All" : entityById.get(longPressFor)?.name}
+                {longPressLabel(longPressFor)}
               </span>
             </p>
-            {defaultFilter === longPressFor ? (
+            {isDefaultChip(longPressFor) ? (
               <button onClick={removeDefault} className="w-full rounded-xl border border-border p-3 text-sm font-semibold">
                 Remove Default
               </button>
             ) : (
-              <button onClick={() => setAsDefault(longPressFor)} className="w-full rounded-xl bg-teal p-3 text-sm font-bold text-background">
+              <button onClick={() => setAsDefault(longPressFilterState(longPressFor))} className="w-full rounded-xl bg-teal p-3 text-sm font-bold text-background">
                 Set as Default
               </button>
             )}
@@ -324,6 +411,9 @@ function EventsCalendar() {
           onPickDay={(d) => { setCursor(d); setView("day"); }}
         />
       )}
+      {!loading && view === "list" && (
+        <ListView events={visibleEvents} entityById={entityById} />
+      )}
 
       {createOpen && (
         <CreateSheet
@@ -338,10 +428,10 @@ function EventsCalendar() {
 
 // ---------- Filter chip with long-press ----------
 function FilterChip({
-  label, color, active, isDefault, onClick, onLongPress,
+  label, color, active, isDefault, onClick, onLongPress, trailingIcon,
 }: {
   label: string; color?: string; active: boolean; isDefault: boolean;
-  onClick: () => void; onLongPress: () => void;
+  onClick: () => void; onLongPress: () => void; trailingIcon?: React.ReactNode;
 }) {
   const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   function start() {
@@ -365,6 +455,7 @@ function FilterChip({
       {color && <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />}
       {label}
       {isDefault && <Star size={10} className="text-amber-400" fill="currentColor" />}
+      {trailingIcon}
     </button>
   );
 }
