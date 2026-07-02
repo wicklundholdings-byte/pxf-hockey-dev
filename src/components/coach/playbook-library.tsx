@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Search, Filter, Clock, Users, Snowflake, Zap, Brain, Dumbbell } from "lucide-react";
+import { Search, Filter, Clock, Users, Snowflake, Zap, Brain, Dumbbell, Clapperboard } from "lucide-react";
+import { toast } from "sonner";
 import { CoachDrylandLibrary } from "./dryland-library";
 
 type CatId = "all" | "skating" | "slip" | "gameiq" | "dryland";
