@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { MessageSquare, Send, ArrowLeft, Users, Plus, Pin, X, Megaphone, User, BarChart3, CalendarClock, CheckCircle2, ChevronUp, MessageCircle } from "lucide-react";
+import { MessageSquare, Send, ArrowLeft, Users, Plus, Pin, X, Megaphone, User, BarChart3, CalendarClock, CheckCircle2, ChevronUp, MessageCircle, Paperclip, Smile, Check, CheckCheck } from "lucide-react";
 import { listTeamMessageableContacts, type TeamContact } from "@/lib/messaging.functions";
 
 export const Route = createFileRoute("/_authenticated/coach/inbox")({
@@ -31,8 +31,11 @@ type Msg = {
   metadata?: any;
   scheduled_for?: string | null;
   parent_message_id?: string | null;
+  attachments?: any;
 };
 type PollVote = { message_id: string; user_id: string; option_index: number };
+type Reaction = { id: string; message_id: string; user_id: string; emoji: string };
+type ReadRow = { message_id: string; user_id: string; read_at: string };
 type Camp = { id: string; name: string };
 type Team = { id: string; name: string };
 
@@ -200,6 +203,12 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
   const [showRich, setShowRich] = useState<null | "poll" | "rsvp" | "schedule">(null);
   const [openThread, setOpenThread] = useState<Msg | null>(null);
   const [replyTo, setReplyTo] = useState<Msg | null>(null);
+  const [reactions, setReactions] = useState<Reaction[]>([]);
+  const [reads, setReads] = useState<ReadRow[]>([]);
+  const [reactionFor, setReactionFor] = useState<string | null>(null);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   async function load() {
@@ -220,6 +229,17 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
     } else {
       setVotes([]);
     }
+    const msgIds = (data ?? []).map((m: any) => m.id);
+    if (msgIds.length > 0) {
+      const [{ data: rx }, { data: rd }] = await Promise.all([
+        supabase.from("message_reactions").select("id,message_id,user_id,emoji").in("message_id", msgIds),
+        supabase.from("message_reads").select("message_id,user_id,read_at").in("message_id", msgIds),
+      ]);
+      setReactions((rx ?? []) as Reaction[]);
+      setReads((rd ?? []) as ReadRow[]);
+    } else {
+      setReactions([]); setReads([]);
+    }
   }
 
   useEffect(() => {
@@ -237,11 +257,36 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
           return payload.eventType === "DELETE" ? others : [...others, payload.new as PollVote];
         });
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "message_reactions" }, (payload) => {
+        setReactions((prev) => {
+          if (payload.eventType === "DELETE") return prev.filter((r) => r.id !== (payload.old as any).id);
+          const row = payload.new as Reaction;
+          if (prev.some((r) => r.id === row.id)) return prev;
+          return [...prev, row];
+        });
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "message_reads" }, (payload) => {
+        const row = payload.new as ReadRow;
+        setReads((prev) => (prev.some((r) => r.message_id === row.message_id && r.user_id === row.user_id) ? prev : [...prev, row]));
+      })
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
   }, [convo.id]);
+
+  // Mark visible messages from others as read
+  useEffect(() => {
+    const unread = messages.filter((m) =>
+      m.sender_id !== currentUserId &&
+      !reads.some((r) => r.message_id === m.id && r.user_id === currentUserId),
+    );
+    if (unread.length === 0) return;
+    const rows = unread.map((m) => ({ message_id: m.id, user_id: currentUserId }));
+    supabase.from("message_reads").upsert(rows, { onConflict: "message_id,user_id", ignoreDuplicates: true }).then(() => {
+      setReads((prev) => [...prev, ...rows.map((r) => ({ ...r, read_at: new Date().toISOString() }))]);
+    });
+  }, [messages, currentUserId, reads.length]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -249,15 +294,27 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
 
   async function send() {
     const text = body.trim();
-    if (!text) return;
+    if (!text && pendingFiles.length === 0) return;
     setSending(true);
+    setUploading(pendingFiles.length > 0);
+    const attachments: Array<{ url: string; name: string; type: string }> = [];
+    for (const f of pendingFiles) {
+      const path = `${currentUserId}/${convo.id}/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+      const { error: upErr } = await supabase.storage.from("message-attachments").upload(path, f, { upsert: false });
+      if (upErr) { alert("Upload failed: " + upErr.message); setSending(false); setUploading(false); return; }
+      const { data: signed } = await supabase.storage.from("message-attachments").createSignedUrl(path, 60 * 60 * 24 * 7);
+      attachments.push({ url: signed?.signedUrl ?? "", name: f.name, type: f.type });
+    }
+    setUploading(false);
+    setPendingFiles([]);
     setBody("");
     const parent = replyTo?.id ?? null;
     const insertPayload: any = {
       conversation_id: convo.id,
       sender_id: currentUserId,
-      body: text,
+      body: text || null,
       kind: "text",
+      attachments,
     };
     if (parent) insertPayload.parent_message_id = parent;
     const { data, error } = await supabase.from("messages").insert(insertPayload).select("*").single();
@@ -271,6 +328,18 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
       setMessages((prev) => (prev.some((m) => m.id === (data as Msg).id) ? prev : [...prev, data as Msg]));
       setReplyTo(null);
     }
+  }
+
+  async function toggleReaction(messageId: string, emoji: string) {
+    const mine = reactions.find((r) => r.message_id === messageId && r.user_id === currentUserId && r.emoji === emoji);
+    if (mine) {
+      await supabase.from("message_reactions").delete().eq("id", mine.id);
+      setReactions((prev) => prev.filter((r) => r.id !== mine.id));
+    } else {
+      const { data } = await supabase.from("message_reactions").insert({ message_id: messageId, user_id: currentUserId, emoji }).select("*").single();
+      if (data) setReactions((prev) => [...prev, data as Reaction]);
+    }
+    setReactionFor(null);
   }
 
   async function togglePin(m: Msg) {
@@ -438,9 +507,49 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
                     ) : (
                       <p className="whitespace-pre-wrap">{renderWithMentions(m.body)}</p>
                     )}
+                    {Array.isArray(m.attachments) && m.attachments.length > 0 && (
+                      <div className="mt-2 grid grid-cols-2 gap-1.5">
+                        {(m.attachments as any[]).map((a, i) => (
+                          a.type?.startsWith("image/") ? (
+                            <a key={i} href={a.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-black/10">
+                              <img src={a.url} alt={a.name ?? "attachment"} className="h-32 w-full object-cover" />
+                            </a>
+                          ) : (
+                            <a key={i} href={a.url} target="_blank" rel="noreferrer" className={"flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-[11px] " + (mine ? "border-black/20 bg-black/10" : "border-border bg-surface")}>
+                              <Paperclip size={11} /> <span className="truncate">{a.name ?? "file"}</span>
+                            </a>
+                          )
+                        ))}
+                      </div>
+                    )}
                     <p className={"mt-0.5 text-[9px] " + (mine ? "text-black/60" : "text-muted-foreground")}>
                       {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      {mine && (() => {
+                        const others = reads.filter((r) => r.message_id === m.id && r.user_id !== currentUserId);
+                        return others.length > 0 ? (
+                          <span className="ml-1 inline-flex items-center gap-0.5"><CheckCheck size={10} /> {others.length}</span>
+                        ) : (
+                          <span className="ml-1 inline-flex items-center gap-0.5 opacity-60"><Check size={10} /></span>
+                        );
+                      })()}
                     </p>
+                    {(() => {
+                      const rx = reactions.filter((r) => r.message_id === m.id);
+                      if (rx.length === 0) return null;
+                      const grouped = rx.reduce<Record<string, Reaction[]>>((acc, r) => { (acc[r.emoji] ??= []).push(r); return acc; }, {});
+                      return (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {Object.entries(grouped).map(([emoji, list]) => {
+                            const mineReacted = list.some((r) => r.user_id === currentUserId);
+                            return (
+                              <button key={emoji} onClick={() => toggleReaction(m.id, emoji)} className={"flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] " + (mineReacted ? "border-teal bg-teal/20 text-teal" : mine ? "border-black/20 bg-black/10" : "border-border bg-surface")}>
+                                <span>{emoji}</span><span className="font-semibold">{list.length}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                     <div className="mt-1 flex items-center gap-2">
                       <button
                         onClick={() => setOpenThread(m)}
@@ -448,6 +557,18 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
                       >
                         <MessageCircle size={10} /> {rc > 0 ? `${rc} repl${rc === 1 ? "y" : "ies"}` : "Reply"}
                       </button>
+                      <div className="relative">
+                        <button onClick={() => setReactionFor(reactionFor === m.id ? null : m.id)} className={"flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] " + (mine ? "bg-black/10 text-black/70" : "bg-surface text-muted-foreground")}>
+                          <Smile size={10} />
+                        </button>
+                        {reactionFor === m.id && (
+                          <div className="absolute bottom-6 left-0 z-30 flex gap-1 rounded-full border border-border bg-card p-1 shadow-xl">
+                            {["👍","❤️","😂","🎉","🔥","👏"].map((e) => (
+                              <button key={e} onClick={() => toggleReaction(m.id, e)} className="grid h-7 w-7 place-items-center rounded-full text-sm hover:bg-surface">{e}</button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <button
@@ -467,6 +588,18 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
         <div className="mb-1 flex items-center justify-between gap-2 rounded-xl border border-teal/30 bg-teal/5 px-3 py-1.5">
           <p className="truncate text-[11px] text-muted-foreground"><span className="font-bold text-teal">Replying:</span> {replyTo.body?.slice(0, 60) ?? "message"}</p>
           <button onClick={() => setReplyTo(null)} className="text-muted-foreground"><X size={12} /></button>
+        </div>
+      )}
+
+      {pendingFiles.length > 0 && (
+        <div className="mb-1 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2">
+          {pendingFiles.map((f, i) => (
+            <div key={i} className="flex items-center gap-1 rounded-full bg-card px-2 py-1 text-[10px]">
+              <Paperclip size={10} /> <span className="max-w-[120px] truncate">{f.name}</span>
+              <button onClick={() => setPendingFiles((prev) => prev.filter((_, j) => j !== i))} className="text-muted-foreground"><X size={10} /></button>
+            </div>
+          ))}
+          {uploading && <span className="text-[10px] text-muted-foreground">Uploading…</span>}
         </div>
       )}
 
@@ -497,6 +630,25 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
           )}
         </div>
         <input
+          ref={fileRef}
+          type="file"
+          multiple
+          accept="image/*,application/pdf"
+          hidden
+          onChange={(e) => {
+            const files = Array.from(e.target.files ?? []);
+            if (files.length) setPendingFiles((prev) => [...prev, ...files].slice(0, 6));
+            if (fileRef.current) fileRef.current.value = "";
+          }}
+        />
+        <button
+          onClick={() => fileRef.current?.click()}
+          className="grid h-10 w-10 place-items-center rounded-full border border-border bg-surface text-muted-foreground"
+          title="Attach"
+        >
+          <Paperclip size={16} />
+        </button>
+        <input
           value={body}
           onChange={(e) => setBody(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), send())}
@@ -505,7 +657,7 @@ function Thread({ convo, currentUserId, onBack }: { convo: Convo; currentUserId:
         />
         <button
           onClick={send}
-          disabled={sending || !body.trim()}
+          disabled={sending || (!body.trim() && pendingFiles.length === 0)}
           className="grid h-10 w-10 place-items-center rounded-full bg-gradient-brand text-primary-foreground disabled:opacity-40"
         >
           <Send size={14} />
