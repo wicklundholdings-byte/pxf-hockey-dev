@@ -198,28 +198,29 @@ export function PlaybookLibrary() {
       </div>
 
       <div className="mt-5 space-y-6">
-        {showSkating && (
+        {cat === "gameiq" && <GameIQComingSoon />}
+        {cat !== "gameiq" && showSkating && (
           <CategoryGroup
             title="Skating"
             blurb="Edge, crossover, and stride progressions for power and control."
             items={filter(SKATING)}
           />
         )}
-        {showSlip && (
+        {cat !== "gameiq" && showSlip && (
           <CategoryGroup
             title="Slip Training"
             blurb="Deceptive edge and puck-handling circuits built for game creativity."
             items={filter(SLIP)}
           />
         )}
-        {showGameIQ && (
+        {cat !== "gameiq" && showGameIQ && (
           <CategoryGroup
             title="GameIQ"
             blurb="Reads, positioning, and decision-making concepts for competitive play."
             items={filter(GAMEIQ)}
           />
         )}
-        {showDryland && (
+        {cat !== "gameiq" && showDryland && (
           <div>
             <CoachDrylandLibrary />
           </div>
