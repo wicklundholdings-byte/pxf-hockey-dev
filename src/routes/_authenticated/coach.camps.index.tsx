@@ -212,7 +212,7 @@ function filtersEqual(a: FilterState, b: FilterState) {
 // ---------- Main ----------
 function EventsCalendar() {
   const { entities, events, loading } = useLiveData();
-  const [view, setView] = useState<"day" | "week" | "month" | "list">("day");
+  const [view, setView] = useState<"day" | "week" | "month" | "list">("list");
   const [cursor, setCursor] = useState<Date>(new Date());
   const [filter, setFilter] = useState<FilterState>({ category: "all" });
   const [defaultFilter, setDefaultFilter] = useState<FilterState>({ category: "all" });
@@ -288,7 +288,7 @@ function EventsCalendar() {
       {/* View toggle */}
       <div className="mt-3 px-5">
         <div className="grid grid-cols-4 gap-1 rounded-full border border-border bg-surface p-1">
-          {(["month", "week", "day", "list"] as const).map((v) => (
+          {(["list", "day", "week", "month"] as const).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
