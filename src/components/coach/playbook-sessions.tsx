@@ -18,9 +18,70 @@ const AGE_GROUPS = ["U9+", "U11+", "U13+", "U15+"] as const;
 const LEVELS = ["Beginner", "Intermediate", "Advanced", "Elite"] as const;
 
 const KEY = "pxf:sessions:v2";
+const MOCK_SESSIONS: SavedSession[] = [
+  {
+    id: "mock-elite-jul3",
+    name: "Elite Demo — Thu Jul 3",
+    date: "2026-07-03",
+    age: "U15+",
+    level: "Elite",
+    totalMins: 90,
+    notes: "Defensive zone coverage + breakouts",
+    focus: "Team Systems",
+    blocks: [
+      { uid: "b1", drillId: "-", mins: 15 },
+      { uid: "b2", drillId: "-", mins: 15 },
+      { uid: "b3", drillId: "-", mins: 15 },
+      { uid: "b4", drillId: "-", mins: 15 },
+      { uid: "b5", drillId: "-", mins: 15 },
+      { uid: "b6", drillId: "-", mins: 15 },
+    ],
+    completed: false,
+  },
+  {
+    id: "mock-atom-jul5",
+    name: "Atom Rep — Sat Jul 5",
+    date: "2026-07-05",
+    age: "U11+",
+    level: "Intermediate",
+    totalMins: 60,
+    notes: "Skating focus — edges + crossovers",
+    focus: "Skating",
+    blocks: [
+      { uid: "b1", drillId: "-", mins: 15 },
+      { uid: "b2", drillId: "-", mins: 15 },
+      { uid: "b3", drillId: "-", mins: 15 },
+      { uid: "b4", drillId: "-", mins: 15 },
+    ],
+    completed: false,
+  },
+  {
+    id: "mock-power-jul8",
+    name: "Power Skating Clinic — Jul 8",
+    date: "2026-07-08",
+    age: "U13+",
+    level: "Advanced",
+    totalMins: 75,
+    notes: "Full skating circuit",
+    focus: "Skating",
+    blocks: [
+      { uid: "b1", drillId: "-", mins: 15 },
+      { uid: "b2", drillId: "-", mins: 15 },
+      { uid: "b3", drillId: "-", mins: 15 },
+      { uid: "b4", drillId: "-", mins: 15 },
+      { uid: "b5", drillId: "-", mins: 15 },
+    ],
+    completed: false,
+  },
+];
 function read(): SavedSession[] {
   if (typeof window === "undefined") return [];
   try { const r = window.localStorage.getItem(KEY); return r ? JSON.parse(r) as SavedSession[] : []; } catch { return []; }
+}
+function readWithMocks(): SavedSession[] {
+  const stored = read();
+  const ids = new Set(stored.map((s) => s.id));
+  return [...stored, ...MOCK_SESSIONS.filter((m) => !ids.has(m.id))];
 }
 function write(list: SavedSession[]) {
   window.localStorage.setItem(KEY, JSON.stringify(list));
@@ -39,7 +100,7 @@ export function PlaybookSessions() {
   const fav = usePlaybookFavorites();
 
   useEffect(() => {
-    const sync = () => setSessions(read());
+    const sync = () => setSessions(readWithMocks());
     sync();
     window.addEventListener("pxf:sessions-changed", sync);
     window.addEventListener("storage", sync);
