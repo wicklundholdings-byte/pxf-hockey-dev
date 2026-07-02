@@ -3204,9 +3204,68 @@ export type Database = {
           },
         ]
       }
+      message_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_reads: {
+        Row: {
+          message_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          message_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          message_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reads_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           athlete_media_id: string | null
+          attachments: Json
           body: string | null
           conversation_id: string
           created_at: string
@@ -3222,6 +3281,7 @@ export type Database = {
         }
         Insert: {
           athlete_media_id?: string | null
+          attachments?: Json
           body?: string | null
           conversation_id: string
           created_at?: string
@@ -3237,6 +3297,7 @@ export type Database = {
         }
         Update: {
           athlete_media_id?: string | null
+          attachments?: Json
           body?: string | null
           conversation_id?: string
           created_at?: string
