@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, ChevronLeft, ChevronRight, X, Star } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, X, Star, ChevronDown, Check } from "lucide-react";
 import { BlockForStaff } from "@/components/block-for-staff";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/")({
@@ -35,6 +35,8 @@ type CalEvent = {
   durationMin: number;
   rsvp?: { yes: number; maybe: number; no: number };
   href?: string;
+  endDate?: string;   // YYYY-MM-DD (for multi-day events like tournaments)
+  opponent?: string;
 };
 
 // ---------- Color palette ----------
@@ -68,22 +70,28 @@ function useMockSeed(): { entities: Entity[]; events: CalEvent[] } {
     const entities: Entity[] = [
       { id: "elite", name: "Elite Demo Team", color: "#00BFA5", kind: "team" },
       { id: "atom",  name: "Atom Rep",        color: "#3B82F6", kind: "team" },
+      { id: "bantam", name: "Bantam A",       color: "#22C55E", kind: "team" },
       { id: "camp",  name: "Summer Power Camp", color: "#F59E0B", kind: "camp" },
       { id: "priv",  name: "Private Sessions", color: "#F43F5E", kind: "private" },
     ];
-    // Anchor mock data to "this week" so Day/Week/Month all show something.
+    // Anchor mock data to the current week so Day/Week/Month always render populated.
     const today = new Date();
     const mon = startOfWeek(today);
     const day = (i: number) => toDateKey(addDays(mon, i));
     const events: CalEvent[] = [
-      { id: "e1", entityId: "elite", kind: "practice", title: "Elite Demo Team Practice", location: "Burnaby 8 Rinks · Rink 2", date: day(0), start: "16:00", durationMin: 90, rsvp: { yes: 11, maybe: 1, no: 2 } },
-      { id: "e2", entityId: "priv",  kind: "private",  title: "Private · Jake Andersson", location: "Burnaby 8 Rinks · Rink 4", date: day(1), start: "06:00", durationMin: 60 },
-      { id: "e3", entityId: "camp",  kind: "camp",     title: "Summer Power Camp — Day 1", location: "Dev Ice Center", date: day(1), start: "09:00", durationMin: 360 },
-      { id: "e4", entityId: "priv",  kind: "private",  title: "Private · Jake Andersson", location: "Burnaby 8 Rinks · Rink 4", date: day(3), start: "06:00", durationMin: 60 },
-      { id: "e5", entityId: "elite", kind: "practice", title: "Elite Demo Team Practice", location: "Burnaby 8 Rinks · Rink 2", date: day(3), start: "16:00", durationMin: 90, rsvp: { yes: 11, maybe: 1, no: 2 } },
-      { id: "e6", entityId: "atom",  kind: "practice", title: "Atom Rep Practice",        location: "Burnaby 8 Rinks · Rink 1", date: day(3), start: "19:30", durationMin: 60, rsvp: { yes: 8, maybe: 2, no: 0 } },
-      { id: "e7", entityId: "elite", kind: "game",     title: "Elite Demo Team vs Wolves", location: "Dev Arena · Rink A", date: day(5), start: "10:00", durationMin: 90 },
-      { id: "e8", entityId: "atom",  kind: "game",     title: "Atom Rep vs Bears",         location: "Northside Ice Plex", date: day(5), start: "14:00", durationMin: 90 },
+      // This Thursday
+      { id: "e-priv-thu", entityId: "priv", kind: "private", title: "Private · Jake Andersson", location: "Burnaby 8 Rinks · Rink 4", date: day(3), start: "06:00", durationMin: 60 },
+      { id: "e-elite-thu", entityId: "elite", kind: "practice", title: "Elite Demo Team Practice", location: "Burnaby 8 Rinks · Rink 2", date: day(3), start: "16:00", durationMin: 90, rsvp: { yes: 11, maybe: 1, no: 2 } },
+      { id: "e-atom-thu", entityId: "atom", kind: "practice", title: "Atom Rep Practice", location: "Burnaby 8 Rinks · Rink 1", date: day(3), start: "19:30", durationMin: 60, rsvp: { yes: 8, maybe: 2, no: 0 } },
+      // This Saturday
+      { id: "e-elite-sat", entityId: "elite", kind: "game", title: "Elite Demo Team vs North Delta Lightning", opponent: "North Delta Lightning", location: "Burnaby 8 Rinks · Rink 1", date: day(5), start: "10:00", durationMin: 90 },
+      { id: "e-atom-sat", entityId: "atom", kind: "game", title: "Atom Rep vs Richmond Steel", opponent: "Richmond Steel", location: "Northside Ice Plex", date: day(5), start: "14:00", durationMin: 90 },
+      // Next Thursday — camp opens
+      { id: "e-camp-d1", entityId: "camp", kind: "camp", title: "Summer Power Camp — Day 1", location: "Dev Ice Center", date: day(10), start: "09:00", durationMin: 360 },
+      // Following Thursday — elite practice
+      { id: "e-elite-2wk", entityId: "elite", kind: "practice", title: "Elite Demo Team Practice", location: "Burnaby 8 Rinks · Rink 2", date: day(17), start: "18:00", durationMin: 90, rsvp: { yes: 10, maybe: 2, no: 1 } },
+      // Multi-day tournament (Fri–Mon of that week)
+      { id: "e-tourney", entityId: "elite", kind: "tournament", title: "BC Minor AAA Spring Classic", location: "Delta Ice Complex", date: day(19), endDate: day(22), start: "08:00", durationMin: 480 },
     ];
     return { entities, events };
   }, []);
