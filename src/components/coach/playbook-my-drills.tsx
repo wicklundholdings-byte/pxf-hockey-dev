@@ -388,6 +388,190 @@ function ChipRow({ items, value, onChange }: { items: string[]; value: string; o
   );
 }
 
+function DiagramThumb({ shapes }: { shapes: DiagramShape[] }) {
+  return (
+    <svg viewBox="0 0 640 320" className="block h-auto w-full">
+      <rect x="4" y="4" width="632" height="312" rx="60" fill="#0b0b0d" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
+      <DiagramShapesLayer shapes={shapes} />
+    </svg>
+  );
+}
+
+function DiagramShapesLayer({ shapes }: { shapes: DiagramShape[] }) {
+  return (
+    <>
+      <defs>
+        {(["teal", "white", "amber"] as Color[]).map((c) => (
+          <marker key={c} id={`arr-${c}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill={COLORS[c]} />
+          </marker>
+        ))}
+      </defs>
+      {shapes.map((s, i) => {
+        if (s.kind === "player") {
+          return (
+            <g key={i}>
+              <circle cx={s.x} cy={s.y} r="12" fill={COLORS[s.color]} />
+              <text x={s.x} y={s.y + 4} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#0b0b0d">P</text>
+            </g>
+          );
+        }
+        const dash =
+          s.kind === "pass" ? "6 4" : s.kind === "puck" ? "2 4" : undefined;
+        return (
+          <line
+            key={i}
+            x1={s.x1}
+            y1={s.y1}
+            x2={s.x2}
+            y2={s.y2}
+            stroke={COLORS[s.color]}
+            strokeWidth={2.5}
+            strokeDasharray={dash}
+            markerEnd={`url(#arr-${s.color})`}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+function DiagramEditor({
+  initial,
+  onSave,
+  onCancel,
+}: {
+  initial?: DiagramShape[];
+  onSave: (s: DiagramShape[]) => void;
+  onCancel: () => void;
+}) {
+  const [shapes, setShapes] = useState<DiagramShape[]>(initial ?? []);
+  const [tool, setTool] = useState<Tool>("player");
+  const [color, setColor] = useState<Color>("teal");
+  const [drag, setDrag] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null);
+
+  function toSvg(e: React.PointerEvent<SVGSVGElement>) {
+    const svg = svgRef.current;
+    if (!svg) return { x: 0, y: 0 };
+    const rect = svg.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 640;
+    const y = ((e.clientY - rect.top) / rect.height) * 320;
+    return { x: Math.round(x), y: Math.round(y) };
+  }
+
+  function onDown(e: React.PointerEvent<SVGSVGElement>) {
+    e.preventDefault();
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+    const p = toSvg(e);
+    if (tool === "player") {
+      setShapes((s) => [...s, { kind: "player", x: p.x, y: p.y, color }]);
+    } else {
+      setDrag({ x1: p.x, y1: p.y, x2: p.x, y2: p.y });
+    }
+  }
+  function onMove(e: React.PointerEvent<SVGSVGElement>) {
+    if (!drag) return;
+    const p = toSvg(e);
+    setDrag({ ...drag, x2: p.x, y2: p.y });
+  }
+  function onUp() {
+    if (!drag) return;
+    if (Math.hypot(drag.x2 - drag.x1, drag.y2 - drag.y1) > 4) {
+      setShapes((s) => [...s, { kind: tool as "skate" | "pass" | "puck", ...drag, color }]);
+    }
+    setDrag(null);
+  }
+
+  const tools: { id: Tool; label: string }[] = [
+    { id: "player", label: "Player" },
+    { id: "skate", label: "Skate" },
+    { id: "pass", label: "Pass" },
+    { id: "puck", label: "Puck" },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[60] flex flex-col bg-background">
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <button onClick={onCancel} className="text-sm font-semibold text-muted-foreground">Cancel</button>
+        <p className="text-[11px] font-bold tracking-[0.28em] text-foreground">DIAGRAM EDITOR</p>
+        <button onClick={() => onSave(shapes)} className="rounded-full bg-teal px-3 py-1 text-xs font-bold text-background">Save Diagram</button>
+      </div>
+      <div className="flex-1 overflow-auto bg-background p-3">
+        <svg
+          ref={svgRef}
+          viewBox="0 0 640 320"
+          className="block w-full touch-none select-none rounded-2xl"
+          onPointerDown={onDown}
+          onPointerMove={onMove}
+          onPointerUp={onUp}
+          onPointerCancel={onUp}
+        >
+          <rect x="4" y="4" width="632" height="312" rx="60" fill="#0b0b0d" stroke="rgba(255,255,255,0.25)" strokeWidth="2" />
+          <line x1="320" y1="8" x2="320" y2="312" stroke="#00E5D6" strokeOpacity="0.3" strokeDasharray="6 4" />
+          <circle cx="320" cy="160" r="34" fill="none" stroke="rgba(255,255,255,0.18)" />
+          <DiagramShapesLayer shapes={shapes} />
+          {drag && (
+            <line
+              x1={drag.x1}
+              y1={drag.y1}
+              x2={drag.x2}
+              y2={drag.y2}
+              stroke={COLORS[color]}
+              strokeWidth={2.5}
+              strokeDasharray={tool === "pass" ? "6 4" : tool === "puck" ? "2 4" : undefined}
+              opacity={0.7}
+            />
+          )}
+        </svg>
+      </div>
+      <div className="border-t border-border bg-surface p-3">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {tools.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTool(t.id)}
+              className={
+                "rounded-full border px-3 py-1.5 text-[11px] font-bold " +
+                (tool === t.id ? "border-teal bg-teal text-background" : "border-border bg-surface-2 text-muted-foreground")
+              }
+            >
+              {t.label}
+            </button>
+          ))}
+          <span className="mx-1 text-muted-foreground"><Palette size={12} /></span>
+          {(["teal", "white", "amber"] as Color[]).map((c) => (
+            <button
+              key={c}
+              onClick={() => setColor(c)}
+              aria-label={`Color ${c}`}
+              className={"h-6 w-6 rounded-full border-2 " + (color === c ? "border-foreground" : "border-transparent")}
+              style={{ backgroundColor: COLORS[c] }}
+            />
+          ))}
+          <div className="ml-auto flex gap-1.5">
+            <button
+              onClick={() => setShapes((s) => s.slice(0, -1))}
+              className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-[11px] font-bold text-foreground"
+            >
+              <Undo2 size={12} /> Undo
+            </button>
+            <button
+              onClick={() => setShapes([])}
+              className="inline-flex items-center gap-1 rounded-full border border-destructive/50 bg-destructive/10 px-3 py-1.5 text-[11px] font-bold text-destructive"
+            >
+              <Trash2 size={12} /> Clear
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export { MOCK_DRILLS as MY_DRILLS_MOCK };
+export type { MyDrill };
+
 function ModalShell({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur" onClick={onClose}>
