@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Search, Filter, Clock, Users, Snowflake, Zap, Brain, Dumbbell } from "lucide-react";
 import { CoachDrylandLibrary } from "./dryland-library";
 
@@ -250,7 +251,12 @@ function MockCardRow({ card }: { card: MockCard }) {
   const accent = ACCENT[card.accent];
   return (
     <div className="rounded-2xl border border-border/60 bg-surface p-4">
-      <div className="flex items-center gap-3">
+      <Link
+        to="/playbook-drill/$drillId"
+        params={{ drillId: card.id }}
+        search={{ from: "library" }}
+        className="flex items-center gap-3"
+      >
         <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${accent.grad}`}>
           <Icon size={20} className="text-background" />
         </div>
@@ -265,7 +271,7 @@ function MockCardRow({ card }: { card: MockCard }) {
             <span className="flex items-center gap-1"><Dumbbell size={11} />{card.sessions}</span>
           </p>
         </div>
-      </div>
+      </Link>
       <p className="mt-2 text-[11px] text-muted-foreground">{card.description}</p>
       <button className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-brand py-2 text-xs font-bold text-primary-foreground">
         <Users size={13} /> Assign to athletes

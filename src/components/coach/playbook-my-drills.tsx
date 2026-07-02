@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Plus, Upload, X, Video, Share2, Pencil, Film } from "lucide-react";
 
 type MyDrill = {
@@ -92,16 +93,23 @@ export function PlaybookMyDrills() {
         <ul className="mt-5 space-y-3">
           {drills.map((d) => (
             <li key={d.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
-              <div className="grid h-14 w-20 shrink-0 place-items-center rounded-lg bg-surface text-teal">
-                <Video size={18} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold text-foreground">{d.name}</p>
-                <p className="mt-0.5 text-[10px] uppercase tracking-wider text-teal">
-                  {d.category} · {d.level}
-                </p>
-                <p className="mt-0.5 text-[10px] text-muted-foreground">{d.duration}</p>
-              </div>
+              <Link
+                to="/playbook-drill/$drillId"
+                params={{ drillId: d.id }}
+                search={{ from: "mydrills" }}
+                className="flex flex-1 items-center gap-3"
+              >
+                <div className="grid h-14 w-20 shrink-0 place-items-center rounded-lg bg-surface text-teal">
+                  <Video size={18} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-foreground">{d.name}</p>
+                  <p className="mt-0.5 text-[10px] uppercase tracking-wider text-teal">
+                    {d.category} · {d.level}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-muted-foreground">{d.duration}</p>
+                </div>
+              </Link>
               <div className="flex flex-col gap-1">
                 <button className="rounded-full p-1.5 text-muted-foreground" aria-label="Edit"><Pencil size={14} /></button>
                 <button className="rounded-full p-1.5 text-muted-foreground" aria-label="Share"><Share2 size={14} /></button>

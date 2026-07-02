@@ -45,6 +45,7 @@ import { Route as StoreProductIdRouteImport } from './routes/store.$productId'
 import { Route as StaffInviteTokenRouteImport } from './routes/staff-invite.$token'
 import { Route as SessionDetailSessionIdRouteImport } from './routes/session-detail.$sessionId'
 import { Route as RsvpTokenRouteImport } from './routes/rsvp.$token'
+import { Route as PlaybookDrillDrillIdRouteImport } from './routes/playbook-drill.$drillId'
 import { Route as PaymentsSubscribeRouteImport } from './routes/payments.subscribe'
 import { Route as PaymentsRefundsRouteImport } from './routes/payments.refunds'
 import { Route as PaymentsPlanRouteImport } from './routes/payments.plan'
@@ -351,6 +352,11 @@ const SessionDetailSessionIdRoute = SessionDetailSessionIdRouteImport.update({
 const RsvpTokenRoute = RsvpTokenRouteImport.update({
   id: '/rsvp/$token',
   path: '/rsvp/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlaybookDrillDrillIdRoute = PlaybookDrillDrillIdRouteImport.update({
+  id: '/playbook-drill/$drillId',
+  path: '/playbook-drill/$drillId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PaymentsSubscribeRoute = PaymentsSubscribeRouteImport.update({
@@ -1121,6 +1127,7 @@ export interface FileRoutesByFullPath {
   '/payments/plan': typeof PaymentsPlanRoute
   '/payments/refunds': typeof PaymentsRefundsRoute
   '/payments/subscribe': typeof PaymentsSubscribeRoute
+  '/playbook-drill/$drillId': typeof PlaybookDrillDrillIdRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/staff-invite/$token': typeof StaffInviteTokenRoute
@@ -1281,6 +1288,7 @@ export interface FileRoutesByTo {
   '/payments/plan': typeof PaymentsPlanRoute
   '/payments/refunds': typeof PaymentsRefundsRoute
   '/payments/subscribe': typeof PaymentsSubscribeRoute
+  '/playbook-drill/$drillId': typeof PlaybookDrillDrillIdRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/staff-invite/$token': typeof StaffInviteTokenRoute
@@ -1441,6 +1449,7 @@ export interface FileRoutesById {
   '/payments/plan': typeof PaymentsPlanRoute
   '/payments/refunds': typeof PaymentsRefundsRoute
   '/payments/subscribe': typeof PaymentsSubscribeRoute
+  '/playbook-drill/$drillId': typeof PlaybookDrillDrillIdRoute
   '/rsvp/$token': typeof RsvpTokenRoute
   '/session-detail/$sessionId': typeof SessionDetailSessionIdRoute
   '/staff-invite/$token': typeof StaffInviteTokenRoute
@@ -1608,6 +1617,7 @@ export interface FileRouteTypes {
     | '/payments/plan'
     | '/payments/refunds'
     | '/payments/subscribe'
+    | '/playbook-drill/$drillId'
     | '/rsvp/$token'
     | '/session-detail/$sessionId'
     | '/staff-invite/$token'
@@ -1768,6 +1778,7 @@ export interface FileRouteTypes {
     | '/payments/plan'
     | '/payments/refunds'
     | '/payments/subscribe'
+    | '/playbook-drill/$drillId'
     | '/rsvp/$token'
     | '/session-detail/$sessionId'
     | '/staff-invite/$token'
@@ -1927,6 +1938,7 @@ export interface FileRouteTypes {
     | '/payments/plan'
     | '/payments/refunds'
     | '/payments/subscribe'
+    | '/playbook-drill/$drillId'
     | '/rsvp/$token'
     | '/session-detail/$sessionId'
     | '/staff-invite/$token'
@@ -2083,6 +2095,7 @@ export interface RootRouteChildren {
   PaymentsPlanRoute: typeof PaymentsPlanRoute
   PaymentsRefundsRoute: typeof PaymentsRefundsRoute
   PaymentsSubscribeRoute: typeof PaymentsSubscribeRoute
+  PlaybookDrillDrillIdRoute: typeof PlaybookDrillDrillIdRoute
   RsvpTokenRoute: typeof RsvpTokenRoute
   SessionDetailSessionIdRoute: typeof SessionDetailSessionIdRoute
   StaffInviteTokenRoute: typeof StaffInviteTokenRoute
@@ -2348,6 +2361,13 @@ declare module '@tanstack/react-router' {
       path: '/rsvp/$token'
       fullPath: '/rsvp/$token'
       preLoaderRoute: typeof RsvpTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/playbook-drill/$drillId': {
+      id: '/playbook-drill/$drillId'
+      path: '/playbook-drill/$drillId'
+      fullPath: '/playbook-drill/$drillId'
+      preLoaderRoute: typeof PlaybookDrillDrillIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/payments/subscribe': {
@@ -3775,6 +3795,7 @@ const rootRouteChildren: RootRouteChildren = {
   PaymentsPlanRoute: PaymentsPlanRoute,
   PaymentsRefundsRoute: PaymentsRefundsRoute,
   PaymentsSubscribeRoute: PaymentsSubscribeRoute,
+  PlaybookDrillDrillIdRoute: PlaybookDrillDrillIdRoute,
   RsvpTokenRoute: RsvpTokenRoute,
   SessionDetailSessionIdRoute: SessionDetailSessionIdRoute,
   StaffInviteTokenRoute: StaffInviteTokenRoute,
