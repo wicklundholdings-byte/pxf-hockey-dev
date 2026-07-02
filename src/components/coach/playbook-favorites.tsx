@@ -79,17 +79,23 @@ export function PlaybookFavorites() {
           {showDrills && (drills.length > 0 || MOCK_DRILLS.length > 0) && (
             <Section title="Drills">
               {MOCK_DRILLS.map((d) => (
-                <div key={d.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
+                <Link
+                  key={d.id}
+                  to="/playbook-drill/$drillId"
+                  params={{ drillId: d.id }}
+                  search={{ from: "favorites" }}
+                  className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
+                >
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface text-teal"><Dumbbell size={16} /></div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-foreground">{d.title}</p>
                     <p className="text-[10px] uppercase tracking-wider text-teal">{d.tag}</p>
                   </div>
                   <Heart size={14} className="fill-red-500 text-red-500" />
-                </div>
+                </Link>
               ))}
               {drills.map((d) => (
-                <Link key={d.id} to="/drill-detail/$drillId" params={{ drillId: d.id }} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
+                <Link key={d.id} to="/playbook-drill/$drillId" params={{ drillId: d.id }} search={{ from: "favorites" }} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface text-teal"><Dumbbell size={16} /></div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-foreground">{d.title}</p>
