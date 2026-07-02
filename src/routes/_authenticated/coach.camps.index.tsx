@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, ChevronLeft, ChevronRight, X, Star } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, X, Star, ChevronDown, Check } from "lucide-react";
 import { BlockForStaff } from "@/components/block-for-staff";
 
 export const Route = createFileRoute("/_authenticated/coach/camps/")({
@@ -35,6 +35,8 @@ type CalEvent = {
   durationMin: number;
   rsvp?: { yes: number; maybe: number; no: number };
   href?: string;
+  endDate?: string;   // YYYY-MM-DD (for multi-day events like tournaments)
+  opponent?: string;
 };
 
 // ---------- Color palette ----------
@@ -61,6 +63,10 @@ function longDate(d: Date) {
   return d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
 }
 function isSameDay(a: Date, b: Date) { return toDateKey(a) === toDateKey(b); }
+function eventCoversDay(e: CalEvent, dk: string) {
+  if (!e.endDate) return e.date === dk;
+  return dk >= e.date && dk <= e.endDate;
+}
 
 // ---------- Mock seed (fallback / demo) ----------
 function useMockSeed(): { entities: Entity[]; events: CalEvent[] } {
@@ -68,22 +74,28 @@ function useMockSeed(): { entities: Entity[]; events: CalEvent[] } {
     const entities: Entity[] = [
       { id: "elite", name: "Elite Demo Team", color: "#00BFA5", kind: "team" },
       { id: "atom",  name: "Atom Rep",        color: "#3B82F6", kind: "team" },
+      { id: "bantam", name: "Bantam A",       color: "#22C55E", kind: "team" },
       { id: "camp",  name: "Summer Power Camp", color: "#F59E0B", kind: "camp" },
       { id: "priv",  name: "Private Sessions", color: "#F43F5E", kind: "private" },
     ];
-    // Anchor mock data to "this week" so Day/Week/Month all show something.
+    // Anchor mock data to the current week so Day/Week/Month always render populated.
     const today = new Date();
     const mon = startOfWeek(today);
     const day = (i: number) => toDateKey(addDays(mon, i));
     const events: CalEvent[] = [
-      { id: "e1", entityId: "elite", kind: "practice", title: "Elite Demo Team Practice", location: "Burnaby 8 Rinks · Rink 2", date: day(0), start: "16:00", durationMin: 90, rsvp: { yes: 11, maybe: 1, no: 2 } },
-      { id: "e2", entityId: "priv",  kind: "private",  title: "Private · Jake Andersson", location: "Burnaby 8 Rinks · Rink 4", date: day(1), start: "06:00", durationMin: 60 },
-      { id: "e3", entityId: "camp",  kind: "camp",     title: "Summer Power Camp — Day 1", location: "Dev Ice Center", date: day(1), start: "09:00", durationMin: 360 },
-      { id: "e4", entityId: "priv",  kind: "private",  title: "Private · Jake Andersson", location: "Burnaby 8 Rinks · Rink 4", date: day(3), start: "06:00", durationMin: 60 },
-      { id: "e5", entityId: "elite", kind: "practice", title: "Elite Demo Team Practice", location: "Burnaby 8 Rinks · Rink 2", date: day(3), start: "16:00", durationMin: 90, rsvp: { yes: 11, maybe: 1, no: 2 } },
-      { id: "e6", entityId: "atom",  kind: "practice", title: "Atom Rep Practice",        location: "Burnaby 8 Rinks · Rink 1", date: day(3), start: "19:30", durationMin: 60, rsvp: { yes: 8, maybe: 2, no: 0 } },
-      { id: "e7", entityId: "elite", kind: "game",     title: "Elite Demo Team vs Wolves", location: "Dev Arena · Rink A", date: day(5), start: "10:00", durationMin: 90 },
-      { id: "e8", entityId: "atom",  kind: "game",     title: "Atom Rep vs Bears",         location: "Northside Ice Plex", date: day(5), start: "14:00", durationMin: 90 },
+      // This Thursday
+      { id: "e-priv-thu", entityId: "priv", kind: "private", title: "Private · Jake Andersson", location: "Burnaby 8 Rinks · Rink 4", date: day(3), start: "06:00", durationMin: 60 },
+      { id: "e-elite-thu", entityId: "elite", kind: "practice", title: "Elite Demo Team Practice", location: "Burnaby 8 Rinks · Rink 2", date: day(3), start: "16:00", durationMin: 90, rsvp: { yes: 11, maybe: 1, no: 2 } },
+      { id: "e-atom-thu", entityId: "atom", kind: "practice", title: "Atom Rep Practice", location: "Burnaby 8 Rinks · Rink 1", date: day(3), start: "19:30", durationMin: 60, rsvp: { yes: 8, maybe: 2, no: 0 } },
+      // This Saturday
+      { id: "e-elite-sat", entityId: "elite", kind: "game", title: "Elite Demo Team vs North Delta Lightning", opponent: "North Delta Lightning", location: "Burnaby 8 Rinks · Rink 1", date: day(5), start: "10:00", durationMin: 90 },
+      { id: "e-atom-sat", entityId: "atom", kind: "game", title: "Atom Rep vs Richmond Steel", opponent: "Richmond Steel", location: "Northside Ice Plex", date: day(5), start: "14:00", durationMin: 90 },
+      // Next Thursday — camp opens
+      { id: "e-camp-d1", entityId: "camp", kind: "camp", title: "Summer Power Camp — Day 1", location: "Dev Ice Center", date: day(10), start: "09:00", durationMin: 360 },
+      // Following Thursday — elite practice
+      { id: "e-elite-2wk", entityId: "elite", kind: "practice", title: "Elite Demo Team Practice", location: "Burnaby 8 Rinks · Rink 2", date: day(17), start: "18:00", durationMin: 90, rsvp: { yes: 10, maybe: 2, no: 1 } },
+      // Multi-day tournament (Fri–Mon of that week)
+      { id: "e-tourney", entityId: "elite", kind: "tournament", title: "BC Minor AAA Spring Classic", location: "Delta Ice Complex", date: day(19), endDate: day(22), start: "08:00", durationMin: 480 },
     ];
     return { entities, events };
   }, []);
@@ -179,28 +191,50 @@ function diffMin(a: string, b: string) {
 }
 
 // ---------- Default filter persistence ----------
-const DEFAULT_KEY = "events.defaultFilter";
+const DEFAULT_KEY = "events.defaultFilter.v2";
+
+type FilterCategory = "all" | "camp" | "privates" | "teams";
+type FilterState = { category: FilterCategory; teamId?: string };
+
+function serializeFilter(f: FilterState) {
+  return f.category === "teams" && f.teamId ? `teams:${f.teamId}` : f.category;
+}
+function parseFilter(s: string | null): FilterState {
+  if (!s) return { category: "all" };
+  if (s.startsWith("teams:")) return { category: "teams", teamId: s.slice(6) };
+  if (s === "camp" || s === "privates" || s === "teams" || s === "all") return { category: s };
+  return { category: "all" };
+}
+function filtersEqual(a: FilterState, b: FilterState) {
+  return a.category === b.category && (a.teamId ?? "") === (b.teamId ?? "");
+}
 
 // ---------- Main ----------
 function EventsCalendar() {
   const { entities, events, loading } = useLiveData();
-  const [view, setView] = useState<"day" | "week" | "month">("day");
+  const [view, setView] = useState<"day" | "week" | "month" | "list">("day");
   const [cursor, setCursor] = useState<Date>(new Date());
-  const [filter, setFilter] = useState<string>("all");
-  const [defaultFilter, setDefaultFilter] = useState<string>("all");
+  const [filter, setFilter] = useState<FilterState>({ category: "all" });
+  const [defaultFilter, setDefaultFilter] = useState<FilterState>({ category: "all" });
   const [longPressFor, setLongPressFor] = useState<string | null>(null);
+  const [teamsOpen, setTeamsOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [createAt, setCreateAt] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem(DEFAULT_KEY) : null;
-    if (saved) { setDefaultFilter(saved); setFilter(saved); }
+    if (saved) { const p = parseFilter(saved); setDefaultFilter(p); setFilter(p); }
   }, []);
 
   const visibleEvents = useMemo(() => {
-    if (filter === "all") return events;
-    return events.filter((e) => e.entityId === filter);
-  }, [events, filter]);
+    if (filter.category === "all") return events;
+    if (filter.category === "camp") return events.filter((e) => e.kind === "camp");
+    if (filter.category === "privates") return events.filter((e) => e.kind === "private");
+    // teams
+    if (filter.teamId) return events.filter((e) => e.entityId === filter.teamId);
+    const teamIds = new Set(entities.filter((x) => x.kind === "team").map((x) => x.id));
+    return events.filter((e) => teamIds.has(e.entityId));
+  }, [events, entities, filter]);
 
   const entityById = useMemo(() => {
     const m = new Map<string, Entity>();
@@ -208,16 +242,34 @@ function EventsCalendar() {
     return m;
   }, [entities]);
 
-  function setAsDefault(id: string) {
-    localStorage.setItem(DEFAULT_KEY, id);
-    setDefaultFilter(id);
+  const teamEntities = useMemo(() => entities.filter((e) => e.kind === "team"), [entities]);
+
+  function setAsDefault(f: FilterState) {
+    localStorage.setItem(DEFAULT_KEY, serializeFilter(f));
+    setDefaultFilter(f);
     setLongPressFor(null);
   }
   function removeDefault() {
     localStorage.removeItem(DEFAULT_KEY);
-    setDefaultFilter("all");
+    setDefaultFilter({ category: "all" });
     setLongPressFor(null);
   }
+
+  function longPressLabel(id: string) {
+    if (id === "all") return "All";
+    if (id === "camp") return "Camp";
+    if (id === "privates") return "Privates";
+    if (id === "teams") return filter.teamId ? (entityById.get(filter.teamId)?.name ?? "Teams") : "Teams";
+    return id;
+  }
+  const longPressFilterState = (id: string): FilterState => {
+    if (id === "teams") return { category: "teams", teamId: filter.teamId };
+    return { category: id as FilterCategory };
+  };
+  const isDefaultChip = (id: string) => {
+    if (id === "teams") return defaultFilter.category === "teams";
+    return defaultFilter.category === id;
+  };
 
   return (
     <div className="-mx-5 -mt-2 pb-24">
@@ -235,8 +287,8 @@ function EventsCalendar() {
 
       {/* View toggle */}
       <div className="mt-3 px-5">
-        <div className="grid grid-cols-3 gap-1 rounded-full border border-border bg-surface p-1">
-          {(["month", "week", "day"] as const).map((v) => (
+        <div className="grid grid-cols-4 gap-1 rounded-full border border-border bg-surface p-1">
+          {(["month", "week", "day", "list"] as const).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
@@ -252,21 +304,68 @@ function EventsCalendar() {
       </div>
 
       {/* Filter chips */}
-      <div className="mt-3 flex gap-2 overflow-x-auto px-5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="relative mt-3 flex gap-2 overflow-x-auto px-5 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <FilterChip
-          label="All" active={filter === "all"} isDefault={defaultFilter === "all"}
-          onClick={() => setFilter("all")}
+          label="All" active={filter.category === "all"} isDefault={isDefaultChip("all")}
+          onClick={() => setFilter({ category: "all" })}
           onLongPress={() => setLongPressFor("all")}
         />
-        {entities.map((e) => (
-          <FilterChip
-            key={e.id} label={e.name} color={e.color}
-            active={filter === e.id} isDefault={defaultFilter === e.id}
-            onClick={() => setFilter(e.id)}
-            onLongPress={() => setLongPressFor(e.id)}
-          />
-        ))}
+        <FilterChip
+          label="Camp" color="#F59E0B" active={filter.category === "camp"} isDefault={isDefaultChip("camp")}
+          onClick={() => setFilter({ category: "camp" })}
+          onLongPress={() => setLongPressFor("camp")}
+        />
+        <FilterChip
+          label="Privates" color="#F43F5E" active={filter.category === "privates"} isDefault={isDefaultChip("privates")}
+          onClick={() => setFilter({ category: "privates" })}
+          onLongPress={() => setLongPressFor("privates")}
+        />
+        <FilterChip
+          label={filter.category === "teams" && filter.teamId ? (entityById.get(filter.teamId)?.name ?? "Teams") : "Teams"}
+          color={filter.category === "teams" && filter.teamId ? entityById.get(filter.teamId)?.color : undefined}
+          active={filter.category === "teams"} isDefault={isDefaultChip("teams")}
+          trailingIcon={<ChevronDown size={12} />}
+          onClick={() => {
+            if (filter.category !== "teams") setFilter({ category: "teams" });
+            setTeamsOpen((v) => !v);
+          }}
+          onLongPress={() => setLongPressFor("teams")}
+        />
       </div>
+
+      {/* Teams dropdown */}
+      {teamsOpen && (
+        <div className="fixed inset-0 z-40" onClick={() => setTeamsOpen(false)}>
+          <div
+            className="absolute right-5 top-[168px] w-56 overflow-hidden rounded-2xl border border-border bg-surface shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => { setFilter({ category: "teams" }); setTeamsOpen(false); }}
+              className="flex w-full items-center justify-between px-4 py-2.5 text-sm hover:bg-background/50"
+            >
+              <span className="font-semibold">All Teams</span>
+              {!filter.teamId && filter.category === "teams" && <Check size={14} className="text-teal" />}
+            </button>
+            {teamEntities.length === 0 && (
+              <p className="px-4 py-3 text-xs text-muted-foreground">No teams yet</p>
+            )}
+            {teamEntities.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => { setFilter({ category: "teams", teamId: t.id }); setTeamsOpen(false); }}
+                className="flex w-full items-center justify-between border-t border-border/40 px-4 py-2.5 text-sm hover:bg-background/50"
+              >
+                <span className="flex items-center gap-2">
+                  <span className="inline-block h-2 w-2 rounded-full" style={{ background: t.color }} />
+                  {t.name}
+                </span>
+                {filter.teamId === t.id && <Check size={14} className="text-teal" />}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Long-press default sheet */}
       {longPressFor && (
@@ -274,15 +373,15 @@ function EventsCalendar() {
           <div className="w-full rounded-t-3xl bg-surface p-5" onClick={(e) => e.stopPropagation()}>
             <p className="mb-3 text-xs text-muted-foreground">
               Filter: <span className="font-semibold text-foreground">
-                {longPressFor === "all" ? "All" : entityById.get(longPressFor)?.name}
+                {longPressLabel(longPressFor)}
               </span>
             </p>
-            {defaultFilter === longPressFor ? (
+            {isDefaultChip(longPressFor) ? (
               <button onClick={removeDefault} className="w-full rounded-xl border border-border p-3 text-sm font-semibold">
                 Remove Default
               </button>
             ) : (
-              <button onClick={() => setAsDefault(longPressFor)} className="w-full rounded-xl bg-teal p-3 text-sm font-bold text-background">
+              <button onClick={() => setAsDefault(longPressFilterState(longPressFor))} className="w-full rounded-xl bg-teal p-3 text-sm font-bold text-background">
                 Set as Default
               </button>
             )}
@@ -316,6 +415,9 @@ function EventsCalendar() {
           onPickDay={(d) => { setCursor(d); setView("day"); }}
         />
       )}
+      {!loading && view === "list" && (
+        <ListView events={visibleEvents} entityById={entityById} />
+      )}
 
       {createOpen && (
         <CreateSheet
@@ -330,10 +432,10 @@ function EventsCalendar() {
 
 // ---------- Filter chip with long-press ----------
 function FilterChip({
-  label, color, active, isDefault, onClick, onLongPress,
+  label, color, active, isDefault, onClick, onLongPress, trailingIcon,
 }: {
   label: string; color?: string; active: boolean; isDefault: boolean;
-  onClick: () => void; onLongPress: () => void;
+  onClick: () => void; onLongPress: () => void; trailingIcon?: React.ReactNode;
 }) {
   const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   function start() {
@@ -357,6 +459,7 @@ function FilterChip({
       {color && <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />}
       {label}
       {isDefault && <Star size={10} className="text-amber-400" fill="currentColor" />}
+      {trailingIcon}
     </button>
   );
 }
@@ -375,7 +478,7 @@ function DayView({
   onCreateAt: (time: string) => void;
 }) {
   const key = toDateKey(cursor);
-  const dayEvents = events.filter((e) => e.date === key);
+  const dayEvents = events.filter((e) => eventCoversDay(e, key));
   const isToday = isSameDay(cursor, new Date());
 
   const slots: string[] = [];
@@ -467,6 +570,106 @@ function EventBlockLink({ event, children }: { event: CalEvent; children: React.
   );
 }
 
+// ---------- LIST VIEW ----------
+function ListView({ events, entityById }: { events: CalEvent[]; entityById: Map<string, Entity> }) {
+  const todayKey = toDateKey(new Date());
+  const sorted = useMemo(
+    () => [...events].sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start)),
+    [events],
+  );
+  const upcoming = sorted.filter((e) => (e.endDate ?? e.date) >= todayKey);
+  const past = sorted.filter((e) => (e.endDate ?? e.date) < todayKey).reverse();
+
+  const groupByDate = (list: CalEvent[]) => {
+    const map = new Map<string, CalEvent[]>();
+    list.forEach((e) => {
+      const arr = map.get(e.date) ?? [];
+      arr.push(e);
+      map.set(e.date, arr);
+    });
+    return Array.from(map.entries());
+  };
+
+  const upcomingGroups = groupByDate(upcoming);
+  const pastGroups = groupByDate(past);
+
+  return (
+    <div className="mt-4 space-y-6 px-5">
+      {upcomingGroups.length === 0 && (
+        <p className="rounded-2xl border border-border bg-surface p-6 text-center text-xs text-muted-foreground">
+          No upcoming events.
+        </p>
+      )}
+      {upcomingGroups.map(([date, items]) => (
+        <ListDateGroup key={date} date={date} items={items} entityById={entityById} />
+      ))}
+
+      {pastGroups.length > 0 && (
+        <div className="pt-2">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="h-px flex-1 bg-border/60" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Past</span>
+            <div className="h-px flex-1 bg-border/60" />
+          </div>
+          <div className="space-y-6 opacity-60">
+            {pastGroups.map(([date, items]) => (
+              <ListDateGroup key={date} date={date} items={items} entityById={entityById} muted />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ListDateGroup({
+  date, items, entityById, muted,
+}: {
+  date: string; items: CalEvent[]; entityById: Map<string, Entity>; muted?: boolean;
+}) {
+  const d = parseDateKey(date);
+  const header = d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }).toUpperCase();
+  return (
+    <div>
+      <p className={"mb-2 text-[10px] font-bold uppercase tracking-widest " + (muted ? "text-muted-foreground/70" : "text-muted-foreground")}>
+        {header}
+      </p>
+      <div className="space-y-2">
+        {items.map((e) => {
+          const ent = entityById.get(e.entityId);
+          const color = ent?.color ?? "#00BFA5";
+          const kindLabel =
+            e.kind === "private" ? "PRIVATE SESSION" :
+            e.kind === "tournament" ? "TOURNAMENT" :
+            e.kind.toUpperCase();
+          return (
+            <EventBlockLink key={e.id} event={e}>
+              <div
+                className="overflow-hidden rounded-xl border-l-4 bg-surface p-3"
+                style={{ borderLeftColor: color, background: color + "14" }}
+              >
+                <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color }}>
+                  {kindLabel}{ent?.kind === "team" && e.kind !== "tournament" ? ` · ${ent.name}` : ""}
+                </p>
+                <p className="mt-0.5 text-sm font-bold text-foreground">{e.title}</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  {fmtTime(e.start)}{e.location ? ` · ${e.location}` : ""} · {e.durationMin} min
+                  {e.endDate && e.endDate !== e.date ? ` · thru ${parseDateKey(e.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
+                </p>
+                {e.rsvp && (
+                  <p className="mt-1 text-[11px] font-semibold text-muted-foreground">
+                    ✓{e.rsvp.yes} · ?{e.rsvp.maybe} · ✗{e.rsvp.no}
+                  </p>
+                )}
+              </div>
+            </EventBlockLink>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ---------- WEEK VIEW ----------
 function WeekView({
   cursor, setCursor, events, entityById, onCreateAt, onSwitchDay,
@@ -526,7 +729,7 @@ function WeekView({
             </div>
             {days.map((d) => {
               const dk = toDateKey(d);
-              const dayEvents = events.filter((e) => e.date === dk);
+              const dayEvents = events.filter((e) => eventCoversDay(e, dk));
               return (
                 <div key={dk} className="relative rounded-lg border border-border/40">
                   {Array.from({ length: (HOUR_END - HOUR_START) * 2 + 1 }, (_, i) => (
@@ -597,7 +800,7 @@ function MonthView({
       <div className="mt-1 grid grid-cols-7 gap-1">
         {cells.map((d) => {
           const dk = toDateKey(d);
-          const dayEvents = events.filter((e) => e.date === dk);
+          const dayEvents = events.filter((e) => eventCoversDay(e, dk));
           const inMonth = d.getMonth() === cursor.getMonth();
           const isToday = isSameDay(d, today);
           return (
