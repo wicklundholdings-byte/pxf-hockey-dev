@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import {
   ChevronLeft, Play, Pause, Maximize, ChevronDown, ChevronUp, Plus,
-  Calendar as CalendarIcon, CheckCircle2, X,
+  Calendar as CalendarIcon, CheckCircle2, X, Link as LinkIcon, ExternalLink,
 } from "lucide-react";
 
 const searchSchema = z.object({
@@ -31,6 +31,7 @@ type MockDrill = {
   duration: string;
   description: string;
   videoUrl?: string;
+  ihsUrl?: string;
   progressions: Progression[];
   coachNotes: string;
 };
@@ -58,6 +59,51 @@ const DRILLS: Record<string, MockDrill> = {
   [DEFAULT_DRILL.id]: DEFAULT_DRILL,
   "sk-1": DEFAULT_DRILL,
   "fav-mock-edge": DEFAULT_DRILL,
+  "md-mock-2on1": {
+    id: "md-mock-2on1",
+    name: "2-on-1 Rush Progression",
+    category: "OFFENSIVE",
+    level: "INTERMEDIATE",
+    ages: "Ages 12+",
+    duration: "15m",
+    description: "Two-attacker rush concepts against a single defender with reads and finishing.",
+    ihsUrl: "https://ihs.com/drills/2on1-rush",
+    progressions: [
+      { title: "Base", body: "Attackers enter zone wide; defender maintains gap." },
+      { title: "Add read", body: "Defender commits to shooter or passer; attackers react." },
+      { title: "Game speed", body: "Full-speed rush with coach whistle to reset." },
+    ],
+    coachNotes: "Force decisions early; reward crisp lateral passes.",
+  },
+  "md-mock-back-cross": {
+    id: "md-mock-back-cross",
+    name: "Backward Crossover Circuit",
+    category: "SKATING",
+    level: "BEGINNER",
+    ages: "Ages 10-14",
+    duration: "12m",
+    description: "Full-ice backward crossover circuit for edge control and posture.",
+    progressions: [
+      { title: "Base", body: "Slow-speed backward crossovers around dot circles." },
+      { title: "Add speed", body: "Full-speed crossovers on whistle changes." },
+    ],
+    coachNotes: "Deep knee bend and eyes up through every crossover.",
+  },
+  "md-mock-def-gap": {
+    id: "md-mock-def-gap",
+    name: "Defensive Gap Control",
+    category: "GAMEIQ",
+    level: "ADVANCED",
+    ages: "Ages 13+",
+    duration: "20m",
+    description: "Reads and gap control drills for defenders vs a controlled rush.",
+    progressions: [
+      { title: "Base", body: "1-on-1 controlled rush; defender maintains stick-length gap." },
+      { title: "Add pressure", body: "Attacker adds fakes; defender reads hips." },
+      { title: "Game speed", body: "Live puck battles from blue line in." },
+    ],
+    coachNotes: "Sticks in lanes; force outside; never reach.",
+  },
 };
 
 type FromKey = "library" | "mydrills" | "favorites";
@@ -104,7 +150,11 @@ function PlaybookDrillDetail() {
         <div className="w-16" />
       </div>
 
-      <VideoPlayer src={drill.videoUrl} />
+      {drill.ihsUrl ? (
+        <IhsCard url={drill.ihsUrl} />
+      ) : (
+        <VideoPlayer src={drill.videoUrl} />
+      )}
 
       <div className="mx-auto max-w-xl px-4 pt-5">
         <p className="text-[10px] font-bold tracking-[0.3em] text-teal">{drill.category}</p>
@@ -204,6 +254,23 @@ function PlaybookDrillDetail() {
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return <h2 className="mb-3 mt-7 text-[11px] font-bold tracking-[0.32em] text-foreground/90">{children}</h2>;
+}
+
+function IhsCard({ url }: { url: string }) {
+  return (
+    <div className="flex flex-col items-center gap-3 border-b border-border/60 bg-black px-6 py-10 text-center">
+      <LinkIcon size={28} className="text-teal" />
+      <p className="text-sm font-bold text-foreground">This drill is hosted on IHS</p>
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex items-center gap-1.5 rounded-full border border-teal px-4 py-2 text-xs font-bold text-teal"
+      >
+        Watch on IHS <ExternalLink size={12} />
+      </a>
+    </div>
+  );
 }
 
 function VideoPlayer({ src }: { src?: string }) {
