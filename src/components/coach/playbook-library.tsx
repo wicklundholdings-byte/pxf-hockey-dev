@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { Search, Filter, Clock, Users, Snowflake, Zap, Brain, Dumbbell, Clapperboard } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import {
+  Search, Filter, Clock, Plus, Snowflake, Zap, Brain, Dumbbell, Clapperboard,
+  Calendar as CalendarIcon, CheckCircle2, X, Users,
+} from "lucide-react";
 import { toast } from "sonner";
-import { CoachDrylandLibrary } from "./dryland-library";
 
 type CatId = "all" | "skating" | "slip" | "gameiq" | "dryland";
 
@@ -136,6 +138,50 @@ const GAMEIQ: MockCard[] = [
   },
 ];
 
+const DRYLAND: MockCard[] = [
+  {
+    id: "dl-1",
+    title: "Shooting Release Circuit",
+    category: "DRYLAND",
+    level: "INTERMEDIATE",
+    ages: "Ages 12+",
+    duration: "15m",
+    sessions: "5 items",
+    description: "Off-ice release reps with weight transfer and follow-through focus.",
+    icon: Dumbbell,
+    accent: "violet",
+  },
+  {
+    id: "dl-2",
+    title: "Stickhandling Warm-Up",
+    category: "DRYLAND",
+    level: "BEGINNER",
+    ages: "Ages 8+",
+    duration: "10m",
+    sessions: "4 items",
+    description: "Quick-hands puck control patterns to prime hands before games.",
+    icon: Dumbbell,
+    accent: "violet",
+  },
+  {
+    id: "dl-3",
+    title: "Explosive Lower Body",
+    category: "DRYLAND",
+    level: "ADVANCED",
+    ages: "Ages 14+",
+    duration: "20m",
+    sessions: "6 items",
+    description: "Plyometrics and jump work for first-step and stride power.",
+    icon: Dumbbell,
+    accent: "violet",
+  },
+];
+
+const UPCOMING_PRACTICES = [
+  { id: "p1", label: "Thu Jul 3 · Elite Demo · 6:00 PM", short: "Jul 3" },
+  { id: "p2", label: "Sat Jul 5 · Atom Rep · 4:00 PM", short: "Jul 5" },
+];
+
 const CATS: { id: CatId; label: string }[] = [
   { id: "all", label: "All" },
   { id: "skating", label: "Skating" },
@@ -222,11 +268,78 @@ export function PlaybookLibrary() {
           />
         )}
         {cat !== "gameiq" && showDryland && (
-          <div>
-            <CoachDrylandLibrary />
-          </div>
+          <DrylandSection items={filter(DRYLAND)} />
         )}
       </div>
+    </div>
+  );
+}
+
+function DrylandSection({ items }: { items: MockCard[] }) {
+  return (
+    <section className="space-y-6">
+      <div>
+        <p className="text-[11px] font-semibold tracking-[0.3em] text-muted-foreground">DRILLS</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Individual dryland drills you can drop into any practice session.
+        </p>
+        <div className="mt-3 space-y-3">
+          {items.map((c) => (
+            <MockCardRow key={c.id} card={c} />
+          ))}
+          {items.length === 0 && (
+            <p className="py-6 text-center text-xs text-muted-foreground">No drills match your search.</p>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <p className="text-[11px] font-semibold tracking-[0.3em] text-muted-foreground">PROGRAMS</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Multi-session training programs assigned directly to athletes
+        </p>
+        <div className="mt-3 space-y-3">
+          <DrylandProgramCard />
+          <div className="rounded-2xl border border-dashed border-border/60 bg-surface/40 p-5 text-center">
+            <p className="text-sm font-bold text-foreground">More programs coming soon</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Pre-built multi-week training programs will appear here.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DrylandProgramCard() {
+  return (
+    <div className="rounded-2xl border border-border/60 bg-surface p-4">
+      <div className="flex items-center gap-3">
+        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-brand">
+          <Dumbbell size={20} className="text-primary-foreground" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-bold text-foreground">Shooting Foundations</p>
+          <p className="mt-0.5 text-[11px] uppercase tracking-wider text-teal">
+            DRYLAND PROGRAM · BEGINNER
+          </p>
+          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+            <span>Ages 10-16</span>
+            <span className="flex items-center gap-1"><Clock size={11} />25 min/session</span>
+            <span>4 sessions</span>
+          </p>
+        </div>
+      </div>
+      <p className="mt-2 text-[11px] text-muted-foreground">
+        Develop a quick, accurate release. Daily reps emphasizing weight transfer and follow-through.
+      </p>
+      <button
+        onClick={() => toast("Opening Assign to Athletes flow…")}
+        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-brand py-2 text-xs font-bold text-primary-foreground"
+      >
+        <Users size={13} /> Assign to Athletes →
+      </button>
     </div>
   );
 }
@@ -251,6 +364,8 @@ function CategoryGroup({ title, blurb, items }: { title: string; blurb: string; 
 function MockCardRow({ card }: { card: MockCard }) {
   const Icon = card.icon;
   const accent = ACCENT[card.accent];
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [localToast, setLocalToast] = useState<string | null>(null);
   return (
     <div className="rounded-2xl border border-border/60 bg-surface p-4">
       <Link
@@ -275,9 +390,77 @@ function MockCardRow({ card }: { card: MockCard }) {
         </div>
       </Link>
       <p className="mt-2 text-[11px] text-muted-foreground">{card.description}</p>
-      <button className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-brand py-2 text-xs font-bold text-primary-foreground">
-        <Users size={13} /> Assign to athletes
+      <button
+        onClick={() => setPickerOpen(true)}
+        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-brand py-2 text-xs font-bold text-primary-foreground"
+      >
+        <Plus size={13} /> Add to Session
       </button>
+      {pickerOpen && (
+        <AddToSessionSheet
+          onClose={() => setPickerOpen(false)}
+          onPick={(p) => {
+            setPickerOpen(false);
+            setLocalToast(`Added to ${p.short} practice ✓`);
+            setTimeout(() => setLocalToast(null), 1600);
+          }}
+        />
+      )}
+      {localToast && (
+        <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full border border-teal/40 bg-surface px-4 py-2 text-xs font-semibold text-teal shadow-glow-teal">
+          {localToast}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AddToSessionSheet({
+  onClose,
+  onPick,
+}: {
+  onClose: () => void;
+  onPick: (p: (typeof UPCOMING_PRACTICES)[number]) => void;
+}) {
+  const navigate = useNavigate();
+  return (
+    <div className="fixed inset-0 z-50 flex items-end bg-background/80 backdrop-blur" onClick={onClose}>
+      <div
+        className="mx-auto w-full max-w-xl rounded-t-3xl border-t border-border bg-surface p-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-sm font-bold text-foreground">Add to which session?</p>
+          <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full bg-surface-2 text-foreground">
+            <X size={14} />
+          </button>
+        </div>
+        <ul className="space-y-2">
+          {UPCOMING_PRACTICES.map((p) => (
+            <li key={p.id}>
+              <button
+                onClick={() => onPick(p)}
+                className="flex w-full items-center gap-3 rounded-2xl border border-border bg-background/50 px-4 py-3 text-left"
+              >
+                <CalendarIcon size={16} className="text-teal" />
+                <span className="flex-1 text-sm font-semibold text-foreground">{p.label}</span>
+                <CheckCircle2 size={16} className="text-muted-foreground" />
+              </button>
+            </li>
+          ))}
+          <li>
+            <button
+              onClick={() => {
+                onClose();
+                navigate({ to: "/coach/playbook" });
+              }}
+              className="flex w-full items-center gap-3 rounded-2xl border border-dashed border-border bg-background/30 px-4 py-3 text-left text-sm font-semibold text-teal"
+            >
+              <Plus size={16} /> Create New Session
+            </button>
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }
