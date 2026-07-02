@@ -566,6 +566,106 @@ function EventBlockLink({ event, children }: { event: CalEvent; children: React.
   );
 }
 
+// ---------- LIST VIEW ----------
+function ListView({ events, entityById }: { events: CalEvent[]; entityById: Map<string, Entity> }) {
+  const todayKey = toDateKey(new Date());
+  const sorted = useMemo(
+    () => [...events].sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start)),
+    [events],
+  );
+  const upcoming = sorted.filter((e) => (e.endDate ?? e.date) >= todayKey);
+  const past = sorted.filter((e) => (e.endDate ?? e.date) < todayKey).reverse();
+
+  const groupByDate = (list: CalEvent[]) => {
+    const map = new Map<string, CalEvent[]>();
+    list.forEach((e) => {
+      const arr = map.get(e.date) ?? [];
+      arr.push(e);
+      map.set(e.date, arr);
+    });
+    return Array.from(map.entries());
+  };
+
+  const upcomingGroups = groupByDate(upcoming);
+  const pastGroups = groupByDate(past);
+
+  return (
+    <div className="mt-4 space-y-6 px-5">
+      {upcomingGroups.length === 0 && (
+        <p className="rounded-2xl border border-border bg-surface p-6 text-center text-xs text-muted-foreground">
+          No upcoming events.
+        </p>
+      )}
+      {upcomingGroups.map(([date, items]) => (
+        <ListDateGroup key={date} date={date} items={items} entityById={entityById} />
+      ))}
+
+      {pastGroups.length > 0 && (
+        <div className="pt-2">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="h-px flex-1 bg-border/60" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Past</span>
+            <div className="h-px flex-1 bg-border/60" />
+          </div>
+          <div className="space-y-6 opacity-60">
+            {pastGroups.map(([date, items]) => (
+              <ListDateGroup key={date} date={date} items={items} entityById={entityById} muted />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ListDateGroup({
+  date, items, entityById, muted,
+}: {
+  date: string; items: CalEvent[]; entityById: Map<string, Entity>; muted?: boolean;
+}) {
+  const d = parseDateKey(date);
+  const header = d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }).toUpperCase();
+  return (
+    <div>
+      <p className={"mb-2 text-[10px] font-bold uppercase tracking-widest " + (muted ? "text-muted-foreground/70" : "text-muted-foreground")}>
+        {header}
+      </p>
+      <div className="space-y-2">
+        {items.map((e) => {
+          const ent = entityById.get(e.entityId);
+          const color = ent?.color ?? "#00BFA5";
+          const kindLabel =
+            e.kind === "private" ? "PRIVATE SESSION" :
+            e.kind === "tournament" ? "TOURNAMENT" :
+            e.kind.toUpperCase();
+          return (
+            <EventBlockLink key={e.id} event={e}>
+              <div
+                className="overflow-hidden rounded-xl border-l-4 bg-surface p-3"
+                style={{ borderLeftColor: color, background: color + "14" }}
+              >
+                <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color }}>
+                  {kindLabel}{ent?.kind === "team" && e.kind !== "tournament" ? ` · ${ent.name}` : ""}
+                </p>
+                <p className="mt-0.5 text-sm font-bold text-foreground">{e.title}</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  {fmtTime(e.start)}{e.location ? ` · ${e.location}` : ""} · {e.durationMin} min
+                  {e.endDate && e.endDate !== e.date ? ` · thru ${parseDateKey(e.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
+                </p>
+                {e.rsvp && (
+                  <p className="mt-1 text-[11px] font-semibold text-muted-foreground">
+                    ✓{e.rsvp.yes} · ?{e.rsvp.maybe} · ✗{e.rsvp.no}
+                  </p>
+                )}
+              </div>
+            </EventBlockLink>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ---------- WEEK VIEW ----------
 function WeekView({
   cursor, setCursor, events, entityById, onCreateAt, onSwitchDay,
