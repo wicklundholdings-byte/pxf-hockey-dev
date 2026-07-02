@@ -5,7 +5,6 @@ import {
   Calendar as CalendarIcon, CheckCircle2, X, Users,
 } from "lucide-react";
 import { toast } from "sonner";
-import { CoachDrylandLibrary } from "./dryland-library";
 
 type CatId = "all" | "skating" | "slip" | "gameiq" | "dryland";
 
