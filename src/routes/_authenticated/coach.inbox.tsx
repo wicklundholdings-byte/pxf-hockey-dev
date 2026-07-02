@@ -31,7 +31,7 @@ type Msg = {
   metadata?: any;
   scheduled_for?: string | null;
   parent_message_id?: string | null;
-  attachments?: Array<{ url: string; name?: string; type?: string }>;
+  attachments?: any;
 };
 type PollVote = { message_id: string; user_id: string; option_index: number };
 type Reaction = { id: string; message_id: string; user_id: string; emoji: string };
