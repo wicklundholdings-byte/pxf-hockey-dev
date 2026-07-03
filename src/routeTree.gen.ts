@@ -144,6 +144,7 @@ import { Route as AuthenticatedCoachContactsContactIdRouteImport } from './route
 import { Route as AuthenticatedCoachCampsNewRouteImport } from './routes/_authenticated/coach.camps.new'
 import { Route as AuthenticatedCoachCampsCampIdRouteImport } from './routes/_authenticated/coach.camps.$campId'
 import { Route as AuthenticatedCoachAttendeesAthleteIdRouteImport } from './routes/_authenticated/coach.attendees.$athleteId'
+import { Route as AuthenticatedCoachAthletesAthleteIdRouteImport } from './routes/_authenticated/coach.athletes.$athleteId'
 import { Route as AuthenticatedCoachTeamsTournamentsIndexRouteImport } from './routes/_authenticated/coach.teams..tournaments.index'
 import { Route as AuthenticatedCoachTeamsTeamIdIndexRouteImport } from './routes/_authenticated/coach.teams.$teamId.index'
 import { Route as ParentTeamsTeamIdLeaderboardAthleteIdRouteImport } from './routes/parent.teams.$teamId.leaderboard.$athleteId'
@@ -895,6 +896,12 @@ const AuthenticatedCoachAttendeesAthleteIdRoute =
     path: '/$athleteId',
     getParentRoute: () => AuthenticatedCoachAttendeesRoute,
   } as any)
+const AuthenticatedCoachAthletesAthleteIdRoute =
+  AuthenticatedCoachAthletesAthleteIdRouteImport.update({
+    id: '/athletes/$athleteId',
+    path: '/athletes/$athleteId',
+    getParentRoute: () => AuthenticatedCoachRoute,
+  } as any)
 const AuthenticatedCoachTeamsTournamentsIndexRoute =
   AuthenticatedCoachTeamsTournamentsIndexRouteImport.update({
     id: '/',
@@ -1215,6 +1222,7 @@ export interface FileRoutesByFullPath {
   '/coach/': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug/': typeof CampsSlugIndexRoute
   '/parent/teams/': typeof ParentTeamsIndexRoute
+  '/coach/athletes/$athleteId': typeof AuthenticatedCoachAthletesAthleteIdRoute
   '/coach/attendees/$athleteId': typeof AuthenticatedCoachAttendeesAthleteIdRoute
   '/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
@@ -1378,6 +1386,7 @@ export interface FileRoutesByTo {
   '/coach': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug': typeof CampsSlugIndexRoute
   '/parent/teams': typeof ParentTeamsIndexRoute
+  '/coach/athletes/$athleteId': typeof AuthenticatedCoachAthletesAthleteIdRoute
   '/coach/attendees/$athleteId': typeof AuthenticatedCoachAttendeesAthleteIdRoute
   '/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
@@ -1545,6 +1554,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/': typeof AuthenticatedCoachIndexRoute
   '/camps/$slug/': typeof CampsSlugIndexRoute
   '/parent/teams/': typeof ParentTeamsIndexRoute
+  '/_authenticated/coach/athletes/$athleteId': typeof AuthenticatedCoachAthletesAthleteIdRoute
   '/_authenticated/coach/attendees/$athleteId': typeof AuthenticatedCoachAttendeesAthleteIdRoute
   '/_authenticated/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/_authenticated/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
@@ -1717,6 +1727,7 @@ export interface FileRouteTypes {
     | '/coach/'
     | '/camps/$slug/'
     | '/parent/teams/'
+    | '/coach/athletes/$athleteId'
     | '/coach/attendees/$athleteId'
     | '/coach/camps/$campId'
     | '/coach/camps/new'
@@ -1880,6 +1891,7 @@ export interface FileRouteTypes {
     | '/coach'
     | '/camps/$slug'
     | '/parent/teams'
+    | '/coach/athletes/$athleteId'
     | '/coach/attendees/$athleteId'
     | '/coach/camps/$campId'
     | '/coach/camps/new'
@@ -2046,6 +2058,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach/'
     | '/camps/$slug/'
     | '/parent/teams/'
+    | '/_authenticated/coach/athletes/$athleteId'
     | '/_authenticated/coach/attendees/$athleteId'
     | '/_authenticated/coach/camps/$campId'
     | '/_authenticated/coach/camps/new'
@@ -3108,6 +3121,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachAttendeesAthleteIdRouteImport
       parentRoute: typeof AuthenticatedCoachAttendeesRoute
     }
+    '/_authenticated/coach/athletes/$athleteId': {
+      id: '/_authenticated/coach/athletes/$athleteId'
+      path: '/athletes/$athleteId'
+      fullPath: '/coach/athletes/$athleteId'
+      preLoaderRoute: typeof AuthenticatedCoachAthletesAthleteIdRouteImport
+      parentRoute: typeof AuthenticatedCoachRoute
+    }
     '/_authenticated/coach/teams/tournaments/': {
       id: '/_authenticated/coach/teams/tournaments/'
       path: '/'
@@ -3624,6 +3644,7 @@ interface AuthenticatedCoachRouteChildren {
   AuthenticatedCoachTrainRoute: typeof AuthenticatedCoachTrainRoute
   AuthenticatedCoachWaiversRoute: typeof AuthenticatedCoachWaiversRoute
   AuthenticatedCoachIndexRoute: typeof AuthenticatedCoachIndexRoute
+  AuthenticatedCoachAthletesAthleteIdRoute: typeof AuthenticatedCoachAthletesAthleteIdRoute
   AuthenticatedCoachCampsCampIdRoute: typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   AuthenticatedCoachCampsNewRoute: typeof AuthenticatedCoachCampsNewRoute
   AuthenticatedCoachAthletesIndexRoute: typeof AuthenticatedCoachAthletesIndexRoute
@@ -3657,6 +3678,8 @@ const AuthenticatedCoachRouteChildren: AuthenticatedCoachRouteChildren = {
   AuthenticatedCoachTrainRoute: AuthenticatedCoachTrainRoute,
   AuthenticatedCoachWaiversRoute: AuthenticatedCoachWaiversRoute,
   AuthenticatedCoachIndexRoute: AuthenticatedCoachIndexRoute,
+  AuthenticatedCoachAthletesAthleteIdRoute:
+    AuthenticatedCoachAthletesAthleteIdRoute,
   AuthenticatedCoachCampsCampIdRoute:
     AuthenticatedCoachCampsCampIdRouteWithChildren,
   AuthenticatedCoachCampsNewRoute: AuthenticatedCoachCampsNewRoute,
