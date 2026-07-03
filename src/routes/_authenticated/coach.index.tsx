@@ -623,7 +623,7 @@ function EliteCoachDashboard() {
       <section>
         <div className="flex items-center justify-between">
           <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Upcoming Privates</h2>
-          <Link to="/coach/bookings" className="text-[11px] font-semibold text-teal">View all ›</Link>
+          <Link to="/coach/privates" className="text-[11px] font-semibold text-teal">View all ›</Link>
         </div>
         {privates.length === 0 ? (
           <div className="mt-2 space-y-2">

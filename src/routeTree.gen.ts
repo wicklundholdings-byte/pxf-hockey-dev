@@ -92,6 +92,7 @@ import { Route as CampsSlugRegisterRouteImport } from './routes/camps.$slug.regi
 import { Route as CampsSlugPaymentRouteImport } from './routes/camps.$slug.payment'
 import { Route as CampsSlugHealthRouteImport } from './routes/camps.$slug.health'
 import { Route as CampsSlugConfirmedRouteImport } from './routes/camps.$slug.confirmed'
+import { Route as BookPrivateSessionIdRouteImport } from './routes/book.private.$sessionId'
 import { Route as AuthenticatedHomeCoachSessionsRouteImport } from './routes/_authenticated/home-coach.sessions'
 import { Route as AuthenticatedHomeCoachProfileRouteImport } from './routes/_authenticated/home-coach.profile'
 import { Route as AuthenticatedHomeCoachInboxRouteImport } from './routes/_authenticated/home-coach.inbox'
@@ -600,6 +601,11 @@ const CampsSlugConfirmedRoute = CampsSlugConfirmedRouteImport.update({
   id: '/confirmed',
   path: '/confirmed',
   getParentRoute: () => CampsSlugRoute,
+} as any)
+const BookPrivateSessionIdRoute = BookPrivateSessionIdRouteImport.update({
+  id: '/book/private/$sessionId',
+  path: '/book/private/$sessionId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedHomeCoachSessionsRoute =
   AuthenticatedHomeCoachSessionsRouteImport.update({
@@ -1225,6 +1231,7 @@ export interface FileRoutesByFullPath {
   '/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
   '/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
+  '/book/private/$sessionId': typeof BookPrivateSessionIdRoute
   '/camps/$slug/confirmed': typeof CampsSlugConfirmedRoute
   '/camps/$slug/health': typeof CampsSlugHealthRoute
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
@@ -1393,6 +1400,7 @@ export interface FileRoutesByTo {
   '/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
   '/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
+  '/book/private/$sessionId': typeof BookPrivateSessionIdRoute
   '/camps/$slug/confirmed': typeof CampsSlugConfirmedRoute
   '/camps/$slug/health': typeof CampsSlugHealthRoute
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
@@ -1563,6 +1571,7 @@ export interface FileRoutesById {
   '/_authenticated/home-coach/inbox': typeof AuthenticatedHomeCoachInboxRoute
   '/_authenticated/home-coach/profile': typeof AuthenticatedHomeCoachProfileRoute
   '/_authenticated/home-coach/sessions': typeof AuthenticatedHomeCoachSessionsRoute
+  '/book/private/$sessionId': typeof BookPrivateSessionIdRoute
   '/camps/$slug/confirmed': typeof CampsSlugConfirmedRoute
   '/camps/$slug/health': typeof CampsSlugHealthRoute
   '/camps/$slug/payment': typeof CampsSlugPaymentRoute
@@ -1739,6 +1748,7 @@ export interface FileRouteTypes {
     | '/home-coach/inbox'
     | '/home-coach/profile'
     | '/home-coach/sessions'
+    | '/book/private/$sessionId'
     | '/camps/$slug/confirmed'
     | '/camps/$slug/health'
     | '/camps/$slug/payment'
@@ -1907,6 +1917,7 @@ export interface FileRouteTypes {
     | '/home-coach/inbox'
     | '/home-coach/profile'
     | '/home-coach/sessions'
+    | '/book/private/$sessionId'
     | '/camps/$slug/confirmed'
     | '/camps/$slug/health'
     | '/camps/$slug/payment'
@@ -2076,6 +2087,7 @@ export interface FileRouteTypes {
     | '/_authenticated/home-coach/inbox'
     | '/_authenticated/home-coach/profile'
     | '/_authenticated/home-coach/sessions'
+    | '/book/private/$sessionId'
     | '/camps/$slug/confirmed'
     | '/camps/$slug/health'
     | '/camps/$slug/payment'
@@ -2207,6 +2219,7 @@ export interface RootRouteChildren {
   TeamInviteTokenRoute: typeof TeamInviteTokenRoute
   CampsIndexRoute: typeof CampsIndexRoute
   StoreIndexRoute: typeof StoreIndexRoute
+  BookPrivateSessionIdRoute: typeof BookPrivateSessionIdRoute
   CombineShareTokenRoute: typeof CombineShareTokenRoute
   RsvpTeamTokenRoute: typeof RsvpTeamTokenRoute
   ApiPublicHooksRsvpRemindersRoute: typeof ApiPublicHooksRsvpRemindersRoute
@@ -2794,6 +2807,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/camps/$slug/confirmed'
       preLoaderRoute: typeof CampsSlugConfirmedRouteImport
       parentRoute: typeof CampsSlugRoute
+    }
+    '/book/private/$sessionId': {
+      id: '/book/private/$sessionId'
+      path: '/book/private/$sessionId'
+      fullPath: '/book/private/$sessionId'
+      preLoaderRoute: typeof BookPrivateSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/home-coach/sessions': {
       id: '/_authenticated/home-coach/sessions'
@@ -3981,6 +4001,7 @@ const rootRouteChildren: RootRouteChildren = {
   TeamInviteTokenRoute: TeamInviteTokenRoute,
   CampsIndexRoute: CampsIndexRoute,
   StoreIndexRoute: StoreIndexRoute,
+  BookPrivateSessionIdRoute: BookPrivateSessionIdRoute,
   CombineShareTokenRoute: CombineShareTokenRoute,
   RsvpTeamTokenRoute: RsvpTeamTokenRoute,
   ApiPublicHooksRsvpRemindersRoute: ApiPublicHooksRsvpRemindersRoute,
