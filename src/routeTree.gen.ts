@@ -142,6 +142,7 @@ import { Route as AuthenticatedCoachTeamsTournamentsRouteImport } from './routes
 import { Route as AuthenticatedCoachTeamsNewRouteImport } from './routes/_authenticated/coach.teams.new'
 import { Route as AuthenticatedCoachTeamsMediaRouteImport } from './routes/_authenticated/coach.teams..media'
 import { Route as AuthenticatedCoachTeamsTeamIdRouteImport } from './routes/_authenticated/coach.teams.$teamId'
+import { Route as AuthenticatedCoachPrivatesSessionIdRouteImport } from './routes/_authenticated/coach.privates.$sessionId'
 import { Route as AuthenticatedCoachContactsContactIdRouteImport } from './routes/_authenticated/coach.contacts.$contactId'
 import { Route as AuthenticatedCoachCampsNewRouteImport } from './routes/_authenticated/coach.camps.new'
 import { Route as AuthenticatedCoachCampsCampIdRouteImport } from './routes/_authenticated/coach.camps.$campId'
@@ -885,6 +886,12 @@ const AuthenticatedCoachTeamsTeamIdRoute =
     path: '/$teamId',
     getParentRoute: () => AuthenticatedCoachTeamsRoute,
   } as any)
+const AuthenticatedCoachPrivatesSessionIdRoute =
+  AuthenticatedCoachPrivatesSessionIdRouteImport.update({
+    id: '/privates/$sessionId',
+    path: '/privates/$sessionId',
+    getParentRoute: () => AuthenticatedCoachRoute,
+  } as any)
 const AuthenticatedCoachContactsContactIdRoute =
   AuthenticatedCoachContactsContactIdRouteImport.update({
     id: '/$contactId',
@@ -1241,6 +1248,7 @@ export interface FileRoutesByFullPath {
   '/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
   '/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
+  '/coach/privates/$sessionId': typeof AuthenticatedCoachPrivatesSessionIdRoute
   '/coach/teams/$teamId': typeof AuthenticatedCoachTeamsTeamIdRouteWithChildren
   '/coach/teams/media': typeof AuthenticatedCoachTeamsMediaRoute
   '/coach/teams/new': typeof AuthenticatedCoachTeamsNewRoute
@@ -1407,6 +1415,7 @@ export interface FileRoutesByTo {
   '/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
   '/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
+  '/coach/privates/$sessionId': typeof AuthenticatedCoachPrivatesSessionIdRoute
   '/coach/teams/media': typeof AuthenticatedCoachTeamsMediaRoute
   '/coach/teams/new': typeof AuthenticatedCoachTeamsNewRoute
   '/api/public/hooks/rsvp-reminders': typeof ApiPublicHooksRsvpRemindersRoute
@@ -1577,6 +1586,7 @@ export interface FileRoutesById {
   '/_authenticated/coach/camps/$campId': typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   '/_authenticated/coach/camps/new': typeof AuthenticatedCoachCampsNewRoute
   '/_authenticated/coach/contacts/$contactId': typeof AuthenticatedCoachContactsContactIdRoute
+  '/_authenticated/coach/privates/$sessionId': typeof AuthenticatedCoachPrivatesSessionIdRoute
   '/_authenticated/coach/teams/$teamId': typeof AuthenticatedCoachTeamsTeamIdRouteWithChildren
   '/_authenticated/coach/teams/media': typeof AuthenticatedCoachTeamsMediaRoute
   '/_authenticated/coach/teams/new': typeof AuthenticatedCoachTeamsNewRoute
@@ -1752,6 +1762,7 @@ export interface FileRouteTypes {
     | '/coach/camps/$campId'
     | '/coach/camps/new'
     | '/coach/contacts/$contactId'
+    | '/coach/privates/$sessionId'
     | '/coach/teams/$teamId'
     | '/coach/teams/media'
     | '/coach/teams/new'
@@ -1918,6 +1929,7 @@ export interface FileRouteTypes {
     | '/coach/camps/$campId'
     | '/coach/camps/new'
     | '/coach/contacts/$contactId'
+    | '/coach/privates/$sessionId'
     | '/coach/teams/media'
     | '/coach/teams/new'
     | '/api/public/hooks/rsvp-reminders'
@@ -2087,6 +2099,7 @@ export interface FileRouteTypes {
     | '/_authenticated/coach/camps/$campId'
     | '/_authenticated/coach/camps/new'
     | '/_authenticated/coach/contacts/$contactId'
+    | '/_authenticated/coach/privates/$sessionId'
     | '/_authenticated/coach/teams/$teamId'
     | '/_authenticated/coach/teams/media'
     | '/_authenticated/coach/teams/new'
@@ -3132,6 +3145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCoachTeamsTeamIdRouteImport
       parentRoute: typeof AuthenticatedCoachTeamsRoute
     }
+    '/_authenticated/coach/privates/$sessionId': {
+      id: '/_authenticated/coach/privates/$sessionId'
+      path: '/privates/$sessionId'
+      fullPath: '/coach/privates/$sessionId'
+      preLoaderRoute: typeof AuthenticatedCoachPrivatesSessionIdRouteImport
+      parentRoute: typeof AuthenticatedCoachRoute
+    }
     '/_authenticated/coach/contacts/$contactId': {
       id: '/_authenticated/coach/contacts/$contactId'
       path: '/$contactId'
@@ -3686,6 +3706,7 @@ interface AuthenticatedCoachRouteChildren {
   AuthenticatedCoachAthletesAthleteIdRoute: typeof AuthenticatedCoachAthletesAthleteIdRoute
   AuthenticatedCoachCampsCampIdRoute: typeof AuthenticatedCoachCampsCampIdRouteWithChildren
   AuthenticatedCoachCampsNewRoute: typeof AuthenticatedCoachCampsNewRoute
+  AuthenticatedCoachPrivatesSessionIdRoute: typeof AuthenticatedCoachPrivatesSessionIdRoute
   AuthenticatedCoachAthletesIndexRoute: typeof AuthenticatedCoachAthletesIndexRoute
   AuthenticatedCoachCampsIndexRoute: typeof AuthenticatedCoachCampsIndexRoute
   AuthenticatedCoachPrivatesIndexRoute: typeof AuthenticatedCoachPrivatesIndexRoute
@@ -3723,6 +3744,8 @@ const AuthenticatedCoachRouteChildren: AuthenticatedCoachRouteChildren = {
   AuthenticatedCoachCampsCampIdRoute:
     AuthenticatedCoachCampsCampIdRouteWithChildren,
   AuthenticatedCoachCampsNewRoute: AuthenticatedCoachCampsNewRoute,
+  AuthenticatedCoachPrivatesSessionIdRoute:
+    AuthenticatedCoachPrivatesSessionIdRoute,
   AuthenticatedCoachAthletesIndexRoute: AuthenticatedCoachAthletesIndexRoute,
   AuthenticatedCoachCampsIndexRoute: AuthenticatedCoachCampsIndexRoute,
   AuthenticatedCoachPrivatesIndexRoute: AuthenticatedCoachPrivatesIndexRoute,
