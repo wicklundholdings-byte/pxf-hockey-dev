@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, Link, redirect, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutDashboard, CalendarDays, MessageSquare, Megaphone, Settings, BookOpen, Users, Camera } from "lucide-react";
+import { LayoutDashboard, CalendarDays, MessageSquare, Megaphone, Settings, BookOpen, Users, Camera, UserCircle2 } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { TrialBanner } from "@/components/trial-banner";
 import { DevTierSwitcher } from "@/components/tier-gate";
@@ -45,6 +45,9 @@ function CoachLayout() {
           <BackButton />
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[10px] font-bold tracking-wider text-teal">COACH</span>
+            <Link to="/coach/athletes" className="rounded-full border border-border bg-surface p-1.5 text-muted-foreground hover:text-foreground" aria-label="Athletes">
+              <UserCircle2 size={14} />
+            </Link>
             <Link to="/coach/broadcast" className="rounded-full border border-border bg-surface p-1.5 text-muted-foreground hover:text-foreground" aria-label="Broadcast">
               <Megaphone size={14} />
             </Link>

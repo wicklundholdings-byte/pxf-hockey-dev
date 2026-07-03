@@ -59,6 +59,7 @@ import { Route as ParentTrainRouteImport } from './routes/parent.train'
 import { Route as ParentScheduleRouteImport } from './routes/parent.schedule'
 import { Route as ParentProfileRouteImport } from './routes/parent.profile'
 import { Route as ParentPlaybookRouteImport } from './routes/parent.playbook'
+import { Route as ParentLeaderboardRouteImport } from './routes/parent.leaderboard'
 import { Route as ParentInboxRouteImport } from './routes/parent.inbox'
 import { Route as ParentCampsRouteImport } from './routes/parent.camps'
 import { Route as OnboardingParentRouteImport } from './routes/onboarding.parent'
@@ -427,6 +428,11 @@ const ParentProfileRoute = ParentProfileRouteImport.update({
 const ParentPlaybookRoute = ParentPlaybookRouteImport.update({
   id: '/playbook',
   path: '/playbook',
+  getParentRoute: () => ParentRoute,
+} as any)
+const ParentLeaderboardRoute = ParentLeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
   getParentRoute: () => ParentRoute,
 } as any)
 const ParentInboxRoute = ParentInboxRouteImport.update({
@@ -1150,6 +1156,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/parent': typeof OnboardingParentRoute
   '/parent/camps': typeof ParentCampsRoute
   '/parent/inbox': typeof ParentInboxRoute
+  '/parent/leaderboard': typeof ParentLeaderboardRoute
   '/parent/playbook': typeof ParentPlaybookRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
@@ -1316,6 +1323,7 @@ export interface FileRoutesByTo {
   '/onboarding/parent': typeof OnboardingParentRoute
   '/parent/camps': typeof ParentCampsRoute
   '/parent/inbox': typeof ParentInboxRoute
+  '/parent/leaderboard': typeof ParentLeaderboardRoute
   '/parent/playbook': typeof ParentPlaybookRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
@@ -1482,6 +1490,7 @@ export interface FileRoutesById {
   '/onboarding/parent': typeof OnboardingParentRoute
   '/parent/camps': typeof ParentCampsRoute
   '/parent/inbox': typeof ParentInboxRoute
+  '/parent/leaderboard': typeof ParentLeaderboardRoute
   '/parent/playbook': typeof ParentPlaybookRoute
   '/parent/profile': typeof ParentProfileRoute
   '/parent/schedule': typeof ParentScheduleRoute
@@ -1655,6 +1664,7 @@ export interface FileRouteTypes {
     | '/onboarding/parent'
     | '/parent/camps'
     | '/parent/inbox'
+    | '/parent/leaderboard'
     | '/parent/playbook'
     | '/parent/profile'
     | '/parent/schedule'
@@ -1821,6 +1831,7 @@ export interface FileRouteTypes {
     | '/onboarding/parent'
     | '/parent/camps'
     | '/parent/inbox'
+    | '/parent/leaderboard'
     | '/parent/playbook'
     | '/parent/profile'
     | '/parent/schedule'
@@ -1986,6 +1997,7 @@ export interface FileRouteTypes {
     | '/onboarding/parent'
     | '/parent/camps'
     | '/parent/inbox'
+    | '/parent/leaderboard'
     | '/parent/playbook'
     | '/parent/profile'
     | '/parent/schedule'
@@ -2524,6 +2536,13 @@ declare module '@tanstack/react-router' {
       path: '/playbook'
       fullPath: '/parent/playbook'
       preLoaderRoute: typeof ParentPlaybookRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/parent/leaderboard': {
+      id: '/parent/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/parent/leaderboard'
+      preLoaderRoute: typeof ParentLeaderboardRouteImport
       parentRoute: typeof ParentRoute
     }
     '/parent/inbox': {
@@ -3801,6 +3820,7 @@ const ParentTeamsTeamIdRouteWithChildren =
 interface ParentRouteChildren {
   ParentCampsRoute: typeof ParentCampsRoute
   ParentInboxRoute: typeof ParentInboxRoute
+  ParentLeaderboardRoute: typeof ParentLeaderboardRoute
   ParentPlaybookRoute: typeof ParentPlaybookRoute
   ParentProfileRoute: typeof ParentProfileRoute
   ParentScheduleRoute: typeof ParentScheduleRoute
@@ -3821,6 +3841,7 @@ interface ParentRouteChildren {
 const ParentRouteChildren: ParentRouteChildren = {
   ParentCampsRoute: ParentCampsRoute,
   ParentInboxRoute: ParentInboxRoute,
+  ParentLeaderboardRoute: ParentLeaderboardRoute,
   ParentPlaybookRoute: ParentPlaybookRoute,
   ParentProfileRoute: ParentProfileRoute,
   ParentScheduleRoute: ParentScheduleRoute,
