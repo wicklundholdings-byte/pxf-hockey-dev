@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X, ListChecks, BookOpen, ListPlus, ShieldCheck, QrCode, Bell, ChevronDown, ChevronRight, ClipboardList, MessageSquare, Camera, Hourglass, Star, Wallet, Lock, PlayCircle, Check } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Users, Clock, DollarSign, Share2, Pencil, Download, Image as ImageIcon, CheckCircle2, Circle, Search, FileText, Settings2, Tag, CreditCard, Plus, X, ListChecks, BookOpen, ListPlus, ShieldCheck, QrCode, Bell, ChevronDown, ChevronRight, ClipboardList, MessageSquare, Camera, Hourglass, Star, Wallet, Lock, PlayCircle, Check, Video } from "lucide-react";
+import { FilmingModeSheet } from "@/components/media/filming-mode-sheet";
 import { VenueMap } from "@/components/venue-map";
 import { StatusBadge } from "@/components/coach/status-badge";
 import { QRScannerModal } from "@/components/coach/qr-scanner";
@@ -237,9 +238,23 @@ function CampDetailPage() {
   return (
     <div className="-mx-5 -mt-2">
       <div className="px-5 pt-2">
-        <Link to="/coach/camps" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-          <ArrowLeft size={12} /> Events
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link to="/coach/camps" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+            <ArrowLeft size={12} /> Events
+          </Link>
+          <button
+            onClick={() => setFilmingOpen(true)}
+            aria-label="Filming Mode"
+            className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface text-teal"
+          >
+            <Video size={16} />
+          </button>
+        </div>
+        <FilmingModeSheet
+          open={filmingOpen}
+          onClose={() => setFilmingOpen(false)}
+          context={{ contextLabel: `${camp.name} · Camp` }}
+        />
 
         {/* Hero */}
         <div className="mt-2 relative h-32 w-full overflow-hidden rounded-2xl border border-border bg-card">
