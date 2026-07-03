@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronRight, Users, Building2, Search } from "lucide-react";
+import { ChevronRight, Users, Building2, Search, Trophy } from "lucide-react";
 import { listMyHockeySchools } from "@/lib/hockey-schools.functions";
 
 export const Route = createFileRoute("/parent/teams/")({
@@ -84,7 +84,12 @@ function ParentTeamsIndex() {
     <div className="px-5 pt-4 pb-4 space-y-6">
       <div>
         <p className="text-[11px] font-semibold tracking-[0.3em] text-muted-foreground">MY CLUBS</p>
-        <h2 className="mt-1 font-display text-2xl font-bold">My Teams</h2>
+        <div className="mt-1 flex items-center justify-between">
+          <h2 className="font-display text-2xl font-bold">My Teams</h2>
+          <Link to="/parent/leaderboard" className="inline-flex items-center gap-1 rounded-full border border-teal/40 bg-teal/10 px-3 py-1 text-[11px] font-bold text-teal">
+            <Trophy size={12} /> Leaderboard
+          </Link>
+        </div>
         <div className="mt-3 space-y-2">
           {loading && <p className="text-xs text-muted-foreground">Loading…</p>}
           {!loading && teams.length === 0 && (
