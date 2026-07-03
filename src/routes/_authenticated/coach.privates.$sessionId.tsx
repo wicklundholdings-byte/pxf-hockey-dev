@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useState } from "react";
-import { Copy, MessageSquare, Plus } from "lucide-react";
+import { Copy, MessageSquare, Plus, Video } from "lucide-react";
+import { FilmingModeSheet } from "@/components/media/filming-mode-sheet";
 import { toast } from "sonner";
 import {
   useMockPrivates,
@@ -19,6 +20,7 @@ function SessionDetail() {
   const navigate = useNavigate();
   const p = privates.find((x) => x.id === sessionId);
   const [addingName, setAddingName] = useState("");
+  const [filmingOpen, setFilmingOpen] = useState(false);
 
   if (!p) {
     return <div className="p-6 text-sm text-muted-foreground">Session not found.</div>;
@@ -56,6 +58,20 @@ function SessionDetail() {
 
   return (
     <div className="space-y-4 pb-24">
+      <div className="flex justify-end">
+        <button
+          onClick={() => setFilmingOpen(true)}
+          aria-label="Filming Mode"
+          className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface text-teal"
+        >
+          <Video size={16} />
+        </button>
+      </div>
+      <FilmingModeSheet
+        open={filmingOpen}
+        onClose={() => setFilmingOpen(false)}
+        context={{ contextLabel: `${fmtPrivateDate(p.date)} · Private (${p.type})` }}
+      />
       <section className="rounded-2xl border border-border bg-card p-4">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           {fmtPrivateDate(p.date)} · {p.time} · {p.duration} min

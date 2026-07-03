@@ -6,6 +6,7 @@ import { markAttendance, recordGameStats } from "@/lib/teams.functions";
 import { ArrowLeft, CheckCircle2, XCircle, Clock, ClipboardList, Trophy, BarChart3, Users, Navigation, Camera, Video, Pencil } from "lucide-react";
 import { GameMediaTab } from "@/components/teams/game-media-tab";
 import { useAuth } from "@/hooks/use-auth";
+import { FilmingModeSheet } from "@/components/media/filming-mode-sheet";
 
 export const Route = createFileRoute("/_authenticated/coach/teams/$teamId/schedule/$eventId/")({
   component: EventDetail,
@@ -334,6 +335,7 @@ function PracticeDetail({
   const plan = MOCK_PLAN;
   const totalMin = plan.blocks.reduce((s, b) => s + b.minutes, 0);
   const [notes, setNotes] = useState<string>("");
+  const [filmingOpen, setFilmingOpen] = useState(false);
 
   const dateLabel = (() => {
     try {
@@ -357,9 +359,29 @@ function PracticeDetail({
 
   return (
     <div>
-      <Link to="/coach/teams/$teamId/schedule" params={{ teamId }} className="inline-flex items-center gap-1 text-xs text-teal">
-        <ArrowLeft size={14} /> Schedule
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link to="/coach/teams/$teamId/schedule" params={{ teamId }} className="inline-flex items-center gap-1 text-xs text-teal">
+          <ArrowLeft size={14} /> Schedule
+        </Link>
+        <button
+          onClick={() => setFilmingOpen(true)}
+          aria-label="Filming Mode"
+          className="grid h-9 w-9 place-items-center rounded-full border border-border bg-surface text-teal"
+        >
+          <Video size={16} />
+        </button>
+      </div>
+
+      <FilmingModeSheet
+        open={filmingOpen}
+        onClose={() => setFilmingOpen(false)}
+        context={{
+          contextLabel: `${dateLabel} · Practice`,
+          attendeeIds: roster
+            .map((p) => (p.display_name.split(",")[0] || p.display_name).toLowerCase().replace(/[^a-z]/g, ""))
+            .slice(0, 0), // no reliable athlete-id mapping in mock, keep empty
+        }}
+      />
 
       <div className="mt-2 rounded-2xl border border-border bg-surface p-4">
         <p className="text-[10px] font-bold tracking-wider text-muted-foreground">PRACTICE</p>
