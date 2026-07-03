@@ -1,13 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronLeft, Phone, Mail, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronLeft, Phone, Mail, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { MOCK_ATHLETES } from "./coach.athletes.index";
+import { VideosGrid } from "@/components/media/videos-grid";
+import { FilmingModeSheet } from "@/components/media/filming-mode-sheet";
+import { clipsForAthlete, useClips } from "@/lib/mock-videos";
 
 export const Route = createFileRoute("/_authenticated/coach/athletes/$athleteId")({
   component: AthleteProfile,
 });
 
-type Tab = "overview" | "stats" | "training" | "notes";
+type Tab = "overview" | "stats" | "training" | "videos" | "notes";
 
 const GAME_LOG = [
   { date: "Jun 28", opp: "vs North Delta", g: 1, a: 2, pts: 3, plus: 2 },
@@ -33,6 +36,8 @@ function AthleteProfile() {
   const { athleteId } = Route.useParams();
   const athlete = MOCK_ATHLETES.find((a) => a.id === athleteId) ?? MOCK_ATHLETES[0];
   const [tab, setTab] = useState<Tab>("overview");
+  const clips = useClips().filter((c) => c.athleteIds.includes(athlete.id));
+  const [filmingOpen, setFilmingOpen] = useState(false);
 
   return (
     <div className="space-y-4 pb-10">
@@ -54,12 +59,12 @@ function AthleteProfile() {
 
       {/* Tabs */}
       <div className="flex gap-1 rounded-full border border-border bg-surface p-1">
-        {(["overview", "stats", "training", "notes"] as Tab[]).map((t) => (
+        {(["overview", "stats", "training", "videos", "notes"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={
-              "flex-1 rounded-full py-1.5 text-[11px] font-bold capitalize " +
+              "flex-1 rounded-full py-1.5 text-[10px] font-bold capitalize " +
               (tab === t ? "bg-teal text-background" : "text-muted-foreground")
             }
           >
@@ -71,6 +76,22 @@ function AthleteProfile() {
       {tab === "overview" && <OverviewTab />}
       {tab === "stats" && <StatsTab />}
       {tab === "training" && <TrainingTab />}
+      {tab === "videos" && (
+        <div className="space-y-3">
+          <button
+            onClick={() => setFilmingOpen(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-teal py-2.5 text-[12px] font-bold text-background"
+          >
+            <Plus size={14} /> Add Clip
+          </button>
+          <VideosGrid clips={clips} showApprovalBadges />
+          <FilmingModeSheet
+            open={filmingOpen}
+            onClose={() => setFilmingOpen(false)}
+            context={{ contextLabel: `${athlete.name} · Clip`, attendeeIds: [athlete.id] }}
+          />
+        </div>
+      )}
       {tab === "notes" && <NotesTab />}
     </div>
   );
