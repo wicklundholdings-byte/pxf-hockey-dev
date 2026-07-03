@@ -86,6 +86,7 @@ import { Route as ParentHockeySchoolsBrowseRouteImport } from './routes/parent.h
 import { Route as ParentHockeySchoolOwnerIdRouteImport } from './routes/parent.hockey-school.$ownerId'
 import { Route as ParentConversationConversationIdRouteImport } from './routes/parent.conversation.$conversationId'
 import { Route as ParentCampCampIdRouteImport } from './routes/parent.camp.$campId'
+import { Route as MediaClipClipIdRouteImport } from './routes/media.clip.$clipId'
 import { Route as CombineShareTokenRouteImport } from './routes/combine.share.$token'
 import { Route as CampsSlugWaiverRouteImport } from './routes/camps.$slug.waiver'
 import { Route as CampsSlugRegisterRouteImport } from './routes/camps.$slug.register'
@@ -571,6 +572,11 @@ const ParentCampCampIdRoute = ParentCampCampIdRouteImport.update({
   id: '/camp/$campId',
   path: '/camp/$campId',
   getParentRoute: () => ParentRoute,
+} as any)
+const MediaClipClipIdRoute = MediaClipClipIdRouteImport.update({
+  id: '/media/clip/$clipId',
+  path: '/media/clip/$clipId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CombineShareTokenRoute = CombineShareTokenRouteImport.update({
   id: '/combine/share/$token',
@@ -1238,6 +1244,7 @@ export interface FileRoutesByFullPath {
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
   '/combine/share/$token': typeof CombineShareTokenRoute
+  '/media/clip/$clipId': typeof MediaClipClipIdRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/parent/hockey-school/$ownerId': typeof ParentHockeySchoolOwnerIdRoute
@@ -1407,6 +1414,7 @@ export interface FileRoutesByTo {
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
   '/combine/share/$token': typeof CombineShareTokenRoute
+  '/media/clip/$clipId': typeof MediaClipClipIdRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/parent/hockey-school/$ownerId': typeof ParentHockeySchoolOwnerIdRoute
@@ -1578,6 +1586,7 @@ export interface FileRoutesById {
   '/camps/$slug/register': typeof CampsSlugRegisterRoute
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
   '/combine/share/$token': typeof CombineShareTokenRoute
+  '/media/clip/$clipId': typeof MediaClipClipIdRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/parent/hockey-school/$ownerId': typeof ParentHockeySchoolOwnerIdRoute
@@ -1755,6 +1764,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
     | '/combine/share/$token'
+    | '/media/clip/$clipId'
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
     | '/parent/hockey-school/$ownerId'
@@ -1924,6 +1934,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
     | '/combine/share/$token'
+    | '/media/clip/$clipId'
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
     | '/parent/hockey-school/$ownerId'
@@ -2094,6 +2105,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/register'
     | '/camps/$slug/waiver'
     | '/combine/share/$token'
+    | '/media/clip/$clipId'
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
     | '/parent/hockey-school/$ownerId'
@@ -2221,6 +2233,7 @@ export interface RootRouteChildren {
   StoreIndexRoute: typeof StoreIndexRoute
   BookPrivateSessionIdRoute: typeof BookPrivateSessionIdRoute
   CombineShareTokenRoute: typeof CombineShareTokenRoute
+  MediaClipClipIdRoute: typeof MediaClipClipIdRoute
   RsvpTeamTokenRoute: typeof RsvpTeamTokenRoute
   ApiPublicHooksRsvpRemindersRoute: typeof ApiPublicHooksRsvpRemindersRoute
 }
@@ -2765,6 +2778,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/parent/camp/$campId'
       preLoaderRoute: typeof ParentCampCampIdRouteImport
       parentRoute: typeof ParentRoute
+    }
+    '/media/clip/$clipId': {
+      id: '/media/clip/$clipId'
+      path: '/media/clip/$clipId'
+      fullPath: '/media/clip/$clipId'
+      preLoaderRoute: typeof MediaClipClipIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/combine/share/$token': {
       id: '/combine/share/$token'
@@ -4003,6 +4023,7 @@ const rootRouteChildren: RootRouteChildren = {
   StoreIndexRoute: StoreIndexRoute,
   BookPrivateSessionIdRoute: BookPrivateSessionIdRoute,
   CombineShareTokenRoute: CombineShareTokenRoute,
+  MediaClipClipIdRoute: MediaClipClipIdRoute,
   RsvpTeamTokenRoute: RsvpTeamTokenRoute,
   ApiPublicHooksRsvpRemindersRoute: ApiPublicHooksRsvpRemindersRoute,
 }
