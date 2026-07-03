@@ -105,6 +105,7 @@ function CampDetailPage() {
   const [more, setMore] = useState<null | "waitlist" | "media" | "evaluations" | "financials">(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanFlash, setScanFlash] = useState<string | null>(null);
+  const [filmingOpen, setFilmingOpen] = useState(false);
   const [todayAttendance, setTodayAttendance] = useState<Map<string, boolean>>(new Map());
   const [completions, setCompletions] = useState<Record<string, SessionRunRecord>>({});
   const [statsView, setStatsView] = useState<null | "paid" | "pending">(null);
