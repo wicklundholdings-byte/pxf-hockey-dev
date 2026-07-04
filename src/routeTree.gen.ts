@@ -24,6 +24,7 @@ import { Route as ParentRouteImport } from './routes/parent'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MembershipRouteImport } from './routes/membership'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as GetVerifiedRouteImport } from './routes/get-verified'
 import { Route as GameiqRouteImport } from './routes/gameiq'
 import { Route as FavouritesRouteImport } from './routes/favourites'
@@ -74,6 +75,8 @@ import { Route as BookSlugRouteImport } from './routes/book.$slug'
 import { Route as AuthenticatedHomeCoachRouteImport } from './routes/_authenticated/home-coach'
 import { Route as AuthenticatedCoachRouteImport } from './routes/_authenticated/coach'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as ParentTeamsIndexRouteImport } from './routes/parent.teams.index'
 import { Route as CampsSlugIndexRouteImport } from './routes/camps.$slug.index'
 import { Route as AuthenticatedCoachIndexRouteImport } from './routes/_authenticated/coach.index'
@@ -124,6 +127,7 @@ import { Route as AuthenticatedAdminVerificationsRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminProgramsRouteImport } from './routes/_authenticated/admin.programs'
 import { Route as AuthenticatedAdminDrillsRouteImport } from './routes/_authenticated/admin.drills'
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as ParentTeamsTeamIdIndexRouteImport } from './routes/parent.teams.$teamId.index'
 import { Route as AuthenticatedCoachTeamsIndexRouteImport } from './routes/_authenticated/coach.teams.index'
 import { Route as AuthenticatedCoachPrivatesIndexRouteImport } from './routes/_authenticated/coach.privates.index'
@@ -258,6 +262,11 @@ const NotificationsRoute = NotificationsRouteImport.update({
 const MembershipRoute = MembershipRouteImport.update({
   id: '/membership',
   path: '/membership',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GetVerifiedRoute = GetVerifiedRouteImport.update({
@@ -510,6 +519,18 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ParentTeamsIndexRoute = ParentTeamsIndexRouteImport.update({
   id: '/teams/',
   path: '/teams/',
@@ -783,6 +804,12 @@ const AuthenticatedAdminCategoriesRoute =
     id: '/categories',
     path: '/categories',
     getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const ParentTeamsTeamIdIndexRoute = ParentTeamsTeamIdIndexRouteImport.update({
   id: '/',
@@ -1153,6 +1180,7 @@ export interface FileRoutesByFullPath {
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
   '/get-verified': typeof GetVerifiedRoute
+  '/mcp': typeof McpRoute
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
@@ -1168,6 +1196,8 @@ export interface FileRoutesByFullPath {
   '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
   '/welcome': typeof WelcomeRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/coach': typeof AuthenticatedCoachRouteWithChildren
   '/home-coach': typeof AuthenticatedHomeCoachRouteWithChildren
@@ -1207,6 +1237,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/': typeof OnboardingIndexRoute
   '/parent/': typeof ParentIndexRoute
   '/store/': typeof StoreIndexRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/admin/programs': typeof AuthenticatedAdminProgramsRoute
@@ -1329,6 +1360,7 @@ export interface FileRoutesByTo {
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
   '/get-verified': typeof GetVerifiedRoute
+  '/mcp': typeof McpRoute
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
   '/payments-preview': typeof PaymentsPreviewRoute
@@ -1342,6 +1374,8 @@ export interface FileRoutesByTo {
   '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
   '/welcome': typeof WelcomeRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/home-coach': typeof AuthenticatedHomeCoachRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
   '/camps/browse': typeof CampsBrowseRoute
@@ -1378,6 +1412,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingIndexRoute
   '/parent': typeof ParentIndexRoute
   '/store': typeof StoreIndexRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/admin/programs': typeof AuthenticatedAdminProgramsRoute
@@ -1495,6 +1530,7 @@ export interface FileRoutesById {
   '/favourites': typeof FavouritesRoute
   '/gameiq': typeof GameiqRoute
   '/get-verified': typeof GetVerifiedRoute
+  '/mcp': typeof McpRoute
   '/membership': typeof MembershipRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
@@ -1510,6 +1546,8 @@ export interface FileRoutesById {
   '/signature': typeof SignatureRoute
   '/team': typeof TeamRoute
   '/welcome': typeof WelcomeRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/coach': typeof AuthenticatedCoachRouteWithChildren
   '/_authenticated/home-coach': typeof AuthenticatedHomeCoachRouteWithChildren
@@ -1549,6 +1587,7 @@ export interface FileRoutesById {
   '/onboarding/': typeof OnboardingIndexRoute
   '/parent/': typeof ParentIndexRoute
   '/store/': typeof StoreIndexRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/_authenticated/admin/drills': typeof AuthenticatedAdminDrillsRoute
   '/_authenticated/admin/programs': typeof AuthenticatedAdminProgramsRoute
@@ -1673,6 +1712,7 @@ export interface FileRouteTypes {
     | '/favourites'
     | '/gameiq'
     | '/get-verified'
+    | '/mcp'
     | '/membership'
     | '/notifications'
     | '/onboarding'
@@ -1688,6 +1728,8 @@ export interface FileRouteTypes {
     | '/signature'
     | '/team'
     | '/welcome'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/coach'
     | '/home-coach'
@@ -1727,6 +1769,7 @@ export interface FileRouteTypes {
     | '/onboarding/'
     | '/parent/'
     | '/store/'
+    | '/.mcp/invoke-tool/$tool'
     | '/admin/categories'
     | '/admin/drills'
     | '/admin/programs'
@@ -1849,6 +1892,7 @@ export interface FileRouteTypes {
     | '/favourites'
     | '/gameiq'
     | '/get-verified'
+    | '/mcp'
     | '/membership'
     | '/notifications'
     | '/payments-preview'
@@ -1862,6 +1906,8 @@ export interface FileRouteTypes {
     | '/signature'
     | '/team'
     | '/welcome'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/home-coach'
     | '/book/$slug'
     | '/camps/browse'
@@ -1898,6 +1944,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/parent'
     | '/store'
+    | '/.mcp/invoke-tool/$tool'
     | '/admin/categories'
     | '/admin/drills'
     | '/admin/programs'
@@ -2014,6 +2061,7 @@ export interface FileRouteTypes {
     | '/favourites'
     | '/gameiq'
     | '/get-verified'
+    | '/mcp'
     | '/membership'
     | '/notifications'
     | '/onboarding'
@@ -2029,6 +2077,8 @@ export interface FileRouteTypes {
     | '/signature'
     | '/team'
     | '/welcome'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
     | '/_authenticated/coach'
     | '/_authenticated/home-coach'
@@ -2068,6 +2118,7 @@ export interface FileRouteTypes {
     | '/onboarding/'
     | '/parent/'
     | '/store/'
+    | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/categories'
     | '/_authenticated/admin/drills'
     | '/_authenticated/admin/programs'
@@ -2192,6 +2243,7 @@ export interface RootRouteChildren {
   FavouritesRoute: typeof FavouritesRoute
   GameiqRoute: typeof GameiqRoute
   GetVerifiedRoute: typeof GetVerifiedRoute
+  McpRoute: typeof McpRoute
   MembershipRoute: typeof MembershipRoute
   NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
@@ -2207,6 +2259,8 @@ export interface RootRouteChildren {
   SignatureRoute: typeof SignatureRoute
   TeamRoute: typeof TeamRoute
   WelcomeRoute: typeof WelcomeRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   BookSlugRoute: typeof BookSlugRoute
   CampsSlugRoute: typeof CampsSlugRouteWithChildren
   CampsBrowseRoute: typeof CampsBrowseRoute
@@ -2231,6 +2285,7 @@ export interface RootRouteChildren {
   TeamInviteTokenRoute: typeof TeamInviteTokenRoute
   CampsIndexRoute: typeof CampsIndexRoute
   StoreIndexRoute: typeof StoreIndexRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   BookPrivateSessionIdRoute: typeof BookPrivateSessionIdRoute
   CombineShareTokenRoute: typeof CombineShareTokenRoute
   MediaClipClipIdRoute: typeof MediaClipClipIdRoute
@@ -2343,6 +2398,13 @@ declare module '@tanstack/react-router' {
       path: '/membership'
       fullPath: '/membership'
       preLoaderRoute: typeof MembershipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/get-verified': {
@@ -2695,6 +2757,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/parent/teams/': {
       id: '/parent/teams/'
       path: '/teams'
@@ -3044,6 +3120,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/categories'
       preLoaderRoute: typeof AuthenticatedAdminCategoriesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/parent/teams/$teamId/': {
       id: '/parent/teams/$teamId/'
@@ -3982,6 +4065,7 @@ const rootRouteChildren: RootRouteChildren = {
   FavouritesRoute: FavouritesRoute,
   GameiqRoute: GameiqRoute,
   GetVerifiedRoute: GetVerifiedRoute,
+  McpRoute: McpRoute,
   MembershipRoute: MembershipRoute,
   NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRouteWithChildren,
@@ -3997,6 +4081,9 @@ const rootRouteChildren: RootRouteChildren = {
   SignatureRoute: SignatureRoute,
   TeamRoute: TeamRoute,
   WelcomeRoute: WelcomeRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   BookSlugRoute: BookSlugRoute,
   CampsSlugRoute: CampsSlugRouteWithChildren,
   CampsBrowseRoute: CampsBrowseRoute,
@@ -4021,6 +4108,7 @@ const rootRouteChildren: RootRouteChildren = {
   TeamInviteTokenRoute: TeamInviteTokenRoute,
   CampsIndexRoute: CampsIndexRoute,
   StoreIndexRoute: StoreIndexRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   BookPrivateSessionIdRoute: BookPrivateSessionIdRoute,
   CombineShareTokenRoute: CombineShareTokenRoute,
   MediaClipClipIdRoute: MediaClipClipIdRoute,
