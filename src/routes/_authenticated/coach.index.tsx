@@ -497,50 +497,79 @@ function EliteCoachDashboard() {
               { id: "m2", kind: "practice" as const, time: "4:00 PM", title: "Practice · Elite Demo Team", sub: "Rink 2 · Burnaby 8 Rinks · 90 min", meta: "✓11 · ?1 · ✗2", to: "/coach/teams" },
               { id: "m3", kind: "practice" as const, time: "7:30 PM", title: "Practice · Atom Rep", sub: "Rink 1 · Burnaby 8 Rinks · 60 min", meta: "✓8 · ?2", to: "/coach/teams" },
             ].map((e) => (
-              <Link
+              <div
                 key={e.id}
-                to={e.to as any}
                 className={`flex items-center gap-3 rounded-2xl border border-border border-l-4 bg-card p-3 ${e.kind === "practice" && e.id === "m3" ? "border-l-blue-500" : kindColor[e.kind]}`}
               >
-                <div className="w-14 shrink-0">
-                  <p className="text-sm font-bold">{e.time}</p>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{e.title}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">{e.sub}</p>
-                  {e.meta && <p className="mt-0.5 text-[11px] font-bold text-teal">{e.meta}</p>}
-                </div>
-                <ChevronRight size={14} className="text-muted-foreground" />
-              </Link>
+                <Link to={e.to as any} className="flex min-w-0 flex-1 items-center gap-3">
+                  <div className="w-14 shrink-0">
+                    <p className="text-sm font-bold">{e.time}</p>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{e.title}</p>
+                    <p className="truncate text-[11px] text-muted-foreground">{e.sub}</p>
+                    {e.meta && <p className="mt-0.5 text-[11px] font-bold text-teal">{e.meta}</p>}
+                  </div>
+                </Link>
+                <Link
+                  to="/coach/live"
+                  search={{
+                    kind: e.kind === "private" ? "private" : "team",
+                    name: e.title.replace(/^.*·\s*/, ""),
+                    rink: e.sub.split("·")[0]?.trim(),
+                    returnTo: "/coach",
+                  } as never}
+                  className="shrink-0 rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-primary-foreground shadow-glow-teal"
+                >
+                  ▶ Start
+                </Link>
+              </div>
             ))}
           </div>
         ) : (
           <div className="mt-2 space-y-2">
             {todayEvents.map((e) => (
-              <Link
+              <div
                 key={`${e.kind}-${e.id}`}
-                to={e.link.to as any}
-                params={e.link.params as any}
                 className={`flex items-center gap-3 rounded-2xl border border-border border-l-4 bg-card p-3 ${kindColor[e.kind]}`}
               >
-                <div className="w-14 shrink-0">
-                  <p className="text-sm font-bold">{e.start_time ? fmtTime(e.start_time) : "—"}</p>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider ${kindBadgeBg[e.kind]}`}>{kindLabel[e.kind]}</span>
+                <Link
+                  to={e.link.to as any}
+                  params={e.link.params as any}
+                  className="flex min-w-0 flex-1 items-center gap-3"
+                >
+                  <div className="w-14 shrink-0">
+                    <p className="text-sm font-bold">{e.start_time ? fmtTime(e.start_time) : "—"}</p>
                   </div>
-                  <p className="mt-0.5 truncate text-sm font-semibold">{e.title}</p>
-                  {e.location && <p className="truncate text-[11px] text-muted-foreground">{e.location}</p>}
-                  {e.instructor && <p className="truncate text-[11px] text-amber-400">⚠ Instructor {e.instructor}</p>}
-                  {e.rsvp_total != null && (
-                    <p className="mt-0.5 text-[11px] font-bold text-teal">
-                      {e.rsvp_confirmed ?? 0} confirmed / {e.rsvp_total} spots
-                    </p>
-                  )}
-                </div>
-                <ChevronRight size={14} className="text-muted-foreground" />
-              </Link>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wider ${kindBadgeBg[e.kind]}`}>{kindLabel[e.kind]}</span>
+                    </div>
+                    <p className="mt-0.5 truncate text-sm font-semibold">{e.title}</p>
+                    {e.location && <p className="truncate text-[11px] text-muted-foreground">{e.location}</p>}
+                    {e.instructor && <p className="truncate text-[11px] text-amber-400">⚠ Instructor {e.instructor}</p>}
+                    {e.rsvp_total != null && (
+                      <p className="mt-0.5 text-[11px] font-bold text-teal">
+                        {e.rsvp_confirmed ?? 0} confirmed / {e.rsvp_total} spots
+                      </p>
+                    )}
+                  </div>
+                </Link>
+                {(e.kind === "practice" || e.kind === "camp" || e.kind === "private") && (
+                  <Link
+                    to="/coach/live"
+                    search={{
+                      kind: e.kind === "camp" ? "camp" : e.kind === "private" ? "private" : "team",
+                      name: e.title,
+                      rink: e.location ?? undefined,
+                      returnTo: "/coach",
+                    } as never}
+                    className="shrink-0 rounded-full bg-gradient-brand px-3 py-1.5 text-[11px] font-bold text-primary-foreground shadow-glow-teal"
+                  >
+                    ▶ Start
+                  </Link>
+                )}
+              </div>
             ))}
           </div>
         )}
