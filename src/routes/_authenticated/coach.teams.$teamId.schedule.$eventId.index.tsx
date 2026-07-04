@@ -422,6 +422,19 @@ function PracticeDetail({
         </button>
       </div>
 
+      <Link
+        to="/coach/live"
+        search={{
+          kind: "team",
+          name: `${event.title || "Practice"}`,
+          rink: event.venue ?? undefined,
+          returnTo: `/coach/teams/${teamId}/schedule/${eventId}`,
+        } as never}
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-brand px-3 py-3 text-sm font-bold text-primary-foreground shadow-glow-teal"
+      >
+        ▶ Start Practice
+      </Link>
+
       <h4 id="attendance" className="mt-4 text-xs font-bold">Attendance</h4>
       <div className="mt-2 space-y-2">
         {roster.map((p) => (
