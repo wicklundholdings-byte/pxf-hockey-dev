@@ -384,6 +384,27 @@ function CampDetailPage() {
             >
               <Camera size={16} /> Start Check-in
             </button>
+            {isLive && (() => {
+              const total = sessions.length || 1;
+              const idx = sessions.findIndex((s) => s.session_date === today);
+              const dayNum = idx === -1 ? 1 : idx + 1;
+              return (
+                <Link
+                  to="/coach/live"
+                  search={{
+                    kind: "camp",
+                    name: `${camp.name} · Day ${dayNum}`,
+                    rink: camp.venue_name ?? undefined,
+                    campDay: dayNum,
+                    campTotal: total,
+                    returnTo: `/coach/camps/${campId}`,
+                  } as never}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-brand py-3 text-sm font-bold text-primary-foreground shadow-glow-teal"
+                >
+                  ▶ Start Day {dayNum}
+                </Link>
+              );
+            })()}
             {scanFlash && (
               <div className="rounded-xl border border-border bg-surface px-3 py-2 text-center text-xs font-semibold text-foreground">
                 {scanFlash}
