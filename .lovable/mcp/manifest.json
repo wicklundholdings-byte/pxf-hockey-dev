@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "sdk_version": "0.20.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "pxf-hockey-mcp",
+      "version": "0.1.0",
+      "title": "PXF Hockey"
+    },
+    "tools": [
+      {
+        "name": "list_public_camps",
+        "title": "List public camps",
+        "description": "List live hockey camps from coaches who opted into the public marketplace. Optional filters: text query, city/location, age group, skill level, sport type.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "q": {
+              "description": "Text search across camp and venue name.",
+              "type": "string",
+              "maxLength": 120
+            },
+            "location": {
+              "description": "City, postal code, or venue substring.",
+              "type": "string",
+              "maxLength": 120
+            },
+            "ageGroup": {
+              "type": "string",
+              "maxLength": 40
+            },
+            "skillLevel": {
+              "type": "string",
+              "maxLength": 40
+            },
+            "sportType": {
+              "type": "string",
+              "maxLength": 40
+            },
+            "limit": {
+              "description": "Max results (default 20).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 60
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_public_camp",
+        "title": "Get public camp details",
+        "description": "Fetch details for a single live camp by its public slug, including session dates and paid registration count.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "slug": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "description": "The camp's public URL slug."
+            }
+          },
+          "required": [
+            "slug"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_public_coach",
+        "title": "Get public coach profile",
+        "description": "Fetch a public coach profile (by slug or id) along with their live camps.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "slug": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "description": "Coach slug or user id."
+            }
+          },
+          "required": [
+            "slug"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
