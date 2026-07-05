@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X, ChevronLeft, ChevronRight, Check, Share2, ChevronDown, Play } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Check, Share2, ChevronDown, Play, Video, Circle } from "lucide-react";
 
 type LiveKind = "team" | "camp" | "private";
 
@@ -625,6 +625,8 @@ function LiveStep({
   const total = DEMO_DRILLS.length;
   const isLast = drillIdx === total - 1;
   const [confirmEnd, setConfirmEnd] = useState(false);
+  const [recordOpen, setRecordOpen] = useState(false);
+  const [clips, setClips] = useState<Record<string, { caption: string; athleteIds: string[] }[]>>({});
 
   const touch = useRef<{ x: number; y: number } | null>(null);
   function onTouchStart(e: React.TouchEvent) {
@@ -716,6 +718,19 @@ function LiveStep({
             <RinkDiagram drillId={drill.id} />
           </div>
 
+          {/* Record Clip */}
+          <button
+            onClick={() => setRecordOpen(true)}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-teal/40 bg-teal/10 py-3 text-sm font-bold text-teal"
+          >
+            <Video size={18} /> Record Clip
+          </button>
+          {clips[drill.id]?.length ? (
+            <p className="mt-2 text-center text-[11px] text-muted-foreground">
+              {clips[drill.id].length} clip{clips[drill.id].length === 1 ? "" : "s"} saved to this drill
+            </p>
+          ) : null}
+
           <p className="mt-4 text-base leading-snug text-foreground">{drill.notes}</p>
 
           {/* Progressions accordion */}
@@ -803,6 +818,151 @@ function LiveStep({
           </div>
         </div>
       )}
+
+      {recordOpen && (
+        <RecordClipModal
+          drillName={drill.name}
+          onClose={() => setRecordOpen(false)}
+          onSave={(caption, athleteIds) => {
+            setClips((prev) => ({
+              ...prev,
+              [drill.id]: [...(prev[drill.id] ?? []), { caption, athleteIds }],
+            }));
+            setRecordOpen(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function RecordClipModal({
+  drillName,
+  onClose,
+  onSave,
+}: {
+  drillName: string;
+  onClose: () => void;
+  onSave: (caption: string, athleteIds: string[]) => void;
+}) {
+  const [recording, setRecording] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [caption, setCaption] = useState("");
+
+  function toggle(id: string) {
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
+
+  function initials(name: string) {
+    const parts = name.split(" ");
+    return (parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "");
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70 sm:items-center">
+      <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl border border-border bg-card sm:rounded-3xl">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[2px] text-teal">Record Clip</p>
+            <p className="truncate text-sm font-semibold">{drillName}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="grid h-8 w-8 place-items-center rounded-full bg-surface text-muted-foreground"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          {/* Video preview */}
+          <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-border bg-black">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+              <p className="text-[11px] font-semibold text-white/60">
+                {recording ? "Recording…" : "Camera preview"}
+              </p>
+            </div>
+            {recording && (
+              <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/60 px-2 py-1">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-white">REC</span>
+              </div>
+            )}
+            <button
+              onClick={() => setRecording((v) => !v)}
+              className="absolute bottom-3 left-1/2 grid h-14 w-14 -translate-x-1/2 place-items-center rounded-full border-4 border-white/80 bg-transparent"
+              aria-label={recording ? "Stop recording" : "Start recording"}
+            >
+              {recording ? (
+                <span className="h-5 w-5 rounded-sm bg-red-500" />
+              ) : (
+                <Circle size={40} className="text-red-500" fill="currentColor" />
+              )}
+            </button>
+          </div>
+
+          {/* Tag athletes */}
+          <div className="mt-5">
+            <p className="text-[10px] font-bold uppercase tracking-[2px] text-teal">
+              Tag Athletes
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {DEMO_ROSTER.map((p) => {
+                const on = selected.includes(p.id);
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => toggle(p.id)}
+                    className={`flex items-center gap-2 rounded-full border px-2 py-1 text-xs font-semibold transition ${
+                      on
+                        ? "border-teal bg-teal/20 text-teal"
+                        : "border-border bg-surface text-foreground"
+                    }`}
+                  >
+                    <span
+                      className={`grid h-6 w-6 place-items-center rounded-full font-mono text-[10px] font-bold ${
+                        on ? "bg-teal text-background" : "bg-background text-muted-foreground"
+                      }`}
+                    >
+                      {initials(p.name)}
+                    </span>
+                    <span className="truncate">{p.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {selected.length > 0 && (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                {selected.length} athlete{selected.length === 1 ? "" : "s"} tagged
+              </p>
+            )}
+          </div>
+
+          {/* Caption */}
+          <div className="mt-5">
+            <p className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">
+              Caption
+            </p>
+            <input
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              placeholder="Add a note about this clip…"
+              className="mt-2 w-full rounded-2xl border border-border bg-surface px-3 py-3 text-sm outline-none focus:border-teal"
+            />
+          </div>
+        </div>
+
+        <div className="border-t border-border bg-card px-4 pt-3 pb-5">
+          <button
+            onClick={() => onSave(caption, selected)}
+            className="w-full rounded-xl bg-gradient-brand py-3 text-sm font-bold text-primary-foreground shadow-glow-teal"
+          >
+            Save Clip
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
