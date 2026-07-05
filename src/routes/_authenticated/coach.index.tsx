@@ -494,14 +494,23 @@ function EliteCoachDashboard() {
           <div className="mt-2 space-y-2">
             {[
               { id: "m1", kind: "private" as const, time: "6:00 AM", title: "Private Session · Jake Andersson", sub: "Rink 4 · Burnaby 8 Rinks · 60 min", meta: null as string | null, to: "/coach/bookings" },
-              { id: "m2", kind: "practice" as const, time: "4:00 PM", title: "Practice · Elite Demo Team", sub: "Rink 2 · Burnaby 8 Rinks · 90 min", meta: "✓11 · ?1 · ✗2", to: "/coach/teams" },
-              { id: "m3", kind: "practice" as const, time: "7:30 PM", title: "Practice · Atom Rep", sub: "Rink 1 · Burnaby 8 Rinks · 60 min", meta: "✓8 · ?2", to: "/coach/teams" },
+              { id: "m2", kind: "practice" as const, time: "4:00 PM", title: "Practice · Elite Demo Team", sub: "Rink 2 · Burnaby 8 Rinks · 90 min", meta: "✓11 · ?1 · ✗2", to: "/coach/live" },
+              { id: "m3", kind: "practice" as const, time: "7:30 PM", title: "Practice · Atom Rep", sub: "Rink 1 · Burnaby 8 Rinks · 60 min", meta: "✓8 · ?2", to: "/coach/live" },
             ].map((e) => (
               <div
                 key={e.id}
                 className={`flex items-center gap-3 rounded-2xl border border-border border-l-4 bg-card p-3 ${e.kind === "practice" && e.id === "m3" ? "border-l-blue-500" : kindColor[e.kind]}`}
               >
-                <Link to={e.to as any} className="flex min-w-0 flex-1 items-center gap-3">
+                <Link
+                  to={e.to as any}
+                  search={e.kind === "practice" ? ({
+                    kind: "team",
+                    name: e.title.replace(/^.*·\s*/, ""),
+                    rink: e.sub.split("·")[0]?.trim(),
+                    returnTo: "/coach",
+                  } as never) : undefined}
+                  className="flex min-w-0 flex-1 items-center gap-3"
+                >
                   <div className="w-14 shrink-0">
                     <p className="text-sm font-bold">{e.time}</p>
                   </div>
