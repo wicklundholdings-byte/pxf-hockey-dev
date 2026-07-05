@@ -536,17 +536,51 @@ function OverviewStep({
                 </button>
                 {open && (
                   <div className="border-t border-border bg-surface/50 p-3">
-                    <RinkDiagram drillId={d.id} />
-                    <p className="mt-3 text-sm leading-snug text-foreground">{d.notes}</p>
-                    {d.progressions && (
-                      <ul className="mt-3 space-y-1">
+                    {/* Video */}
+                    <div className="aspect-video w-full overflow-hidden rounded-2xl border border-border bg-black">
+                      <div className="flex h-full w-full flex-col items-center justify-center gap-2">
+                        <div className="grid h-12 w-12 place-items-center rounded-full bg-white/10">
+                          <Play size={22} className="ml-1 text-white/80" fill="currentColor" />
+                        </div>
+                        <p className="text-[11px] font-semibold text-white/60">No video uploaded</p>
+                      </div>
+                    </div>
+
+                    {/* Rink diagram */}
+                    <div className="mt-4">
+                      <RinkDiagram drillId={d.id} />
+                    </div>
+
+                    {/* Description */}
+                    <p className="mt-4 text-sm leading-snug text-foreground">{d.notes}</p>
+
+                    {/* Progressions */}
+                    <div className="mt-5">
+                      <p className="text-[10px] font-bold uppercase tracking-[2px] text-teal">
+                        Progressions
+                      </p>
+                      <div className="mt-2 space-y-2">
                         {d.progressions.map((p, idx) => (
-                          <li key={idx} className="text-[11px] text-muted-foreground">
-                            <span className="font-bold text-teal">→</span> {p}
-                          </li>
+                          <ProgressionItem
+                            key={idx}
+                            index={idx + 1}
+                            title={p.title}
+                            body={p.body}
+                            defaultOpen={idx === 0}
+                          />
                         ))}
-                      </ul>
-                    )}
+                      </div>
+                    </div>
+
+                    {/* Coaching Notes */}
+                    <div className="mt-5">
+                      <p className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">
+                        Coaching Notes
+                      </p>
+                      <div className="mt-2 rounded-2xl border border-border bg-surface p-3">
+                        <p className="text-sm leading-snug text-foreground">{d.coachNotes}</p>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
