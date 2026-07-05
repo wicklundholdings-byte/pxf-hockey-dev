@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X, ChevronLeft, ChevronRight, Check, Share2 } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Check, Share2, ChevronDown } from "lucide-react";
 
 type LiveKind = "team" | "camp" | "private";
 
@@ -54,25 +54,26 @@ const DEMO_DRILLS: Drill[] = [
   },
   {
     id: "d3",
-    category: "PASSING",
-    name: "Two-Line Pass",
-    minutes: 8,
-    notes: "Tape-to-tape. Follow your pass. Support the puck carrier.",
+    category: "COMPETE",
+    name: "Battle Drills",
+    minutes: 15,
+    notes: "1-on-1 in the corner. Body position wins pucks. Short shifts, high compete.",
   },
   {
     id: "d4",
-    category: "SYSTEMS",
-    name: "Breakout Drill",
+    category: "COMPETE",
+    name: "Rush Series",
     minutes: 12,
-    notes: "D-to-D reads. Wingers on the wall. Center swings low.",
-    progressions: ["Walk-through", "Half speed", "Full speed with pressure"],
+    notes: "2-on-1 and 3-on-2 rushes. Attack with speed. Support the puck carrier.",
+    progressions: ["2-on-0", "2-on-1", "3-on-2 with backcheck"],
   },
   {
     id: "d5",
-    category: "COMPETE",
-    name: "Compete Battle",
-    minutes: 6,
-    notes: "1-on-1 in the corner. Body position wins pucks. Short shifts.",
+    category: "SYSTEMS",
+    name: "Breakout Patterns",
+    minutes: 20,
+    notes: "D-to-D reads. Wingers on the wall. Center swings low. Full-ice reps.",
+    progressions: ["Walk-through", "Half speed", "Full speed with pressure"],
   },
   {
     id: "d6",
@@ -120,8 +121,8 @@ function LiveSessionScreen() {
   const returnTo = search.returnTo ?? "/coach";
 
   const needsAttendance = kind !== "private";
-  const [step, setStep] = useState<"attendance" | "live" | "complete">(
-    needsAttendance ? "attendance" : "live",
+  const [step, setStep] = useState<"attendance" | "overview" | "live" | "complete">(
+    needsAttendance ? "attendance" : "overview",
   );
 
   const [attendance, setAttendance] = useState<Record<string, Attend>>({});
@@ -155,7 +156,18 @@ function LiveSessionScreen() {
         attendance={attendance}
         setAttendance={setAttendance}
         onCancel={goHome}
-        onStart={() => setStep("live")}
+        onStart={() => setStep("overview")}
+      />
+    );
+  }
+
+  if (step === "overview") {
+    return (
+      <OverviewStep
+        sessionName={sessionName}
+        rink={search.rink}
+        onBack={() => (needsAttendance ? setStep("attendance") : goHome())}
+        onBegin={() => setStep("live")}
       />
     );
   }
