@@ -32,7 +32,8 @@ type Drill = {
   name: string;
   minutes: number;
   notes: string;
-  progressions?: string[];
+  coachNotes: string;
+  progressions: { title: string; body: string }[];
 };
 
 const DEMO_DRILLS: Drill[] = [
@@ -41,46 +42,168 @@ const DEMO_DRILLS: Drill[] = [
     category: "SKATING",
     name: "Edge Mastery Series",
     minutes: 8,
-    notes: "Deep knee bend. Inside edge → outside edge. Small circles both directions.",
-    progressions: ["Two-foot glide", "One-foot pivots", "Full-lap edge work"],
+    notes:
+      "Full-ice edge work progressions building speed and agility through progressive circuit training.",
+    coachNotes:
+      "Watch for lazy edges on backhand side. Demand knee bend through every turn. Stop and correct before moving to progressions.",
+    progressions: [
+      {
+        title: "Base",
+        body: "4 players start in corners. Skate to nearest blue line, tight turn, return to start. Focus on knee bend.",
+      },
+      {
+        title: "Add timing",
+        body: "All 4 go simultaneously. Avoid collisions, maintain spacing.",
+      },
+      {
+        title: "Add puck",
+        body: "Carry puck through full circuit. Maintain edge quality with puck.",
+      },
+      {
+        title: "Game speed",
+        body: "Full competition speed. Coach calls direction changes randomly.",
+      },
+    ],
   },
   {
     id: "d2",
     category: "SKATING",
     name: "Crossover Power",
     minutes: 10,
-    notes: "Push through the crossover — full extension. Head up, eyes on the target.",
-    progressions: ["Stationary", "Around circle", "Figure-8 pattern"],
+    notes:
+      "Stationary and full-ice crossover progressions focusing on extension, knee bend, and power generation.",
+    coachNotes:
+      "Push through the crossover — full extension. Head up, eyes on the target.",
+    progressions: [
+      {
+        title: "Base",
+        body: "Stationary crossovers on the dot. Focus on knee bend, full extension, and outside edge push.",
+      },
+      {
+        title: "Add timing",
+        body: "On whistle, accelerate into crossovers for 3 seconds then stop. Build explosive first 3 strides.",
+      },
+      {
+        title: "Add puck",
+        body: "Carry puck through crossover pattern. Maintain speed and edge quality with puck on stick.",
+      },
+      {
+        title: "Game speed",
+        body: "Full-lap crossover figure-8s at game speed. Compete against partner on opposite circle.",
+      },
+    ],
   },
   {
     id: "d3",
     category: "COMPETE",
     name: "Battle Drills",
     minutes: 15,
-    notes: "1-on-1 in the corner. Body position wins pucks. Short shifts, high compete.",
+    notes:
+      "1-on-1 corner puck protection and retrieval drills emphasizing body position and compete level.",
+    coachNotes:
+      "Body position wins pucks. Short shifts, high compete. No coasting in the corners.",
+    progressions: [
+      {
+        title: "Base",
+        body: "1-on-1 corner puck protect. Body position wins pucks. No contact, focus on stick and body leverage.",
+      },
+      {
+        title: "Add timing",
+        body: "15-second shifts. Coach dumps puck in, first player to win it gets point.",
+      },
+      {
+        title: "Add puck",
+        body: "Add outlet pass to point after winning puck. Defender must gap up and take away lane.",
+      },
+      {
+        title: "Game speed",
+        body: "Live 1-on-1 with backchecker support. Short shifts, high compete, no coasting.",
+      },
+    ],
   },
   {
     id: "d4",
     category: "COMPETE",
     name: "Rush Series",
     minutes: 12,
-    notes: "2-on-1 and 3-on-2 rushes. Attack with speed. Support the puck carrier.",
-    progressions: ["2-on-0", "2-on-1", "3-on-2 with backcheck"],
+    notes:
+      "Two-attacker rush concepts against a single defender with reads and finishing.",
+    coachNotes:
+      "Attack with speed. Support the puck carrier. Force decisions early; reward crisp lateral passes.",
+    progressions: [
+      {
+        title: "Base",
+        body: "2-on-0 rush. Attackers read goalie, make quick decision to pass or shoot.",
+      },
+      {
+        title: "Add timing",
+        body: "Add defender at blue line. Attackers must read gap and make play in under 3 seconds.",
+      },
+      {
+        title: "Add puck",
+        body: "Controlled entry with puck support. Trail man picks up loose pucks and maintains O-zone possession.",
+      },
+      {
+        title: "Game speed",
+        body: "3-on-2 with backchecker. Full-speed rush, quick transition, finish the play.",
+      },
+    ],
   },
   {
     id: "d5",
     category: "SYSTEMS",
     name: "Breakout Patterns",
     minutes: 20,
-    notes: "D-to-D reads. Wingers on the wall. Center swings low. Full-ice reps.",
-    progressions: ["Walk-through", "Half speed", "Full speed with pressure"],
+    notes:
+      "D-to-D reads with wingers on the wall and center swinging low. Full-ice breakout reps under pressure.",
+    coachNotes:
+      "D-to-D reads. Wingers on the wall. Center swings low. Full-ice reps.",
+    progressions: [
+      {
+        title: "Base",
+        body: "D-to-D pass behind the net. Wingers on the wall. Center swings low. Walk-through reps.",
+      },
+      {
+        title: "Add timing",
+        body: "Half-speed execution with coach calling forecheck pressure. Read and react to pinching D.",
+      },
+      {
+        title: "Add puck",
+        body: "Full speed with puck retrieval. D must protect puck and make first pass under pressure.",
+      },
+      {
+        title: "Game speed",
+        body: "Live forecheck with 2 F1/F2 pressure. Breakout must beat pressure within 5 seconds.",
+      },
+    ],
   },
   {
     id: "d6",
     category: "COOLDOWN",
     name: "Cooldown Edges",
     minutes: 3,
-    notes: "Easy glides. Long strides. Slow the heart rate. Debrief on ice.",
+    notes:
+      "Easy glides and long strides to slow the heart rate. Low-intensity edge work to close the session.",
+    coachNotes:
+      "Easy glides. Long strides. Slow the heart rate. Debrief on ice.",
+    progressions: [
+      {
+        title: "Base",
+        body: "Easy glides around the dots. Deep breaths, long strides, focus on edge quality at low speed.",
+      },
+      {
+        title: "Add timing",
+        body: "Slow figure-8s on whistle. 50% effort, emphasis on form and relaxation.",
+      },
+      {
+        title: "Add puck",
+        body: "Light puck carrying through cooldown pattern. Soft hands, no rush.",
+      },
+      {
+        title: "Game speed",
+        body: "Not applicable for cooldown — maintain easy pace and debrief on ice.",
+      },
+    ],
   },
 ];
 
