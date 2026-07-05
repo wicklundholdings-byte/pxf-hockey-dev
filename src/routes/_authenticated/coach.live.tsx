@@ -113,7 +113,7 @@ function LiveSessionScreen() {
   const sessionName =
     search.name ??
     (kind === "camp"
-      ? `Elite Dev Camp · Day ${search.campDay ?? 1}`
+      ? `Elite Dev Camp · Day ${search.campDay ?? 1}${search.campTotal ? ` of ${search.campTotal}` : ""}`
       : kind === "private"
       ? "Private Session"
       : "Elite Demo Team · Practice");
@@ -227,7 +227,7 @@ function AttendanceStep({
   }, [attendance]);
 
   function toggle(pid: string, s: Attend) {
-    setAttendance({ ...attendance, [pid]: attendance[pid] === s ? null : s });
+    setAttendance({ ...attendance, [pid]: s });
   }
 
   return (
@@ -260,7 +260,7 @@ function AttendanceStep({
                 </div>
                 <div className="flex gap-1">
                   <AttendBtn label="✓ HERE" active={state === "here"} tone="teal" onClick={() => toggle(p.id, "here")} />
-                  <AttendBtn label="? LATE" active={state === "late"} tone="amber" onClick={() => toggle(p.id, "late")} />
+                  <AttendBtn label="? LATE" active={state === "late"} tone="orange" onClick={() => toggle(p.id, "late")} />
                   <AttendBtn label="✗ ABSENT" active={state === "absent"} tone="red" onClick={() => toggle(p.id, "absent")} />
                 </div>
               </div>
@@ -273,7 +273,7 @@ function AttendanceStep({
         <p className="text-center text-xs font-bold">
           <span className="text-teal">{counts.here} here</span>
           <span className="text-muted-foreground"> · </span>
-          <span className="text-amber-400">{counts.late} late</span>
+          <span className="text-orange-400">{counts.late} late</span>
           <span className="text-muted-foreground"> · </span>
           <span className="text-red-400">{counts.absent} absent</span>
         </p>
@@ -304,14 +304,14 @@ function AttendBtn({
 }: {
   label: string;
   active: boolean;
-  tone: "teal" | "amber" | "red";
+  tone: "teal" | "orange" | "red";
   onClick: () => void;
 }) {
   const activeCls =
     tone === "teal"
       ? "bg-teal text-background"
-      : tone === "amber"
-      ? "bg-amber-500 text-background"
+      : tone === "orange"
+      ? "bg-orange-500 text-white"
       : "bg-red-500 text-white";
   return (
     <button
