@@ -651,6 +651,46 @@ function LiveStep({
 }
 
 function RinkDiagram({ drillId }: { drillId: string }) {
+  return <RinkDiagramSvg drillId={drillId} />;
+}
+
+function ProgressionItem({
+  index,
+  title,
+  body,
+  defaultOpen = false,
+}: {
+  index: number;
+  title: string;
+  body: string;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-3 p-3 text-left"
+      >
+        <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-teal/15 font-mono text-xs font-bold text-teal">
+          {index}
+        </div>
+        <p className="flex-1 text-sm font-semibold">{title}</p>
+        <ChevronDown
+          size={16}
+          className={`text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && (
+        <div className="border-t border-border px-3 pt-2 pb-3">
+          <p className="text-sm leading-snug text-foreground">{body}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RinkDiagramSvg({ drillId }: { drillId: string }) {
   // simple schematic — the rink outline with drill-specific colored routes
   return (
     <svg
