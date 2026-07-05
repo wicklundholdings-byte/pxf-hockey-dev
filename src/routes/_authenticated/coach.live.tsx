@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X, ChevronLeft, ChevronRight, Check, Share2, ChevronDown } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Check, Share2, ChevronDown, Play } from "lucide-react";
 
 type LiveKind = "team" | "camp" | "private";
 
@@ -544,6 +544,16 @@ function LiveStep({
             {drill.minutes} min
           </span>
 
+          {/* Video placeholder */}
+          <div className="mt-4 aspect-video w-full overflow-hidden rounded-2xl border border-border bg-black">
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2">
+              <div className="grid h-12 w-12 place-items-center rounded-full bg-white/10">
+                <Play size={22} className="ml-1 text-white/80" fill="currentColor" />
+              </div>
+              <p className="text-[11px] font-semibold text-white/60">No video uploaded</p>
+            </div>
+          </div>
+
           {/* Rink diagram (schematic) */}
           <div className="mt-4">
             <RinkDiagram drillId={drill.id} />
@@ -551,34 +561,47 @@ function LiveStep({
 
           <p className="mt-4 text-base leading-snug text-foreground">{drill.notes}</p>
 
-          {drill.progressions && drill.progressions.length > 0 && (
-            <div className="mt-4 rounded-2xl border border-border bg-surface p-3">
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">
-                  Progression {progIdx + 1} of {drill.progressions.length}
-                </p>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => setProgIdx(Math.max(0, progIdx - 1))}
-                    disabled={progIdx === 0}
-                    className="grid h-8 w-8 place-items-center rounded-full border border-border bg-card text-teal disabled:opacity-30"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button
-                    onClick={() =>
-                      setProgIdx(Math.min(drill.progressions!.length - 1, progIdx + 1))
-                    }
-                    disabled={progIdx === drill.progressions.length - 1}
-                    className="grid h-8 w-8 place-items-center rounded-full border border-border bg-card text-teal disabled:opacity-30"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
-              </div>
-              <p className="mt-2 text-sm font-semibold">{drill.progressions[progIdx]}</p>
+          {/* Progressions accordion */}
+          <div className="mt-5">
+            <p className="text-[10px] font-bold uppercase tracking-[2px] text-teal">
+              Progressions
+            </p>
+            <div className="mt-2 space-y-2">
+              <ProgressionItem
+                index={1}
+                title="Edge work"
+                body="Start with pure edge control — inside and outside edges, deep knee bend. No puck, no timing. Establish the base movement pattern."
+                defaultOpen
+              />
+              <ProgressionItem
+                index={2}
+                title="Add timing"
+                body="Layer in whistle cues and partner reads. Players must execute the edge pattern on a cadence, syncing with the group."
+              />
+              <ProgressionItem
+                index={3}
+                title="Add puck"
+                body="Introduce puck handling through the same pattern. Heads up, soft hands, protect the puck on turns."
+              />
+              <ProgressionItem
+                index={4}
+                title="Game speed"
+                body="Full-speed execution with light pressure or contested reps. Enforce compete level — no cruising."
+              />
             </div>
-          )}
+          </div>
+
+          {/* Coaching notes */}
+          <div className="mt-5">
+            <p className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">
+              Coaching Notes
+            </p>
+            <div className="mt-2 rounded-2xl border border-border bg-surface p-3">
+              <p className="text-sm leading-snug text-foreground">
+                Watch for lazy edges on backhand side. Demand knee bend through every turn. Stop and correct before moving to progressions.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
