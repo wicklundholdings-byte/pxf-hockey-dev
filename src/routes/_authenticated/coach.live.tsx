@@ -337,6 +337,113 @@ function AttendBtn({
   );
 }
 
+// ---------------- Overview ----------------
+function OverviewStep({
+  sessionName,
+  rink,
+  onBack,
+  onBegin,
+}: {
+  sessionName: string;
+  rink?: string;
+  onBack: () => void;
+  onBegin: () => void;
+}) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const today = new Date().toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+  const totalMin = DEMO_DRILLS.reduce((s, d) => s + d.minutes, 0);
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-background text-foreground">
+      <div className="border-b border-border px-4 pt-5 pb-3">
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground"
+        >
+          <ChevronLeft size={14} /> Back
+        </button>
+        <h1 className="mt-2 font-display text-xl font-bold">{sessionName}</h1>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {today}
+          {rink ? ` · ${rink}` : ""}
+        </p>
+        <p className="mt-2 text-[11px] font-bold uppercase tracking-[2px] text-teal">
+          Total {totalMin} min · {DEMO_DRILLS.length} drills
+        </p>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-4 py-3">
+        <div className="space-y-2">
+          {DEMO_DRILLS.map((d, i) => {
+            const open = expanded === d.id;
+            return (
+              <div
+                key={d.id}
+                className="overflow-hidden rounded-2xl border border-border bg-card"
+              >
+                <button
+                  onClick={() => setExpanded(open ? null : d.id)}
+                  className="flex w-full items-center gap-3 p-3 text-left"
+                >
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-teal/15 font-mono text-sm font-bold text-teal">
+                    {i + 1}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{d.name}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                      <span className="rounded-full bg-surface px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                        {d.category}
+                      </span>
+                      <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-teal">
+                        {d.minutes} MIN
+                      </span>
+                    </div>
+                  </div>
+                  <div className="h-10 w-16 shrink-0 overflow-hidden rounded-md border border-border">
+                    <RinkDiagram drillId={d.id} />
+                  </div>
+                  <ChevronDown
+                    size={16}
+                    className={`shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {open && (
+                  <div className="border-t border-border bg-surface/50 p-3">
+                    <RinkDiagram drillId={d.id} />
+                    <p className="mt-3 text-sm leading-snug text-foreground">{d.notes}</p>
+                    {d.progressions && (
+                      <ul className="mt-3 space-y-1">
+                        {d.progressions.map((p, idx) => (
+                          <li key={idx} className="text-[11px] text-muted-foreground">
+                            <span className="font-bold text-teal">→</span> {p}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="border-t border-border bg-card px-4 pt-3 pb-5">
+        <button
+          onClick={onBegin}
+          className="w-full rounded-xl bg-gradient-brand py-4 text-sm font-bold text-primary-foreground shadow-glow-teal"
+        >
+          Begin Session →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ---------------- Live ----------------
 function LiveStep({
   sessionName,
