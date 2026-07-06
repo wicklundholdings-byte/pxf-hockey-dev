@@ -144,25 +144,30 @@ function ParentTeamsIndex() {
           {MY_CAMPS_PRIVATES.map((e) => {
             const Icon = e.kind === "camp" ? Calendar : UserIcon;
             return (
-              <div
+              <Link
                 key={e.id}
-                className="flex items-center justify-between rounded-2xl border border-border bg-surface p-3"
+                to="/parent/my-enrollment/$enrollmentId"
+                params={{ enrollmentId: e.id }}
+                className="flex items-center justify-between rounded-2xl border border-border bg-surface p-3 transition hover:border-teal/40"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-teal to-emerald-500 text-background">
                     <Icon size={20} />
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{e.name}</p>
-                    <p className="truncate text-[11px] text-muted-foreground">
+                    <p className="truncate text-sm font-semibold text-white">{e.name}</p>
+                    <p className="truncate text-[11px] font-medium text-white/80">
                       {e.when} · {e.host}
                     </p>
                   </div>
                 </div>
-                <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal">
-                  {e.kind === "camp" ? "Camp" : "Private"}
-                </span>
-              </div>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal">
+                    {e.kind === "camp" ? "Camp" : "Private"}
+                  </span>
+                  <ChevronRight size={16} className="text-muted-foreground" />
+                </div>
+              </Link>
             );
           })}
           <Link
