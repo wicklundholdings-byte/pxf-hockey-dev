@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { PlaybookLibrary } from "@/components/coach/playbook-library";
 import { PlaybookFavorites } from "@/components/coach/playbook-favorites";
 import { MyTraining } from "@/components/parent/my-training";
 import { VideosGrid } from "@/components/media/videos-grid";
@@ -19,7 +18,7 @@ export const Route = createFileRoute("/parent/playbook")({
   component: ParentPlaybookPage,
 });
 
-type Tab = "library" | "training" | "videos" | "favorites";
+type Tab = "training" | "videos" | "favorites";
 
 function ParentPlaybookPage() {
   const [tab, setTab] = useState<Tab>("training");
@@ -32,9 +31,8 @@ function ParentPlaybookPage() {
     <div className="-mx-5 -mt-2">
       <div className="px-5 pb-3 pt-2">
         <p className="text-[11px] font-semibold tracking-[0.3em] text-muted-foreground">PLAYBOOK</p>
-        <div className="mt-3 grid grid-cols-4 gap-1 rounded-full border border-border bg-surface p-1">
+        <div className="mt-3 grid grid-cols-3 gap-1 rounded-full border border-border bg-surface p-1">
           {([
-            ["library", "Library"],
             ["training", "My Training"],
             ["videos", "My Videos"],
             ["favorites", "Favorites"],
@@ -53,7 +51,6 @@ function ParentPlaybookPage() {
         </div>
       </div>
       <div className="px-5">
-        {tab === "library" && <PlaybookLibrary />}
         {tab === "training" && <MyTraining />}
         {tab === "videos" && (
           <div className="space-y-3">
