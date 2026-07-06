@@ -79,7 +79,7 @@ function ParentStats() {
       {record && (
         <div className="mt-3 rounded-2xl border border-border bg-surface p-4">
           <p className="text-[10px] font-bold tracking-wider text-muted-foreground">SEASON RECORD</p>
-          <p className="mt-1 font-display text-2xl font-bold">{record.w}-{record.l}-{record.otl + record.sol}</p>
+          <p className="mt-1 font-display text-2xl font-bold">{record.w}-{record.l}-{record.otw + record.otl + record.sow + record.sol}</p>
           <p className="text-[11px] text-muted-foreground">
             {record.points} PTS · {record.gp} GP · GF {record.gf} · GA {record.ga} · DIFF {record.diff >= 0 ? "+" : ""}{record.diff}
           </p>
