@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Flame, Medal, Trophy, ChevronRight, Calendar, Users, BarChart3, Camera, Swords, Dumbbell, Star } from "lucide-react";
+import { ArrowLeft, Flame, Medal, Trophy, ChevronRight, Calendar, Swords, Dumbbell, Star } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { loadTeamSeasonStats, type TeamRecord, type SkaterAgg } from "@/lib/team-stats";
 import { mockRecord, mockSkaters } from "@/lib/mock-team-stats";
