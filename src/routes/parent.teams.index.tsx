@@ -2,8 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronRight, Users, Building2, Search, Trophy } from "lucide-react";
-import { listMyHockeySchools } from "@/lib/hockey-schools.functions";
+import { ChevronRight, Users, Building2, Search, Trophy, Calendar, User as UserIcon } from "lucide-react";
 
 export const Route = createFileRoute("/parent/teams/")({
   head: () => ({ meta: [{ title: "My Clubs — PXF Hockey" }] }),
@@ -20,13 +19,22 @@ type TeamCard = {
   role: string | null;
   player_count: number;
 };
-type School = { owner_id: string; name: string; head_coach: string | null; location: string | null };
+type CampOrPrivate = {
+  id: string;
+  name: string;
+  when: string;
+  host: string;
+  kind: "camp" | "private";
+};
+
+const MY_CAMPS_PRIVATES: CampOrPrivate[] = [
+  { id: "summer-elite", name: "Summer Elite Camp", when: "Jul 14-18", host: "PXF Skills Academy", kind: "camp" },
+  { id: "skating-power", name: "Skating Power Clinic", when: "Jul 21", host: "Coach Park Hockey", kind: "private" },
+];
 
 function ParentTeamsIndex() {
   const [teams, setTeams] = useState<TeamCard[]>([]);
-  const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(true);
-  const fetchSchools = useServerFn(listMyHockeySchools);
 
   useEffect(() => {
     (async () => {
@@ -70,12 +78,6 @@ function ParentTeamsIndex() {
         role: roleByTeam.get(r.id) ?? null,
         player_count: countMap.get(r.id) ?? 0,
       })));
-      try {
-        const s = await fetchSchools();
-        setSchools(s as School[]);
-      } catch {
-        setSchools([]);
-      }
       setLoading(false);
     })();
   }, []);
