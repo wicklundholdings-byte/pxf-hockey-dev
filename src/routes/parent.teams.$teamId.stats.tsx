@@ -3,6 +3,7 @@ import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { loadTeamSeasonStats, maskName, gaa, svpct, type SkaterAgg, type GoalieAgg, type TeamRecord, type GameFilter } from "@/lib/team-stats";
+import { mockRecord, mockSkaters, mockGoalies } from "@/lib/mock-team-stats";
 
 export const Route = createFileRoute("/parent/teams/$teamId/stats")({
   component: ParentStats,
@@ -26,7 +27,11 @@ function ParentStats() {
   useEffect(() => {
     (async () => {
       const s = await loadTeamSeasonStats(teamId, filter);
-      setRecord(s.record); setSkaters(s.skaters); setGoalies(s.goalies);
+      if (s.skaters && s.skaters.length > 0) {
+        setRecord(s.record); setSkaters(s.skaters); setGoalies(s.goalies);
+      } else {
+        setRecord(mockRecord); setSkaters(mockSkaters); setGoalies(mockGoalies);
+      }
     })();
   }, [teamId, filter]);
 
@@ -79,7 +84,7 @@ function ParentStats() {
       {record && (
         <div className="mt-3 rounded-2xl border border-border bg-surface p-4">
           <p className="text-[10px] font-bold tracking-wider text-muted-foreground">SEASON RECORD</p>
-          <p className="mt-1 font-display text-2xl font-bold">{record.w}-{record.l}-{record.otl + record.sol}</p>
+          <p className="mt-1 font-display text-2xl font-bold">{record.w}-{record.l}-{record.otw + record.otl + record.sow + record.sol}</p>
           <p className="text-[11px] text-muted-foreground">
             {record.points} PTS · {record.gp} GP · GF {record.gf} · GA {record.ga} · DIFF {record.diff >= 0 ? "+" : ""}{record.diff}
           </p>

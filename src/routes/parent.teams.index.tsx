@@ -1,9 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useServerFn } from "@tanstack/react-start";
-import { ChevronRight, Users, Building2, Search, Trophy } from "lucide-react";
-import { listMyHockeySchools } from "@/lib/hockey-schools.functions";
+import { ChevronRight, Users, Search, Trophy, Calendar, User as UserIcon } from "lucide-react";
 
 export const Route = createFileRoute("/parent/teams/")({
   head: () => ({ meta: [{ title: "My Clubs — PXF Hockey" }] }),
@@ -20,13 +18,22 @@ type TeamCard = {
   role: string | null;
   player_count: number;
 };
-type School = { owner_id: string; name: string; head_coach: string | null; location: string | null };
+type CampOrPrivate = {
+  id: string;
+  name: string;
+  when: string;
+  host: string;
+  kind: "camp" | "private";
+};
+
+const MY_CAMPS_PRIVATES: CampOrPrivate[] = [
+  { id: "summer-elite", name: "Summer Elite Camp", when: "Jul 14-18", host: "PXF Skills Academy", kind: "camp" },
+  { id: "skating-power", name: "Skating Power Clinic", when: "Jul 21", host: "Coach Park Hockey", kind: "private" },
+];
 
 function ParentTeamsIndex() {
   const [teams, setTeams] = useState<TeamCard[]>([]);
-  const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(true);
-  const fetchSchools = useServerFn(listMyHockeySchools);
 
   useEffect(() => {
     (async () => {
@@ -70,12 +77,6 @@ function ParentTeamsIndex() {
         role: roleByTeam.get(r.id) ?? null,
         player_count: countMap.get(r.id) ?? 0,
       })));
-      try {
-        const s = await fetchSchools();
-        setSchools(s as School[]);
-      } catch {
-        setSchools([]);
-      }
       setLoading(false);
     })();
   }, []);
@@ -138,36 +139,32 @@ function ParentTeamsIndex() {
       </div>
 
       <div>
-        <h2 className="font-display text-2xl font-bold">My Hockey Schools</h2>
+        <h2 className="font-display text-2xl font-bold">My Camps & Privates</h2>
         <div className="mt-3 space-y-2">
-          {!loading && schools.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-border bg-surface p-6 text-center">
-              <Building2 className="mx-auto mb-2 text-muted-foreground" size={28} />
-              <p className="text-sm font-semibold">No hockey schools yet</p>
-              <p className="mt-1 text-xs text-muted-foreground">Find a hockey school below to register for camps and book privates.</p>
-            </div>
-          )}
-          {schools.map((s) => (
-            <Link
-              key={s.owner_id}
-              to="/parent/hockey-school/$ownerId"
-              params={{ ownerId: s.owner_id }}
-              className="flex items-center justify-between rounded-2xl border border-border bg-surface p-3"
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-teal to-emerald-500 text-background">
-                  <Building2 size={20} />
+          {MY_CAMPS_PRIVATES.map((e) => {
+            const Icon = e.kind === "camp" ? Calendar : UserIcon;
+            return (
+              <div
+                key={e.id}
+                className="flex items-center justify-between rounded-2xl border border-border bg-surface p-3"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-teal to-emerald-500 text-background">
+                    <Icon size={20} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">{e.name}</p>
+                    <p className="truncate text-[11px] text-muted-foreground">
+                      {e.when} · {e.host}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">{s.name}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">
-                    {[s.head_coach ? `Coach ${s.head_coach}` : null, s.location].filter(Boolean).join(" · ") || "Hockey school"}
-                  </p>
-                </div>
+                <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal">
+                  {e.kind === "camp" ? "Camp" : "Private"}
+                </span>
               </div>
-              <ChevronRight size={16} className="text-muted-foreground" />
-            </Link>
-          ))}
+            );
+          })}
           <Link
             to="/parent/hockey-schools/browse"
             className="mt-2 flex items-center justify-center gap-2 rounded-full border border-teal/40 bg-teal/10 px-4 py-3 text-sm font-semibold text-teal"
