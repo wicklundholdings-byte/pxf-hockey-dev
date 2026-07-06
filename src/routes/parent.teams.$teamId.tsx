@@ -150,8 +150,19 @@ function TeamLayout() {
     { to: "/parent/teams/$teamId/media" as const, label: "Media", match: (p: string) => p.startsWith(base + "/media") },
   ];
 
+  const darkVars = {
+    "--background": "#0A0A0A",
+    "--foreground": "#F5F5F5",
+    "--surface": "#1A1A1A",
+    "--surface-2": "#222222",
+    "--card": "#1A1A1A",
+    "--card-foreground": "#F5F5F5",
+    "--border": "rgba(255,255,255,0.08)",
+    "--muted-foreground": "#A0A0A0",
+  } as React.CSSProperties;
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground" style={darkVars}>
       <div className="px-5 pt-4">
         {isOverview ? (
           <Link to="/parent/teams" className="inline-flex items-center gap-1 text-xs text-muted-foreground">
