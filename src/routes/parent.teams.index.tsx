@@ -140,36 +140,32 @@ function ParentTeamsIndex() {
       </div>
 
       <div>
-        <h2 className="font-display text-2xl font-bold">My Hockey Schools</h2>
+        <h2 className="font-display text-2xl font-bold">My Camps & Privates</h2>
         <div className="mt-3 space-y-2">
-          {!loading && schools.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-border bg-surface p-6 text-center">
-              <Building2 className="mx-auto mb-2 text-muted-foreground" size={28} />
-              <p className="text-sm font-semibold">No hockey schools yet</p>
-              <p className="mt-1 text-xs text-muted-foreground">Find a hockey school below to register for camps and book privates.</p>
-            </div>
-          )}
-          {schools.map((s) => (
-            <Link
-              key={s.owner_id}
-              to="/parent/hockey-school/$ownerId"
-              params={{ ownerId: s.owner_id }}
-              className="flex items-center justify-between rounded-2xl border border-border bg-surface p-3"
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-teal to-emerald-500 text-background">
-                  <Building2 size={20} />
+          {MY_CAMPS_PRIVATES.map((e) => {
+            const Icon = e.kind === "camp" ? Calendar : UserIcon;
+            return (
+              <div
+                key={e.id}
+                className="flex items-center justify-between rounded-2xl border border-border bg-surface p-3"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-teal to-emerald-500 text-background">
+                    <Icon size={20} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">{e.name}</p>
+                    <p className="truncate text-[11px] text-muted-foreground">
+                      {e.when} · {e.host}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">{s.name}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">
-                    {[s.head_coach ? `Coach ${s.head_coach}` : null, s.location].filter(Boolean).join(" · ") || "Hockey school"}
-                  </p>
-                </div>
+                <span className="rounded-full bg-teal/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal">
+                  {e.kind === "camp" ? "Camp" : "Private"}
+                </span>
               </div>
-              <ChevronRight size={16} className="text-muted-foreground" />
-            </Link>
-          ))}
+            );
+          })}
           <Link
             to="/parent/hockey-schools/browse"
             className="mt-2 flex items-center justify-center gap-2 rounded-full border border-teal/40 bg-teal/10 px-4 py-3 text-sm font-semibold text-teal"
