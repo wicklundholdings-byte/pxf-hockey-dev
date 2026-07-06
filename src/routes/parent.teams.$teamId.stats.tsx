@@ -3,6 +3,7 @@ import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { loadTeamSeasonStats, maskName, gaa, svpct, type SkaterAgg, type GoalieAgg, type TeamRecord, type GameFilter } from "@/lib/team-stats";
+import { mockRecord, mockSkaters, mockGoalies } from "@/lib/mock-team-stats";
 
 export const Route = createFileRoute("/parent/teams/$teamId/stats")({
   component: ParentStats,
@@ -26,7 +27,11 @@ function ParentStats() {
   useEffect(() => {
     (async () => {
       const s = await loadTeamSeasonStats(teamId, filter);
-      setRecord(s.record); setSkaters(s.skaters); setGoalies(s.goalies);
+      if (s.skaters && s.skaters.length > 0) {
+        setRecord(s.record); setSkaters(s.skaters); setGoalies(s.goalies);
+      } else {
+        setRecord(mockRecord); setSkaters(mockSkaters); setGoalies(mockGoalies);
+      }
     })();
   }, [teamId, filter]);
 
