@@ -94,4 +94,14 @@ function TournamentsTab() {
       </div>
     </div>
   );
+  return (
+    <div>
+      {isList ? <TournamentsList /> : <Outlet />}
+    </div>
+  );
 }
+
+function TournamentsList() {
+  const { teamId } = Route.useParams();
+
+  return (
