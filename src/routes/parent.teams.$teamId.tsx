@@ -144,6 +144,7 @@ function TeamLayout() {
   const tabs = [
     { to: "/parent/teams/$teamId" as const, label: "Overview", match: (p: string) => p === base || p === base + "/" },
     { to: "/parent/teams/$teamId/schedule" as const, label: "Schedule", match: (p: string) => p.startsWith(base + "/schedule") },
+    { to: "/parent/teams/$teamId/tournaments" as const, label: "Tournaments", match: (p: string) => p.startsWith(base + "/tournaments") },
     { to: "/parent/teams/$teamId/roster" as const, label: "Roster", match: (p: string) => p.startsWith(base + "/roster") },
     { to: "/parent/teams/$teamId/stats" as const, label: "Stats", match: (p: string) => p.startsWith(base + "/stats") },
     { to: "/parent/teams/$teamId/media" as const, label: "Media", match: (p: string) => p.startsWith(base + "/media") },
