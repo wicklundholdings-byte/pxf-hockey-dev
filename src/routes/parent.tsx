@@ -69,7 +69,7 @@ function ParentLayout() {
           { to: "/parent", label: "Home", icon: Home, exact: true },
           { to: "/parent/camps", label: "Events", icon: CalendarDays },
           { to: "/parent/teams", label: "My Clubs", icon: Building2 },
-          { to: "/parent/playbook", label: "Playbook", icon: BookOpen },
+          { to: "/parent/playbook", label: "Training", icon: BookOpen },
           { to: "/parent/inbox", label: "Inbox", icon: MessageCircle },
         ]}
       />
