@@ -1,8 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useServerFn } from "@tanstack/react-start";
-import { ChevronRight, Users, Building2, Search, Trophy, Calendar, User as UserIcon } from "lucide-react";
+import { ChevronRight, Users, Search, Trophy, Calendar, User as UserIcon } from "lucide-react";
 
 export const Route = createFileRoute("/parent/teams/")({
   head: () => ({ meta: [{ title: "My Clubs — PXF Hockey" }] }),
