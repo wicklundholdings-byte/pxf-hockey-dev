@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { MapPin, Calendar, Clock, ExternalLink, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/parent/teams/$teamId/tournaments")({
@@ -7,6 +7,9 @@ export const Route = createFileRoute("/parent/teams/$teamId/tournaments")({
 
 function TournamentsTab() {
   const { teamId } = Route.useParams();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const base = `/parent/teams/${teamId}/tournaments`;
+  const isList = pathname === base || pathname === base + "/";
 
   return (
     <div className="space-y-4 px-5 pb-8 pt-2">
