@@ -37,8 +37,19 @@ function ParentLayout() {
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase())
     .join("") || "P";
+  const darkVars = {
+    "--background": "#0A0A0A",
+    "--foreground": "#F5F5F5",
+    "--surface": "#1A1A1A",
+    "--surface-2": "#222222",
+    "--card": "#1A1A1A",
+    "--card-foreground": "#F5F5F5",
+    "--border": "rgba(255,255,255,0.08)",
+    "--muted-foreground": "#A0A0A0",
+  } as React.CSSProperties;
+
   return (
-    <div className="relative mx-auto min-h-screen w-full max-w-[480px] bg-background pb-24">
+    <div className="relative mx-auto min-h-screen w-full max-w-[480px] bg-background pb-24" style={darkVars}>
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border/60 bg-background/85 px-5 pb-3 pt-5 backdrop-blur-xl">
         <div className="flex items-center gap-3">
           <BackButton />
