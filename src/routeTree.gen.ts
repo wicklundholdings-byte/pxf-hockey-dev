@@ -137,6 +137,7 @@ import { Route as AuthenticatedCoachAthletesIndexRouteImport } from './routes/_a
 import { Route as ParentTrainingSessionProgramIdSessionIdxRouteImport } from './routes/parent.training-session.$programId.$sessionIdx'
 import { Route as ParentTrainVideoVideoIdRouteImport } from './routes/parent.train.video.$videoId'
 import { Route as ParentTrainSessionSessionIdRouteImport } from './routes/parent.train.session.$sessionId'
+import { Route as ParentTeamsTeamIdTournamentsRouteImport } from './routes/parent.teams.$teamId.tournaments'
 import { Route as ParentTeamsTeamIdStatsRouteImport } from './routes/parent.teams.$teamId.stats'
 import { Route as ParentTeamsTeamIdScheduleRouteImport } from './routes/parent.teams.$teamId.schedule'
 import { Route as ParentTeamsTeamIdRosterRouteImport } from './routes/parent.teams.$teamId.roster'
@@ -863,6 +864,12 @@ const ParentTrainSessionSessionIdRoute =
     path: '/session/$sessionId',
     getParentRoute: () => ParentTrainRoute,
   } as any)
+const ParentTeamsTeamIdTournamentsRoute =
+  ParentTeamsTeamIdTournamentsRouteImport.update({
+    id: '/tournaments',
+    path: '/tournaments',
+    getParentRoute: () => ParentTeamsTeamIdRoute,
+  } as any)
 const ParentTeamsTeamIdStatsRoute = ParentTeamsTeamIdStatsRouteImport.update({
   id: '/stats',
   path: '/stats',
@@ -1313,6 +1320,7 @@ export interface FileRoutesByFullPath {
   '/parent/teams/$teamId/roster': typeof ParentTeamsTeamIdRosterRoute
   '/parent/teams/$teamId/schedule': typeof ParentTeamsTeamIdScheduleRoute
   '/parent/teams/$teamId/stats': typeof ParentTeamsTeamIdStatsRoute
+  '/parent/teams/$teamId/tournaments': typeof ParentTeamsTeamIdTournamentsRoute
   '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
   '/parent/train/video/$videoId': typeof ParentTrainVideoVideoIdRoute
   '/parent/training-session/$programId/$sessionIdx': typeof ParentTrainingSessionProgramIdSessionIdxRoute
@@ -1485,6 +1493,7 @@ export interface FileRoutesByTo {
   '/parent/teams/$teamId/roster': typeof ParentTeamsTeamIdRosterRoute
   '/parent/teams/$teamId/schedule': typeof ParentTeamsTeamIdScheduleRoute
   '/parent/teams/$teamId/stats': typeof ParentTeamsTeamIdStatsRoute
+  '/parent/teams/$teamId/tournaments': typeof ParentTeamsTeamIdTournamentsRoute
   '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
   '/parent/train/video/$videoId': typeof ParentTrainVideoVideoIdRoute
   '/parent/training-session/$programId/$sessionIdx': typeof ParentTrainingSessionProgramIdSessionIdxRoute
@@ -1665,6 +1674,7 @@ export interface FileRoutesById {
   '/parent/teams/$teamId/roster': typeof ParentTeamsTeamIdRosterRoute
   '/parent/teams/$teamId/schedule': typeof ParentTeamsTeamIdScheduleRoute
   '/parent/teams/$teamId/stats': typeof ParentTeamsTeamIdStatsRoute
+  '/parent/teams/$teamId/tournaments': typeof ParentTeamsTeamIdTournamentsRoute
   '/parent/train/session/$sessionId': typeof ParentTrainSessionSessionIdRoute
   '/parent/train/video/$videoId': typeof ParentTrainVideoVideoIdRoute
   '/parent/training-session/$programId/$sessionIdx': typeof ParentTrainingSessionProgramIdSessionIdxRoute
@@ -1848,6 +1858,7 @@ export interface FileRouteTypes {
     | '/parent/teams/$teamId/roster'
     | '/parent/teams/$teamId/schedule'
     | '/parent/teams/$teamId/stats'
+    | '/parent/teams/$teamId/tournaments'
     | '/parent/train/session/$sessionId'
     | '/parent/train/video/$videoId'
     | '/parent/training-session/$programId/$sessionIdx'
@@ -2020,6 +2031,7 @@ export interface FileRouteTypes {
     | '/parent/teams/$teamId/roster'
     | '/parent/teams/$teamId/schedule'
     | '/parent/teams/$teamId/stats'
+    | '/parent/teams/$teamId/tournaments'
     | '/parent/train/session/$sessionId'
     | '/parent/train/video/$videoId'
     | '/parent/training-session/$programId/$sessionIdx'
@@ -2199,6 +2211,7 @@ export interface FileRouteTypes {
     | '/parent/teams/$teamId/roster'
     | '/parent/teams/$teamId/schedule'
     | '/parent/teams/$teamId/stats'
+    | '/parent/teams/$teamId/tournaments'
     | '/parent/train/session/$sessionId'
     | '/parent/train/video/$videoId'
     | '/parent/training-session/$programId/$sessionIdx'
@@ -3203,6 +3216,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParentTrainSessionSessionIdRouteImport
       parentRoute: typeof ParentTrainRoute
     }
+    '/parent/teams/$teamId/tournaments': {
+      id: '/parent/teams/$teamId/tournaments'
+      path: '/tournaments'
+      fullPath: '/parent/teams/$teamId/tournaments'
+      preLoaderRoute: typeof ParentTeamsTeamIdTournamentsRouteImport
+      parentRoute: typeof ParentTeamsTeamIdRoute
+    }
     '/parent/teams/$teamId/stats': {
       id: '/parent/teams/$teamId/stats'
       path: '/stats'
@@ -3987,6 +4007,7 @@ interface ParentTeamsTeamIdRouteChildren {
   ParentTeamsTeamIdRosterRoute: typeof ParentTeamsTeamIdRosterRoute
   ParentTeamsTeamIdScheduleRoute: typeof ParentTeamsTeamIdScheduleRoute
   ParentTeamsTeamIdStatsRoute: typeof ParentTeamsTeamIdStatsRoute
+  ParentTeamsTeamIdTournamentsRoute: typeof ParentTeamsTeamIdTournamentsRoute
   ParentTeamsTeamIdIndexRoute: typeof ParentTeamsTeamIdIndexRoute
   ParentTeamsTeamIdGameEventIdRoute: typeof ParentTeamsTeamIdGameEventIdRoute
 }
@@ -3999,6 +4020,7 @@ const ParentTeamsTeamIdRouteChildren: ParentTeamsTeamIdRouteChildren = {
   ParentTeamsTeamIdRosterRoute: ParentTeamsTeamIdRosterRoute,
   ParentTeamsTeamIdScheduleRoute: ParentTeamsTeamIdScheduleRoute,
   ParentTeamsTeamIdStatsRoute: ParentTeamsTeamIdStatsRoute,
+  ParentTeamsTeamIdTournamentsRoute: ParentTeamsTeamIdTournamentsRoute,
   ParentTeamsTeamIdIndexRoute: ParentTeamsTeamIdIndexRoute,
   ParentTeamsTeamIdGameEventIdRoute: ParentTeamsTeamIdGameEventIdRoute,
 }
