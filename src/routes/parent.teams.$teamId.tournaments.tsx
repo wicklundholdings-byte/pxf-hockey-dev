@@ -12,6 +12,16 @@ function TournamentsTab() {
   const isList = pathname === base || pathname === base + "/";
 
   return (
+    <div>
+      {isList ? <TournamentsList /> : <Outlet />}
+    </div>
+  );
+}
+
+function TournamentsList() {
+  const { teamId } = Route.useParams();
+
+  return (
     <div className="space-y-4 px-5 pb-8 pt-2">
       {/* Spring Showdown */}
       <Link
@@ -94,14 +104,4 @@ function TournamentsTab() {
       </div>
     </div>
   );
-  return (
-    <div>
-      {isList ? <TournamentsList /> : <Outlet />}
-    </div>
-  );
 }
-
-function TournamentsList() {
-  const { teamId } = Route.useParams();
-
-  return (
