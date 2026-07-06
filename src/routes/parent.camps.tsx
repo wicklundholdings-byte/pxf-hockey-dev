@@ -215,13 +215,7 @@ function ParentEvents() {
     }
   };
 
-  const upcoming = events.slice(0, 3);
-  // Group remaining by source
-  const groups = new Map<string, { label: string; items: FeedEvent[] }>();
-  events.forEach((e) => {
-    if (!groups.has(e.sourceKey)) groups.set(e.sourceKey, { label: e.sourceLabel, items: [] });
-    groups.get(e.sourceKey)!.items.push(e);
-  });
+  const upcoming = events;
 
   return (
     <div className="min-h-screen bg-background px-5 pt-5 pb-24 text-foreground">
@@ -248,17 +242,6 @@ function ParentEvents() {
               ))}
             </div>
           </section>
-
-          {Array.from(groups.entries()).map(([key, group]) => (
-            <section className="mt-6" key={key}>
-              <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">{group.label}</h2>
-              <div className="mt-2 space-y-2">
-                {group.items.slice(0, 3).map((e) => (
-                  <EventCard key={`${key}-${e.kind}-${e.id}`} event={e} onPay={onPay} paying={paying} />
-                ))}
-              </div>
-            </section>
-          ))}
         </>
       )}
     </div>
