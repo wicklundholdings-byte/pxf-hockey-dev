@@ -5,7 +5,6 @@ import { Home, CalendarDays, MessageCircle, Building2, Bell, BookOpen } from "lu
 import { BottomNav } from "@/components/bottom-nav";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserAppRole } from "@/lib/user-role";
-import { DevTierSwitcher } from "@/components/tier-gate";
 import { useAuth } from "@/hooks/use-auth";
 import { PxfLogo } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
@@ -73,7 +72,6 @@ function ParentLayout() {
           { to: "/parent/inbox", label: "Inbox", icon: MessageCircle },
         ]}
       />
-      <DevTierSwitcher />
     </div>
   );
 }

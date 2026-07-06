@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Flame, Medal, Trophy, ChevronRight, Calendar, Users, BarChart3, Camera, Swords, Dumbbell, Star } from "lucide-react";
+import { ArrowLeft, Flame, Medal, Trophy, ChevronRight, Calendar, Swords, Dumbbell, Star } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { loadTeamSeasonStats, type TeamRecord, type SkaterAgg } from "@/lib/team-stats";
 import { mockRecord, mockSkaters } from "@/lib/mock-team-stats";
@@ -141,8 +141,16 @@ function TeamLayout() {
   const base = `/parent/teams/${teamId}`;
   const isOverview = pathname === base || pathname === base + "/";
 
+  const tabs = [
+    { to: "/parent/teams/$teamId" as const, label: "Overview", match: (p: string) => p === base || p === base + "/" },
+    { to: "/parent/teams/$teamId/schedule" as const, label: "Schedule", match: (p: string) => p.startsWith(base + "/schedule") },
+    { to: "/parent/teams/$teamId/roster" as const, label: "Roster", match: (p: string) => p.startsWith(base + "/roster") },
+    { to: "/parent/teams/$teamId/stats" as const, label: "Stats", match: (p: string) => p.startsWith(base + "/stats") },
+    { to: "/parent/teams/$teamId/media" as const, label: "Media", match: (p: string) => p.startsWith(base + "/media") },
+  ];
+
   return (
-    <div>
+    <div className="min-h-screen bg-background text-foreground">
       <div className="px-5 pt-4">
         {isOverview ? (
           <Link to="/parent/teams" className="inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -170,26 +178,27 @@ function TeamLayout() {
           </div>
         </div>
 
-        {isOverview && (
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {[
-            { to: "/parent/teams/$teamId/schedule" as const, label: "Schedule", Icon: Calendar },
-            { to: "/parent/teams/$teamId/roster" as const, label: "Roster", Icon: Users },
-            { to: "/parent/teams/$teamId/stats" as const, label: "Stats", Icon: BarChart3 },
-            { to: "/parent/teams/$teamId/media" as const, label: "Media", Icon: Camera },
-          ].map(({ to, label, Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              params={{ teamId }}
-              className="flex items-center justify-center gap-2 rounded-full bg-gradient-brand py-3 shadow-glow-teal active:opacity-90"
-            >
-              <Icon size={18} className="text-background" />
-              <span className="text-sm font-bold text-background">{label}</span>
-            </Link>
-          ))}
+        <div className="mt-4 -mx-5 overflow-x-auto border-b border-border/60 px-5">
+          <div className="flex items-center gap-1 min-w-max">
+            {tabs.map((t) => {
+              const active = t.match(pathname);
+              return (
+                <Link
+                  key={t.label}
+                  to={t.to}
+                  params={{ teamId }}
+                  className={
+                    "relative px-3 py-2.5 text-xs font-bold tracking-wide transition-colors " +
+                    (active ? "text-teal" : "text-muted-foreground hover:text-foreground")
+                  }
+                >
+                  {t.label}
+                  {active && <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-teal" />}
+                </Link>
+              );
+            })}
+          </div>
         </div>
-        )}
 
         {isOverview && (
           <section className="mt-4">
