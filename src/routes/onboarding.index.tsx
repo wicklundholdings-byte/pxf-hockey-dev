@@ -12,7 +12,13 @@ type Role = "coach" | "parent" | null;
 function OnboardingScreen() {
   const [step, setStep] = useState(1);
   const [role, setRole] = useState<Role>(null);
-  const totalSteps = role ? 4 : 4;
+  const navigate = useNavigate();
+  const totalSteps = 4;
+
+  const goToPlans = () => {
+    if (!role) return;
+    navigate({ to: "/onboarding/plans", search: { role } });
+  };
 
   return (
     <div className="min-h-screen bg-background px-5 pt-6 pb-32">
