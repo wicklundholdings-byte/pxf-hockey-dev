@@ -38,7 +38,7 @@ function OnboardingScreen() {
         </div>
 
         <div className="mt-6">
-          {step === 1 && <Step1 role={role} setRole={setRole} onNext={() => role && setStep(2)} />}
+          {step === 1 && <Step1 role={role} setRole={setRole} onNext={goToPlans} />}
           {step === 2 && role === "coach" && <CoachStep2 onNext={() => setStep(3)} />}
           {step === 3 && role === "coach" && <CoachStep3 onNext={() => setStep(4)} />}
           {step === 4 && role === "coach" && <CoachStep4 />}
