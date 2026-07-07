@@ -595,6 +595,75 @@ function ParentDashboard() {
         </section>
       )}
 
+      {/* Payments */}
+      <section className="mt-6">
+        <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Payments</h2>
+        <div className="mt-2 rounded-2xl border border-border bg-card p-4">
+          <p className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Outstanding Balance</p>
+          <p className="mt-1 font-display text-3xl font-bold text-teal">${paid ? "0.00" : "450.00"}</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">{paid ? "Paid Jul 7" : "Due Jul 15"}</p>
+          <button
+            onClick={() => setPayOpen(true)}
+            disabled={paid}
+            className="mt-3 w-full rounded-full bg-gradient-to-r from-teal to-teal/70 py-2.5 text-sm font-bold text-background disabled:opacity-50"
+          >
+            {paid ? "Paid ✓" : "Pay Now →"}
+          </button>
+
+          <div className="mt-4 border-t border-border pt-3">
+            <p className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Recent Payments</p>
+            <div className="mt-2 space-y-2">
+              {[
+                { name: "Summer Elite Camp deposit", amt: "$225", date: "Jun 28" },
+                { name: "Skating Power Clinic", amt: "$175", date: "Jun 15" },
+              ].map((p) => (
+                <div key={p.name} className="flex items-center gap-2 text-xs">
+                  <CheckCircle2 size={14} className="shrink-0 text-teal" />
+                  <span className="min-w-0 flex-1 truncate">{p.name}</span>
+                  <span className="font-semibold">{p.amt}</span>
+                  <span className="text-muted-foreground">· {p.date}</span>
+                </div>
+              ))}
+            </div>
+            <Link to="/parent/invoices" className="mt-3 block text-[11px] font-semibold text-teal">View All Invoices →</Link>
+          </div>
+        </div>
+      </section>
+
+      {payOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 sm:items-center" onClick={() => setPayOpen(false)}>
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Invoice</p>
+                <p className="mt-1 text-sm font-semibold">Summer Elite Camp balance</p>
+              </div>
+              <button onClick={() => setPayOpen(false)} className="text-muted-foreground"><X size={18} /></button>
+            </div>
+            <div className="mt-4 rounded-xl border border-border bg-surface p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Amount</p>
+              <p className="mt-1 font-display text-3xl font-bold text-teal">$450.00</p>
+            </div>
+            <div className="mt-3 flex items-center gap-3 rounded-xl border border-border bg-surface p-3">
+              <div className="grid h-9 w-12 place-items-center rounded-md bg-surface-2">
+                <CreditCard size={16} className="text-teal" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold">Card ending in 4242</p>
+                <p className="text-[11px] text-muted-foreground">Visa · Saved</p>
+              </div>
+            </div>
+            <button
+              onClick={() => { setPaid(true); setPayOpen(false); }}
+              className="mt-4 w-full rounded-full bg-gradient-to-r from-teal to-teal/70 py-3 text-sm font-bold text-background"
+            >
+              Confirm Payment
+            </button>
+            <button className="mt-2 w-full text-center text-[12px] font-semibold text-teal">Use Different Card</button>
+          </div>
+        </div>
+      )}
+
       {/* Dryland This Week */}
       <section className="mt-6">
         <Link to="/parent/train" className="block rounded-2xl border border-border bg-card p-4">
