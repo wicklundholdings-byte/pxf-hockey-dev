@@ -724,48 +724,81 @@ function ParentDashboard() {
       </section>
 
       {/* Recent Media */}
-      {displayMedia.length > 0 && (
-        <section className="mt-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Recent Media</h2>
-            <Link
-              to="/parent/teams/$teamId/media"
-              params={{ teamId: displayTeams[0]?.id ?? "" }}
-              className="text-[11px] font-semibold text-teal"
+      <section className="mt-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Recent Media</h2>
+          <Link to="/parent/media" className="text-[11px] font-semibold text-teal">
+            See All →
+          </Link>
+        </div>
+        <div className="-mx-5 mt-2 flex gap-3 overflow-x-auto px-5 pb-1">
+          {displayMedia.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => setOpenMedia(m)}
+              className="relative flex h-40 w-44 shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-surface text-left"
             >
-              See All
-            </Link>
-          </div>
-          <div className="-mx-5 mt-2 flex gap-3 overflow-x-auto px-5 pb-1">
-            {displayMedia.map((m) => (
-              <Link
-                key={m.id}
-                to="/parent/teams/$teamId/media"
-                params={{ teamId: displayTeams[0]?.id ?? "" }}
-                className="relative flex h-32 w-44 shrink-0 flex-col items-center justify-center overflow-hidden rounded-2xl border border-border bg-surface"
-              >
-                <div className="flex flex-1 items-center justify-center">
-                  <div className="grid h-12 w-12 place-items-center rounded-full bg-surface-2">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+              <div className="flex flex-1 items-center justify-center bg-surface-2/40">
+                <div className="grid h-14 w-14 place-items-center rounded-full bg-surface-2">
+                  {m.icon === "camera" ? (
+                    <Camera size={24} className="text-muted-foreground" />
+                  ) : (
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
                       <ellipse cx="12" cy="12" rx="9" ry="4" />
                       <path d="M3 12v3c0 2.2 4 4 9 4s9-1.8 9-4v-3" />
                     </svg>
-                  </div>
+                  )}
                 </div>
-                {m.kind === "video" && (
-                  <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-surface-2 text-white">
-                    <ImageIcon size={12} />
-                  </span>
-                )}
-                {m.athlete_name && (
-                  <span className="mb-2 rounded-full bg-surface-2 px-2.5 py-0.5 text-[10px] font-bold text-foreground">
-                    {m.athlete_name.split(/\s+/)[0]}
-                  </span>
-                )}
-              </Link>
-            ))}
+              </div>
+              {m.kind === "video" && (
+                <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-background/80 text-white">
+                  <Play size={11} />
+                </span>
+              )}
+              <div className="border-t border-border bg-card px-2.5 py-2">
+                <p className="truncate text-[12px] font-semibold text-foreground">{m.athlete_name}</p>
+                <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+                  <span className="text-teal">{m.tag}</span> · {m.date}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {openMedia && (
+        <div className="fixed inset-0 z-[70] flex flex-col bg-background">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-foreground">{openMedia.athlete_name}</p>
+              <p className="truncate text-[11px] text-muted-foreground">{openMedia.session}</p>
+            </div>
+            <button onClick={() => setOpenMedia(null)} className="grid h-9 w-9 place-items-center rounded-full bg-surface text-foreground" aria-label="Close">
+              <X size={16} />
+            </button>
           </div>
-        </section>
+          <div className="flex flex-1 items-center justify-center bg-black">
+            <div className="grid h-24 w-24 place-items-center rounded-full bg-surface-2">
+              {openMedia.icon === "camera" ? (
+                <Camera size={40} className="text-muted-foreground" />
+              ) : (
+                <Play size={40} className="text-white" />
+              )}
+            </div>
+          </div>
+          <div className="border-t border-border bg-card p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground">Coach Note</p>
+            <p className="mt-1 text-sm text-foreground">{openMedia.note}</p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button className="flex items-center justify-center gap-2 rounded-full border border-border bg-surface py-2.5 text-xs font-bold text-foreground">
+                <Share2 size={14} /> Share
+              </button>
+              <button className="flex items-center justify-center gap-2 rounded-full bg-gradient-brand py-2.5 text-xs font-bold text-background">
+                <Download size={14} /> Save to Camera Roll
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Unread Messages */}
