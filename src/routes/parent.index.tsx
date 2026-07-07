@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { MapPin, Star, ChevronRight, ChevronDown, Cpu, Calendar, Clock, Dumbbell, Trophy, Image as ImageIcon, Swords } from "lucide-react";
+import { MapPin, Star, ChevronRight, ChevronDown, Cpu, Calendar, Clock, Dumbbell, Trophy, Image as ImageIcon, Swords, CheckCircle2, X, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { OutstandingPayments } from "@/components/parent/outstanding-payments";
@@ -96,6 +96,8 @@ function ParentDashboard() {
   const [hasActiveDryland, setHasActiveDryland] = useState<boolean | null>(null);
   const [teams, setTeams] = useState<TeamCard[]>([]);
   const [recentMedia, setRecentMedia] = useState<MediaItem[]>([]);
+  const [payOpen, setPayOpen] = useState(false);
+  const [paid, setPaid] = useState(false);
 
   useEffect(() => {
     if (!user?.id) return;
