@@ -98,6 +98,7 @@ function ParentDashboard() {
   const [recentMedia, setRecentMedia] = useState<MediaItem[]>([]);
   const [payOpen, setPayOpen] = useState(false);
   const [paid, setPaid] = useState(false);
+  const [openMedia, setOpenMedia] = useState<MediaItem | null>(null);
 
   useEffect(() => {
     if (!user?.id) return;
