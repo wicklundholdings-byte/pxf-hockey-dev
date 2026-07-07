@@ -462,12 +462,17 @@ function ParentDashboard() {
             {displayKids.map((k) => {
               const open = expanded === k.id;
               const age = ageFrom(k.birthday);
+              const routeId = k.full_name.toLowerCase().includes("sam") ? "sam" : "alex";
               return (
                 <div
                   key={k.id}
                   className="rounded-2xl border border-border bg-card p-4"
                 >
-                  <button onClick={() => setExpanded(open ? null : k.id)} className="flex w-full flex-col items-center gap-2 text-center">
+                  <Link
+                    to="/parent/athlete/$athleteId"
+                    params={{ athleteId: routeId }}
+                    className="flex w-full flex-col items-center gap-2 text-center"
+                  >
                     <div className="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-teal/30 to-volt/20 font-display text-lg font-bold text-teal ring-2 ring-teal/40">
                       {initials(k.full_name)}
                     </div>
@@ -480,7 +485,10 @@ function ParentDashboard() {
                         {k.skill_level}
                       </span>
                     )}
-                    <ChevronDown size={14} className={"mt-1 text-muted-foreground transition-transform " + (open ? "rotate-180" : "")} />
+                    <span className="mt-1 text-[10px] font-bold uppercase tracking-wider text-teal">View Profile →</span>
+                  </Link>
+                  <button onClick={() => setExpanded(open ? null : k.id)} className="mt-2 flex w-full items-center justify-center gap-1 text-[10px] text-muted-foreground">
+                    Quick stats <ChevronDown size={12} className={"transition-transform " + (open ? "rotate-180" : "")} />
                   </button>
                   {open && (
                     <div className="mt-3 space-y-3 border-t border-border pt-3">
