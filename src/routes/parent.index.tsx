@@ -433,10 +433,12 @@ function ParentDashboard() {
     return candidates[0] ?? null;
   })();
 
-  const displayMedia: MediaItem[] = recentMedia.length > 0 ? recentMedia : [
-    { id: "mm1", thumb_url: "https://images.unsplash.com/photo-1515703407324-5f51c2ee0e2a?w=400", athlete_name: displayKids[0].full_name, kind: "photo" },
-    { id: "mm2", thumb_url: "https://images.unsplash.com/photo-1580692475446-c2fabbbe287d?w=400", athlete_name: displayKids[1]?.full_name ?? displayKids[0].full_name, kind: "video" },
-    { id: "mm3", thumb_url: "https://images.unsplash.com/photo-1551269901-5c5e14c25df7?w=400", athlete_name: displayKids[0].full_name, kind: "photo" },
+  const alexName = displayKids[0]?.full_name ?? "Alex Dev";
+  const samName = displayKids[1]?.full_name ?? "Sam Dev";
+  const displayMedia: MediaItem[] = [
+    { id: "mm1", thumb_url: "", athlete_name: alexName, kind: "video", tag: "Edge Work", date: "Jul 5", session: "Jul 5 Practice", note: "Good edge work on the left side. Watch knee bend.", icon: "puck" },
+    { id: "mm2", thumb_url: "", athlete_name: samName, kind: "video", tag: "Skating", date: "Jul 3", session: "Jul 3 Skating Session", note: "Strong crossovers — keep chest tall through the turn.", icon: "puck" },
+    { id: "mm3", thumb_url: "", athlete_name: "Team Photo", kind: "photo", tag: "Lightning U14", date: "Jul 1", session: "Lightning U14 Team Photo", note: "Team photo from July 1 practice.", icon: "camera" },
   ];
 
   const dryland: DrylandWeek = { done: 2, goal: 3, team_name: displayTeams[0]?.name ?? "Lightning U14", rank: 2 };
