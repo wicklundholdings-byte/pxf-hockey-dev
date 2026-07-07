@@ -64,6 +64,7 @@ import { Route as ParentLeaderboardRouteImport } from './routes/parent.leaderboa
 import { Route as ParentInvoicesRouteImport } from './routes/parent.invoices'
 import { Route as ParentInboxRouteImport } from './routes/parent.inbox'
 import { Route as ParentCampsRouteImport } from './routes/parent.camps'
+import { Route as OnboardingPlansRouteImport } from './routes/onboarding.plans'
 import { Route as OnboardingParentRouteImport } from './routes/onboarding.parent'
 import { Route as OnboardingCoachRouteImport } from './routes/onboarding.coach'
 import { Route as DrylandProgressAssignmentIdRouteImport } from './routes/dryland-progress.$assignmentId'
@@ -467,6 +468,11 @@ const ParentCampsRoute = ParentCampsRouteImport.update({
   id: '/camps',
   path: '/camps',
   getParentRoute: () => ParentRoute,
+} as any)
+const OnboardingPlansRoute = OnboardingPlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => OnboardingRoute,
 } as any)
 const OnboardingParentRoute = OnboardingParentRouteImport.update({
   id: '/parent',
@@ -1243,6 +1249,7 @@ export interface FileRoutesByFullPath {
   '/dryland-progress/$assignmentId': typeof DrylandProgressAssignmentIdRoute
   '/onboarding/coach': typeof OnboardingCoachRoute
   '/onboarding/parent': typeof OnboardingParentRoute
+  '/onboarding/plans': typeof OnboardingPlansRoute
   '/parent/camps': typeof ParentCampsRoute
   '/parent/inbox': typeof ParentInboxRoute
   '/parent/invoices': typeof ParentInvoicesRoute
@@ -1423,6 +1430,7 @@ export interface FileRoutesByTo {
   '/dryland-progress/$assignmentId': typeof DrylandProgressAssignmentIdRoute
   '/onboarding/coach': typeof OnboardingCoachRoute
   '/onboarding/parent': typeof OnboardingParentRoute
+  '/onboarding/plans': typeof OnboardingPlansRoute
   '/parent/camps': typeof ParentCampsRoute
   '/parent/inbox': typeof ParentInboxRoute
   '/parent/invoices': typeof ParentInvoicesRoute
@@ -1603,6 +1611,7 @@ export interface FileRoutesById {
   '/dryland-progress/$assignmentId': typeof DrylandProgressAssignmentIdRoute
   '/onboarding/coach': typeof OnboardingCoachRoute
   '/onboarding/parent': typeof OnboardingParentRoute
+  '/onboarding/plans': typeof OnboardingPlansRoute
   '/parent/camps': typeof ParentCampsRoute
   '/parent/inbox': typeof ParentInboxRoute
   '/parent/invoices': typeof ParentInvoicesRoute
@@ -1790,6 +1799,7 @@ export interface FileRouteTypes {
     | '/dryland-progress/$assignmentId'
     | '/onboarding/coach'
     | '/onboarding/parent'
+    | '/onboarding/plans'
     | '/parent/camps'
     | '/parent/inbox'
     | '/parent/invoices'
@@ -1970,6 +1980,7 @@ export interface FileRouteTypes {
     | '/dryland-progress/$assignmentId'
     | '/onboarding/coach'
     | '/onboarding/parent'
+    | '/onboarding/plans'
     | '/parent/camps'
     | '/parent/inbox'
     | '/parent/invoices'
@@ -2149,6 +2160,7 @@ export interface FileRouteTypes {
     | '/dryland-progress/$assignmentId'
     | '/onboarding/coach'
     | '/onboarding/parent'
+    | '/onboarding/plans'
     | '/parent/camps'
     | '/parent/inbox'
     | '/parent/invoices'
@@ -2742,6 +2754,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/parent/camps'
       preLoaderRoute: typeof ParentCampsRouteImport
       parentRoute: typeof ParentRoute
+    }
+    '/onboarding/plans': {
+      id: '/onboarding/plans'
+      path: '/plans'
+      fullPath: '/onboarding/plans'
+      preLoaderRoute: typeof OnboardingPlansRouteImport
+      parentRoute: typeof OnboardingRoute
     }
     '/onboarding/parent': {
       id: '/onboarding/parent'
@@ -4015,12 +4034,14 @@ const AuthenticatedRouteRouteWithChildren =
 interface OnboardingRouteChildren {
   OnboardingCoachRoute: typeof OnboardingCoachRoute
   OnboardingParentRoute: typeof OnboardingParentRoute
+  OnboardingPlansRoute: typeof OnboardingPlansRoute
   OnboardingIndexRoute: typeof OnboardingIndexRoute
 }
 
 const OnboardingRouteChildren: OnboardingRouteChildren = {
   OnboardingCoachRoute: OnboardingCoachRoute,
   OnboardingParentRoute: OnboardingParentRoute,
+  OnboardingPlansRoute: OnboardingPlansRoute,
   OnboardingIndexRoute: OnboardingIndexRoute,
 }
 

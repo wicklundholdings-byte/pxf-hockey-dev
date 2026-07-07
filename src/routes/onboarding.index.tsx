@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, User, Users, Camera, CreditCard, CalendarPlus, MapPin, Check } from "lucide-react";
 
@@ -12,7 +12,13 @@ type Role = "coach" | "parent" | null;
 function OnboardingScreen() {
   const [step, setStep] = useState(1);
   const [role, setRole] = useState<Role>(null);
-  const totalSteps = role ? 4 : 4;
+  const navigate = useNavigate();
+  const totalSteps = 4;
+
+  const goToPlans = () => {
+    if (!role) return;
+    navigate({ to: "/onboarding/plans", search: { role } });
+  };
 
   return (
     <div className="min-h-screen bg-background px-5 pt-6 pb-32">
@@ -32,7 +38,7 @@ function OnboardingScreen() {
         </div>
 
         <div className="mt-6">
-          {step === 1 && <Step1 role={role} setRole={setRole} onNext={() => role && setStep(2)} />}
+          {step === 1 && <Step1 role={role} setRole={setRole} onNext={goToPlans} />}
           {step === 2 && role === "coach" && <CoachStep2 onNext={() => setStep(3)} />}
           {step === 3 && role === "coach" && <CoachStep3 onNext={() => setStep(4)} />}
           {step === 4 && role === "coach" && <CoachStep4 />}
