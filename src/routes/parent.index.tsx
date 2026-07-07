@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { MapPin, Star, ChevronRight, ChevronDown, Cpu, Calendar, Clock, Dumbbell, Trophy, Image as ImageIcon, Swords, CheckCircle2, X, CreditCard } from "lucide-react";
+import { MapPin, Star, ChevronRight, ChevronDown, Cpu, Calendar, Clock, Dumbbell, Trophy, Image as ImageIcon, Swords, CheckCircle2, X, CreditCard, Camera, Share2, Download, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { OutstandingPayments } from "@/components/parent/outstanding-payments";
@@ -42,7 +42,7 @@ type NextUpItem = {
   end_time: string | null;
   venue: string | null;
 };
-type MediaItem = { id: string; thumb_url: string; athlete_name: string | null; kind: "photo" | "video" };
+type MediaItem = { id: string; thumb_url: string; athlete_name: string | null; kind: "photo" | "video"; tag?: string; date?: string; session?: string; note?: string; icon?: "puck" | "camera" };
 type DrylandWeek = { done: number; goal: number; team_name: string; rank: number };
 
 function ageFrom(b: string | null) {
