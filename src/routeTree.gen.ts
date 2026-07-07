@@ -93,6 +93,7 @@ import { Route as ParentHockeySchoolsBrowseRouteImport } from './routes/parent.h
 import { Route as ParentHockeySchoolOwnerIdRouteImport } from './routes/parent.hockey-school.$ownerId'
 import { Route as ParentConversationConversationIdRouteImport } from './routes/parent.conversation.$conversationId'
 import { Route as ParentCampCampIdRouteImport } from './routes/parent.camp.$campId'
+import { Route as ParentAthleteAthleteIdRouteImport } from './routes/parent.athlete.$athleteId'
 import { Route as MediaClipClipIdRouteImport } from './routes/media.clip.$clipId'
 import { Route as CombineShareTokenRouteImport } from './routes/combine.share.$token'
 import { Route as CampsSlugWaiverRouteImport } from './routes/camps.$slug.waiver'
@@ -620,6 +621,11 @@ const ParentConversationConversationIdRoute =
 const ParentCampCampIdRoute = ParentCampCampIdRouteImport.update({
   id: '/camp/$campId',
   path: '/camp/$campId',
+  getParentRoute: () => ParentRoute,
+} as any)
+const ParentAthleteAthleteIdRoute = ParentAthleteAthleteIdRouteImport.update({
+  id: '/athlete/$athleteId',
+  path: '/athlete/$athleteId',
   getParentRoute: () => ParentRoute,
 } as any)
 const MediaClipClipIdRoute = MediaClipClipIdRouteImport.update({
@@ -1325,6 +1331,7 @@ export interface FileRoutesByFullPath {
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
   '/combine/share/$token': typeof CombineShareTokenRoute
   '/media/clip/$clipId': typeof MediaClipClipIdRoute
+  '/parent/athlete/$athleteId': typeof ParentAthleteAthleteIdRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/parent/hockey-school/$ownerId': typeof ParentHockeySchoolOwnerIdRoute
@@ -1506,6 +1513,7 @@ export interface FileRoutesByTo {
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
   '/combine/share/$token': typeof CombineShareTokenRoute
   '/media/clip/$clipId': typeof MediaClipClipIdRoute
+  '/parent/athlete/$athleteId': typeof ParentAthleteAthleteIdRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/parent/hockey-school/$ownerId': typeof ParentHockeySchoolOwnerIdRoute
@@ -1689,6 +1697,7 @@ export interface FileRoutesById {
   '/camps/$slug/waiver': typeof CampsSlugWaiverRoute
   '/combine/share/$token': typeof CombineShareTokenRoute
   '/media/clip/$clipId': typeof MediaClipClipIdRoute
+  '/parent/athlete/$athleteId': typeof ParentAthleteAthleteIdRoute
   '/parent/camp/$campId': typeof ParentCampCampIdRoute
   '/parent/conversation/$conversationId': typeof ParentConversationConversationIdRoute
   '/parent/hockey-school/$ownerId': typeof ParentHockeySchoolOwnerIdRoute
@@ -1878,6 +1887,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/waiver'
     | '/combine/share/$token'
     | '/media/clip/$clipId'
+    | '/parent/athlete/$athleteId'
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
     | '/parent/hockey-school/$ownerId'
@@ -2059,6 +2069,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/waiver'
     | '/combine/share/$token'
     | '/media/clip/$clipId'
+    | '/parent/athlete/$athleteId'
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
     | '/parent/hockey-school/$ownerId'
@@ -2241,6 +2252,7 @@ export interface FileRouteTypes {
     | '/camps/$slug/waiver'
     | '/combine/share/$token'
     | '/media/clip/$clipId'
+    | '/parent/athlete/$athleteId'
     | '/parent/camp/$campId'
     | '/parent/conversation/$conversationId'
     | '/parent/hockey-school/$ownerId'
@@ -2968,6 +2980,13 @@ declare module '@tanstack/react-router' {
       path: '/camp/$campId'
       fullPath: '/parent/camp/$campId'
       preLoaderRoute: typeof ParentCampCampIdRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/parent/athlete/$athleteId': {
+      id: '/parent/athlete/$athleteId'
+      path: '/athlete/$athleteId'
+      fullPath: '/parent/athlete/$athleteId'
+      preLoaderRoute: typeof ParentAthleteAthleteIdRouteImport
       parentRoute: typeof ParentRoute
     }
     '/media/clip/$clipId': {
@@ -4155,6 +4174,7 @@ interface ParentRouteChildren {
   ParentTrainRoute: typeof ParentTrainRouteWithChildren
   ParentUpdatesRoute: typeof ParentUpdatesRoute
   ParentIndexRoute: typeof ParentIndexRoute
+  ParentAthleteAthleteIdRoute: typeof ParentAthleteAthleteIdRoute
   ParentCampCampIdRoute: typeof ParentCampCampIdRoute
   ParentConversationConversationIdRoute: typeof ParentConversationConversationIdRoute
   ParentHockeySchoolOwnerIdRoute: typeof ParentHockeySchoolOwnerIdRoute
@@ -4179,6 +4199,7 @@ const ParentRouteChildren: ParentRouteChildren = {
   ParentTrainRoute: ParentTrainRouteWithChildren,
   ParentUpdatesRoute: ParentUpdatesRoute,
   ParentIndexRoute: ParentIndexRoute,
+  ParentAthleteAthleteIdRoute: ParentAthleteAthleteIdRoute,
   ParentCampCampIdRoute: ParentCampCampIdRoute,
   ParentConversationConversationIdRoute: ParentConversationConversationIdRoute,
   ParentHockeySchoolOwnerIdRoute: ParentHockeySchoolOwnerIdRoute,
