@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator, Alert, Modal, Pressable, ScrollView,
   StyleSheet, TextInput, TouchableOpacity, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ThemedText } from '@/components/themed-text';
@@ -49,15 +49,12 @@ type FilterTab = 'all' | 'favorites';
 
 export default function DrillsScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ pickMode?: string; sessionId?: string }>();
-  const pickMode = params.pickMode === '1';
-  const sessionId = params.sessionId;
+  const params = useLocalSearchParams<{ tab?: string }>();
+  const handledTabParam = useRef(false);
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [addedDrillIds, setAddedDrillIds] = useState<string[]>([]);
-  const [adding, setAdding] = useState<string | null>(null);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [filterTab, setFilterTab] = useState<FilterTab>('all');
 
@@ -75,31 +72,29 @@ export default function DrillsScreen() {
   const [addingToSession, setAddingToSession] = useState<string | null>(null);
   const [addedToSessionIds, setAddedToSessionIds] = useState<string[]>([]);
 
-  useEffect(() => {
-    fetchDrills();
-    if (pickMode && sessionId) fetchAddedDrills();
-  }, []);
+  useEffect(() => { fetchDrills(); }, []);
 
   useFocusEffect(useCallback(() => {
+    if (params.tab === 'favorites' && !handledTabParam.current) {
+      handledTabParam.current = true;
+      setFilterTab('favorites');
+    }
     fetchFavorites();
     fetchFolders();
-  }, []));
+  }, [params.tab]));
 
   async function fetchDrills() {
     const { data: cats } = await supabase
-      .from('drill_categories')
-      .select('id, title, description')
-      .order('sort_order');
+      .from('drill_categories').select('id, title, description').order('sort_order');
     const { data: drills } = await supabase
       .from('drills')
       .select('id, title, difficulty_level, age_group, duration_minutes, video_url, category_id')
       .eq('is_published', true);
     if (cats && drills) {
-      const grouped = cats.map((cat) => ({
+      setCategories(cats.map(cat => ({
         ...cat,
         drills: drills.filter((d: any) => d.category_id === cat.id),
-      })).filter((cat) => cat.drills.length > 0);
-      setCategories(grouped);
+      })).filter(cat => cat.drills.length > 0));
     }
     setLoading(false);
   }
@@ -107,25 +102,20 @@ export default function DrillsScreen() {
   async function fetchFavorites() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data } = await supabase
-      .from('drill_favorites')
-      .select('drill_id')
-      .eq('user_id', user.id);
+    const { data } = await supabase.from('drill_favorites').select('drill_id').eq('user_id', user.id);
     if (data) setFavoriteIds(data.map((r: any) => r.drill_id));
   }
 
   async function fetchFolders() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data: foldersData } = await supabase
+    const { data } = await supabase
       .from('favorite_folders')
       .select('id, name, favorite_folder_drills(drill_id)')
-      .eq('user_id', user.id)
-      .order('created_at');
-    if (foldersData) {
-      setFolders(foldersData.map((f: any) => ({
-        id: f.id,
-        name: f.name,
+      .eq('user_id', user.id).order('created_at');
+    if (data) {
+      setFolders(data.map((f: any) => ({
+        id: f.id, name: f.name,
         drillIds: (f.favorite_folder_drills ?? []).map((d: any) => d.drill_id),
       })));
     }
@@ -135,8 +125,7 @@ export default function DrillsScreen() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     if (favoriteIds.includes(drillId)) {
-      await supabase.from('drill_favorites').delete()
-        .eq('user_id', user.id).eq('drill_id', drillId);
+      await supabase.from('drill_favorites').delete().eq('user_id', user.id).eq('drill_id', drillId);
       setFavoriteIds(prev => prev.filter(id => id !== drillId));
     } else {
       await supabase.from('drill_favorites').insert({ user_id: user.id, drill_id: drillId });
@@ -150,8 +139,7 @@ export default function DrillsScreen() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return setSavingFolder(false);
     const { data } = await supabase.from('favorite_folders')
-      .insert({ user_id: user.id, name: newFolderName.trim() })
-      .select().single();
+      .insert({ user_id: user.id, name: newFolderName.trim() }).select().single();
     if (data) {
       setFolders(prev => [...prev, { id: data.id, name: data.name, drillIds: [] }]);
       setNewFolderName('');
@@ -177,8 +165,8 @@ export default function DrillsScreen() {
     const folder = folders.find(f => f.id === folderId);
     if (!folder) return;
     if (folder.drillIds.includes(drillId)) {
-      await supabase.from('favorite_folder_drills')
-        .delete().eq('folder_id', folderId).eq('drill_id', drillId);
+      await supabase.from('favorite_folder_drills').delete()
+        .eq('folder_id', folderId).eq('drill_id', drillId);
       setFolders(prev => prev.map(f =>
         f.id === folderId ? { ...f, drillIds: f.drillIds.filter(id => id !== drillId) } : f
       ));
@@ -190,34 +178,15 @@ export default function DrillsScreen() {
     }
   }
 
-  async function fetchAddedDrills() {
-    const { data } = await supabase
-      .from('session_drills').select('drill_id').eq('session_id', sessionId);
-    if (data) setAddedDrillIds(data.map((r: any) => r.drill_id));
-  }
-
-  async function addDrillToSession(drillId: string) {
-    if (!sessionId || adding) return;
-    setAdding(drillId);
-    const { error } = await supabase.from('session_drills').insert({
-      session_id: sessionId, drill_id: drillId, sort_order: addedDrillIds.length,
-    });
-    if (!error) setAddedDrillIds(prev => [...prev, drillId]);
-    setAdding(null);
-  }
-
   async function openSessionPicker(drillId: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const { data } = await supabase
-      .from('sessions')
-      .select('id, title, session_drills(count)')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+      .from('sessions').select('id, title, session_drills(count)')
+      .eq('coach_id', user.id).order('created_at', { ascending: false });
     if (data) {
       setUserSessions(data.map((s: any) => ({
-        id: s.id,
-        title: s.title,
+        id: s.id, title: s.title,
         drill_count: s.session_drills?.[0]?.count ?? 0,
       })));
     }
@@ -229,9 +198,7 @@ export default function DrillsScreen() {
     if (!sessionPickerDrillId || addingToSession) return;
     setAddingToSession(targetSessionId);
     const { data: countData } = await supabase
-      .from('session_drills')
-      .select('id')
-      .eq('session_id', targetSessionId);
+      .from('session_drills').select('id').eq('session_id', targetSessionId);
     await supabase.from('session_drills').insert({
       session_id: targetSessionId,
       drill_id: sessionPickerDrillId,
@@ -239,14 +206,6 @@ export default function DrillsScreen() {
     });
     setAddedToSessionIds(prev => [...prev, targetSessionId]);
     setAddingToSession(null);
-    // keep modal open so user can add to more sessions
-  }
-
-  async function removeDrillFromSession(drillId: string) {
-    if (!sessionId) return;
-    await supabase.from('session_drills').delete()
-      .eq('session_id', sessionId).eq('drill_id', drillId);
-    setAddedDrillIds(prev => prev.filter(id => id !== drillId));
   }
 
   // Filtering
@@ -284,26 +243,15 @@ export default function DrillsScreen() {
               <GradientText style={styles.logoText} colors={[TEAL, GREEN]}>PXF</GradientText>
               <GradientText style={styles.logoSub} colors={[TEAL, GREEN]}>HOCKEY</GradientText>
             </View>
-            {pickMode ? (
-              <TouchableOpacity style={styles.doneBtn} onPress={() => router.navigate(`/session/${sessionId}`)}>
-                <LinearGradient colors={[TEAL, GREEN]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.doneGradient}>
-                  <ThemedText style={styles.doneText}>
-                    Done{addedDrillIds.length > 0 ? ` (${addedDrillIds.length})` : ''}
-                  </ThemedText>
-                </LinearGradient>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity style={styles.bellBtn}>
-                <Ionicons name="notifications-outline" size={22} color={TEXT_MUTED} />
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity style={styles.bellBtn}>
+              <Ionicons name="notifications-outline" size={22} color={TEXT_MUTED} />
+            </TouchableOpacity>
           </View>
 
           {/* Title */}
           <View style={styles.header}>
-            <ThemedText style={styles.headerLabel}>{pickMode ? 'ADD TO SESSION' : 'DRILL LIBRARY'}</ThemedText>
-            <ThemedText style={styles.headerTitle}>{pickMode ? 'Pick Drills' : 'Drills'}</ThemedText>
-            {pickMode && <ThemedText style={styles.headerSub}>Tap to add · Tap again to remove</ThemedText>}
+            <ThemedText style={styles.headerLabel}>DRILL LIBRARY</ThemedText>
+            <ThemedText style={styles.headerTitle}>Drills</ThemedText>
           </View>
 
           {/* Filter tabs */}
@@ -333,13 +281,10 @@ export default function DrillsScreen() {
           {/* Folder bar — shown in favorites tab */}
           {filterTab === 'favorites' && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.folderBar} contentContainerStyle={styles.folderBarContent}>
-              {/* New folder button */}
               <TouchableOpacity style={styles.newFolderChip} onPress={() => setShowNewFolder(true)}>
                 <Ionicons name="add" size={14} color={TEAL} />
                 <ThemedText style={styles.newFolderText}> NEW FOLDER</ThemedText>
               </TouchableOpacity>
-
-              {/* All favorites chip */}
               <TouchableOpacity
                 style={[styles.folderChip, !selectedFolderId && styles.folderChipActive]}
                 onPress={() => setSelectedFolderId(null)}
@@ -347,8 +292,6 @@ export default function DrillsScreen() {
                 <Ionicons name="heart" size={12} color={!selectedFolderId ? '#000' : RED} />
                 <ThemedText style={[styles.folderChipText, !selectedFolderId && styles.folderChipTextActive]}> All</ThemedText>
               </TouchableOpacity>
-
-              {/* Folder chips */}
               {folders.map(folder => (
                 <TouchableOpacity
                   key={folder.id}
@@ -406,7 +349,7 @@ export default function DrillsScreen() {
               )}
             </View>
           ) : (
-            filtered.map((section) => (
+            filtered.map(section => (
               <View key={section.id}>
                 <View style={styles.categoryHeader}>
                   <View style={styles.categoryHeaderLeft}>
@@ -416,37 +359,18 @@ export default function DrillsScreen() {
                   <ThemedText style={styles.drillCount}>{section.drills.length} drills</ThemedText>
                 </View>
 
-                {section.drills.map((drill) => {
-                  const isAdded = addedDrillIds.includes(drill.id);
-                  const isAdding = adding === drill.id;
+                {section.drills.map(drill => {
                   const isFav = favoriteIds.includes(drill.id);
-
                   return (
                     <TouchableOpacity
                       key={drill.id}
-                      style={[styles.drillCard, pickMode && isAdded && styles.drillCardAdded]}
-                      onPress={() => {
-                        if (pickMode) {
-                          isAdded ? removeDrillFromSession(drill.id) : addDrillToSession(drill.id);
-                        } else {
-                          router.push(`/drill/${drill.id}`);
-                        }
-                      }}
+                      style={styles.drillCard}
+                      onPress={() => router.push(`/drill/${drill.id}`)}
                     >
                       <View style={styles.thumbnail}>
-                        {pickMode ? (
-                          isAdded ? (
-                            <View style={styles.addedCircle}><Ionicons name="checkmark" size={18} color="#000" /></View>
-                          ) : isAdding ? (
-                            <View style={styles.addCircle}><ActivityIndicator size="small" color={TEAL} /></View>
-                          ) : (
-                            <View style={styles.addCircle}><Ionicons name="add" size={22} color={TEAL} /></View>
-                          )
-                        ) : (
-                          <LinearGradient colors={[TEAL, GREEN]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.playCircle}>
-                            <Ionicons name="play" size={14} color="#000" />
-                          </LinearGradient>
-                        )}
+                        <LinearGradient colors={[TEAL, GREEN]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.playCircle}>
+                          <Ionicons name="play" size={14} color="#000" />
+                        </LinearGradient>
                       </View>
 
                       <View style={styles.drillInfo}>
@@ -468,33 +392,28 @@ export default function DrillsScreen() {
                         </View>
                       </View>
 
-                      {pickMode ? (
-                        isAdded && <ThemedText style={styles.addedLabel}>ADDED</ThemedText>
-                      ) : (
-                        <View style={styles.drillActions}>
-                          {/* Folder button — only in favorites tab */}
-                          {filterTab === 'favorites' && isFav && (
-                            <TouchableOpacity
-                              style={styles.folderBtn}
-                              onPress={(e) => { e.stopPropagation(); setFolderPickerDrillId(drill.id); }}
-                            >
-                              <Ionicons name="folder-outline" size={14} color={TEAL} />
-                            </TouchableOpacity>
-                          )}
+                      <View style={styles.drillActions}>
+                        {filterTab === 'favorites' && isFav && (
                           <TouchableOpacity
-                            style={styles.favoriteBtn}
-                            onPress={(e) => { e.stopPropagation(); toggleFavorite(drill.id); }}
+                            style={styles.folderBtn}
+                            onPress={e => { e.stopPropagation(); setFolderPickerDrillId(drill.id); }}
                           >
-                            <Ionicons name={isFav ? 'heart' : 'heart-outline'} size={15} color={isFav ? RED : TEXT_MUTED} />
+                            <Ionicons name="folder-outline" size={14} color={TEAL} />
                           </TouchableOpacity>
-                          <TouchableOpacity
-                            style={styles.addBtn}
-                            onPress={(e) => { e.stopPropagation(); openSessionPicker(drill.id); }}
-                          >
-                            <Ionicons name="add" size={18} color={GREEN} />
-                          </TouchableOpacity>
-                        </View>
-                      )}
+                        )}
+                        <TouchableOpacity
+                          style={styles.favoriteBtn}
+                          onPress={e => { e.stopPropagation(); toggleFavorite(drill.id); }}
+                        >
+                          <Ionicons name={isFav ? 'heart' : 'heart-outline'} size={15} color={isFav ? RED : TEXT_MUTED} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.addBtn}
+                          onPress={e => { e.stopPropagation(); openSessionPicker(drill.id); }}
+                        >
+                          <Ionicons name="add" size={18} color={GREEN} />
+                        </TouchableOpacity>
+                      </View>
                     </TouchableOpacity>
                   );
                 })}
@@ -544,7 +463,6 @@ export default function DrillsScreen() {
                 <Ionicons name="close" size={20} color={TEXT_MUTED} />
               </TouchableOpacity>
             </View>
-
             {folders.length === 0 ? (
               <View style={styles.noFoldersHint}>
                 <ThemedText style={styles.noFoldersText}>No folders yet.</ThemedText>
@@ -559,9 +477,7 @@ export default function DrillsScreen() {
                   <TouchableOpacity
                     key={folder.id}
                     style={styles.folderPickerRow}
-                    onPress={() => {
-                      if (folderPickerDrillId) toggleDrillInFolder(folder.id, folderPickerDrillId);
-                    }}
+                    onPress={() => { if (folderPickerDrillId) toggleDrillInFolder(folder.id, folderPickerDrillId); }}
                   >
                     <View style={styles.folderPickerLeft}>
                       <Ionicons name="folder" size={18} color={TEAL} />
@@ -575,7 +491,6 @@ export default function DrillsScreen() {
                 );
               })
             )}
-
             <TouchableOpacity style={styles.newFolderRow} onPress={() => { setFolderPickerDrillId(null); setShowNewFolder(true); }}>
               <Ionicons name="add-circle-outline" size={18} color={TEAL} />
               <ThemedText style={styles.newFolderRowText}> New Folder</ThemedText>
@@ -590,14 +505,10 @@ export default function DrillsScreen() {
           <Pressable style={styles.folderPickerSheet} onPress={e => e.stopPropagation()}>
             <View style={styles.folderPickerHeader}>
               <ThemedText style={styles.folderPickerTitle}>Add to Session</ThemedText>
-              <TouchableOpacity
-                style={styles.sessionPickerDone}
-                onPress={() => setSessionPickerDrillId(null)}
-              >
+              <TouchableOpacity style={styles.sessionPickerDone} onPress={() => setSessionPickerDrillId(null)}>
                 <ThemedText style={styles.sessionPickerDoneText}>Done</ThemedText>
               </TouchableOpacity>
             </View>
-
             {userSessions.length === 0 ? (
               <View style={styles.noFoldersHint}>
                 <ThemedText style={styles.noFoldersText}>No sessions yet.</ThemedText>
@@ -650,20 +561,15 @@ const styles = StyleSheet.create({
   scrollContent: { paddingBottom: 40 },
 
   logoHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
-  logoText: { fontSize: 28, fontWeight: '900', color: TEAL, letterSpacing: 3, lineHeight: 46 },
+  logoText: { fontSize: 28, fontWeight: '800', color: TEAL, letterSpacing: 3, lineHeight: 46 },
   logoSub: { fontSize: 11, fontWeight: '700', color: GREEN, letterSpacing: 5, lineHeight: 18 },
   bellBtn: { marginTop: 8 },
-
-  doneBtn: { marginTop: 8, borderRadius: 10, overflow: 'hidden' },
-  doneGradient: { paddingHorizontal: 16, paddingVertical: 8 },
-  doneText: { fontSize: 13, fontWeight: '800', color: '#000' },
 
   header: { paddingHorizontal: 20, paddingBottom: 12 },
   headerLabel: { fontSize: 11, fontWeight: '700', color: TEXT_MUTED, letterSpacing: 2, marginBottom: 4 },
   headerTitle: { fontSize: 32, fontWeight: '800', color: TEXT, lineHeight: 42 },
-  headerSub: { fontSize: 13, color: TEXT_MUTED, marginTop: 4 },
 
-  filterTabs: { flexDirection: 'row', paddingHorizontal: 20, marginBottom: 0, borderBottomWidth: 1, borderBottomColor: BORDER },
+  filterTabs: { flexDirection: 'row', paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: BORDER },
   filterTab: { marginRight: 24, paddingBottom: 10, alignItems: 'center' },
   filterTabInner: { flexDirection: 'row', alignItems: 'center' },
   filterTabText: { fontSize: 11, fontWeight: '700', color: TEXT_MUTED, letterSpacing: 1 },
@@ -673,7 +579,6 @@ const styles = StyleSheet.create({
   favBadge: { marginLeft: 5, backgroundColor: '#3A1A1A', borderRadius: 8, paddingHorizontal: 5, paddingVertical: 1 },
   favBadgeText: { fontSize: 9, fontWeight: '800', color: RED },
 
-  // Folder bar
   folderBar: { borderBottomWidth: 1, borderBottomColor: BORDER },
   folderBarContent: { paddingHorizontal: 16, paddingVertical: 10, gap: 8, flexDirection: 'row' },
   newFolderChip: { flexDirection: 'row', alignItems: 'center', borderRadius: 20, borderWidth: 1, borderColor: TEAL, borderStyle: 'dashed', paddingHorizontal: 12, paddingVertical: 6 },
@@ -696,12 +601,9 @@ const styles = StyleSheet.create({
   drillCount: { fontSize: 12, color: TEXT_MUTED, paddingTop: 1 },
 
   drillCard: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginBottom: 10, backgroundColor: CARD, borderRadius: 16, padding: 12, borderWidth: 1, borderColor: BORDER },
-  drillCardAdded: { borderColor: TEAL, backgroundColor: '#0A1F1A' },
 
   thumbnail: { width: 72, height: 72, backgroundColor: '#0A1F15', borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   playCircle: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  addCircle: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: TEAL, alignItems: 'center', justifyContent: 'center' },
-  addedCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: TEAL, alignItems: 'center', justifyContent: 'center' },
 
   drillInfo: { flex: 1 },
   drillCategory: { fontSize: 10, fontWeight: '700', color: TEAL, letterSpacing: 1, marginBottom: 3 },
@@ -714,15 +616,12 @@ const styles = StyleSheet.create({
   addBtn: { width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: GREEN, alignItems: 'center', justifyContent: 'center' },
   favoriteBtn: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: BORDER2, alignItems: 'center', justifyContent: 'center' },
   folderBtn: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: TEAL, backgroundColor: '#0D2A24', alignItems: 'center', justifyContent: 'center' },
-  addedLabel: { fontSize: 10, fontWeight: '800', color: TEAL, letterSpacing: 1, marginLeft: 8 },
 
   emptyFavs: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 40, gap: 10 },
   emptyFavsText: { fontSize: 17, fontWeight: '700', color: TEXT },
   emptyFavsSub: { fontSize: 13, color: TEXT_MUTED, textAlign: 'center', lineHeight: 20 },
 
-  // Modals
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' },
-
   newFolderSheet: { backgroundColor: CARD2, borderRadius: 20, padding: 24, width: '85%', borderWidth: 1, borderColor: BORDER2 },
   newFolderLabel: { fontSize: 10, fontWeight: '700', color: TEXT_MUTED, letterSpacing: 2, marginBottom: 10 },
   newFolderInput: { backgroundColor: BG, borderRadius: 10, borderWidth: 1, borderColor: BORDER2, color: TEXT, fontSize: 16, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 20 },

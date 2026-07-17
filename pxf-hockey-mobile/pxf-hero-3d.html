@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PXF Hockey — Hero 3D Prototype</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0D1117; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+    .hero {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #0D1117;
+    }
+
+    #pxf-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: block;
+    }
+
+    .hero-text {
+      position: absolute;
+      top: 50%;
+      left: 6%;
+      transform: translateY(-50%);
+      z-index: 10;
+      max-width: 400px;
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      color: #00C4B4;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 52px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.08;
+      margin: 0 0 16px;
+      text-shadow: 0 0 60px rgba(0,196,180,0.15);
+    }
+
+    h1 span { color: #00C4B4; }
+
+    .sub {
+      color: #8B949E;
+      font-size: 16px;
+      margin: 0 0 32px;
+      line-height: 1.65;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 12px;
+      pointer-events: all;
+      margin-bottom: 24px;
+    }
+
+    .btn-primary {
+      background: #00C4B4;
+      color: #0D1117;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.2px;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(0,196,180,0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      border: 1px solid #21262D;
+      padding: 14px 24px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.08); }
+
+    .trust-row {
+      display: flex;
+      gap: 20px;
+    }
+    .trust-item {
+      font-size: 12px;
+      color: #8B949E;
+    }
+    .trust-item span { color: #3DFF8F; font-weight: 700; }
+
+    .founding-badge {
+      position: absolute;
+      bottom: 32px;
+      left: 6%;
+      z-index: 10;
+      background: rgba(0,196,180,0.08);
+      border: 1px solid rgba(0,196,180,0.25);
+      border-radius: 10px;
+      padding: 12px 20px;
+      backdrop-filter: blur(8px);
+    }
+    .founding-badge strong { color: #00C4B4; font-size: 13px; }
+    .founding-badge span { color: #8B949E; font-size: 13px; margin-left: 8px; }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <canvas id="pxf-canvas"></canvas>
+
+    <div class="hero-text">
+      <div class="eyebrow">PXF Hockey</div>
+      <h1>The coaching<br/>platform built<br/>for <span>winners</span></h1>
+      <p class="sub">Teams, drills, camps, and payments — all in one place. Built for coaches who want to grow.</p>
+      <div class="cta-row">
+        <button class="btn-primary">Get Early Access →</button>
+        <button class="btn-secondary">See the demo</button>
+      </div>
+      <div class="trust-row">
+        <div class="trust-item"><span>✓</span> Free 14-day trial</div>
+        <div class="trust-item"><span>✓</span> No credit card needed</div>
+        <div class="trust-item"><span>✓</span> Cancel anytime</div>
+      </div>
+    </div>
+
+    <div class="founding-badge">
+      <strong>🏒 Founding Member Pricing — First 250 coaches only</strong>
+      <span>Elite Coach from $50/mo locked for life</span>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+  (function () {
+    const canvas = document.getElementById('pxf-canvas');
+    const hero = canvas.parentElement;
+
+    let W = hero.offsetWidth;
+    let H = hero.offsetHeight;
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+    renderer.setSize(W, H);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x0D1117, 1);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 100);
+    camera.position.set(0, 0, 8);
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0x1a2030, 3));
+
+    const tealLight = new THREE.PointLight(0x00C4B4, 6, 20);
+    tealLight.position.set(3, 2, 4);
+    scene.add(tealLight);
+
+    const greenLight = new THREE.PointLight(0x3DFF8F, 2, 15);
+    greenLight.position.set(-2, -1, 5);
+    scene.add(greenLight);
+
+    const purpleLight = new THREE.PointLight(0x7C3AED, 1.5, 10);
+    purpleLight.position.set(5, -2, 2);
+    scene.add(purpleLight);
+
+    // ---- Helpers ----
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function makeTexture(drawFn, w, h) {
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      drawFn(ctx, w, h);
+      return new THREE.CanvasTexture(c);
+    }
+
+    // ---- Dashboard ----
+    const dashTex = makeTexture((ctx, W, H) => {
+      ctx.fillStyle = '#161B22';
+      ctx.fillRect(0, 0, W, H);
+
+      // Top nav
+      ctx.fillStyle = '#0D1117';
+      ctx.fillRect(0, 0, W, 56);
+      ctx.fillStyle = '#00C4B4';
+      ctx.font = 'bold 20px -apple-system, sans-serif';
+      ctx.fillText('PXF Hockey', 20, 36);
+      ctx.fillStyle = '#8B949E';
+      ctx.font = '14px sans-serif';
+      ['Dashboard','Teams','Drills','Camps','Inbox'].forEach((item, i) => {
+        ctx.fillStyle = i === 0 ? '#00C4B4' : '#8B949E';
+        ctx.fillText(item, 210 + i * 108, 36);
+      });
+      ctx.fillStyle = '#00C4B4';
+      ctx.beginPath(); ctx.arc(W - 36, 28, 18, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0D1117';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillText('EW', W - 46, 33);
+
+      // Heading
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 22px -apple-system, sans-serif';
+      ctx.fillText('Dashboard', 20, 88);
+      ctx.fillStyle = '#8B949E';
+      ctx.font = '13px sans-serif';
+      ctx.fillText('Wednesday, July 8 · Season in progress', 20, 108);
+
+      // Founding banner
+      const grad = ctx.createLinearGradient(0, 0, W, 0);
+      grad.addColorStop(0, 'rgba(0,196,180,0.12)');
+      grad.addColorStop(1, 'rgba(124,58,237,0.12)');
+      ctx.fillStyle = grad;
+      roundRect(ctx, 16, 120, W - 32, 40, 8); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,196,180,0.35)';
+      ctx.lineWidth = 1;
+      roundRect(ctx, 16, 120, W - 32, 40, 8); ctx.stroke();
+      ctx.fillStyle = '#00C4B4';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillText('🏒  Founding Member — Elite Coach locked at $50/mo for life', 28, 145);
+
+      // Stats
+      const stats = [
+        { label: 'Active Players', value: '47', color: '#00C4B4' },
+        { label: 'Sessions This Week', value: '8', color: '#3DFF8F' },
+        { label: 'Revenue (MTD)', value: '$3,240', color: '#F59E0B' },
+      ];
+      stats.forEach((s, i) => {
+        const cw = (W - 48) / 3;
+        const x = 16 + i * (cw + 8);
+        ctx.fillStyle = '#21262D';
+        roundRect(ctx, x, 172, cw, 76, 8); ctx.fill();
+        ctx.fillStyle = '#8B949E';
+        ctx.font = '12px sans-serif';
+        ctx.fillText(s.label, x + 12, 194);
+        ctx.fillStyle = s.color;
+        ctx.font = 'bold 28px -apple-system, sans-serif';
+        ctx.fillText(s.value, x + 12, 232);
+      });
+
+      // Upcoming sessions
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillText('Upcoming Sessions', 20, 272);
+      ctx.fillStyle = '#00C4B4';
+      ctx.font = '13px sans-serif';
+      ctx.fillText('View all →', W - 80, 272);
+
+      const sessions = [
+        { time: 'Today · 4:00 PM', name: 'Peewee A — Power Play Systems', loc: 'Ice Dome Rink 2', badge: 'TODAY', bc: '#00C4B4' },
+        { time: 'Wed · 6:30 PM', name: 'Bantam B — Defensive Zone', loc: 'East Arena Pad 1', badge: 'TOMORROW', bc: '#F59E0B' },
+        { time: 'Sat · 9:00 AM', name: 'Elite Camp Practice #3', loc: 'Training Center', badge: 'CAMP', bc: '#7C3AED' },
+      ];
+      sessions.forEach((s, i) => {
+        const y = 284 + i * 72;
+        ctx.fillStyle = '#21262D';
+        roundRect(ctx, 16, y, W - 32, 64, 8); ctx.fill();
+        ctx.fillStyle = s.bc;
+        ctx.fillRect(16, y, 3, 64);
+        ctx.fillStyle = '#8B949E';
+        ctx.font = '11px sans-serif';
+        ctx.fillText(s.time, 28, y + 20);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText(s.name, 28, y + 38);
+        ctx.fillStyle = '#8B949E';
+        ctx.font = '12px sans-serif';
+        ctx.fillText('📍 ' + s.loc, 28, y + 54);
+        ctx.fillStyle = s.bc + '22';
+        roundRect(ctx, W - 96, y + 12, 72, 22, 4); ctx.fill();
+        ctx.fillStyle = s.bc;
+        ctx.font = 'bold 10px sans-serif';
+        ctx.fillText(s.badge, W - 88, y + 27);
+      });
+    }, 900, 620);
+
+    // ---- Drill Builder ----
+    const drillTex = makeTexture((ctx, W, H) => {
+      ctx.fillStyle = '#161B22';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#0D1117';
+      ctx.fillRect(0, 0, W, 56);
+      ctx.fillStyle = '#00C4B4';
+      ctx.font = 'bold 17px sans-serif';
+      ctx.fillText('← Drill Builder', 16, 36);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 19px sans-serif';
+      ctx.fillText('Power Play Setup — 5v4', 16, 82);
+      ctx.fillStyle = '#8B949E';
+      ctx.font = '13px sans-serif';
+      ctx.fillText('Phase 1 of 3 · Offensive Zone Entry', 16, 102);
+
+      // Rink
+      const rx = 16, ry = 116, rw = W - 32, rh = 238;
+      ctx.fillStyle = '#0D1117';
+      roundRect(ctx, rx, ry, rw, rh, 12); ctx.fill();
+      ctx.strokeStyle = '#21262D'; ctx.lineWidth = 1;
+      roundRect(ctx, rx, ry, rw, rh, 12); ctx.stroke();
+
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(rx + rw / 2, ry); ctx.lineTo(rx + rw / 2, ry + rh); ctx.stroke();
+      ctx.setLineDash([]);
+
+      [0.25, 0.75].forEach(cx => {
+        ctx.beginPath(); ctx.arc(rx + cx * rw, ry + rh * 0.5, 50, 0, Math.PI * 2); ctx.stroke();
+      });
+      ctx.beginPath(); ctx.arc(rx + rw * 0.5, ry + rh * 0.5, 28, 0, Math.PI * 2); ctx.stroke();
+
+      const players = [
+        { x: 0.55, y: 0.25, label: 'C', color: '#00C4B4' },
+        { x: 0.68, y: 0.38, label: 'LW', color: '#00C4B4' },
+        { x: 0.85, y: 0.3, label: 'RW', color: '#00C4B4' },
+        { x: 0.62, y: 0.72, label: 'LD', color: '#00C4B4' },
+        { x: 0.78, y: 0.72, label: 'RD', color: '#00C4B4' },
+        { x: 0.22, y: 0.5, label: 'G', color: '#EF4444' },
+      ];
+      players.forEach(p => {
+        const px = rx + p.x * rw, py = ry + p.y * rh;
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(px, py, 16, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(p.label, px, py + 4);
+        ctx.textAlign = 'left';
+      });
+
+      ctx.strokeStyle = '#3DFF8F'; ctx.lineWidth = 2; ctx.setLineDash([6, 3]);
+      [[0.55,0.25,0.68,0.38],[0.68,0.38,0.85,0.3],[0.62,0.72,0.78,0.72]].forEach(([x1,y1,x2,y2]) => {
+        ctx.beginPath();
+        ctx.moveTo(rx + x1 * rw, ry + y1 * rh);
+        ctx.lineTo(rx + x2 * rw, ry + y2 * rh);
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
+
+      [1,2,3].forEach((n, i) => {
+        const tx = rx + i * 84 + 4;
+        ctx.fillStyle = i === 0 ? '#00C4B4' : '#21262D';
+        roundRect(ctx, tx, ry + rh + 10, 76, 28, 6); ctx.fill();
+        ctx.fillStyle = i === 0 ? '#0D1117' : '#8B949E';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText('Phase ' + n, tx + 14, ry + rh + 29);
+      });
+
+      ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 15px sans-serif';
+      ctx.fillText('Drill Library', 16, ry + rh + 60);
+
+      [
+        ['1-2-2 Forecheck Setup', ['Forecheck','System']],
+        ['D-Zone Breakout — Wheel', ['Breakout','D-Zone']],
+        ['3-on-2 Odd Man Rush', ['Rush','Offense']],
+      ].forEach(([name, tags], i) => {
+        const dy = ry + rh + 72 + i * 52;
+        ctx.fillStyle = '#21262D';
+        roundRect(ctx, 16, dy, W - 32, 44, 6); ctx.fill();
+        ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 13px sans-serif';
+        ctx.fillText(name, 28, dy + 18);
+        tags.forEach((t, ti) => {
+          const tx = 28 + ti * 86;
+          ctx.fillStyle = 'rgba(0,196,180,0.15)';
+          roundRect(ctx, tx, dy + 24, 78, 16, 3); ctx.fill();
+          ctx.fillStyle = '#00C4B4'; ctx.font = '10px sans-serif';
+          ctx.fillText(t, tx + 6, dy + 35);
+        });
+      });
+    }, 700, 620);
+
+    // ---- Team Roster ----
+    const rosterTex = makeTexture((ctx, W, H) => {
+      ctx.fillStyle = '#161B22';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#0D1117';
+      ctx.fillRect(0, 0, W, 56);
+      ctx.fillStyle = '#00C4B4'; ctx.font = 'bold 17px sans-serif';
+      ctx.fillText('PXF Hockey', 16, 35);
+      ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 19px sans-serif';
+      ctx.fillText('Peewee A · Roster', 16, 80);
+      ctx.fillStyle = '#8B949E'; ctx.font = '13px sans-serif';
+      ctx.fillText('18 players · 2 coaches · Season 2026-27', 16, 100);
+
+      ctx.fillStyle = '#21262D';
+      roundRect(ctx, 16, 110, W - 32, 34, 8); ctx.fill();
+      ctx.fillStyle = '#8B949E'; ctx.font = '13px sans-serif';
+      ctx.fillText('🔍  Search players...', 28, 132);
+
+      ctx.fillStyle = '#8B949E'; ctx.font = 'bold 11px sans-serif';
+      ctx.fillText('#', 20, 164);
+      ctx.fillText('PLAYER', 50, 164);
+      ctx.fillText('POS', W - 114, 164);
+      ctx.fillText('STATUS', W - 68, 164);
+
+      const players = [
+        ['14','Jake Morrison','C', true],
+        ['22','Liam Chen','LW', true],
+        ['7','Tyler Brooks','D', true],
+        ['31','Marcus Webb','G', true],
+        ['18','Connor Walsh','RW', false],
+        ['9','Blake Rivera','D', true],
+        ['11','Finn Larsson','C', true],
+      ];
+      const avColors = ['#00C4B4','#3DFF8F','#F59E0B','#7C3AED','#EF4444','#00C4B4','#3DFF8F'];
+      players.forEach(([num, name, pos, paid], i) => {
+        const py = 174 + i * 46;
+        if (i % 2 === 0) { ctx.fillStyle = 'rgba(255,255,255,0.02)'; ctx.fillRect(0, py - 6, W, 46); }
+
+        ctx.fillStyle = '#00C4B4'; ctx.font = 'bold 14px sans-serif';
+        ctx.fillText(num, 20, py + 14);
+
+        ctx.fillStyle = avColors[i];
+        ctx.beginPath(); ctx.arc(58, py + 10, 13, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#0D1117'; ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(name.split(' ').map(n => n[0]).join(''), 58, py + 14);
+        ctx.textAlign = 'left';
+
+        ctx.fillStyle = '#FFFFFF'; ctx.font = '14px sans-serif';
+        ctx.fillText(name, 78, py + 8);
+        ctx.fillStyle = paid ? '#3DFF8F' : '#F59E0B';
+        ctx.font = '11px sans-serif';
+        ctx.fillText(paid ? '✓ Paid' : '⚠ Pending', 78, py + 24);
+
+        ctx.fillStyle = 'rgba(0,196,180,0.15)';
+        roundRect(ctx, W - 118, py + 1, 30, 18, 4); ctx.fill();
+        ctx.fillStyle = '#00C4B4'; ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(pos, W - 103, py + 13);
+        ctx.textAlign = 'left';
+
+        const sc = paid ? '#3DFF8F' : '#F59E0B';
+        ctx.fillStyle = sc + '22';
+        roundRect(ctx, W - 80, py + 1, 68, 18, 4); ctx.fill();
+        ctx.fillStyle = sc; ctx.font = '10px sans-serif';
+        ctx.fillText(paid ? 'Active' : 'Waiver ⚠', W - 76, py + 13);
+      });
+    }, 580, 500);
+
+    // ---- Panels ----
+    function makePanel(tex, w, h, rx, ry, rz, px, py, pz) {
+      const geo = new THREE.PlaneGeometry(w, h);
+      const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.1, metalness: 0.05 });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.rotation.set(rx, ry, rz);
+      mesh.position.set(px, py, pz);
+      return mesh;
+    }
+
+    function makeFrame(w, h, rx, ry, rz, px, py, pz) {
+      const geo = new THREE.BoxGeometry(w + 0.06, h + 0.06, 0.05);
+      const mat = new THREE.MeshStandardMaterial({ color: 0x21262D, roughness: 0.8, metalness: 0.2 });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.rotation.set(rx, ry, rz);
+      mesh.position.set(px, py, pz - 0.04);
+      return mesh;
+    }
+
+    const group = new THREE.Group();
+
+    // Main dashboard
+    group.add(makeFrame(5.4, 3.72, 0, -0.2, 0, 1.2, 0, 0));
+    group.add(makePanel(dashTex, 5.4, 3.72, 0, -0.2, 0, 1.2, 0, 0));
+
+    // Drill builder (left back)
+    group.add(makeFrame(3.5, 3.1, 0.1, 0.35, 0, -1.8, 0.5, -1.2));
+    group.add(makePanel(drillTex, 3.5, 3.1, 0.1, 0.35, 0, -1.8, 0.5, -1.2));
+
+    // Roster (right back)
+    group.add(makeFrame(3.0, 2.6, 0.05, -0.28, 0, 3.2, -0.6, -2.0));
+    group.add(makePanel(rosterTex, 3.0, 2.6, 0.05, -0.28, 0, 3.2, -0.6, -2.0));
+
+    scene.add(group);
+
+    // ---- Particles ----
+    const pGeo = new THREE.BufferGeometry();
+    const pos = new Float32Array(100 * 3);
+    for (let i = 0; i < 100; i++) {
+      pos[i*3] = (Math.random() - 0.5) * 18;
+      pos[i*3+1] = (Math.random() - 0.5) * 14;
+      pos[i*3+2] = (Math.random() - 0.5) * 8 - 2;
+    }
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({
+      color: 0x00C4B4, size: 0.05, transparent: true, opacity: 0.4, sizeAttenuation: true
+    }));
+    scene.add(particles);
+
+    // ---- Glow sprites ----
+    function glow(color, size, x, y, z) {
+      const c = document.createElement('canvas');
+      c.width = 128; c.height = 128;
+      const ctx2 = c.getContext('2d');
+      const g = ctx2.createRadialGradient(64,64,0,64,64,64);
+      g.addColorStop(0, color + '99');
+      g.addColorStop(1, color + '00');
+      ctx2.fillStyle = g;
+      ctx2.fillRect(0,0,128,128);
+      const mat = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false });
+      const s = new THREE.Sprite(mat);
+      s.scale.set(size, size, 1);
+      s.position.set(x, y, z);
+      return s;
+    }
+    scene.add(glow('#00C4B4', 5, 3, 1, 1));
+    scene.add(glow('#3DFF8F', 3, -2, -0.5, 0));
+    scene.add(glow('#7C3AED', 2.5, 5, -1, -1));
+
+    // ---- Mouse parallax ----
+    let targetRotX = 0, targetRotY = 0;
+    let currentRotX = 0, currentRotY = 0;
+
+    window.addEventListener('mousemove', (e) => {
+      targetRotY = ((e.clientX / W) - 0.5) * 0.25;
+      targetRotX = -((e.clientY / H) - 0.5) * 0.15;
+    });
+
+    // ---- Resize ----
+    window.addEventListener('resize', () => {
+      W = hero.offsetWidth;
+      H = hero.offsetHeight;
+      renderer.setSize(W, H);
+      camera.aspect = W / H;
+      camera.updateProjectionMatrix();
+    });
+
+    // ---- Animate ----
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const t = clock.getElapsedTime();
+
+      group.position.y = Math.sin(t * 0.5) * 0.08;
+
+      currentRotY += (targetRotY - currentRotY) * 0.04;
+      currentRotX += (targetRotX - currentRotX) * 0.04;
+      group.rotation.y = currentRotY + Math.sin(t * 0.25) * 0.01;
+      group.rotation.x = currentRotX;
+
+      particles.rotation.y = t * 0.018;
+      particles.rotation.x = t * 0.009;
+
+      tealLight.intensity = 5 + Math.sin(t * 1.1) * 1.5;
+      greenLight.intensity = 1.5 + Math.cos(t * 0.8) * 0.5;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  })();
+  </script>
+</body>
+</html>

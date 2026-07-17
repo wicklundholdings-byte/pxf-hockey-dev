@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
+import { GradientText } from '@/components/gradient-text';
 import { supabase } from '@/lib/supabase';
 
 const BG = '#0D1117';
-const CARD = '#161B22';
 const GREEN = '#3DFF8F';
 const TEAL = '#00C4B4';
 const TEXT = '#FFFFFF';
@@ -31,10 +32,16 @@ export default function SignInScreen() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      setError(error.message);
-    } else {
-      router.replace('/');
+      const msg = error.message ?? '';
+      if (msg.includes('Invalid login') || msg.includes('invalid_grant') || msg.includes('Email not confirmed')) {
+        setError('Incorrect email or password.');
+      } else if (msg.includes('rate limit') || msg.includes('500') || msg.includes('internal server')) {
+        setError('Too many attempts. Please wait a few minutes and try again.');
+      } else {
+        setError('Sign in failed. Please check your details and try again.');
+      }
     }
+    // Routing is handled by _layout.tsx after auth state change
   }
 
   return (
@@ -43,19 +50,14 @@ export default function SignInScreen() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
 
-            {/* Back */}
-            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <ThemedText style={styles.backText}>← Back</ThemedText>
-            </TouchableOpacity>
-
             {/* Logo */}
             <View style={styles.logoSection}>
-              <ThemedText style={styles.logoText}>PXF</ThemedText>
+              <GradientText style={styles.logoText} colors={[TEAL, GREEN]}>PXF</GradientText>
               <ThemedText style={styles.logoSub}>HOCKEY</ThemedText>
             </View>
 
             <ThemedText style={styles.title}>Welcome back</ThemedText>
-            <ThemedText style={styles.subtitle}>Sign in to your account</ThemedText>
+            <ThemedText style={styles.subtitle}>Sign in to continue.</ThemedText>
 
             {/* Form */}
             <View style={styles.form}>
@@ -87,8 +89,24 @@ export default function SignInScreen() {
 
               {error ? <ThemedText style={styles.errorText}>{error}</ThemedText> : null}
 
-              <TouchableOpacity style={styles.primaryBtn} onPress={handleSignIn} disabled={loading}>
-                {loading ? <ActivityIndicator color="#000" /> : <ThemedText style={styles.primaryBtnText}>SIGN IN</ThemedText>}
+              <TouchableOpacity onPress={handleSignIn} disabled={loading} style={styles.btnWrapper}>
+                <LinearGradient
+                  colors={[TEAL, GREEN]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.primaryBtn}
+                >
+                  {loading
+                    ? <ActivityIndicator color="#000" />
+                    : <ThemedText style={styles.primaryBtnText}>SIGN IN</ThemedText>
+                  }
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => router.push('/auth/forgot-password' as any)}>
+                <ThemedText style={styles.linkText}>
+                  Forgot password? <ThemedText style={styles.linkHighlight}>Reset it</ThemedText>
+                </ThemedText>
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => router.push('/auth/sign-up')}>
@@ -106,17 +124,14 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: BG },
   safe: { flex: 1 },
-  content: { paddingHorizontal: 24, paddingBottom: 40 },
+  content: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 40 },
 
-  backBtn: { paddingTop: 12, paddingBottom: 24 },
-  backText: { fontSize: 16, color: TEAL, fontWeight: '600' },
+  logoSection: { alignItems: 'center', marginTop: 48, marginBottom: 36 },
+  logoText: { fontSize: 40, fontWeight: '800', letterSpacing: 4, lineHeight: 48 },
+  logoSub: { fontSize: 12, fontWeight: '700', color: TEXT_MUTED, letterSpacing: 8, marginTop: 2 },
 
-  logoSection: { marginBottom: 40 },
-  logoText: { fontSize: 36, fontWeight: '900', color: TEAL, letterSpacing: 4, lineHeight: 46 },
-  logoSub: { fontSize: 12, fontWeight: '700', color: GREEN, letterSpacing: 6 },
-
-  title: { fontSize: 28, fontWeight: '800', color: TEXT, marginBottom: 8 },
-  subtitle: { fontSize: 15, color: TEXT_MUTED, marginBottom: 36 },
+  title: { fontSize: 26, fontWeight: '800', color: TEXT, marginBottom: 6, textAlign: 'center', lineHeight: 32 },
+  subtitle: { fontSize: 15, color: TEXT_MUTED, marginBottom: 36, textAlign: 'center' },
 
   form: { gap: 20 },
   inputGroup: { gap: 8 },
@@ -134,12 +149,10 @@ const styles = StyleSheet.create({
 
   errorText: { fontSize: 14, color: '#FF4444', textAlign: 'center' },
 
+  btnWrapper: { borderRadius: 14, overflow: 'hidden', marginTop: 8 },
   primaryBtn: {
-    backgroundColor: GREEN,
-    borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
-    marginTop: 8,
   },
   primaryBtnText: { fontSize: 15, fontWeight: '800', color: '#000', letterSpacing: 1 },
 

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "pxf-hockey-mobile",
+    "name": "PXF Hockey",
     "slug": "pxf-hockey-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,14 +8,17 @@
     "scheme": "pxfhockeymobile",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/images/icon.png",
+      "bundleIdentifier": "com.pxfhockey.mobile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0D1117",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundImage": "./assets/images/android-icon-background.png"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -28,18 +31,49 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#0D1117",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
           "android": {
             "image": "./assets/images/splash-icon.png",
-            "imageWidth": 76
+            "imageWidth": 200
           }
         }
       ],
-      "expo-video"
+      "expo-video",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow PXF Hockey to access your photo library to upload team logos, scoresheets, and media."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow PXF Hockey to access your camera to record training film.",
+          "microphonePermission": "Allow PXF Hockey to access your microphone to record training film with audio.",
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow PXF Hockey to save recorded clips to your photo library.",
+          "savePhotosPermission": "Allow PXF Hockey to save recorded clips to your photo library.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7ac6a049-d6e4-407c-b3f0-50d95324ebca"
+      }
     }
   }
 }
